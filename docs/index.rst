@@ -53,6 +53,11 @@ Documentation
 
    api/index
   
+Source and issue tracker
+========================
+
+Sources are available at `issue-tracker`_. You may also file a bug there.
+
 Alternate projects
 ==================
 
@@ -71,6 +76,7 @@ Other topics
 .. _django: http://www.djangoproject.com/
 .. _django-authority: http://bitbucket.org/jezdez/django-authority/
 .. _django-permissions: http://bitbucket.org/diefenbach/django-permissions/
+.. _issue-tracker: http://github.com/lukaszb/django-guardian
 
 .. [1] See http://docs.djangoproject.com/en/1.2/topics/auth/#handling-object-permissions
    for more detail.

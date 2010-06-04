@@ -13,7 +13,7 @@ except IOError, err:
 setup(
     name = 'django-guardian',
     version = guardian.__version__,
-    url = 'http://bitbucket.org/lukaszb/django-guardian/',
+    url = 'http://github.com/lukaszb/django-guardian',
     author = 'Lukasz Balcerzak',
     author_email = 'lukasz.balcerzak@python-center.pl',
     description = guardian.__doc__,
