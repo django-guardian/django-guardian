@@ -1,0 +1,26 @@
+{% extends "richtemplates/base_1col.html" %}                                                                                                                                    
+{% load i18n %}
+
+{% block title %}403 - {% trans "Permission denied" %}{% endblock %}
+
+{% block content %}
+<div id="col_single">
+    <div class="richtemplates-panel">
+        <h5>{% trans "Forbidden" %}</h5>
+        <div class="richtemplates-panel-content">
+            <h1>{% trans "Page unavailable" %}</h1>
+            <ul class="messages">
+                <li class="message message-error">{% trans "You have no permissions to see content of this page" %}</li>
+            </ul>
+            {% if not user.is_authenticated %}
+            <p>
+                {% trans "You are not logged in" %}
+                <a href="{% url auth_login %}?next={{ request.path }}">{% trans "Click here to login" %}</a>
+            </p>
+
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

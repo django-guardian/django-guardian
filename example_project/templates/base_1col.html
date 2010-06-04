@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+
+    <!-- Content -->
+    {% block content %}
+    
+        <!-- One Main Panel -->
+        <div id="col_single">
+        {% block col_single %}
+            <div class="richtemplates-panel">
+                <h5>{% block col_single_title %}Single column base template{% endblock %}</h5>
+                <div class="richtemplates-panel-content">
+                    {% block col_single_content %}
+                    Lorem ipsum dolor ...
+                    {% endblock %}
+                </div>
+            </div>
+        {% endblock col_single %}
+        </div>
+        
+    {% endblock content %}
+

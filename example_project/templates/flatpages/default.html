@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% load guardian_tags %}
+
+{% block col_left_title %}Pages{% endblock %}
+{% block col_left_content %}
+    <h3>Pages</h3>
+    <ul class="nav-vertical">
+        <li><a href="{% url home %}">Home</a></li>
+        {% for flatpage in flats %}
+        <li><a href="{{ flatpage.url }}">{{ flatpage.title }}</a></li>
+        {% endfor %}
+    </ul>
+
+    <hr/>
+
+    {% get_obj_perms request.user for flatpage as "flatpage_perms" %}
+
+    <h3>Your permissions</h3>
+    <ul>
+        {% for perm in flatpage_perms %}
+        <li>{{ perm }}</li>
+        {% empty %}
+        <li>None</li>
+        {% endfor %}
+    </ul>
+
+    {% if flatpage_perms %}
+    <hr/>
+    <h3>Actions</h3>
+    <ul class="nav-vertical">
+        {% if "change_flatpage" in flatpage_perms %}
+        <li><a href="#edit?target={{ flatpage.url }}"
+               class="show-tipsy-right"
+               title="It's just a dummy anchor - it won't take you anywhere">Edit</a></li>
+        {% endif %}
+    </ul>
+    {% endif %}
+{% endblock %}
+
+{% block col_main_title %}{{ flatpage.title }}{% endblock %}
+{% block col_main_content %}
+{{ flatpage.content }}
+{% endblock %}
+
