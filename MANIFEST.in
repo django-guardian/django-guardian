@@ -1,0 +1,10 @@
+include README.rst 
+include MANIFEST.in
+include tests.py
+include run_test_and_report.sh
+recursive-include guardian *.py
+recursive-include example_project *.py
+include example_project/requirements.txt
+recursive-include example_project/templates *.html
+recursive-include guardian/fixtures *.json
+recursive-include docs *
