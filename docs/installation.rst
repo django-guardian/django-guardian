@@ -18,8 +18,8 @@ This would be enough to run ``django-guardian``. However, in order to run tests
 or boundled example application, there are some other requirements. See more
 details about the topics:
 
-- :ref:`testing <testing>`
-.. - :ref:`example_project`
+- :ref:`Testing <testing>`
+- :ref:`Example project <example-project>`
 
 .. _django: http://www.djangoproject.com/
 

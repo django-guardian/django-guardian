@@ -45,6 +45,7 @@ Documentation
    :maxdepth: 1
 
    testing
+   example_project
 
 **API**
 

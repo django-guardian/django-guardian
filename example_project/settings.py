@@ -38,6 +38,8 @@ INSTALLED_APPS = (
     'richtemplates',
     'django_extensions',
     'registration',
+    'dajaxice',
+    'dajax',
 )
 
 MIDDLEWARE_CLASSES = (

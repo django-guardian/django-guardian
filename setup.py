@@ -12,10 +12,11 @@ except IOError, err:
 
 setup(
     name = 'django-guardian',
-    version = guardian.__version__,
+    version = guardian.get_version(),
     url = 'http://github.com/lukaszb/django-guardian',
     author = 'Lukasz Balcerzak',
     author_email = 'lukasz.balcerzak@python-center.pl',
+    download_url='http://github.com/lukaszb/django-guardian/downloads',
     description = guardian.__doc__,
     long_description = long_description,
     zip_safe = False,
