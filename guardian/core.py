@@ -21,7 +21,7 @@ class ObjectPermissionChecker(object):
        On the other hand, if we call ``has_perm`` for perm1/object1, then we
        change permission state and call ``has_perm`` again for same
        perm1/object1 on same instance of ObjectPermissionChecker we won't see a
-       difference as permissions are already fetched and stored as cache
+       difference as permissions are already fetched and stored within cache
        dictionary.
     """
     def __init__(self, user_or_group=None):
@@ -50,7 +50,7 @@ class ObjectPermissionChecker(object):
 
     def get_perms(self, obj):
         """
-        Returns list of ``codename``s of all permissions for given ``obj``.
+        Returns list of ``codename``'s of all permissions for given ``obj``.
 
         :param obj: Django model instance for which permission should be checked
 
