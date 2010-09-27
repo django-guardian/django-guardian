@@ -82,6 +82,52 @@ Let's see it in action::
     >>> checker.get_perms(site)
     [u'change_site']
 
+Using decorators
+~~~~~~~~~~~~~~~~
+
+Standard ``permission_required`` decorator doesn't allow to check for object
+permissions. ``django-guardian`` is shipped with two decorators which may be
+helpful for simple object permission checks but remember that those decorators
+hits database before decorated view is called - this means that if there is
+similar lookup made within a view then most probably one (or more, depending
+on lookups) extra database query would occur.
+
+Let's assume we pass ``'group_name'`` argument to our view function which
+returns form to edit the group. Moreover, we want to return 403 code if check
+fails. This can be simply achieved using ``permission_required_or_403``
+decorator::
+
+    >>> joe = User.objects.get(username='joe')
+    >>> foobars = Group.objects.create(name='foobars')
+    >>>
+    >>> from guardian.decorators import permission_required_or_403
+    >>> from django.http import HttpResponse
+    >>>
+    >>> @permission_required_or_403('auth.change_group',
+    >>>     (Group, 'name', 'group_name'))
+    >>> def edit_group(request, group_name):
+    >>>     return HttpResponse('some form')
+    >>>
+    >>> from django.http import HttpRequest
+    >>> request = HttpRequest()
+    >>> request.user = joe
+    >>> edit_group(request, group_name='foobars')
+    <django.http.HttpResponseForbidden object at 0x102b43dd0>
+    >>>
+    >>> joe.groups.add(foobars)
+    >>> edit_group(request, group_name='foobars')
+    <django.http.HttpResponseForbidden object at 0x102b43e50>
+    >>>
+    >>> from guardian.shortcuts import assign
+    >>> assign('auth.change_group', joe, foobars)
+    <UserObjectPermission: foobars | joe | change_group>
+    >>>
+    >>> edit_group(request, group_name='foobars')
+    <django.http.HttpResponse object at 0x102b8c8d0>
+    >>> # Note that we now get normal HttpResponse, not forbidden
+
+More on decorators can be read at corresponding :ref:`API page <api-decorators>`.
+
 Inside templates
 ----------------
 

@@ -8,6 +8,7 @@ API Reference
 
    backends
    core
+   decorators
    models
    shortcuts
    
