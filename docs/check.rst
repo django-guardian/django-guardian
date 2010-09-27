@@ -128,6 +128,10 @@ decorator::
 
 More on decorators can be read at corresponding :ref:`API page <api-decorators>`.
 
+.. note::
+   Overall idea of decorators' lookups was taken from `django-authority`_ and
+   all credits go to it's creator, Jannis Leidel.
+
 Inside templates
 ----------------
 
@@ -143,4 +147,6 @@ get_obj_perms
 
 .. autofunction:: guardian.templatetags.guardian_tags.get_obj_perms
    :noindex:
+
+.. _django-authority: http://bitbucket.org/jezdez/django-authority/
 
