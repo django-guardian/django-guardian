@@ -14,6 +14,7 @@ class Migration(DataMigration):
         for Model in [orm.UserObjectPermission, orm.GroupObjectPermission]:
             for obj in Model.objects.all():
                 obj.object_pk = str(obj.object_id)
+                obj.save()
 
     def backwards(self, orm):
         """
@@ -23,6 +24,7 @@ class Migration(DataMigration):
         for Model in [orm.UserObjectPermission, orm.GroupObjectPermission]:
             for obj in Model.objects.all():
                 obj.object_id = int(obj.object_pk)
+                obj.save()
 
     models = {
         'auth.group': {
