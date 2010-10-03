@@ -1,3 +1,9 @@
+Release 0.2.1 (Oct 3, 2010)
+===========================
+
+* Fixed migration (it wasn't actually updating object_pk field)
+
+
 Release 0.2.0 (Oct 3, 2010)
 ===========================
 
@@ -19,6 +25,7 @@ Improvements
 ~~~~~~~~~~~~
 
 * Added South_ migrations support
+
 
 Release 0.1.1 (Sep 27, 2010)
 ============================
