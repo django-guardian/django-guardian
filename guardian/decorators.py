@@ -24,7 +24,7 @@ def permission_required(perm, lookup_variables=None, **kwargs):
       this parameter. Defaults to ``django.conf.settings.LOGIN_URL``.
     :param redirect_field_name: name of the parameter passed if redirected.
       Defaults to ``django.contrib.auth.REDIRECT_FIELD_NAME``.
-    :param return_403``: if set to ``True`` then instead of redirecting to the
+    :param return_403: if set to ``True`` then instead of redirecting to the
       login page, response with status code 403 is returned (
       ``django.http.HttpResponseForbidden`` instance). Defaults to ``False``.
 
