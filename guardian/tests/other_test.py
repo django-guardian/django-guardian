@@ -93,7 +93,7 @@ class UserPermissionTests(TestCase):
             permission = perm,
             user = self.user,
             content_type = ctype,
-            object_id = group.id
+            object_pk = group.pk
         )
         self.assertRaises(ValidationError, UserObjectPermission.objects.create,
             **create_info)
@@ -209,7 +209,7 @@ class GroupPermissionTests(TestCase):
             permission = perm,
             group = self.group,
             content_type = ctype,
-            object_id = user.id
+            object_pk = user.pk
         )
         self.assertRaises(ValidationError, GroupObjectPermission.objects.create,
             **create_info)

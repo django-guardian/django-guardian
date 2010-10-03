@@ -4,4 +4,5 @@ from other_test import *
 from tags_test import *
 from utils_test import *
 from core_test import *
+from custommodel_test import *
 

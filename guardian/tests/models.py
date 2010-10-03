@@ -11,3 +11,10 @@ class Keycard(models.Model):
         )
 
 
+class KeyValue(models.Model):
+    key = models.CharField(max_length=40, primary_key=True)
+    value = models.TextField(null=True)
+
+    class Meta:
+        app_label = 'guardian'
+

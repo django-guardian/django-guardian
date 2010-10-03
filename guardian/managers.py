@@ -21,7 +21,7 @@ class UserObjectPermissionManager(models.Manager):
         obj_perm, created = self.get_or_create(
             content_type = ctype,
             permission = permission,
-            object_id = obj.pk,
+            object_pk = obj.pk,
             user = user)
         return obj_perm
 
@@ -35,7 +35,7 @@ class UserObjectPermissionManager(models.Manager):
         self.filter(
             permission__codename=perm,
             user=user,
-            object_id=obj.pk,
+            object_pk=obj.pk,
             content_type=ContentType.objects.get_for_model(obj))\
             .delete()
 
@@ -67,7 +67,7 @@ class GroupObjectPermissionManager(models.Manager):
         obj_perm, created = self.get_or_create(
             content_type = ctype,
             permission = permission,
-            object_id = obj.pk,
+            object_pk = obj.pk,
             group = group)
         return obj_perm
 
@@ -81,7 +81,7 @@ class GroupObjectPermissionManager(models.Manager):
         self.filter(
             permission__codename=perm,
             group=group,
-            object_id=obj.pk,
+            object_pk=obj.pk,
             content_type=ContentType.objects.get_for_model(obj))\
             .delete()
 

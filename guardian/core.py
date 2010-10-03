@@ -56,7 +56,7 @@ class ObjectPermissionChecker(object):
 
         """
         ctype = ContentType.objects.get_for_model(obj)
-        key = (ctype.id, obj.id)
+        key = (ctype.id, obj.pk)
         if not key in self._obj_perms_cache:
             if self.user and not self.user.is_active:
                 return []
@@ -70,10 +70,10 @@ class ObjectPermissionChecker(object):
                     .filter(
                         Q(userobjectpermission__content_type=F('content_type'),
                             userobjectpermission__user=self.user,
-                            userobjectpermission__object_id=obj.id) |
+                            userobjectpermission__object_pk=obj.pk) |
                         Q(groupobjectpermission__content_type=F('content_type'),
                             groupobjectpermission__group__user=self.user,
-                            groupobjectpermission__object_id=obj.id))
+                            groupobjectpermission__object_pk=obj.pk))
                     .values_list("codename"))))
             else:
                 perms = list(set(chain(*Permission.objects
@@ -81,7 +81,7 @@ class ObjectPermissionChecker(object):
                     .filter(
                         groupobjectpermission__content_type=F('content_type'),
                         groupobjectpermission__group=self.group,
-                        groupobjectpermission__object_id=obj.id)
+                        groupobjectpermission__object_pk=obj.pk)
                     .values_list("codename"))))
             self._obj_perms_cache[key] = perms
         return self._obj_perms_cache[key]

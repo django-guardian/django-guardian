@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
+from django.utils.translation import ugettext_lazy as _
 
 from guardian.managers import UserObjectPermissionManager
 from guardian.managers import GroupObjectPermissionManager
@@ -15,8 +16,9 @@ class BaseObjectPermission(models.Model):
     permission = models.ForeignKey(Permission)
 
     content_type = models.ForeignKey(ContentType)
-    object_id = models.PositiveIntegerField()
-    content_object = generic.GenericForeignKey()
+    #object_id = models.PositiveIntegerField()
+    object_pk = models.TextField(_('object ID'), default='')
+    content_object = generic.GenericForeignKey(fk_field='object_pk')
 
     class Meta:
         abstract = True
@@ -40,7 +42,8 @@ class UserObjectPermission(BaseObjectPermission):
     objects = UserObjectPermissionManager()
 
     class Meta:
-        unique_together = ['user', 'permission', 'content_type', 'object_id']
+        #unique_together = ['user', 'permission', 'content_type', 'object_id']
+        unique_together = ['user', 'permission', 'content_type', 'object_pk']
 
 class GroupObjectPermission(BaseObjectPermission):
     group = models.ForeignKey(Group)
@@ -48,7 +51,8 @@ class GroupObjectPermission(BaseObjectPermission):
     objects = GroupObjectPermissionManager()
 
     class Meta:
-        unique_together = ['group', 'permission', 'content_type', 'object_id']
+        #unique_together = ['group', 'permission', 'content_type', 'object_id']
+        unique_together = ['group', 'permission', 'content_type', 'object_pk']
 
 
 # Prototype User and Group methods
