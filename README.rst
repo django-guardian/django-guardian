@@ -60,6 +60,12 @@ Documentation
 There is an online documentation available at
 http://packages.python.org/django-guardian/.
 
+Changelog
+---------
+
+.. include:: CHANGES
+
+
 .. [1] Great peper about this feature is available at 
    http://djangoadvent.com/1.2/object-permissions/.
 

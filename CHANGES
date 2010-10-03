@@ -1,0 +1,40 @@
+Release 0.2.0 (Oct 3, 2010)
+===========================
+
+Fixes
+~~~~~
+
+* #4: guardian now supports models with not-integer primary keys and
+  they don't need to be called "id".
+
+  .. important::
+     For 0.1.X users: it is required to *migrate* guardian in your projects.
+     Add ``south`` to ``INSTALLED_APPS`` and run::
+
+        python manage.py syncdb
+        python manage.py migrate guardian 0001 --fake
+        python manage.py migrate guardian
+
+Improvements
+~~~~~~~~~~~~
+
+* Added South_ migrations support
+
+Release 0.1.1 (Sep 27, 2010)
+============================
+
+Improvements
+~~~~~~~~~~~~
+
+* Added view decorators: ``permission_required`` and
+  ``permission_required_403``
+
+
+Release 0.1.0 (Jun 6, 2010)
+===========================
+
+* Initial public release
+
+
+.. _south: http://south.aeracode.org/
+

@@ -44,6 +44,7 @@ Documentation
 .. toctree::
    :maxdepth: 1
 
+   changes
    testing
    example_project
 

@@ -1,3 +1,4 @@
+include CHANGES
 include README.rst 
 include MANIFEST.in
 include tests.py
