@@ -16,7 +16,6 @@ class BaseObjectPermission(models.Model):
     permission = models.ForeignKey(Permission)
 
     content_type = models.ForeignKey(ContentType)
-    #object_id = models.PositiveIntegerField()
     object_pk = models.TextField(_('object ID'), default='')
     content_object = generic.GenericForeignKey(fk_field='object_pk')
 
@@ -42,7 +41,6 @@ class UserObjectPermission(BaseObjectPermission):
     objects = UserObjectPermissionManager()
 
     class Meta:
-        #unique_together = ['user', 'permission', 'content_type', 'object_id']
         unique_together = ['user', 'permission', 'content_type', 'object_pk']
 
 class GroupObjectPermission(BaseObjectPermission):
@@ -51,7 +49,6 @@ class GroupObjectPermission(BaseObjectPermission):
     objects = GroupObjectPermissionManager()
 
     class Meta:
-        #unique_together = ['group', 'permission', 'content_type', 'object_id']
         unique_together = ['group', 'permission', 'content_type', 'object_pk']
 
 
