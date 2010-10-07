@@ -42,6 +42,7 @@ class UserObjectPermission(BaseObjectPermission):
 
     class Meta:
         unique_together = ['user', 'permission', 'content_type', 'object_pk']
+        ordering = ('user', 'permission',)
 
 class GroupObjectPermission(BaseObjectPermission):
     group = models.ForeignKey(Group)
@@ -50,6 +51,7 @@ class GroupObjectPermission(BaseObjectPermission):
 
     class Meta:
         unique_together = ['group', 'permission', 'content_type', 'object_pk']
+        ordering = ('group', 'permission')
 
 
 # Prototype User and Group methods
