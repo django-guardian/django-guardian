@@ -23,27 +23,49 @@ class ObjectPermissionTestCase(TestCase):
 
 class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
 
-    '''
-    # Commented out as during tests connection.queries attribute is not being
-    # updated
-    def test_cache(self):
-        from django.db import connection
-        UserObjectPermission.objects.all().delete()
-        GroupObjectPermission.objects.all().delete()
-        check = ObjectPermissionChecker(user=self.user)
-        query_count_pre = len(connection.queries)
-        res = check.has_perm("change_group", self.group)
-        query_count = len(connection.queries)
-        res_new = check.has_perm("change_group", self.group)
-        query_count_new = len(connection.queries)
+    def test_cache_for_queries_count(self):
+        from django.conf import settings
+        settings.DEBUG = True
+        try:
+            from django.db import connection
+            UserObjectPermission.objects.all().delete()
+            GroupObjectPermission.objects.all().delete()
 
-        # TODO
-        # has_perm on Checker should spawn only one query
-        self.assertEqual( query_count - query_count_pre, 1)
+            ContentType.objects.clear_cache()
+            checker = ObjectPermissionChecker(self.user)
 
-        self.assertEqual(res, res_new)
-        self.assertEqual(query_count, query_count_new)
-    '''
+            # has_perm on Checker should spawn only one query plus one extra for
+            # fetching the content type first time we check for specific model
+            query_count = len(connection.queries)
+            res = checker.has_perm("change_group", self.group)
+            self.assertEqual(len(connection.queries), query_count + 2)
+
+            # Checking again shouldn't spawn any queries
+            query_count = len(connection.queries)
+            res_new = checker.has_perm("change_group", self.group)
+            self.assertEqual(res, res_new)
+            self.assertEqual(len(connection.queries), query_count)
+
+            # Checking for other permission but for Group object again
+            # shouldn't spawn any query too
+            query_count = len(connection.queries)
+            checker.has_perm("delete_group", self.group)
+            self.assertEqual(len(connection.queries), query_count)
+
+            # Checking for same model but other instance should spawn 1 query
+            new_group = Group.objects.create(name='new-group')
+            query_count = len(connection.queries)
+            checker.has_perm("change_group", new_group)
+            self.assertEqual(len(connection.queries), query_count + 1)
+
+            # Checking for permission for other model should spawn 2 queries
+            # (again: content type and actual permissions for the object)
+            query_count = len(connection.queries)
+            checker.has_perm("change_user", self.user)
+            self.assertEqual(len(connection.queries), query_count + 2)
+
+        finally:
+            settings.DEBUG = False
 
     def test_init(self):
         self.assertRaises(NotUserNorGroup, ObjectPermissionChecker,
