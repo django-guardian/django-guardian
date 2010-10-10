@@ -16,7 +16,7 @@ class BaseObjectPermission(models.Model):
     permission = models.ForeignKey(Permission)
 
     content_type = models.ForeignKey(ContentType)
-    object_pk = models.TextField(_('object ID'), default='')
+    object_pk = models.CharField(_('object ID'), max_length=255)
     content_object = generic.GenericForeignKey(fk_field='object_pk')
 
     class Meta:
