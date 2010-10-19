@@ -8,6 +8,12 @@ class Migration(SchemaMigration):
 
     def forwards(self, orm):
         
+        # Changing field 'GroupObjectPermission.object_pk'
+        db.alter_column('guardian_groupobjectpermission', 'object_pk', self.gf('django.db.models.fields.CharField')(max_length=255))
+
+        # Changing field 'UserObjectPermission.object_pk'
+        db.alter_column('guardian_userobjectpermission', 'object_pk', self.gf('django.db.models.fields.CharField')(max_length=255))
+
         # Removing unique constraint on 'UserObjectPermission', fields ['object_id', 'user', 'content_type', 'permission']
         db.delete_unique('guardian_userobjectpermission', ['object_id', 'user_id', 'content_type_id', 'permission_id'])
 
@@ -28,6 +34,12 @@ class Migration(SchemaMigration):
 
 
     def backwards(self, orm):
+
+        # Changing field 'GroupObjectPermission.object_pk'
+        db.alter_column('guardian_groupobjectpermission', 'object_pk', self.gf('django.db.models.fields.TextField')())
+
+        # Changing field 'UserObjectPermission.object_pk'
+        db.alter_column('guardian_userobjectpermission', 'object_pk', self.gf('django.db.models.fields.TextField')())
         
         # Removing unique constraint on 'UserObjectPermission', fields ['object_pk', 'user', 'content_type', 'permission']
         db.delete_unique('guardian_userobjectpermission', ['object_pk', 'user_id', 'content_type_id', 'permission_id'])
@@ -92,14 +104,14 @@ class Migration(SchemaMigration):
             'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['contenttypes.ContentType']"}),
             'group': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.Group']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'object_pk': ('django.db.models.fields.TextField', [], {'default': "''"}),
+            'object_pk': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'permission': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.Permission']"})
         },
         'guardian.userobjectpermission': {
             'Meta': {'unique_together': "(['user', 'permission', 'content_type', 'object_pk'],)", 'object_name': 'UserObjectPermission'},
             'content_type': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['contenttypes.ContentType']"}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'object_pk': ('django.db.models.fields.TextField', [], {'default': "''"}),
+            'object_pk': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'permission': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.Permission']"}),
             'user': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']"})
         }

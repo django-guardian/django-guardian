@@ -8,21 +8,12 @@ class Migration(SchemaMigration):
 
     def forwards(self, orm):
         
-        # Changing field 'GroupObjectPermission.object_pk'
-        db.alter_column('guardian_groupobjectpermission', 'object_pk', self.gf('django.db.models.fields.CharField')(max_length=255))
-
-        # Changing field 'UserObjectPermission.object_pk'
-        db.alter_column('guardian_userobjectpermission', 'object_pk', self.gf('django.db.models.fields.CharField')(max_length=255))
+        pass
 
 
     def backwards(self, orm):
         
-        # Changing field 'GroupObjectPermission.object_pk'
-        db.alter_column('guardian_groupobjectpermission', 'object_pk', self.gf('django.db.models.fields.TextField')())
-
-        # Changing field 'UserObjectPermission.object_pk'
-        db.alter_column('guardian_userobjectpermission', 'object_pk', self.gf('django.db.models.fields.TextField')())
-
+        pass
 
     models = {
         'auth.group': {
