@@ -56,7 +56,7 @@ class ObjectPermissionChecker(object):
 
         """
         ctype = ContentType.objects.get_for_model(obj)
-        key = (ctype.id, obj.pk)
+        key = self.get_local_cache_key(obj)
         if not key in self._obj_perms_cache:
             if self.user and not self.user.is_active:
                 return []
@@ -85,4 +85,11 @@ class ObjectPermissionChecker(object):
                     .values_list("codename"))))
             self._obj_perms_cache[key] = perms
         return self._obj_perms_cache[key]
+
+    def get_local_cache_key(self, obj):
+        """
+        Returns cache key for ``_obj_perms_cache`` dict.
+        """
+        ctype = ContentType.objects.get_for_model(obj)
+        return (ctype.id, obj.pk)
 

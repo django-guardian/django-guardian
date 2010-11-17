@@ -36,3 +36,8 @@ get_perms_for_model
 
 .. autofunction:: guardian.shortcuts.get_perms_for_model
 
+get_users_with_perms
+--------------------
+
+.. autofunction:: guardian.shortcuts.get_users_with_perms
+

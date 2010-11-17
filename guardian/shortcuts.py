@@ -2,8 +2,9 @@
 Convenient shortcuts to manage or check object permissions.
 """
 from django.db import models
+from django.db.models import Q
+from django.contrib.auth.models import Permission, User
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.auth.models import Permission
 
 from guardian.core import ObjectPermissionChecker
 from guardian.models import UserObjectPermission, GroupObjectPermission
@@ -82,4 +83,51 @@ def get_perms_for_model(cls):
         model = cls
     ctype = ContentType.objects.get_for_model(model)
     return Permission.objects.filter(content_type=ctype)
+
+def get_users_with_perms(obj, attach_perms=False):
+    """
+    Returns queryset of all User objects with *any* object permissions for the
+    given ``obj``.
+
+    :param obj: persisted Django's ``Model`` instance
+
+    :param attach_perms: Default: ``False``. If set to ``True`` result would be
+      dictionary of ``User`` instances with permissions' codenames list as
+      values. This would fetch users eagerly!
+
+    Example::
+
+        >>> from django.contrib.auth.models import User
+        >>> from django.contrib.flatpages.models import FlatPage
+        >>> from guardian.shortcuts import assign, get_users_with_perms
+        >>>
+        >>> page = FlatPage.objects.create(title='Some page', path='/some/page/')
+        >>> joe = User.objects.create_user('joe', 'joe@example.com', 'joesecret')
+        >>> assign('change_flatpage', joe, page)
+        >>>
+        >>> get_users_with_perms(page)
+        [<User: joe>]
+        >>>
+        >>> get_users_with_perms(page, attach_perms=True)
+        {<User: joe>: [u'change_flatpage']}
+
+    """
+    ctype = ContentType.objects.get_for_model(obj)
+    if not attach_perms:
+        # It's much easier without attached perms so we do it first if that is
+        # the case
+        qset = Q(
+            userobjectpermission__content_type=ctype,
+            userobjectpermission__object_pk=obj.pk)
+        qset = qset | Q(
+            groups__groupobjectpermission__content_type=ctype,
+            groups__groupobjectpermission__object_pk=obj.pk,
+        )
+        return User.objects.filter(qset)
+    else:
+        # TODO: Do not hit db for each user!
+        users = {}
+        for user in get_users_with_perms(obj):
+            users[user] = get_perms(user, obj)
+        return users
 

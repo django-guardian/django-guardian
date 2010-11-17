@@ -1,9 +1,14 @@
-from django.test import TestCase
 from django.contrib.auth.models import User, Group, Permission
+from django.contrib.flatpages.models import FlatPage
+from django.db.models.query import QuerySet
+from django.test import TestCase
 
 from guardian.shortcuts import get_perms_for_model
 from guardian.core import ObjectPermissionChecker
-from guardian.shortcuts import assign, remove_perm, get_perms
+from guardian.shortcuts import assign
+from guardian.shortcuts import remove_perm
+from guardian.shortcuts import get_perms
+from guardian.shortcuts import get_users_with_perms
 from guardian.exceptions import NotUserNorGroup
 
 from guardian.tests.models import Keycard
@@ -97,4 +102,83 @@ class GetPermsTest(ObjectPermissionTestCase):
         perms = get_perms(self.user, self.flatpage)
         for perm in perms_to_assign:
             self.assertTrue(perm in perms)
+
+class GetUsersWithPerms(TestCase):
+    """
+    Tests get_users_with_perms function.
+    """
+    def setUp(self):
+        self.flatpage1 = FlatPage.objects.create(title='page1', url='/page1/')
+        self.flatpage2 = FlatPage.objects.create(title='page2', url='/page2/')
+        self.user1 = User.objects.create(username='user1')
+        self.user2 = User.objects.create(username='user2')
+        self.user3 = User.objects.create(username='user3')
+        self.group1 = Group.objects.create(name='group1')
+        self.group2 = Group.objects.create(name='group2')
+        self.group3 = Group.objects.create(name='group3')
+
+    def test_empty(self):
+        result = get_users_with_perms(self.flatpage1)
+        self.assertTrue(isinstance(result, QuerySet))
+        self.assertEqual(list(result), [])
+
+    def test_simple(self):
+        assign("change_flatpage", self.user1, self.flatpage1)
+        assign("delete_flatpage", self.user2, self.flatpage1)
+        assign("delete_flatpage", self.user3, self.flatpage2)
+
+        result = get_users_with_perms(self.flatpage1)
+        result_vals = result.values_list('username', flat=True)
+
+        self.assertEqual(
+            set(result_vals),
+            set([user.username for user in (self.user1, self.user2)]),
+        )
+
+    def test_users_groups_perms(self):
+        self.user1.groups.add(self.group1)
+        self.user2.groups.add(self.group2)
+        self.user3.groups.add(self.group3)
+        assign("change_flatpage", self.group1, self.flatpage1)
+        assign("change_flatpage", self.group2, self.flatpage1)
+        assign("delete_flatpage", self.group3, self.flatpage2)
+
+        result = get_users_with_perms(self.flatpage1).values_list('id',
+            flat=True)
+        self.assertEqual(
+            set(result),
+            set([u.id for u in (self.user1, self.user2)])
+        )
+
+    def test_attach_perms(self):
+        self.user1.groups.add(self.group1)
+        self.user2.groups.add(self.group2)
+        self.user3.groups.add(self.group3)
+        assign("change_flatpage", self.group1, self.flatpage1)
+        assign("change_flatpage", self.group2, self.flatpage1)
+        assign("delete_flatpage", self.group3, self.flatpage2)
+        assign("delete_flatpage", self.user2, self.flatpage1)
+        assign("change_flatpage", self.user3, self.flatpage2)
+
+        # Check flatpage1
+        result = get_users_with_perms(self.flatpage1, attach_perms=True)
+        should_by = {
+            self.user1: ["change_flatpage"],
+            self.user2: ["change_flatpage", "delete_flatpage"],
+        }
+        self.assertEqual(result, should_by)
+
+        # Check flatpage2
+        result = get_users_with_perms(self.flatpage2, attach_perms=True)
+        should_by = {
+            self.user3: ["change_flatpage", "delete_flatpage"],
+        }
+        self.assertEqual(result, should_by)
+
+    def test_attach_groups_only_has_perms(self):
+        self.user1.groups.add(self.group1)
+        assign("change_flatpage", self.group1, self.flatpage1)
+        result = get_users_with_perms(self.flatpage1, attach_perms=True)
+        should_be = {self.user1: ["change_flatpage"]}
+        self.assertEqual(result, should_be)
 
