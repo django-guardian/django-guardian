@@ -15,7 +15,7 @@ setup(
     version = guardian.get_version(),
     url = 'http://github.com/lukaszb/django-guardian',
     author = 'Lukasz Balcerzak',
-    author_email = 'lukasz.balcerzak@python-center.pl',
+    author_email = 'lukaszbalcerzak@gmail.com',
     download_url='http://github.com/lukaszb/django-guardian/downloads',
     description = guardian.__doc__,
     long_description = long_description,
