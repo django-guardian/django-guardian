@@ -1,3 +1,15 @@
+Release 0.2.3 (Nov 17, 2010)
+============================
+
+* Added ``guardian.shortcuts.get_users_with_perms`` function
+* Added AUTHORS file
+
+Release 0.2.2 (Oct 19, 2010)
+============================
+
+* Fixed migrations order (thanks to Daniel Rech)
+
+
 Release 0.2.1 (Oct 3, 2010)
 ===========================
 
