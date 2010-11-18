@@ -41,3 +41,9 @@ get_users_with_perms
 
 .. autofunction:: guardian.shortcuts.get_users_with_perms
 
+
+get_groups_with_perms
+--------------------
+
+.. autofunction:: guardian.shortcuts.get_groups_with_perms
+
