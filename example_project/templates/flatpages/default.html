@@ -2,8 +2,8 @@
 
 {% load guardian_tags %}
 
-{% block col_left_title %}Pages{% endblock %}
-{% block col_left_content %}
+{% block col-left-title %}Pages{% endblock %}
+{% block col-left-content %}
     <h3>Pages</h3>
     <ul class="nav-vertical">
         <li><a href="{% url home %}">Home</a></li>
@@ -38,8 +38,8 @@
     {% endif %}
 {% endblock %}
 
-{% block col_main_title %}{{ flatpage.title }}{% endblock %}
-{% block col_main_content %}
+{% block col-main-title %}{{ flatpage.title }}{% endblock %}
+{% block col-main-content %}
 {{ flatpage.content }}
 {% endblock %}
 
