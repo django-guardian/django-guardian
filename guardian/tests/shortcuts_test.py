@@ -9,6 +9,7 @@ from guardian.shortcuts import assign
 from guardian.shortcuts import remove_perm
 from guardian.shortcuts import get_perms
 from guardian.shortcuts import get_users_with_perms
+from guardian.shortcuts import get_groups_with_perms
 from guardian.exceptions import NotUserNorGroup
 
 from guardian.tests.models import Keycard
@@ -122,6 +123,10 @@ class GetUsersWithPerms(TestCase):
         self.assertTrue(isinstance(result, QuerySet))
         self.assertEqual(list(result), [])
 
+        result = get_users_with_perms(self.flatpage1, attach_perms=True)
+        self.assertTrue(isinstance(result, dict))
+        self.assertFalse(bool(result))
+
     def test_simple(self):
         assign("change_flatpage", self.user1, self.flatpage1)
         assign("delete_flatpage", self.user2, self.flatpage1)
@@ -148,6 +153,17 @@ class GetUsersWithPerms(TestCase):
         self.assertEqual(
             set(result),
             set([u.id for u in (self.user1, self.user2)])
+        )
+
+    def test_users_groups_after_removal(self):
+        self.test_users_groups_perms()
+        remove_perm("change_flatpage", self.group1, self.flatpage1)
+
+        result = get_users_with_perms(self.flatpage1).values_list('id',
+            flat=True)
+        self.assertEqual(
+            set(result),
+            set([self.user2.id]),
         )
 
     def test_attach_perms(self):
@@ -181,4 +197,88 @@ class GetUsersWithPerms(TestCase):
         result = get_users_with_perms(self.flatpage1, attach_perms=True)
         should_be = {self.user1: ["change_flatpage"]}
         self.assertEqual(result, should_be)
+
+    def test_mixed(self):
+        self.user1.groups.add(self.group1)
+        assign("change_flatpage", self.group1, self.flatpage1)
+        assign("change_flatpage", self.user2, self.flatpage1)
+        assign("delete_flatpage", self.user2, self.flatpage1)
+        assign("delete_flatpage", self.user2, self.flatpage2)
+        assign("change_flatpage", self.user3, self.flatpage2)
+        assign("change_user", self.user3, self.user1)
+
+        result = get_users_with_perms(self.flatpage1)
+        self.assertEqual(
+            set(result),
+            set([self.user1, self.user2]),
+        )
+
+class GetGroupsWithPerms(TestCase):
+    """
+    Tests get_groups_with_perms function.
+    """
+    def setUp(self):
+        self.flatpage1 = FlatPage.objects.create(title='page1', url='/page1/')
+        self.flatpage2 = FlatPage.objects.create(title='page2', url='/page2/')
+        self.user1 = User.objects.create(username='user1')
+        self.user2 = User.objects.create(username='user2')
+        self.user3 = User.objects.create(username='user3')
+        self.group1 = Group.objects.create(name='group1')
+        self.group2 = Group.objects.create(name='group2')
+        self.group3 = Group.objects.create(name='group3')
+
+    def test_empty(self):
+        result = get_groups_with_perms(self.flatpage1)
+        self.assertTrue(isinstance(result, QuerySet))
+        self.assertFalse(bool(result))
+
+        result = get_groups_with_perms(self.flatpage1, attach_perms=True)
+        self.assertTrue(isinstance(result, dict))
+        self.assertFalse(bool(result))
+
+    def test_simple(self):
+        assign("change_flatpage", self.group1, self.flatpage1)
+        result = get_groups_with_perms(self.flatpage1)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0], self.group1)
+
+    def test_simple_after_removal(self):
+        self.test_simple()
+        remove_perm("change_flatpage", self.group1, self.flatpage1)
+        result = get_groups_with_perms(self.flatpage1)
+        self.assertEqual(len(result), 0)
+
+    def test_simple_attach_perms(self):
+        assign("change_flatpage", self.group1, self.flatpage1)
+        result = get_groups_with_perms(self.flatpage1, attach_perms=True)
+        expected = {self.group1: ["change_flatpage"]}
+        self.assertEqual(result, expected)
+
+    def test_simple_attach_perms_after_removal(self):
+        self.test_simple_attach_perms()
+        remove_perm("change_flatpage", self.group1, self.flatpage1)
+        result = get_groups_with_perms(self.flatpage1, attach_perms=True)
+        self.assertEqual(len(result), 0)
+
+    def test_mixed(self):
+        assign("change_flatpage", self.group1, self.flatpage1)
+        assign("change_flatpage", self.group1, self.flatpage2)
+        assign("change_user", self.group1, self.user3)
+        assign("change_flatpage", self.group2, self.flatpage2)
+        assign("change_flatpage", self.group2, self.flatpage1)
+        assign("delete_flatpage", self.group2, self.flatpage1)
+        assign("change_user", self.group3, self.user1)
+
+        result = get_groups_with_perms(self.flatpage1)
+        self.assertEqual(set(result), set([self.group1, self.group2]))
+
+    def test_mixed_attach_perms(self):
+        self.test_mixed()
+
+        result = get_groups_with_perms(self.flatpage1, attach_perms=True)
+        expected = {
+            self.group1: ["change_flatpage"],
+            self.group2: ["change_flatpage", "delete_flatpage"],
+        }
+        self.assertEqual(result, expected)
 

@@ -3,7 +3,7 @@ Convenient shortcuts to manage or check object permissions.
 """
 from django.db import models
 from django.db.models import Q
-from django.contrib.auth.models import Permission, User
+from django.contrib.auth.models import Permission, User, Group
 from django.contrib.contenttypes.models import ContentType
 
 from guardian.core import ObjectPermissionChecker
@@ -86,8 +86,8 @@ def get_perms_for_model(cls):
 
 def get_users_with_perms(obj, attach_perms=False):
     """
-    Returns queryset of all User objects with *any* object permissions for the
-    given ``obj``.
+    Returns queryset of all ``User`` objects with *any* object permissions for
+    the given ``obj``.
 
     :param obj: persisted Django's ``Model`` instance
 
@@ -123,11 +123,58 @@ def get_users_with_perms(obj, attach_perms=False):
             groups__groupobjectpermission__content_type=ctype,
             groups__groupobjectpermission__object_pk=obj.pk,
         )
-        return User.objects.filter(qset)
+        return User.objects.filter(qset).distinct()
     else:
         # TODO: Do not hit db for each user!
         users = {}
         for user in get_users_with_perms(obj):
             users[user] = get_perms(user, obj)
         return users
+
+def get_groups_with_perms(obj, attach_perms=False):
+    """
+    Returns queryset of all ``Group`` objects with *any* object permissions for
+    the given ``obj``.
+
+    :param obj: persisted Django's ``Model`` instance
+
+    :param attach_perms: Default: ``False``. If set to ``True`` result would be
+      dictionary of ``Group`` instances with permissions' codenames list as
+      values. This would fetch groups eagerly!
+
+    Example::
+
+        >>> from django.contrib.auth.models import Group
+        >>> from django.contrib.flatpages.models import FlatPage
+        >>> from guardian.shortcuts import assign, get_groups_with_perms
+        >>>
+        >>> page = FlatPage.objects.create(title='Some page', path='/some/page/')
+        >>> admins = Group.objects.create(name='Admins')
+        >>> assign('change_flatpage', group, page)
+        >>>
+        >>> get_groups_with_perms(page)
+        [<Group: admins>]
+        >>>
+        >>> get_groups_with_perms(page, attach_perms=True)
+        {<Group: admins>: [u'change_flatpage']}
+
+    """
+    ctype = ContentType.objects.get_for_model(obj)
+    if not attach_perms:
+        # It's much easier without attached perms so we do it first if that is
+        # the case
+        groups = Group.objects\
+            .filter(
+                groupobjectpermission__content_type=ctype,
+                groupobjectpermission__object_pk=obj.pk,
+            )\
+            .distinct()
+        return groups
+    else:
+        # TODO: Do not hit db for each group!
+        groups = {}
+        for group in get_groups_with_perms(obj):
+            if not group in groups:
+                groups[group] = get_perms(group, obj)
+        return groups
 
