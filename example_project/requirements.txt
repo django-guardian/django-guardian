@@ -7,6 +7,6 @@ django-filter==0.5.3
 django-native-tags==0.5
 django-pagination==1.0.7
 django-registration==0.7
-django-richtemplates==0.3.6
+django-richtemplates==0.3.12
 docutils==0.7
 wsgiref==0.1.2
