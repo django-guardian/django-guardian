@@ -9,7 +9,7 @@ from guardian.core import ObjectPermissionChecker
 from guardian.models import UserObjectPermission, GroupObjectPermission
 from guardian.exceptions import NotUserNorGroup
 from guardian.shortcuts import assign
-from guardian.tests.models import Keycard
+from guardian.tests.app.models import Keycard
 
 class ObjectPermissionTestCase(TestCase):
     fixtures = ['tests.json']

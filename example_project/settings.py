@@ -35,11 +35,14 @@ INSTALLED_APPS = (
 
     'native_tags',
     'guardian',
-    'guardian.tests',
+    'guardian.tests.app',
     'richtemplates',
     'django_extensions',
     'registration',
     'south',
+    'django_coverage',
+
+    'posts',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -50,6 +53,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.transaction.TransactionMiddleware',
     'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
+    'djalog.middleware.SQLLoggingMiddleware',
 )
 
 MEDIA_ROOT = abspath(PROJECT_ROOT, 'media')
@@ -114,3 +118,4 @@ AUTH_PROFILE_MODULE = 'richtemplates.UserProfile'
 # are not migrated for tests
 SOUTH_TESTS_MIGRATE = False
 
+#DEBUG = False

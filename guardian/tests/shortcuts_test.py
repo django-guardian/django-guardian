@@ -12,7 +12,7 @@ from guardian.shortcuts import get_users_with_perms
 from guardian.shortcuts import get_groups_with_perms
 from guardian.exceptions import NotUserNorGroup
 
-from guardian.tests.models import Keycard
+from guardian.tests.app.models import Keycard
 from guardian.tests.core_test import ObjectPermissionTestCase
 
 class ShortcutsTests(TestCase):

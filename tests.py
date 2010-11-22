@@ -20,7 +20,7 @@ settings.INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.flatpages',
     'guardian',
-    'guardian.tests',
+    'guardian.tests.app',
 )
 
 def main():

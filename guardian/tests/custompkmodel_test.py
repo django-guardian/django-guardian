@@ -1,8 +1,8 @@
 from django.contrib.auth.models import User
 from django.test import TestCase
 
-from guardian.shortcuts import assign, remove_perm, get_perms
-from guardian.tests.models import KeyValue
+from guardian.shortcuts import assign, remove_perm
+from guardian.tests.app.models import KeyValue
 
 class CustomPKModelTest(TestCase):
     """

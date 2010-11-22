@@ -13,7 +13,7 @@ from guardian.backends import ObjectPermissionBackend
 from guardian.exceptions import GuardianError, NotUserNorGroup,\
     ObjectNotPersisted, WrongAppError
 
-from guardian.tests.models import Keycard
+from guardian.tests.app.models import Keycard
 
 class UserPermissionTests(TestCase):
     fixtures = ['tests.json']
