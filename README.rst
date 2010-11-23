@@ -54,6 +54,28 @@ Of course our agent jack here would not be able to *change_group* globally::
     >>> jack.has_perm('change_group')
     False
 
+Admin integration
+-----------------
+
+Replace ``admin.ModelAdmin`` with ``GuardedModelAdmin`` for those models
+which should have object permissions support within admin panel.
+
+For example::
+
+    from django.contrib import admin
+    from myapp.models import Author
+    from guardian.admin import GuardedModelAdmin
+
+    # Old way:
+    #class AuthorAdmin(admin.ModelAdmin):
+    #    pass
+
+    # With object permissions support
+    class AuthorAdmin(GuardedModelAdmin):
+        pass
+
+    admin.site.register(Author, AuthorAdmin)
+
 Documentation
 -------------
 

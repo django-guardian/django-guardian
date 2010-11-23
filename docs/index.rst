@@ -12,12 +12,12 @@ providing extra *authentication backend*.
 - AnonymousUser support
 - High level API
 - Heavely tested
+- Django's admin integration
+- Decorators
 
 **Incoming**
 
-- Django's admin integration
-- Management commands
-- Decorators
+- Admin templates for grappelli_
 
 Documentation
 =============
@@ -38,6 +38,8 @@ Documentation
    assign
    check
    remove
+
+   admin-integration
 
 **Development**
 
@@ -79,6 +81,7 @@ Other topics
 .. _django-authority: http://bitbucket.org/jezdez/django-authority/
 .. _django-permissions: http://bitbucket.org/diefenbach/django-permissions/
 .. _issue-tracker: http://github.com/lukaszb/django-guardian
+.. _grappelli: http://code.google.com/p/django-grappelli/
 
 .. [1] See http://docs.djangoproject.com/en/1.2/topics/auth/#handling-object-permissions
    for more detail.
