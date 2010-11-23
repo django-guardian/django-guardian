@@ -34,6 +34,7 @@ setup(
                    'License :: OSI Approved :: BSD License',
                    'Operating System :: OS Independent',
                    'Programming Language :: Python',
+                   'Topic :: Security',
     ],
     test_suite='tests.main',
 )
