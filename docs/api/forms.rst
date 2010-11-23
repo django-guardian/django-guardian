@@ -8,15 +8,6 @@ Forms
 Return to :ref:`api`.
 
 
-.. form:: BaseObjectPermissionsForm
-
-BaseObjectPermissionsForm
--------------------------
-
-.. autoclass:: guardian.forms.BaseObjectPermissionsForm
-   :members:
-
-
 .. form:: UserObjectPermissionsForm
 
 UserObjectPermissionsForm
@@ -24,6 +15,7 @@ UserObjectPermissionsForm
 
 .. autoclass:: guardian.forms.UserObjectPermissionsForm
    :members:
+   :show-inheritance:
 
 
 .. form:: GroupObjectPermissionsForm
@@ -32,5 +24,15 @@ GroupObjectPermissionsForm
 --------------------------
 
 .. autoclass:: guardian.forms.GroupObjectPermissionsForm
+   :members:
+   :show-inheritance:
+
+
+.. form:: BaseObjectPermissionsForm
+
+BaseObjectPermissionsForm
+-------------------------
+
+.. autoclass:: guardian.forms.BaseObjectPermissionsForm
    :members:
 
