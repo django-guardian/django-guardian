@@ -36,6 +36,9 @@ class BaseObjectPermission(models.Model):
         return super(BaseObjectPermission, self).save(*args, **kwargs)
 
 class UserObjectPermission(BaseObjectPermission):
+    """
+    **Manager**: :manager:`UserObjectPermissionManager`
+    """
     user = models.ForeignKey(User)
 
     objects = UserObjectPermissionManager()
@@ -44,6 +47,9 @@ class UserObjectPermission(BaseObjectPermission):
         unique_together = ['user', 'permission', 'content_type', 'object_pk']
 
 class GroupObjectPermission(BaseObjectPermission):
+    """
+    **Manager**: :manager:`GroupObjectPermissionManager`
+    """
     group = models.ForeignKey(Group)
 
     objects = GroupObjectPermissionManager()

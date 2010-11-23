@@ -8,11 +8,16 @@ Models
 Return to :ref:`api`.
 
 
+.. model:: BaseObjectPermission
+
 BaseObjectPermission
 --------------------
 
 .. autoclass:: guardian.models.BaseObjectPermission
    :members:
+
+
+.. model:: UserObjectPermission
 
 UserObjectPermission
 --------------------
@@ -20,15 +25,12 @@ UserObjectPermission
 .. autoclass:: guardian.models.UserObjectPermission
    :members:
 
-.. autoclass:: guardian.managers.UserObjectPermissionManager
-   :members:
+
+.. model:: GroupObjectPermission
 
 GroupObjectPermission
 ---------------------
 
 .. autoclass:: guardian.models.GroupObjectPermission
-   :members:
-
-.. autoclass:: guardian.managers.GroupObjectPermissionManager
    :members:
 
