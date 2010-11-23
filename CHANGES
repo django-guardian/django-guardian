@@ -1,8 +1,16 @@
+Release 1.0.0.pre (Nov 23, 2010)
+================================
+
+* Added admin integration
+* Added reusable forms for object permissions management
+
+
 Release 0.2.3 (Nov 17, 2010)
 ============================
 
 * Added ``guardian.shortcuts.get_users_with_perms`` function
 * Added AUTHORS file
+
 
 Release 0.2.2 (Oct 19, 2010)
 ============================
