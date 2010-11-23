@@ -1,11 +1,102 @@
-{% extends "richtemplates/base.html" %}
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="{{ LANGUAGE_CODE }}" lang="{{ LANGUAGE_CODE }}">
+{% load i18n richtemplates_tags %}
+<head>
+    {% block head %}
+    <title>{% block title %}django-guardian - example project{% endblock %}</title>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+    
+    {% block head-css %}
+    <link rel="stylesheet" type="text/css" href="{{ RICHTEMPLATES_MEDIA_URL }}css/style.css" />
+    {% endblock %}
 
-{% block title %}django-guardian - example project{% endblock %}
-{% block top %}
-    {% comment %}You may specify your logo here{% endcomment %}
-    {#<img id="top_logo" src="{{ MEDIA_URL }}img/logo.png"/>#}
-{% endblock %}
+    {% block head-js %}
+    <script src="{{ RICHTEMPLATES_MEDIA_URL }}js/jquery-1.4.2.min.js" type="text/javascript"></script>
+    <script src="{{ RICHTEMPLATES_MEDIA_URL }}js/jquery-ui-1.8.custom.min.js" type="text/javascript"></script>
+    <script src="{{ RICHTEMPLATES_MEDIA_URL }}js/jquery.tipsy.js" type="text/javascript"></script>
+    <script src="{{ RICHTEMPLATES_MEDIA_URL }}js/jquery.togglable.0.1.min.js" type="text/javascript"></script>
+    <script src="{{ RICHTEMPLATES_MEDIA_URL }}js/common.js" type="text/javascript"></script>
+    {% endblock %}
 
-{% block menu-top %}
-    {% include "layout/menu_top.html" %}
-{% endblock %}
+    {% block extra-head %}{% endblock %}
+    {% endblock %}
+</head>
+
+
+<body{% block body-attrs %}{% endblock %}>
+{% block body %}
+    {% block top %}
+        <div id="top">
+        </div>
+    {% endblock %}
+    {% block menu-top %}
+        {% include "layout/menu_top.html" %}
+    {% endblock %}
+    {% block breadcrumbs %}{% endblock %}
+    <div id="body-content">
+        
+        {# Message Box #}
+        {# For new message framework, available since Django 1.2 #}
+        {% block messages-block %}
+        {% if messages %}
+        <ul id="global-messages" class="messages">
+            {% for message in messages %}
+            <li class="message message-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">{{ message }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% endblock messages-block %}
+
+        {% block content %}
+        
+		    <!-- Column Left -->
+	        <div id="col_left">
+	        {% block col-left %}
+				<div class="richtemplates-panel">
+                    <h5>{% block col-left-title %}Left panel title{% endblock %}</h5>
+		            <div class="richtemplates-panel-content">
+		                {% block col-left-content %}{% endblock %}
+		            </div>
+		        </div>
+				<!-- Add extra things if needed -->
+		        {% block col-left-extra %}{% endblock %}
+		    {% endblock col-left %}
+	        </div>
+	        
+			<!-- Column Main -->
+			<div id="col_main">
+			{% block col-main %}
+		        <div class="richtemplates-panel">
+		            <h5>{% block col-main-title %}Left panel title{% endblock %}</h5>
+		            <div class="richtemplates-panel-content">
+		                {% block col-main-content %}{% endblock %}
+		            </div>
+		        
+				</div>
+				<!-- Add extra things if needed -->
+                {% block col-main-extra %}{% endblock %}
+			{% endblock col-main %}
+			</div>
+        
+        {% endblock content %}
+		
+    </div>
+    {# Footer #}
+    <div id="footer-wrapper">
+        {% block footer-wrapper %}
+        <div id="footer">
+            {% block footer %}
+            <p>{% now "Y" %} &copy; <a href="http://bitbucket.org/lukaszb/django-richtemplates/"
+                                       class="show-tipsy"
+                                       title="Go to richtemplates homepage">django-richtemplates</a></p>
+            {% endblock %}
+        </div>
+        {% endblock footer-wrapper %}
+    </div>
+{% endblock body %}
+
+{% block extra-body %}{% endblock %}
+{% block end-body %}{% endblock %}
+</body>
+</html>
+

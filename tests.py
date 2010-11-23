@@ -12,6 +12,7 @@ import sys
 os.environ["DJANGO_SETTINGS_MODULE"] = 'example_project.settings'
 from example_project import settings
 
+settings.DJALOG_LEVEL = 40
 settings.INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.sessions',
@@ -21,6 +22,7 @@ settings.INSTALLED_APPS = (
     'django.contrib.flatpages',
     'guardian',
     'guardian.tests.app',
+    'richtemplates',
 )
 
 def main():
