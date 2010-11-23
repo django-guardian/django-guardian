@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.contrib import messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth.models import User, Group
+from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
 from django.utils.datastructures import SortedDict
@@ -113,7 +114,7 @@ class GuardedModelAdmin(admin.ModelAdmin):
                 view=self.admin_site.admin_view(
                     self.obj_perms_manage_group_view),
                 name='%s_%s_permissions_manage_group' % info),
-        ) + super(GuardedModelAdmin, self).get_urls()
+        )
         return myurls + urls
 
     def get_obj_perms_base_context(self, request, obj):
@@ -152,16 +153,32 @@ class GuardedModelAdmin(admin.ModelAdmin):
         if request.method == 'POST' and 'submit_manage_user' in request.POST:
             user_form = UserManage(request.POST)
             group_form = GroupManage()
+            info = (
+                self.admin_site.name,
+                self.model._meta.app_label,
+                self.model._meta.module_name
+            )
             if user_form.is_valid():
                 user_id = user_form.cleaned_data['user'].id
-                url = request.META['PATH_INFO'] + 'user-manage/%d/' % user_id
+                url = reverse(
+                    '%s:%s_%s_permissions_manage_user' % info,
+                    args=[obj.pk, user_id]
+                )
                 return redirect(url)
         elif request.method == 'POST' and 'submit_manage_group' in request.POST:
             user_form = UserManage()
             group_form = GroupManage(request.POST)
+            info = (
+                self.admin_site.name,
+                self.model._meta.app_label,
+                self.model._meta.module_name
+            )
             if group_form.is_valid():
                 group_id = group_form.cleaned_data['group'].id
-                url = request.META['PATH_INFO'] + 'group-manage/%d/' % group_id
+                url = reverse(
+                    '%s:%s_%s_permissions_manage_group' % info,
+                    args=[obj.pk, group_id]
+                )
                 return redirect(url)
         else:
             user_form = UserManage()
@@ -174,7 +191,7 @@ class GuardedModelAdmin(admin.ModelAdmin):
         context['group_form'] = group_form
 
         return render_to_response(self.obj_perms_manage_template,
-            context, RequestContext(request))
+            context, RequestContext(request, current_app=self.admin_site.name))
 
     def get_obj_perms_manage_template(self):
         """
@@ -195,7 +212,16 @@ class GuardedModelAdmin(admin.ModelAdmin):
         if request.method == 'POST' and form.is_valid():
             form.save_obj_perms()
             messages.success(request, "Permissions saved")
-            return redirect(request.META['PATH_INFO'])
+            info = (
+                self.admin_site.name,
+                self.model._meta.app_label,
+                self.model._meta.module_name
+            )
+            url = reverse(
+                '%s:%s_%s_permissions_manage_user' % info,
+                args=[obj.pk, user.id]
+            )
+            return redirect(url)
 
         context = self.get_obj_perms_base_context(request, obj)
         context['user_obj'] = user
@@ -203,7 +229,7 @@ class GuardedModelAdmin(admin.ModelAdmin):
         context['form'] = form
 
         return render_to_response(self.get_obj_perms_manage_user_template(),
-            context, RequestContext(request))
+            context, RequestContext(request, current_app=self.admin_site.name))
 
     def get_obj_perms_manage_user_template(self):
         """
@@ -231,7 +257,16 @@ class GuardedModelAdmin(admin.ModelAdmin):
         if request.method == 'POST' and form.is_valid():
             form.save_obj_perms()
             messages.success(request, _("Permissions saved"))
-            return redirect(request.META['PATH_INFO'])
+            info = (
+                self.admin_site.name,
+                self.model._meta.app_label,
+                self.model._meta.module_name
+            )
+            url = reverse(
+                '%s:%s_%s_permissions_manage_group' % info,
+                args=[obj.pk, group.id]
+            )
+            return redirect(url)
 
         context = self.get_obj_perms_base_context(request, obj)
         context['group_obj'] = group
@@ -239,7 +274,7 @@ class GuardedModelAdmin(admin.ModelAdmin):
         context['form'] = form
 
         return render_to_response(self.get_obj_perms_manage_group_template(),
-            context, RequestContext(request))
+            context, RequestContext(request, current_app=self.admin_site.name))
 
     def get_obj_perms_manage_group_template(self):
         """
