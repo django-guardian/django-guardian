@@ -111,7 +111,7 @@ class UserObjectPermissionsForm(BaseObjectPermissionsForm):
         def my_view(request, post_slug, user_id):
             user = get_object_or_404(User, id=user_id)
             post = get_object_or_404(Post, slug=post_slug)
-            form = UserObjectPermissionsForm(request.POST or None)
+            form = UserObjectPermissionsForm(user, post, request.POST or None)
             if request.method == 'POST' and form.is_valid():
                 form.save_obj_perms()
             ...
@@ -158,7 +158,7 @@ class GroupObjectPermissionsForm(BaseObjectPermissionsForm):
         def my_view(request, post_slug, group_id):
             group = get_object_or_404(Group, id=group_id)
             post = get_object_or_404(Post, slug=post_slug)
-            form = GroupObjectPermissionsForm(request.POST or None)
+            form = GroupObjectPermissionsForm(group, post, request.POST or None)
             if request.method == 'POST' and form.is_valid():
                 form.save_obj_perms()
             ...
