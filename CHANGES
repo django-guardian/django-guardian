@@ -1,3 +1,10 @@
+Release 1.0.0.alpha1 (Nov 23, 2010)
+===================================
+
+* Fixed admin templates not included in MANIFEST.in
+* Fixed admin integration codes
+
+
 Release 1.0.0.pre (Nov 23, 2010)
 ================================
 
