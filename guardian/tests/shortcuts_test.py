@@ -47,6 +47,11 @@ class AssignTest(ObjectPermissionTestCase):
             user_or_group="Not a Model",
             obj=self.flatpage)
 
+    def test_global_wrong_perm(self):
+        self.assertRaises(ValueError, assign,
+            perm="change_site", # for global permissions must provide app_label
+            user_or_group=self.user)
+
     def test_user_assign(self):
         assign("change_flatpage", self.user, self.flatpage)
         assign("change_flatpage", self.group, self.flatpage)
@@ -60,6 +65,18 @@ class AssignTest(ObjectPermissionTestCase):
         self.assertTrue(check.has_perm("change_flatpage", self.flatpage))
         self.assertTrue(check.has_perm("delete_flatpage", self.flatpage))
 
+    def test_user_assign_global(self):
+        perm = assign("flatpages.change_flatpage", self.user)
+        self.assertTrue(self.user.has_perm("flatpages.change_flatpage"))
+        self.assertTrue(isinstance(perm, Permission))
+
+    def test_group_assing_global(self):
+        perm = assign("flatpages.change_flatpage", self.group)
+
+        self.assertTrue(self.user.has_perm("flatpages.change_flatpage"))
+        self.assertTrue(isinstance(perm, Permission))
+
+
 class RemovePermTest(ObjectPermissionTestCase):
     """
     Tests object permissions removal.
@@ -69,6 +86,11 @@ class RemovePermTest(ObjectPermissionTestCase):
             perm="change_object",
             user_or_group="Not a Model",
             obj=self.flatpage)
+
+    def test_global_wrong_perm(self):
+        self.assertRaises(ValueError, remove_perm,
+            perm="change_site", # for global permissions must provide app_label
+            user_or_group=self.user)
 
     def test_user_remove_perm(self):
         # assign perm first
@@ -83,6 +105,24 @@ class RemovePermTest(ObjectPermissionTestCase):
 
         check = ObjectPermissionChecker(self.group)
         self.assertFalse(check.has_perm("change_flatpage", self.flatpage))
+
+    def test_user_remove_perm_global(self):
+        # assign perm first
+        perm = "flatpages.change_flatpage"
+        assign(perm, self.user)
+        remove_perm(perm, self.user)
+        self.assertFalse(self.user.has_perm(perm))
+
+    def test_group_remove_perm_global(self):
+        # assign perm first
+        perm = "flatpages.change_flatpage"
+        assign(perm, self.group)
+        remove_perm(perm, self.group)
+        app_label, codename = perm.split('.')
+        perm_obj = Permission.objects.get(codename=codename,
+            content_type__app_label=app_label)
+        self.assertFalse(perm_obj in self.group.permissions.all())
+
 
 class GetPermsTest(ObjectPermissionTestCase):
     """
