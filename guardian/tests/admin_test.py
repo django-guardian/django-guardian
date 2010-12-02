@@ -139,7 +139,7 @@ class AdminTests(TestCase):
         response = self.client.post(url, data, follow=True)
         self.assertEqual(len(response.redirect_chain), 1)
         self.assertEqual(response.redirect_chain[0][1], 302)
-        redirect_url = url + 'group-manage/%d/' % self.user.id
+        redirect_url = url + 'group-manage/%d/' % self.group.id
         self.assertEqual(response.request['PATH_INFO'], redirect_url)
 
     def test_view_manage_group_form_wrong_group(self):
