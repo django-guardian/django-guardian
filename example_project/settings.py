@@ -19,11 +19,6 @@ DATABASES = {
     },
 }
 
-# Make sqlite3 files relative to project's directory
-for db, conf in DATABASES.items():
-    if conf['ENGINE'] == 'sqlite3' and not conf['NAME'].startswith(':'):
-        conf['NAME'] = abspath(PROJECT_ROOT, conf['NAME'])
-
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
