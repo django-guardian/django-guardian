@@ -1,3 +1,12 @@
+Release 1.0.0.alpha2 (Dec 2, 2010)
+==================================
+
+* Added possibility to operate with global permissions for assign and
+  remove_perm shortcut functions
+* Added possibility to generate PDF documentation
+* Fixed some tests
+
+
 Release 1.0.0.alpha1 (Nov 23, 2010)
 ===================================
 
