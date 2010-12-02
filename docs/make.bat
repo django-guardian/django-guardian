@@ -15,6 +15,7 @@ if "%1" == "help" (
 	:help
 	echo.Please use `make ^<target^>` where ^<target^> is one of
 	echo.  html      to make standalone HTML files
+    echo.  pdf       to make PDF document
 	echo.  dirhtml   to make HTML files named index.html in directories
 	echo.  pickle    to make pickle files
 	echo.  json      to make JSON files
@@ -108,6 +109,13 @@ if "%1" == "doctest" (
 	echo.Testing of doctests in the sources finished, look at the ^
 results in %BUILDDIR%/doctest/output.txt.
 	goto end
+)
+
+if "%1" == "pdf" (
+	%SPHINXBUILD% -b pdf %ALLSPHINXOPTS% %BUILDDIR%/pdf
+	echo.
+	echo.Build finished. The PDF files are in %BUILDDIR%/pdf.
+    goto end
 )
 
 :end
