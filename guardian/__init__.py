@@ -1,7 +1,7 @@
 """
 Implementation of per object permissions for Django 1.2.
 """
-VERSION = (1, 0, 0, 'alpha2')
+VERSION = (1, 0, 0, 'alpha3')
 
 __version__ = '.'.join((str(each) for each in VERSION[:4]))
 
