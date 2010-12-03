@@ -68,6 +68,7 @@ def clean_orphan_obj_perms():
 
 
     deleted = 0
+    # TODO: optimise
     for perm in chain(UserObjectPermission.objects.all(),
         GroupObjectPermission.objects.all()):
         if perm.content_object is None:
