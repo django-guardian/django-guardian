@@ -1,10 +1,14 @@
 """
 django-guardian helper functions/classes.
 """
+import logging
+
 from django.contrib.auth.models import User, AnonymousUser, Group
 
 from guardian.exceptions import NotUserNorGroup
 from guardian.conf.settings import ANONYMOUS_USER_ID
+
+logger = logging.getLogger(__name__)
 
 def get_anonymous_user():
     """
@@ -51,4 +55,21 @@ def get_identity(identity):
 
     raise NotUserNorGroup("User/AnonymousUser or Group instance is required "
         "(got %s)" % identity)
+
+def clean_oprhan_obj_perms():
+    from guardian.models import UserObjectPermission
+    from guardian.models import GroupObjectPermission
+
+    from itertools import chain
+
+    deleted = 0
+    for perm in chain(UserObjectPermission.objects.all(),
+        GroupObjectPermission.objects.all()):
+        if perm.content_object is None:
+            logger.debug("Removing %s (pk=%d)" % (perm, perm.pk))
+            perm.delete()
+            deleted += 1
+    logger.info("Total removed orphan object permissions instances: %d" %
+        deleted)
+    return deleted
 
