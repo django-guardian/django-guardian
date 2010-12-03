@@ -10,6 +10,7 @@ DEBUG = True
 PROJECT_ROOT = abspath(os.path.dirname(__file__))
 GUARDIAN_MODULE_PATH = abspath(PROJECT_ROOT, '..')
 sys.path.insert(0, GUARDIAN_MODULE_PATH)
+sys.path.insert(0, PROJECT_ROOT)
 
 DATABASES = {
     'default': {
