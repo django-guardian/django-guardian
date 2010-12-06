@@ -57,6 +57,18 @@ class AdminTests(TestCase):
         redirect_url = url + 'user-manage/%d/' % self.user.id
         self.assertEqual(response.request['PATH_INFO'], redirect_url)
 
+    def test_view_manage_negative_user_form(self):
+        self._login_superuser()
+        url = '/admin/guardian/keycard/%d/permissions/' % self.keycard.id
+        self.user = User.objects.create(username='negative_id_user', id=-2010)
+        data = {'user': self.user.username, 'submit_manage_user': 'submit'}
+        response = self.client.post(url, data, follow=True)
+        self.assertEqual(len(response.redirect_chain), 1)
+        self.assertEqual(response.redirect_chain[0][1], 302)
+        redirect_url = url + 'user-manage/%d/' % self.user.id
+        self.assertEqual(response.request['PATH_INFO'], redirect_url)
+
+
     def test_view_manage_user_form_wrong_user(self):
         self._login_superuser()
         url = '/admin/guardian/keycard/%d/permissions/' % self.keycard.id
@@ -141,6 +153,18 @@ class AdminTests(TestCase):
         self.assertEqual(response.redirect_chain[0][1], 302)
         redirect_url = url + 'group-manage/%d/' % self.group.id
         self.assertEqual(response.request['PATH_INFO'], redirect_url)
+
+    def test_view_manage_negative_group_form(self):
+        self._login_superuser()
+        url = '/admin/guardian/keycard/%d/permissions/' % self.keycard.id
+        self.group = Group.objects.create(name='neagive_id_group', id=-2010)
+        data = {'group': self.group.name, 'submit_manage_group': 'submit'}
+        response = self.client.post(url, data, follow=True)
+        self.assertEqual(len(response.redirect_chain), 1)
+        self.assertEqual(response.redirect_chain[0][1], 302)
+        redirect_url = url + 'group-manage/%d/' % self.group.id
+        self.assertEqual(response.request['PATH_INFO'], redirect_url)
+
 
     def test_view_manage_group_form_wrong_group(self):
         self._login_superuser()
