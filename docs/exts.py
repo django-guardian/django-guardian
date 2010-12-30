@@ -6,6 +6,11 @@ def setup(app):
         indextemplate = "pair: %s; admin",
     )
     app.add_crossref_type(
+        directivename = "command",
+        rolename      = "command",
+        indextemplate = "pair: %s; command",
+    )
+    app.add_crossref_type(
         directivename = "form",
         rolename      = "form",
         indextemplate = "pair: %s; form",

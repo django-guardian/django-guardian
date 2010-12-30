@@ -7,7 +7,7 @@ from guardian.utils import clean_orphan_obj_perms
 from guardian.shortcuts import assign
 
 
-class OrhpanedObjectPermissionsTest(TestCase):
+class OrphanedObjectPermissionsTest(TestCase):
 
     def setUp(self):
         # Create objects for which we would assing obj perms

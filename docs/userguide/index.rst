@@ -9,6 +9,6 @@ User Guide
     assign
     check
     remove
-
     admin-integration
+    caveats
     

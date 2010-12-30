@@ -1,5 +1,5 @@
 """
-django-guardian helper functions/classes.
+django-guardian helper functions.
 """
 import logging
 from django.contrib.auth.models import User, AnonymousUser, Group
@@ -24,9 +24,11 @@ def get_identity(identity):
     instead - it is convenient and needed for authorization backend to support
     anonymous users.
 
-    If cannot return proper identity instance ``NotUserNorGroup`` is raised.
+    :param identity: either ``User`` or ``Group`` instance
 
-    Examples::
+    :raises ``NotUserNorGroup``: if cannot return proper identity instance
+
+    **Examples**::
 
        >>> user = User.objects.create(username='joe')
        >>> get_identity(user)

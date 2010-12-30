@@ -6,14 +6,16 @@ API Reference
 .. toctree::
    :maxdepth: 2
 
-   admin
-   backends
-   core
-   decorators
-   forms
-   managers
-   models
-   shortcuts
+   guardian.admin
+   guardian.backends
+   guardian.core
+   guardian.decorators
+   guardian.forms
+   guardian.management.commands
+   guardian.managers
+   guardian.models
+   guardian.shortcuts
+   guardian.utils
    
-   guardian_tags
+   guardian.templatetags.guardian_tags
 
