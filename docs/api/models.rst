@@ -5,8 +5,6 @@ Models
 
 .. automodule:: guardian.models
 
-Return to :ref:`api`.
-
 
 .. model:: BaseObjectPermission
 

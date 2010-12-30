@@ -16,7 +16,7 @@ import sys, os
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-sys.path.append(os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('..'))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__))))
 os.environ['DJANGO_SETTINGS_MODULE'] = 'example_project.settings'
 guardian = __import__('guardian')
@@ -211,7 +211,7 @@ pdf_documents = [
         u'Lukasz Balcerzak'),
 ]
 pdf_stylesheets = ['sphinx','kerning','a4']
-pdf_break_level = 1
+pdf_break_level = 2
 pdf_inline_footnotes = True
 #pdf_extensions = ['vectorpdf', 'dotted_toc']
 

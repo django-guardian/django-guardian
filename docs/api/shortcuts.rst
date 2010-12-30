@@ -5,7 +5,6 @@ Shortcuts
 
 .. automodule:: guardian.shortcuts
 
-Return to :ref:`api`.
 
 .. _api-shortcuts-assign:
 

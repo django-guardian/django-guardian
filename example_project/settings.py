@@ -12,6 +12,7 @@ GUARDIAN_MODULE_PATH = abspath(PROJECT_ROOT, '..')
 sys.path.insert(0, GUARDIAN_MODULE_PATH)
 sys.path.insert(0, PROJECT_ROOT)
 
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -35,7 +36,7 @@ INSTALLED_APPS = (
     'richtemplates',
     'django_extensions',
     'registration',
-    'south',
+    #'south',
     'django_coverage',
 
     'posts',

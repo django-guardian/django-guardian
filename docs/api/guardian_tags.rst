@@ -5,7 +5,6 @@ Template tags
 
 .. automodule:: guardian.templatetags.guardian_tags
 
-Return to :ref:`api`.
 
 get_obj_perms
 -------------

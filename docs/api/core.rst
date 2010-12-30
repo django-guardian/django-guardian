@@ -5,8 +5,6 @@ Core
 
 .. automodule:: guardian.core
 
-Return to :ref:`api`.
-
 
 ObjectPermissionChecker
 -----------------------

@@ -5,8 +5,6 @@ Admin
 
 .. automodule:: guardian.admin
 
-Return to :ref:`api`.
-
 
 .. admin:: GuardedModelAdmin
 

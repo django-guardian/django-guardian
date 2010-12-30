@@ -3,5 +3,5 @@
 Changelog
 ---------
 
-.. include:: ../CHANGES
+.. include:: ../../CHANGES
 

@@ -5,8 +5,6 @@ Managers
 
 .. automodule:: guardian.managers
 
-Return to :ref:`api`.
-
 
 .. manager:: UserObjectPermissionManager
 

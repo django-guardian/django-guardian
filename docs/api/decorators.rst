@@ -5,7 +5,6 @@ Decorators
 
 .. automodule:: guardian.decorators
 
-Return to :ref:`api`.
 
 permission_required
 -------------------

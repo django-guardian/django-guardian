@@ -5,8 +5,6 @@ Backends
 
 .. automodule:: guardian.backends
 
-Return to :ref:`api`.
-
 
 ObjectPermissionBackend
 -----------------------

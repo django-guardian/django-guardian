@@ -5,8 +5,6 @@ Forms
 
 .. automodule:: guardian.forms
 
-Return to :ref:`api`.
-
 
 .. form:: UserObjectPermissionsForm
 
