@@ -1,4 +1,5 @@
 from django import forms
+from django.conf import settings
 from django.conf.urls.defaults import patterns, url
 from django.contrib import admin
 from django.contrib import messages
@@ -190,7 +191,7 @@ class GuardedModelAdmin(admin.ModelAdmin):
         context['user_form'] = user_form
         context['group_form'] = group_form
 
-        return render_to_response(self.obj_perms_manage_template,
+        return render_to_response(self.get_obj_perms_manage_template(),
             context, RequestContext(request, current_app=self.admin_site.name))
 
     def get_obj_perms_manage_template(self):
@@ -198,6 +199,8 @@ class GuardedModelAdmin(admin.ModelAdmin):
         Returns main object permissions admin template.  May be overridden if
         need to change it dynamically.
         """
+        if 'grappelli' in settings.INSTALLED_APPS:
+            return 'admin/guardian/grappelli/obj_perms_manage.html'
         return self.obj_perms_manage_template
 
     def obj_perms_manage_user_view(self, request, object_pk, user_id):
@@ -236,6 +239,8 @@ class GuardedModelAdmin(admin.ModelAdmin):
         Returns object permissions for user admin template.  May be overridden
         if need to change it dynamically.
         """
+        if 'grappelli' in settings.INSTALLED_APPS:
+            return 'admin/guardian/grappelli/obj_perms_manage_user.html'
         return self.obj_perms_manage_user_template
 
     def get_obj_perms_manage_user_form(self):
@@ -281,6 +286,8 @@ class GuardedModelAdmin(admin.ModelAdmin):
         Returns object permissions for group admin template.  May be overridden
         if need to change it dynamically.
         """
+        if 'grappelli' in settings.INSTALLED_APPS:
+            return 'admin/guardian/grappelli/obj_perms_manage_group.html'
         return self.obj_perms_manage_group_template
 
     def get_obj_perms_manage_group_form(self):

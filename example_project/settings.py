@@ -41,6 +41,11 @@ INSTALLED_APPS = (
 
     'posts',
 )
+try:
+    import grappelli
+    INSTALLED_APPS = ('grappelli',) + INSTALLED_APPS
+except ImportError:
+    pass
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',

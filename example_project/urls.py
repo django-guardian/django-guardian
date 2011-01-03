@@ -24,3 +24,8 @@ if settings.DEBUG:
             {'document_root': settings.MEDIA_ROOT}),
 )
 
+if 'grappelli' in settings.INSTALLED_APPS:
+    urlpatterns += patterns('',
+        (r'^grappelli/', include('grappelli.urls')),
+    )
+
