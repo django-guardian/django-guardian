@@ -14,8 +14,13 @@ class ObjectPermissionBackend(object):
 
     def has_perm(self, user_obj, perm, obj=None):
         """
-        Returns True if given ``user_obj`` has ``perm`` for ``obj``. If no
-        ``obj`` is given, False is returned.
+        Returns ``True`` if given ``user_obj`` has ``perm`` for ``obj``. If no
+        ``obj`` is given, ``False`` is returned.
+
+        .. note::
+
+           Remember, that if user is not *active*, all checks would return
+           ``False``.
 
         Main difference between Django's ``ModelBackend`` is that we can pass
         ``obj`` instance here and ``perm`` doesn't have to contain
