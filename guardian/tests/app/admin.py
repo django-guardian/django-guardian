@@ -1,10 +1,12 @@
 from django.contrib import admin
+from django.contrib.sites.models import Site
+#from django.contrib.sites.admin import SiteAdmin
 
-from guardian.admin import GuardedModelAdmin
-from guardian.tests.app.models import Keycard
+#from guardian.admin import GuardedModelAdmin
 
-class KeycardGuardedAdmin(GuardedModelAdmin):
-    pass
+#class SiteGuardedAdmin(GuardedModelAdmin, SiteAdmin):
+    #pass
 
-admin.site.register(Keycard, KeycardGuardedAdmin)
+#admin.site.unregister(Site)
+#admin.site.register(Site, SiteGuardedAdmin)
 

@@ -72,7 +72,7 @@
         </div>
         <div class="module manage-perms">
             {% for field in user_form %}
-                {% include "admin/guardian/grappelli/field.html" %}
+                {% include "admin/guardian/contrib/grappelli/field.html" %}
             {% endfor %}
             <ul class="submit-row">
                 <li class="left submit-button-container">
@@ -124,7 +124,7 @@
                         {% endfor %}
                         <td>
                             <a href="group-manage/{{ user.id }}/">{% trans "Edit" %}</a>
-                        </td>            
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -132,7 +132,7 @@
         </div>
         <div class="module manage-perms">
             {% for field in group_form %}
-                {% include "admin/guardian/grappelli/field.html" %}
+                {% include "admin/guardian/contrib/grappelli/field.html" %}
             {% endfor %}
             <ul class="submit-row">
                 <li class="left submit-button-container">

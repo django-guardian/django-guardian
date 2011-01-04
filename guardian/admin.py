@@ -198,9 +198,14 @@ class GuardedModelAdmin(admin.ModelAdmin):
         """
         Returns main object permissions admin template.  May be overridden if
         need to change it dynamically.
+
+        .. note::
+           If ``INSTALLED_APPS`` contains ``grappelli`` this function would
+           return ``"admin/guardian/grappelli/obj_perms_manage.html"``.
+
         """
         if 'grappelli' in settings.INSTALLED_APPS:
-            return 'admin/guardian/grappelli/obj_perms_manage.html'
+            return 'admin/guardian/contrib/grappelli/obj_perms_manage.html'
         return self.obj_perms_manage_template
 
     def obj_perms_manage_user_view(self, request, object_pk, user_id):
@@ -238,9 +243,14 @@ class GuardedModelAdmin(admin.ModelAdmin):
         """
         Returns object permissions for user admin template.  May be overridden
         if need to change it dynamically.
+
+        .. note::
+           If ``INSTALLED_APPS`` contains ``grappelli`` this function would
+           return ``"admin/guardian/grappelli/obj_perms_manage_user.html"``.
+
         """
         if 'grappelli' in settings.INSTALLED_APPS:
-            return 'admin/guardian/grappelli/obj_perms_manage_user.html'
+            return 'admin/guardian/contrib/grappelli/obj_perms_manage_user.html'
         return self.obj_perms_manage_user_template
 
     def get_obj_perms_manage_user_form(self):
@@ -285,9 +295,14 @@ class GuardedModelAdmin(admin.ModelAdmin):
         """
         Returns object permissions for group admin template.  May be overridden
         if need to change it dynamically.
+
+        .. note::
+           If ``INSTALLED_APPS`` contains ``grappelli`` this function would
+           return ``"admin/guardian/grappelli/obj_perms_manage_group.html"``.
+
         """
         if 'grappelli' in settings.INSTALLED_APPS:
-            return 'admin/guardian/grappelli/obj_perms_manage_group.html'
+            return 'admin/guardian/contrib/grappelli/obj_perms_manage_group.html'
         return self.obj_perms_manage_group_template
 
     def get_obj_perms_manage_group_form(self):
@@ -334,6 +349,4 @@ class GroupManage(forms.Form):
         except Group.DoesNotExist:
             raise forms.ValidationError(
                 self.fields['group'].error_messages['does_not_exist'])
-
-
 

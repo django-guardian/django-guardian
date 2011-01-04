@@ -12,7 +12,7 @@
      {% if has_change_permission %}<a href="../../../../">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %} &rsaquo; 
      {% if has_change_permission %}<a href="../../../">{{ original|truncatewords:"18" }}</a>{% else %}{{ original|truncatewords:"18" }}{% endif %} &rsaquo;
      {% if has_change_permission %}<a href="../../">{% trans "Object permissions" %}</a>{% else %}{% trans "Object permissions" %}{% endif %} &rsaquo;
-     {% trans "Manage user" %}: {{ user_obj|truncatewords:"18" }}
+     {% trans "Manage group" %}: {{ group_obj|truncatewords:"18" }}
 </div>
 {% endif %}{% endblock %}
 
@@ -33,14 +33,14 @@
         </div>
         <div class="row">
             <div class="column span-4">
-                <label class="required">{% trans "User" %}</label>
+                <label class="required">{% trans "Group" %}</label>
             </div>
             <div class="column span-flexible">
-                <p class="readonly">{{ user_obj }}</p>
+                <p class="readonly">{{ group_obj }}</p>
             </div>
         </div>
         {% for field in form %}
-            {% include "admin/guardian/grappelli/field.html" %}
+            {% include "admin/guardian/contrib/grappelli/field.html" %}
         {% endfor %}
     </fieldset>
     <div class="module footer">
@@ -51,4 +51,3 @@
 </form>
 </div>
 {% endblock %}
-
