@@ -4,8 +4,7 @@ from django import forms
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.models import User, Group
-from django.contrib.sites.models import Site
-from django.contrib.sites.admin import SiteAdmin
+from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.test import TestCase
 from django.test.client import Client
@@ -14,11 +13,10 @@ from guardian.admin import GuardedModelAdmin
 from guardian.shortcuts import get_perms
 from guardian.shortcuts import get_perms_for_model
 
-class SiteGuardedAdmin(GuardedModelAdmin, SiteAdmin):
+class ContentTypeGuardedAdmin(GuardedModelAdmin):
     pass
 
-admin.site.unregister(Site)
-admin.site.register(Site, SiteGuardedAdmin)
+admin.site.register(ContentType, ContentTypeGuardedAdmin)
 
 
 class AdminTests(TestCase):
@@ -29,7 +27,8 @@ class AdminTests(TestCase):
         self.user = User.objects.create_user('joe', 'joe@example.com', 'joe')
         self.group = Group.objects.create(name='group')
         self.client = Client()
-        self.obj = Site.objects.create(name='foo', domain='bar')
+        self.obj = ContentType.objects.create(name='foo', model='bar',
+            app_label='fake-for-guardian-tests')
         self.obj_info = self.obj._meta.app_label, self.obj._meta.module_name
 
     def tearDown(self):

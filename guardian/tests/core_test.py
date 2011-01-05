@@ -3,13 +3,11 @@ from itertools import chain
 from django.test import TestCase
 from django.contrib.auth.models import User, Group, Permission, AnonymousUser
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.flatpages.models import FlatPage
 
 from guardian.core import ObjectPermissionChecker
 from guardian.models import UserObjectPermission, GroupObjectPermission
 from guardian.exceptions import NotUserNorGroup
 from guardian.shortcuts import assign
-from guardian.tests.app.models import Keycard
 
 class ObjectPermissionTestCase(TestCase):
     fixtures = ['tests.json']
@@ -19,7 +17,8 @@ class ObjectPermissionTestCase(TestCase):
         self.group = Group.objects.get(name='jackGroup')
         UserObjectPermission.objects.all().delete()
         GroupObjectPermission.objects.all().delete()
-        self.flatpage = FlatPage.objects.create(title='Any page', url='/any/')
+        self.ctype = ContentType.objects.create(name='foo', model='bar',
+            app_label='fake-for-guardian-tests')
 
 class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
 
@@ -69,66 +68,68 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
 
     def test_init(self):
         self.assertRaises(NotUserNorGroup, ObjectPermissionChecker,
-            user_or_group=Keycard())
+            user_or_group=ContentType())
         self.assertRaises(NotUserNorGroup, ObjectPermissionChecker)
 
     def test_anonymous_user(self):
         user = AnonymousUser()
         check = ObjectPermissionChecker(user)
-        # assert anonymous user has no object permissions at all for flatpage
-        self.assertTrue( [] == list(check.get_perms(self.flatpage)) )
+        # assert anonymous user has no object permissions at all for obj
+        self.assertTrue( [] == list(check.get_perms(self.ctype)) )
 
     def test_superuser(self):
         user = User.objects.create(username='superuser', is_superuser=True)
         check = ObjectPermissionChecker(user)
-        ctype = ContentType.objects.get_for_model(self.flatpage)
+        ctype = ContentType.objects.get_for_model(self.ctype)
         perms = sorted(chain(*Permission.objects
             .filter(content_type=ctype)
             .values_list('codename')))
-        self.assertEqual(perms, check.get_perms(self.flatpage))
+        self.assertEqual(perms, check.get_perms(self.ctype))
         for perm in perms:
-            self.assertTrue(check.has_perm(perm, self.flatpage))
+            self.assertTrue(check.has_perm(perm, self.ctype))
 
     def test_not_active_superuser(self):
         user = User.objects.create(username='not_active_superuser',
             is_superuser=True, is_active=False)
         check = ObjectPermissionChecker(user)
-        ctype = ContentType.objects.get_for_model(self.flatpage)
+        ctype = ContentType.objects.get_for_model(self.ctype)
         perms = sorted(chain(*Permission.objects
             .filter(content_type=ctype)
             .values_list('codename')))
-        self.assertEqual(check.get_perms(self.flatpage), [])
+        self.assertEqual(check.get_perms(self.ctype), [])
         for perm in perms:
-            self.assertFalse(check.has_perm(perm, self.flatpage))
+            self.assertFalse(check.has_perm(perm, self.ctype))
 
     def test_not_active_user(self):
         user = User.objects.create(username='notactive')
-        assign("change_flatpage", user, self.flatpage)
+        assign("change_contenttype", user, self.ctype)
 
         # new ObjectPermissionChecker is created for each User.has_perm call
-        self.assertTrue(user.has_perm("change_flatpage", self.flatpage))
+        self.assertTrue(user.has_perm("change_contenttype", self.ctype))
         user.is_active = False
-        self.assertFalse(user.has_perm("change_flatpage", self.flatpage))
+        self.assertFalse(user.has_perm("change_contenttype", self.ctype))
 
         # use on one checker only (as user's is_active attr should be checked
         # before try to use cache
         user = User.objects.create(username='notactive-cache')
-        assign("change_flatpage", user, self.flatpage)
+        assign("change_contenttype", user, self.ctype)
 
         check = ObjectPermissionChecker(user)
-        self.assertTrue(check.has_perm("change_flatpage", self.flatpage))
+        self.assertTrue(check.has_perm("change_contenttype", self.ctype))
         user.is_active = False
-        self.assertFalse(check.has_perm("change_flatpage", self.flatpage))
+        self.assertFalse(check.has_perm("change_contenttype", self.ctype))
 
     def test_get_perms(self):
         group = Group.objects.create(name='group')
-        key1 = Keycard.objects.create(key='key1')
-        key2 = Keycard.objects.create(key='key2')
+        obj1 = ContentType.objects.create(name='ct1', model='foo',
+            app_label='guardian-tests')
+        obj2 = ContentType.objects.create(name='ct2', model='bar',
+            app_label='guardian-tests')
 
         assign_perms = {
             group: ('change_group', 'delete_group'),
-            key1: ('change_keycard', 'can_use_keycard', 'can_suspend_keycard'),
-            key2: ('delete_keycard', 'can_suspend_keycard'),
+            obj1: ('change_contenttype', 'delete_contenttype'),
+            obj2: ('delete_contenttype',),
         }
 
         check = ObjectPermissionChecker(self.user)

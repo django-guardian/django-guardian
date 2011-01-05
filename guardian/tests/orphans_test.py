@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User, Group
-from django.contrib.sites.models import Site
+from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.test import TestCase
 
@@ -13,8 +13,11 @@ class OrphanedObjectPermissionsTest(TestCase):
         # Create objects for which we would assing obj perms
         self.target_user1 = User.objects.create(username='user1')
         self.target_group1 = Group.objects.create(name='group1')
-        self.target_site1 = Site.objects.create(name='site1')
-        self.target_site2 = Site.objects.create(name='site1')
+        self.target_obj1 = ContentType.objects.create(name='ct1', model='foo',
+            app_label='fake-for-guardian-tests')
+        self.target_obj2 = ContentType.objects.create(name='ct2', model='bar',
+            app_label='fake-for-guardian-tests')
+
 
         self.user = User.objects.create(username='user')
         self.group = Group.objects.create(name='group')
@@ -25,8 +28,8 @@ class OrphanedObjectPermissionsTest(TestCase):
         target_perms = {
             self.target_user1: ["change_user"],
             self.target_group1: ["delete_group"],
-            self.target_site1: ["change_site", "delete_site"],
-            self.target_site2: ["change_site"],
+            self.target_obj1: ["change_contenttype", "delete_contenttype"],
+            self.target_obj2: ["change_contenttype"],
         }
         obj_perms_count = sum([len(val) for key, val in target_perms.items()])
         for target, perms in target_perms.items():
@@ -59,8 +62,8 @@ class OrphanedObjectPermissionsTest(TestCase):
         target_perms = {
             self.target_user1: ["change_user"],
             self.target_group1: ["delete_group"],
-            self.target_site1: ["change_site", "delete_site"],
-            self.target_site2: ["change_site"],
+            self.target_obj1: ["change_contenttype", "delete_contenttype"],
+            self.target_obj2: ["change_contenttype"],
         }
         for target, perms in target_perms.items():
             target.__old_pk = target.pk # Store pkeys
