@@ -268,6 +268,10 @@ class AdminTests(TestCase):
             set(perms),
         )
 
+if 'django.contrib.admin' not in settings.INSTALLED_APPS:
+    # Skip admin tests if admin app is not registered
+    # we simpy clean up AdminTests class ...
+    AdminTests = type('AdminTests', (TestCase,), {})
 
 
 class GuardedModelAdminTests(TestCase):
