@@ -1,14 +1,2 @@
-Djalog==0.9.4
 Django==1.2.4
-Pygments==1.3.1
-South==0.7.2
-coverage==3.4
-django-coverage==1.1
-django-extensions==0.5
-django-filter==0.5.3
-django-native-tags==0.5
-django-pagination==1.0.7
-django-registration==0.7
-django-richtemplates==0.3.12
-docutils==0.7
 wsgiref==0.1.2
