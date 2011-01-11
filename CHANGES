@@ -1,3 +1,14 @@
+Release 1.0.0.beta1 (Jan 11, 2010)
+==================================
+
+* Simplified example project
+* Fixed issues related with test suite
+* Added ability to clear orphaned object permissions
+* Added clean_orphan_obj_perms management command
+* Documentation cleanup
+* Added grappelli admin templates
+
+
 Release 1.0.0.alpha2 (Dec 2, 2010)
 ==================================
 
