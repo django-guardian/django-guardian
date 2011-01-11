@@ -231,3 +231,36 @@ def get_groups_with_perms(obj, attach_perms=False):
                 groups[group] = get_perms(group, obj)
         return groups
 
+def get_objects_for_user(user, perms, klass=None):
+    """
+    Returns queryset of objects for which given ``user`` has *all*
+    permissions from ``perms``.
+
+    :param user: ``User`` instance for which objects would be returned
+    :param perms: sequence with permissions as strings which should be checked.
+      if ``klass`` parameter is not given, those should be full permission
+      names rather than only codenames (i.e. ``auth.change_user``). If more than
+      one permission is present within sequence, theirs content type **must** be
+      the same or ``MixedContentTypeError`` exception would be raised. For
+      convenience, may be given as single permission (string).
+    :param klass: may be a Model, Manager or QuerySet object. If not given
+      this parameter would be computed based on given ``params``.
+
+    :raises MixedContentTypeError:
+    :raises WrongAppError:
+
+    Excample::
+
+        >>> from guardian.shortcuts import get_objects_for_user
+        >>> joe = User.objects.get(username='joe')
+        >>> get_objects_for_user(joe, ['auth.change_group'])
+        []
+        >>> from guardian.shortcuts import assign
+        >>> group = Group.objects.create('some group')
+        >>> assign('auth.change_group', joe, group)
+        >>> get_objects_for_user(joe, ['auth.change_group'])
+        [<Group some group>]
+
+    """
+    return []
+

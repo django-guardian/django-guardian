@@ -15,3 +15,6 @@ class ObjectNotPersisted(GuardianError):
 class WrongAppError(GuardianError):
     pass
 
+class MixedContentTypeError(GuardianError):
+    pass
+

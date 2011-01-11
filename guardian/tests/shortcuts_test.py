@@ -10,7 +10,10 @@ from guardian.shortcuts import remove_perm
 from guardian.shortcuts import get_perms
 from guardian.shortcuts import get_users_with_perms
 from guardian.shortcuts import get_groups_with_perms
+from guardian.shortcuts import get_objects_for_user
+from guardian.exceptions import MixedContentTypeError
 from guardian.exceptions import NotUserNorGroup
+from guardian.exceptions import WrongAppError
 
 from guardian.tests.core_test import ObjectPermissionTestCase
 
@@ -331,4 +334,84 @@ class GetGroupsWithPerms(TestCase):
         for key, perms in result.iteritems():
             self.assertEqual(set(perms), set(expected[key]))
 
+
+class GetObjectsForUser(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create(username='joe')
+        self.group = Group.objects.create(name='group')
+
+    def test_mixed_perms(self):
+        self.assertRaises(MixedContentTypeError, get_objects_for_user,
+            self.user, ['auth.change_user', 'auth.change_group'])
+
+    def test_mixed_perms_and_klass(self):
+        self.assertRaises(MixedContentTypeError, get_objects_for_user,
+            self.user, ['auth.change_group'], User)
+
+    def test_no_app_label_nor_klass(self):
+        self.assertRaises(WrongAppError, get_objects_for_user, self.user,
+            ['change_group'])
+
+    def test_empty_perms_sequence(self):
+        self.assertEqual(
+            set(get_objects_for_user(self.user, [], Group.objects.all())),
+            set()
+        )
+
+    def test_perms_single(self):
+        perm = 'auth.change_group'
+        assign(perm, self.user, self.group)
+        self.assertEqual(
+            set(get_objects_for_user(self.user, perm)),
+            set(get_objects_for_user(self.user, [perm])))
+
+    def test_klass_as_model(self):
+        assign('auth.change_group', self.user, self.group)
+        objects = get_objects_for_user(self.user, ['auth.change_group'], Group)
+        self.assertEqual([obj.name for obj in objects], [self.group.name])
+
+    def test_klass_as_manager(self):
+        assign('auth.change_group', self.user, self.group)
+        objects = get_objects_for_user(self.user, ['auth.change_group'],
+            Group.objects)
+        self.assertEqual([obj.name for obj in objects], [self.group.name])
+
+    def test_klass_as_queryset(self):
+        assign('auth.change_group', self.user, self.group)
+        objects = get_objects_for_user(self.user, ['auth.change_group'],
+            Group.objects.all())
+        self.assertEqual([obj.name for obj in objects], [self.group.name])
+
+    def test_ensure_returns_queryset(self):
+        objects = get_objects_for_user(self.user, ['auth.change_group'])
+        self.assertTrue(isinstance(objects, QuerySet))
+
+    def test_simple(self):
+        group_names = ['group1', 'group2', 'group3']
+        groups = [Group.objects.create(name=name) for name in group_names]
+        for group in groups:
+            assign('change_group', self.user, group)
+
+        objects = get_objects_for_user(self.user, ['auth.change_group'])
+        self.assertEqual(len(objects), len(groups))
+        self.assertTrue(isinstance(objects, QuerySet))
+        self.assertEqual(
+            set(objects.values_list('name', flat=True)),
+            set(group_names))
+
+    def test_multiple_perms_to_check(self):
+        group_names = ['group1', 'group2', 'group3']
+        groups = [Group.objects.create(name=name) for name in group_names]
+        for group in groups:
+            assign('auth.change_group', self.user, group)
+        assign('auth.delete_group', self.user, groups[1])
+
+        objects = get_objects_for_user(self.user, ['auth.change_group',
+            'auth.delete_group'])
+        self.assertEqual(len(objects), 1)
+        self.assertTrue(isinstance(objects, QuerySet))
+        self.assertEqual(
+            set(objects.values_list('name', flat=True)),
+            set([groups[1].name]))
 
