@@ -13,8 +13,9 @@ class ObjectPermissionTestCase(TestCase):
     fixtures = ['tests.json']
 
     def setUp(self):
-        self.user = User.objects.get(username='jack')
         self.group = Group.objects.get(name='jackGroup')
+        self.user = User.objects.get(username='jack')
+        self.user.groups.add(self.group)
         UserObjectPermission.objects.all().delete()
         GroupObjectPermission.objects.all().delete()
         self.ctype = ContentType.objects.create(name='foo', model='bar',

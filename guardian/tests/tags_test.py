@@ -21,8 +21,9 @@ class GetObjPermsTagTest(TestCase):
     def setUp(self):
         self.ctype = ContentType.objects.create(name='foo', model='bar',
             app_label='fake-for-guardian-tests')
-        self.user = User.objects.get(username='jack')
         self.group = Group.objects.get(name='jackGroup')
+        self.user = User.objects.get(username='jack')
+        self.user.groups.add(self.group)
         UserObjectPermission.objects.all().delete()
         GroupObjectPermission.objects.all().delete()
 
