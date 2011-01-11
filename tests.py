@@ -19,10 +19,7 @@ settings.INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.admin',
     'django.contrib.sites',
-    'django.contrib.flatpages',
     'guardian',
-    'guardian.tests.app',
-    'richtemplates',
 )
 
 def main():

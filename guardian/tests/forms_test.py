@@ -1,17 +1,15 @@
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import User
+from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
-
 from guardian.forms import BaseObjectPermissionsForm
-from guardian.forms import UserObjectPermissionsForm
-from guardian.forms import GroupObjectPermissionsForm
-from guardian.tests.app.models import Keycard
 
 
 class BaseObjectPermissionsFormTests(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user('joe', 'joe@example.com', 'joe')
-        self.obj = Keycard.objects.create(key='obj')
+        self.obj = ContentType.objects.create(name='foo', model='bar',
+            app_label='fake-for-guardian-tests')
 
     def test_not_implemented(self):
 

@@ -1,81 +1,84 @@
 import guardian
-
-from itertools import chain
-
-from django.test import TestCase
-from django.contrib.auth.models import User, Group, Permission, AnonymousUser
+from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.models import Group
+from django.contrib.auth.models import Permission
+from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
-
-from guardian.models import UserObjectPermission
-from guardian.models import GroupObjectPermission
+from django.test import TestCase
 from guardian.backends import ObjectPermissionBackend
-from guardian.exceptions import GuardianError, NotUserNorGroup,\
-    ObjectNotPersisted, WrongAppError
+from guardian.exceptions import GuardianError
+from guardian.exceptions import NotUserNorGroup
+from guardian.exceptions import ObjectNotPersisted
+from guardian.exceptions import WrongAppError
+from guardian.models import GroupObjectPermission
+from guardian.models import UserObjectPermission
+from itertools import chain
 
-from guardian.tests.app.models import Keycard
 
 class UserPermissionTests(TestCase):
     fixtures = ['tests.json']
 
     def setUp(self):
         self.user = User.objects.get(username='jack')
-        self.key, created = Keycard.objects.get_or_create(key='key1')
+        self.ctype = ContentType.objects.create(name='foo', model='bar',
+            app_label='fake-for-guardian-tests')
+        self.obj1 = ContentType.objects.create(name='ct1', model='foo',
+            app_label='guardian-tests')
+        self.obj2 = ContentType.objects.create(name='ct2', model='bar',
+            app_label='guardian-tests')
 
     def test_assignement(self):
-        self.assertFalse(self.user.has_perm('change_keycard', self.key))
+        self.assertFalse(self.user.has_perm('change_contenttype', self.ctype))
 
-        UserObjectPermission.objects.assign('change_keycard', self.user, self.key)
-        self.assertTrue(self.user.has_perm('change_keycard', self.key))
-        self.assertTrue(self.user.has_perm('guardian.change_keycard', self.key))
+        UserObjectPermission.objects.assign('change_contenttype', self.user,
+            self.ctype)
+        self.assertTrue(self.user.has_perm('change_contenttype', self.ctype))
+        self.assertTrue(self.user.has_perm('contenttypes.change_contenttype',
+            self.ctype))
 
     def test_assignement_and_remove(self):
-        UserObjectPermission.objects.assign('change_keycard', self.user, self.key)
-        self.assertTrue(self.user.has_perm('change_keycard', self.key))
+        UserObjectPermission.objects.assign('change_contenttype', self.user,
+            self.ctype)
+        self.assertTrue(self.user.has_perm('change_contenttype', self.ctype))
 
-        UserObjectPermission.objects.remove_perm('change_keycard', self.user,
-            self.key)
-        self.assertFalse(self.user.has_perm('change_keycard', self.key))
+        UserObjectPermission.objects.remove_perm('change_contenttype',
+            self.user, self.ctype)
+        self.assertFalse(self.user.has_perm('change_contenttype', self.ctype))
 
-    def test_keys(self):
-        key1, created = Keycard.objects.get_or_create(key='keys_1')
-        key2, created = Keycard.objects.get_or_create(key='keys_2')
+    def test_ctypes(self):
+        UserObjectPermission.objects.assign('change_contenttype', self.user, self.obj1)
+        self.assertTrue(self.user.has_perm('change_contenttype', self.obj1))
+        self.assertFalse(self.user.has_perm('change_contenttype', self.obj2))
 
-        UserObjectPermission.objects.assign('can_use_keycard', self.user, key1)
-        self.assertTrue(self.user.has_perm('can_use_keycard', key1))
-        self.assertFalse(self.user.has_perm('can_use_keycard', key2))
+        UserObjectPermission.objects.remove_perm('change_contenttype', self.user, self.obj1)
+        UserObjectPermission.objects.assign('change_contenttype', self.user, self.obj2)
+        self.assertTrue(self.user.has_perm('change_contenttype', self.obj2))
+        self.assertFalse(self.user.has_perm('change_contenttype', self.obj1))
 
-        UserObjectPermission.objects.remove_perm('can_use_keycard', self.user, key1)
-        UserObjectPermission.objects.assign('can_use_keycard', self.user, key2)
-        self.assertTrue(self.user.has_perm('can_use_keycard', key2))
-        self.assertFalse(self.user.has_perm('can_use_keycard', key1))
+        UserObjectPermission.objects.assign('change_contenttype', self.user, self.obj1)
+        UserObjectPermission.objects.assign('change_contenttype', self.user, self.obj2)
+        self.assertTrue(self.user.has_perm('change_contenttype', self.obj2))
+        self.assertTrue(self.user.has_perm('change_contenttype', self.obj1))
 
-        UserObjectPermission.objects.assign('can_use_keycard', self.user, key1)
-        UserObjectPermission.objects.assign('can_use_keycard', self.user, key2)
-        self.assertTrue(self.user.has_perm('can_use_keycard', key2))
-        self.assertTrue(self.user.has_perm('can_use_keycard', key1))
-
-        UserObjectPermission.objects.remove_perm('can_use_keycard', self.user, key1)
-        UserObjectPermission.objects.remove_perm('can_use_keycard', self.user, key2)
-        self.assertFalse(self.user.has_perm('can_use_keycard', key2))
-        self.assertFalse(self.user.has_perm('can_use_keycard', key1))
+        UserObjectPermission.objects.remove_perm('change_contenttype', self.user, self.obj1)
+        UserObjectPermission.objects.remove_perm('change_contenttype', self.user, self.obj2)
+        self.assertFalse(self.user.has_perm('change_contenttype', self.obj2))
+        self.assertFalse(self.user.has_perm('change_contenttype', self.obj1))
 
     def test_get_for_object(self):
-        key = Keycard.objects.create(key='get_user_perms_for_object')
-        perms = UserObjectPermission.objects.get_for_object(self.user, key)
+        perms = UserObjectPermission.objects.get_for_object(self.user, self.ctype)
         self.assertEqual(perms.count(), 0)
 
         to_assign = sorted([
-            'delete_keycard',
-            'change_keycard',
-            'can_use_keycard',
-            'can_suspend_keycard',
+            'delete_contenttype',
+            'change_contenttype',
         ])
 
         for perm in to_assign:
-            UserObjectPermission.objects.assign(perm, self.user, key)
+            UserObjectPermission.objects.assign(perm, self.user, self.ctype)
 
-        perms = UserObjectPermission.objects.get_for_object(self.user, key)
+        perms = UserObjectPermission.objects.get_for_object(self.user, self.ctype)
         codenames = sorted(chain(*perms.values_list('permission__codename')))
 
         self.assertEqual(to_assign, codenames)
@@ -122,76 +125,76 @@ class GroupPermissionTests(TestCase):
         self.user = User.objects.get(username='jack')
         self.group, created = Group.objects.get_or_create(name='jackGroup')
         self.user.groups.add(self.group)
-        UserObjectPermission.objects.all().delete()
-        GroupObjectPermission.objects.all().delete()
+        self.ctype = ContentType.objects.create(name='foo', model='bar',
+            app_label='fake-for-guardian-tests')
+        self.obj1 = ContentType.objects.create(name='ct1', model='foo',
+            app_label='guardian-tests')
+        self.obj2 = ContentType.objects.create(name='ct2', model='bar',
+            app_label='guardian-tests')
 
     def test_assignement(self):
-        key, created = Keycard.objects.get_or_create(key='nopermsyet_key')
-        self.assertFalse(self.user.has_perm('change_keycard', key))
-        self.assertFalse(self.user.has_perm('guardian.change_keycard', key))
+        self.assertFalse(self.user.has_perm('change_contenttype', self.ctype))
+        self.assertFalse(self.user.has_perm('contenttypes.change_contenttype',
+            self.ctype))
 
-        GroupObjectPermission.objects.assign('change_keycard', self.group, key)
-        self.assertTrue(self.user.has_perm('change_keycard', key))
-        self.assertTrue(self.user.has_perm('guardian.change_keycard', key))
-        key.delete()
+        GroupObjectPermission.objects.assign('change_contenttype', self.group,
+            self.ctype)
+        self.assertTrue(self.user.has_perm('change_contenttype', self.ctype))
+        self.assertTrue(self.user.has_perm('contenttypes.change_contenttype',
+            self.ctype))
 
     def test_assignement_and_remove(self):
-        key, created = Keycard.objects.get_or_create(key='some_key')
-        GroupObjectPermission.objects.assign('change_keycard', self.group, key)
-        self.assertTrue(self.user.has_perm('change_keycard', key))
+        GroupObjectPermission.objects.assign('change_contenttype', self.group,
+            self.ctype)
+        self.assertTrue(self.user.has_perm('change_contenttype', self.ctype))
 
-        GroupObjectPermission.objects.remove_perm('change_keycard', self.group, key)
-        self.assertFalse(self.user.has_perm('change_keycard', key))
-        key.delete()
+        GroupObjectPermission.objects.remove_perm('change_contenttype',
+            self.group, self.ctype)
+        self.assertFalse(self.user.has_perm('change_contenttype', self.ctype))
 
-    def test_keys(self):
-        key1, created = Keycard.objects.get_or_create(key='key1')
-        key2, created = Keycard.objects.get_or_create(key='key2')
+    def test_ctypes(self):
+        GroupObjectPermission.objects.assign('change_contenttype', self.group,
+            self.obj1)
+        self.assertTrue(self.user.has_perm('change_contenttype', self.obj1))
+        self.assertFalse(self.user.has_perm('change_contenttype', self.obj2))
 
-        GroupObjectPermission.objects.assign('can_use_keycard', self.group, key1)
-        self.assertTrue(self.user.has_perm('can_use_keycard', key1))
-        self.assertFalse(self.user.has_perm('can_use_keycard', key2))
+        GroupObjectPermission.objects.remove_perm('change_contenttype',
+            self.group, self.obj1)
+        GroupObjectPermission.objects.assign('change_contenttype', self.group,
+            self.obj2)
+        self.assertTrue(self.user.has_perm('change_contenttype', self.obj2))
+        self.assertFalse(self.user.has_perm('change_contenttype', self.obj1))
 
-        GroupObjectPermission.objects.remove_perm('can_use_keycard', self.group,
-            key1)
-        GroupObjectPermission.objects.assign('can_use_keycard', self.group, key2)
-        self.assertTrue(self.user.has_perm('can_use_keycard', key2))
-        self.assertFalse(self.user.has_perm('can_use_keycard', key1))
+        GroupObjectPermission.objects.assign('change_contenttype', self.group,
+            self.obj1)
+        GroupObjectPermission.objects.assign('change_contenttype', self.group,
+            self.obj2)
+        self.assertTrue(self.user.has_perm('change_contenttype', self.obj2))
+        self.assertTrue(self.user.has_perm('change_contenttype', self.obj1))
 
-        GroupObjectPermission.objects.assign('can_use_keycard', self.group, key1)
-        GroupObjectPermission.objects.assign('can_use_keycard', self.group, key2)
-        self.assertTrue(self.user.has_perm('can_use_keycard', key2))
-        self.assertTrue(self.user.has_perm('can_use_keycard', key1))
-
-        GroupObjectPermission.objects.remove_perm('can_use_keycard', self.group,
-            key1)
-        GroupObjectPermission.objects.remove_perm('can_use_keycard', self.group,
-            key2)
-        self.assertFalse(self.user.has_perm('can_use_keycard', key2))
-        self.assertFalse(self.user.has_perm('can_use_keycard', key1))
-
-        key1.delete()
-        key2.delete()
+        GroupObjectPermission.objects.remove_perm('change_contenttype',
+            self.group, self.obj1)
+        GroupObjectPermission.objects.remove_perm('change_contenttype',
+            self.group, self.obj2)
+        self.assertFalse(self.user.has_perm('change_contenttype', self.obj2))
+        self.assertFalse(self.user.has_perm('change_contenttype', self.obj1))
 
     def test_get_for_object(self):
-        key = Keycard.objects.create(key='get_group_perms_for_object')
         group = Group.objects.create(name='get_group_perms_for_object')
         self.user.groups.add(group)
 
-        perms = GroupObjectPermission.objects.get_for_object(group, key)
+        perms = GroupObjectPermission.objects.get_for_object(group, self.ctype)
         self.assertEqual(perms.count(), 0)
 
         to_assign = sorted([
-            'delete_keycard',
-            'change_keycard',
-            'can_use_keycard',
-            'can_suspend_keycard',
+            'delete_contenttype',
+            'change_contenttype',
         ])
 
         for perm in to_assign:
-            GroupObjectPermission.objects.assign(perm, group, key)
+            GroupObjectPermission.objects.assign(perm, group, self.ctype)
 
-        perms = GroupObjectPermission.objects.get_for_object(group, key)
+        perms = GroupObjectPermission.objects.get_for_object(group, self.ctype)
         codenames = sorted(chain(*perms.values_list('permission__codename')))
 
         self.assertEqual(to_assign, codenames)
@@ -247,7 +250,7 @@ class ObjectPermissionBackendTests(TestCase):
             self.user.username, self.user.password), None)
 
     def test_has_perm_noobj(self):
-        result = self.backend.has_perm(self.user, "change_key")
+        result = self.backend.has_perm(self.user, "change_contenttype")
         self.assertFalse(result)
 
     def test_has_perm_notauthed(self):
@@ -269,6 +272,7 @@ class GuardianBaseTests(TestCase):
 
     def test_get_version(self):
         self.assertTrue(isinstance(guardian.get_version(), str))
+
 
 class TestExceptions(TestCase):
 

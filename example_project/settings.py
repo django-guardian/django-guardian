@@ -6,6 +6,7 @@ from django.conf import global_settings
 abspath = lambda *p: os.path.abspath(os.path.join(*p))
 
 DEBUG = True
+TEMPLATE_DEBUG = DEBUG
 
 PROJECT_ROOT = abspath(os.path.dirname(__file__))
 GUARDIAN_MODULE_PATH = abspath(PROJECT_ROOT, '..')
@@ -28,21 +29,14 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.admin',
     'django.contrib.messages',
-    'django.contrib.flatpages',
 
-    'native_tags',
     'guardian',
-    'guardian.tests.app',
-    'richtemplates',
-    'django_extensions',
-    'registration',
     #'south',
     'django_coverage',
-
     'posts',
 )
 try:
-    import grappelli
+    __import__('grappelli')
     INSTALLED_APPS = ('grappelli',) + INSTALLED_APPS
 except ImportError:
     pass
@@ -55,7 +49,6 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.transaction.TransactionMiddleware',
     'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
-    'djalog.middleware.SQLLoggingMiddleware',
 )
 
 MEDIA_ROOT = abspath(PROJECT_ROOT, 'media')
@@ -66,8 +59,6 @@ ROOT_URLCONF = 'example_project.urls'
 
 TEMPLATE_CONTEXT_PROCESSORS = global_settings.TEMPLATE_CONTEXT_PROCESSORS + (
     'django.core.context_processors.request',
-    'richtemplates.context_processors.media',
-    'example_project.context_processors.flats',
 )
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.load_template_source',
@@ -93,31 +84,9 @@ AUTHENTICATION_BACKENDS = (
     'guardian.backends.ObjectPermissionBackend',
 )
 
-# =============== #
-# DJALOG SETTINGS #
-# =============== #
-
-DJALOG_SQL = True
-DJALOG_SQL_SUMMARY_ONLY = True
-DJALOG_LEVEL = 5
-DJALOG_USE_COLORS = True
-DJALOG_FORMAT = "[%(levelname)s] %(message)s"
-
-# ====================== #
-# RICHTEMPLATES SETTINGS #
-# ====================== #
-
-RICHTEMPLATES_DEFAULT_SKIN = 'ruby'
-RICHTEMPLATES_PYGMENTS_STYLES = {
-    'irblack': 'richtemplates.pygstyles.irblack.IrBlackStyle',
-}
-
 ANONYMOUS_USER_ID = -1
-
-AUTH_PROFILE_MODULE = 'richtemplates.UserProfile'
 
 # Neede as some models (located at guardian/tests/models.py)
 # are not migrated for tests
 SOUTH_TESTS_MIGRATE = False
 
-#DEBUG = False
