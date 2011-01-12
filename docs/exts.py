@@ -30,4 +30,9 @@ def setup(app):
         rolename      = "setting",
         indextemplate = "pair: %s; setting",
     )
+    app.add_crossref_type(
+        directivename = "shortcut",
+        rolename      = "shortcut",
+        indextemplate = "pair: %s; shortcut",
+    )
 

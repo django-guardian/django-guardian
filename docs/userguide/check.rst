@@ -61,6 +61,35 @@ both ``User`` and ``Group`` instances. And if we need to do some more work we
 can use lower level ``ObjectPermissionChecker`` class which is described in next
 section.
 
+get_objects_for_user
+~~~~~~~~~~~~~~~~~~~~
+
+Sometimes there is a need to extract list of objects based on particular user,
+type of the object and provided permissions. For instance, lets say there is a
+``Project`` model at ``projects`` application with custom ``view_project``
+permission. We want to show our users projects they can actually *view*. This
+could be easily achieved using :shortcut:`get_objects_for_user`:
+
+.. code-block:: python
+
+    from django.shortcuts import render_to_response
+    from django.template import RequestContext
+    from projects.models import Project
+    from guardian.shortcuts import get_objects_for_user
+
+    def user_dashboard(request, template_name='projects/dashboard.html'):
+        projects = get_objects_for_user(request.user, 'projects.view_project')
+        return render_to_response(template_name, {'projects': projects},
+            RequestContext(request))
+
+It is also possible to provide list of permissions rather than single string,
+own queryset (as ``klass`` argument) or control if result should be computed
+with (default) or without user's groups permissions.
+
+.. seealso::
+   Documentation for :shortcut:`get_objects_for_user`
+
+
 ObjectPermissionChecker
 ~~~~~~~~~~~~~~~~~~~~~~~
 

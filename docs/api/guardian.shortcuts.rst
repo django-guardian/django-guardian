@@ -35,14 +35,29 @@ get_perms_for_model
 
 .. autofunction:: guardian.shortcuts.get_perms_for_model
 
+
+.. _api-shortcuts-get_users_with_perms:
+
 get_users_with_perms
 --------------------
 
 .. autofunction:: guardian.shortcuts.get_users_with_perms
 
 
+.. _api-shortcuts-get_groups_with_perms:
+
 get_groups_with_perms
 ---------------------
 
 .. autofunction:: guardian.shortcuts.get_groups_with_perms
+
+
+.. _api-shortcuts-get_objects_for_user:
+
+.. shortcut:: get_objects_for_user
+
+get_objects_for_user
+--------------------
+
+.. autofunction:: guardian.shortcuts.get_objects_for_user
 

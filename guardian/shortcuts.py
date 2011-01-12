@@ -234,25 +234,29 @@ def get_groups_with_perms(obj, attach_perms=False):
                 groups[group] = get_perms(group, obj)
         return groups
 
-def get_objects_for_user(user, perms, klass=None):
+def get_objects_for_user(user, perms, klass=None, use_groups=True):
     """
     Returns queryset of objects for which given ``user`` has *all*
-    permissions from ``perms``.
+    permissions present at ``perms``.
 
     :param user: ``User`` instance for which objects would be returned
     :param perms: sequence with permissions as strings which should be checked.
-      if ``klass`` parameter is not given, those should be full permission
+      If ``klass`` parameter is not given, those should be full permission
       names rather than only codenames (i.e. ``auth.change_user``). If more than
       one permission is present within sequence, theirs content type **must** be
       the same or ``MixedContentTypeError`` exception would be raised. For
       convenience, may be given as single permission (string).
     :param klass: may be a Model, Manager or QuerySet object. If not given
       this parameter would be computed based on given ``params``.
+    :param use_groups: if ``False``, wouldn't check user's groups object
+      permissions. Default is ``True``.
 
-    :raises MixedContentTypeError:
-    :raises WrongAppError:
+    :raises MixedContentTypeError: when computed content type for ``perms``
+      and/or ``klass`` clashes.
+    :raises WrongAppError: if cannot compute app label for given ``perms``/
+      ``klass``.
 
-    Excample::
+    Example::
 
         >>> from guardian.shortcuts import get_objects_for_user
         >>> joe = User.objects.get(username='joe')
@@ -315,23 +319,23 @@ def get_objects_for_user(user, perms, klass=None):
         return queryset
 
     # Now we should extract list of pk values for which we would filter queryset
-    q1 = Q(
-        permission__content_type=ctype,
-        permission__codename__in=codenames,
-    )
-    q2 = Q(
-        user__groups__groupobjectpermission__permission__content_type=ctype,
-        user__groups__groupobjectpermission__permission__codename__in=codenames,
-    )
-    qset = q1 | q2
-    rows = UserObjectPermission.objects\
+    user_obj_perms = UserObjectPermission.objects\
         .filter(user=user)\
-        .filter(qset)\
+        .filter(permission__content_type=ctype)\
+        .filter(permission__codename__in=codenames)\
         .values_list('object_pk', 'permission__codename')
-    keyfunc = lambda row: row[0] # sorting/grouping by pk (first in result tuple)
-    rows = sorted(rows, key=keyfunc)
+    data = list(user_obj_perms)
+    if use_groups:
+        groups_obj_perms = GroupObjectPermission.objects\
+            .filter(group__user=user)\
+            .filter(permission__content_type=ctype)\
+            .filter(permission__codename__in=codenames)\
+            .values_list('object_pk', 'permission__codename')
+        data += list(groups_obj_perms)
+    keyfunc = lambda t: t[0] # sorting/grouping by pk (first in result tuple)
+    data = sorted(data, key=keyfunc)
     pk_list = []
-    for pk, group in groupby(rows, keyfunc):
+    for pk, group in groupby(data, keyfunc):
         obj_codenames = set((e[1] for e in group))
         if codenames.issubset(obj_codenames):
             pk_list.append(pk)

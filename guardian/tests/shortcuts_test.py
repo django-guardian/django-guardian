@@ -341,9 +341,20 @@ class GetObjectsForUser(TestCase):
         self.user = User.objects.create(username='joe')
         self.group = Group.objects.create(name='group')
 
+    def test_superuser(self):
+        self.user.is_superuser = True
+        ctypes = ContentType.objects.all()
+        objects = get_objects_for_user(self.user,
+            ['contenttypes.change_contenttype'], ctypes)
+        self.assertEqual(set(ctypes), set(objects))
+
     def test_mixed_perms(self):
         self.assertRaises(MixedContentTypeError, get_objects_for_user,
             self.user, ['auth.change_user', 'auth.change_group'])
+
+    def test_perms_with_mixed_apps(self):
+        self.assertRaises(MixedContentTypeError, get_objects_for_user,
+            self.user, ['auth.change_user', 'contenttypes.change_contenttype'])
 
     def test_mixed_perms_and_klass(self):
         self.assertRaises(MixedContentTypeError, get_objects_for_user,
@@ -414,4 +425,46 @@ class GetObjectsForUser(TestCase):
         self.assertEqual(
             set(objects.values_list('name', flat=True)),
             set([groups[1].name]))
+
+    def test_groups_perms(self):
+        group1 = Group.objects.create(name='group1')
+        group2 = Group.objects.create(name='group2')
+        group3 = Group.objects.create(name='group3')
+        groups = [group1, group2, group3]
+        for group in groups:
+            self.user.groups.add(group)
+
+        # Objects to operate on
+        ctypes = dict(((ct.id, ct) for ct in ContentType.objects.all()))
+
+        assign('change_contenttype', self.user, ctypes[1])
+        assign('change_contenttype', self.user, ctypes[2])
+        assign('delete_contenttype', self.user, ctypes[2])
+        assign('delete_contenttype', self.user, ctypes[3])
+
+        assign('change_contenttype', groups[0], ctypes[4])
+        assign('change_contenttype', groups[1], ctypes[4])
+        assign('change_contenttype', groups[2], ctypes[5])
+        assign('delete_contenttype', groups[0], ctypes[1])
+
+        objects = get_objects_for_user(self.user,
+            ['contenttypes.change_contenttype'])
+        self.assertEqual(
+            set(objects.values_list('id', flat=True)),
+            set([1, 2, 4, 5]))
+
+        objects = get_objects_for_user(self.user,
+            ['contenttypes.change_contenttype',
+            'contenttypes.delete_contenttype'])
+        self.assertEqual(
+            set(objects.values_list('id', flat=True)),
+            set([1, 2]))
+
+        objects = get_objects_for_user(self.user,
+            ['contenttypes.change_contenttype'])
+        self.assertEqual(
+            set(objects.values_list('id', flat=True)),
+            set([1, 2, 4, 5]))
+
+
 
