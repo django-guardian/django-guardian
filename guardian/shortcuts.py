@@ -1,14 +1,17 @@
 """
 Convenient shortcuts to manage or check object permissions.
 """
-from django.db import models
-from django.db.models import Q
 from django.contrib.auth.models import Permission, User, Group
 from django.contrib.contenttypes.models import ContentType
-
+from django.db import models
+from django.db.models import Q
+from django.shortcuts import _get_queryset
 from guardian.core import ObjectPermissionChecker
+from guardian.exceptions import MixedContentTypeError
+from guardian.exceptions import WrongAppError
 from guardian.models import UserObjectPermission, GroupObjectPermission
 from guardian.utils import get_identity
+from itertools import groupby
 
 def assign(perm, user_or_group, obj=None):
     """
@@ -262,5 +265,77 @@ def get_objects_for_user(user, perms, klass=None):
         [<Group some group>]
 
     """
-    return []
+    if isinstance(perms, basestring):
+        perms = [perms]
+    ctype = None
+    app_label = None
+    codenames = set()
+
+    # Compute codenames set and ctype if possible
+    for perm in perms:
+        if '.' in perm:
+            new_app_label, codename = perm.split('.', 1)
+            if app_label is not None and app_label != new_app_label:
+                raise MixedContentTypeError("Given perms must have same app "
+                    "label (%s != %s)" % (app_label, new_app_label))
+            else:
+                app_label = new_app_label
+        else:
+            codename = perm
+        codenames.add(codename)
+        if app_label is not None:
+            new_ctype = ContentType.objects.get(app_label=app_label,
+                permission__codename=codename)
+            if ctype is not None and ctype != new_ctype:
+                raise MixedContentTypeError("ContentType was once computed "
+                    "to be %s and another one %s" % (ctype, new_ctype))
+            else:
+                ctype = new_ctype
+
+    # Compute queryset and ctype if still missing
+    if ctype is None and klass is None:
+        raise WrongAppError("Cannot determine content type")
+    elif ctype is None and klass is not None:
+        queryset = _get_queryset(klass)
+        ctype = ContentType.objects.get_for_model(queryset.model)
+    elif ctype is not None and klass is None:
+        queryset = _get_queryset(ctype.model_class())
+    else:
+        queryset = _get_queryset(klass)
+        if ctype.model_class() != queryset.model:
+            raise MixedContentTypeError("Content type for given perms and "
+                "klass differs")
+
+    # At this point, we should have both ctype and queryset and they should
+    # match which means: ctype.model_class() == queryset.model
+    # we should also have ``codenames`` list
+
+    # First check if user is superuser and if so, return queryset immediately
+    if user.is_superuser:
+        return queryset
+
+    # Now we should extract list of pk values for which we would filter queryset
+    q1 = Q(
+        permission__content_type=ctype,
+        permission__codename__in=codenames,
+    )
+    q2 = Q(
+        user__groups__groupobjectpermission__permission__content_type=ctype,
+        user__groups__groupobjectpermission__permission__codename__in=codenames,
+    )
+    qset = q1 | q2
+    rows = UserObjectPermission.objects\
+        .filter(user=user)\
+        .filter(qset)\
+        .values_list('object_pk', 'permission__codename')
+    keyfunc = lambda row: row[0] # sorting/grouping by pk (first in result tuple)
+    rows = sorted(rows, key=keyfunc)
+    pk_list = []
+    for pk, group in groupby(rows, keyfunc):
+        obj_codenames = set((e[1] for e in group))
+        if codenames.issubset(obj_codenames):
+            pk_list.append(pk)
+
+    objects = queryset.filter(pk__in=pk_list)
+    return objects
 
