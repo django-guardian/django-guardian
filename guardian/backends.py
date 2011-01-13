@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.db import models
 
 from guardian.conf import settings
 from guardian.exceptions import WrongAppError
@@ -26,9 +27,16 @@ class ObjectPermissionBackend(object):
         ``obj`` instance here and ``perm`` doesn't have to contain
         ``app_label`` as it can be retrieved from given ``obj``.
         """
+        # Backend checks only object permissions
         if obj is None:
             return False
 
+        # Backend checks only permissions for Django models
+        if not isinstance(obj, models.Model):
+            return False
+
+        # This is how we support anonymous users - simply try to retrieve User
+        # instance and perform checks for that predefined user
         if not user_obj.is_authenticated():
             user_obj = User.objects.get(pk=settings.ANONYMOUS_USER_ID)
 

@@ -261,6 +261,11 @@ class ObjectPermissionBackendTests(TestCase):
         self.assertRaises(WrongAppError, self.backend.has_perm,
             self.user, "no_app.change_user", self.user)
 
+    def test_obj_is_not_model(self):
+        for obj in (Group, 666, "String", [2, 1, 5, 7], {}):
+            self.assertFalse(self.backend.has_perm(self.user,
+                "any perm", obj))
+
 class GuardianBaseTests(TestCase):
 
     def has_attrs(self):
