@@ -243,6 +243,7 @@ class ObjectPermissionBackendTests(TestCase):
     def test_attrs(self):
         self.assertTrue(self.backend.supports_anonymous_user)
         self.assertTrue(self.backend.supports_object_permissions)
+        self.assertTrue(self.backend.supports_inactive_user)
 
     def test_authenticate(self):
         self.assertEqual(self.backend.authenticate(
