@@ -1,5 +1,5 @@
 include CHANGES
-include README.rst 
+include README.rst
 include MANIFEST.in
 include tests.py
 include run_test_and_report.sh
