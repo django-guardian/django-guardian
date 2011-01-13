@@ -44,7 +44,7 @@ def run_tests(settings):
 
     TestRunner = get_runner(settings)
     test_runner = TestRunner(interactive=False)
-    failures = test_runner.run_tests(['guardian'])
+    failures = test_runner.run_tests(['auth', 'guardian'])
     return failures
 
 def main():
