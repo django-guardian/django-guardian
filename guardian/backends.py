@@ -26,6 +26,11 @@ class ObjectPermissionBackend(object):
         Main difference between Django's ``ModelBackend`` is that we can pass
         ``obj`` instance here and ``perm`` doesn't have to contain
         ``app_label`` as it can be retrieved from given ``obj``.
+
+        **Inactive user support**
+
+        If user is authenticated but inactive at the same time, all checks
+        always returns ``False``.
         """
         # Backend checks only object permissions
         if obj is None:
@@ -40,6 +45,7 @@ class ObjectPermissionBackend(object):
         if not user_obj.is_authenticated():
             user_obj = User.objects.get(pk=settings.ANONYMOUS_USER_ID)
 
+        # Do not check any further if user is not active
         if user_obj.is_active is not True:
             return False
 
