@@ -16,9 +16,9 @@
             "email": "", 
             "date_joined": "2010-05-28 04:02:27"
         }
-    }, 
+    },
     {
-        "pk": 0, 
+        "pk": 1,
         "model": "auth.user", 
         "fields": {
             "username": "jack", 
@@ -52,4 +52,3 @@
         }
     }
 ]
-

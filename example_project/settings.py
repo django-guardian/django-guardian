@@ -89,3 +89,8 @@ ANONYMOUS_USER_ID = -1
 # are not migrated for tests
 SOUTH_TESTS_MIGRATE = False
 
+try:
+    from conf.localsettings import *
+except ImportError:
+    pass
+
