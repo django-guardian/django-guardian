@@ -1,35 +1,41 @@
 from itertools import chain
 
-from django.test import TestCase
+from django.conf import settings
+from django.contrib.auth import models as auth_app
+from django.contrib.auth.management import create_permissions
 from django.contrib.auth.models import User, Group, Permission, AnonymousUser
 from django.contrib.contenttypes.models import ContentType
+from django.test import TestCase
 
 from guardian.core import ObjectPermissionChecker
-from guardian.models import UserObjectPermission, GroupObjectPermission
 from guardian.exceptions import NotUserNorGroup
+from guardian.models import UserObjectPermission, GroupObjectPermission
 from guardian.shortcuts import assign
 
 class ObjectPermissionTestCase(TestCase):
-    fixtures = ['tests.json']
 
     def setUp(self):
-        self.group = Group.objects.get(name='jackGroup')
-        self.user = User.objects.get(username='jack')
+        self.group, created = Group.objects.get_or_create(name='jackGroup')
+        self.user, created = User.objects.get_or_create(username='jack')
         self.user.groups.add(self.group)
-        UserObjectPermission.objects.all().delete()
-        GroupObjectPermission.objects.all().delete()
         self.ctype = ContentType.objects.create(name='foo', model='bar',
             app_label='fake-for-guardian-tests')
+        self.anonymous_user, created = User.objects.get_or_create(
+            id=settings.ANONYMOUS_USER_ID,
+            username='AnonymousUser')
+
 
 class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
 
+    def setUp(self):
+        super(ObjectPermissionCheckerTest, self).setUp()
+        # Required if MySQL backend is used :/
+        create_permissions(auth_app, [], 1)
+
     def test_cache_for_queries_count(self):
-        from django.conf import settings
         settings.DEBUG = True
         try:
             from django.db import connection
-            UserObjectPermission.objects.all().delete()
-            GroupObjectPermission.objects.all().delete()
 
             ContentType.objects.clear_cache()
             checker = ObjectPermissionChecker(self.user)

@@ -31,6 +31,8 @@ def run_tests(settings):
     embracer = '=' * len(msg)
     output.append(msg)
     for key, value in db_conf.iteritems():
+        if key == 'PASSWORD':
+            value = '****************'
         line = '    %s: "%s"' % (key, value)
         output.append(line)
     embracer = colorize('=' * len(max(output, key=lambda s: len(s))),

@@ -16,20 +16,17 @@ def render(template, context):
     return t.render(Context(context))
 
 class GetObjPermsTagTest(TestCase):
-    fixtures = ['tests.json']
 
     def setUp(self):
         self.ctype = ContentType.objects.create(name='foo', model='bar',
             app_label='fake-for-guardian-tests')
-        self.group = Group.objects.get(name='jackGroup')
-        self.user = User.objects.get(username='jack')
+        self.group = Group.objects.create(name='jackGroup')
+        self.user = User.objects.create(username='jack')
         self.user.groups.add(self.group)
-        UserObjectPermission.objects.all().delete()
-        GroupObjectPermission.objects.all().delete()
 
     def test_wrong_formats(self):
         wrong_formats = (
-            #'{% get_obj_perms user for contenttype as obj_perms %}', # no quotes
+            '{% get_obj_perms user for contenttype as obj_perms %}', # no quotes
             '{% get_obj_perms user for contenttype as \'obj_perms" %}', # wrong quotes
             '{% get_obj_perms user for contenttype as \'obj_perms" %}', # wrong quotes
             '{% get_obj_perms user for contenttype as obj_perms" %}', # wrong quotes

@@ -1,3 +1,5 @@
+from django.contrib.auth import models as auth_app
+from django.contrib.auth.management import create_permissions
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
@@ -17,6 +19,8 @@ class OrphanedObjectPermissionsTest(TestCase):
             app_label='fake-for-guardian-tests')
         self.target_obj2 = ContentType.objects.create(name='ct2', model='bar',
             app_label='fake-for-guardian-tests')
+        # Required if MySQL backend is used :/
+        create_permissions(auth_app, [], 1)
 
 
         self.user = User.objects.create(username='user')

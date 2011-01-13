@@ -17,12 +17,7 @@ from guardian.exceptions import WrongAppError
 
 from guardian.tests.core_test import ObjectPermissionTestCase
 
-class ShortcutsTests(TestCase):
-    fixtures = ['tests.json']
-
-    def setUp(self):
-        self.user = User.objects.get(username='jack')
-        self.group = Group.objects.get(name='admins')
+class ShortcutsTests(ObjectPermissionTestCase):
 
     def test_get_perms_for_model(self):
         self.assertEqual(get_perms_for_model(self.user).count(), 3)
@@ -323,7 +318,13 @@ class GetGroupsWithPerms(TestCase):
         self.assertEqual(set(result), set([self.group1, self.group2]))
 
     def test_mixed_attach_perms(self):
-        self.test_mixed()
+        assign("change_contenttype", self.group1, self.obj1)
+        assign("change_contenttype", self.group1, self.obj2)
+        assign("change_group", self.group1, self.group3)
+        assign("change_contenttype", self.group2, self.obj2)
+        assign("change_contenttype", self.group2, self.obj1)
+        assign("delete_contenttype", self.group2, self.obj1)
+        assign("change_group", self.group3, self.group1)
 
         result = get_groups_with_perms(self.obj1, attach_perms=True)
         expected = {
@@ -340,6 +341,8 @@ class GetObjectsForUser(TestCase):
     def setUp(self):
         self.user = User.objects.create(username='joe')
         self.group = Group.objects.create(name='group')
+        self.ctype = ContentType.objects.create(name='foo', model='bar',
+            app_label='fake-for-guardian-tests')
 
     def test_superuser(self):
         self.user.is_superuser = True
@@ -350,7 +353,7 @@ class GetObjectsForUser(TestCase):
 
     def test_mixed_perms(self):
         self.assertRaises(MixedContentTypeError, get_objects_for_user,
-            self.user, ['auth.change_user', 'auth.change_group'])
+            self.user, ['auth.change_user', 'auth.change_permission'])
 
     def test_perms_with_mixed_apps(self):
         self.assertRaises(MixedContentTypeError, get_objects_for_user,
@@ -378,9 +381,11 @@ class GetObjectsForUser(TestCase):
             set(get_objects_for_user(self.user, [perm])))
 
     def test_klass_as_model(self):
-        assign('auth.change_group', self.user, self.group)
-        objects = get_objects_for_user(self.user, ['auth.change_group'], Group)
-        self.assertEqual([obj.name for obj in objects], [self.group.name])
+        assign('contenttypes.change_contenttype', self.user, self.ctype)
+
+        objects = get_objects_for_user(self.user,
+            ['contenttypes.change_contenttype'], ContentType)
+        self.assertEqual([obj.name for obj in objects], [self.ctype.name])
 
     def test_klass_as_manager(self):
         assign('auth.change_group', self.user, self.group)
@@ -465,6 +470,4 @@ class GetObjectsForUser(TestCase):
         self.assertEqual(
             set(objects.values_list('id', flat=True)),
             set([1, 2, 4, 5]))
-
-
 
