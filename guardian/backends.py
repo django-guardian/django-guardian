@@ -40,6 +40,9 @@ class ObjectPermissionBackend(object):
         if not user_obj.is_authenticated():
             user_obj = User.objects.get(pk=settings.ANONYMOUS_USER_ID)
 
+        if user_obj.is_active is not True:
+            return False
+
         if len(perm.split('.')) > 1:
             app_label, perm = perm.split('.')
             if app_label != obj._meta.app_label:
