@@ -9,7 +9,7 @@ from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
 from django.utils.datastructures import SortedDict
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext, ugettext_lazy as _
 
 from guardian.forms import UserObjectPermissionsForm
 from guardian.forms import GroupObjectPermissionsForm
@@ -219,7 +219,8 @@ class GuardedModelAdmin(admin.ModelAdmin):
 
         if request.method == 'POST' and form.is_valid():
             form.save_obj_perms()
-            messages.success(request, "Permissions saved")
+            msg = ugettext("Permissions saved.")
+            messages.success(request, msg)
             info = (
                 self.admin_site.name,
                 self.model._meta.app_label,
