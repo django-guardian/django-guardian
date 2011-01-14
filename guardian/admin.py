@@ -272,7 +272,8 @@ class GuardedModelAdmin(admin.ModelAdmin):
 
         if request.method == 'POST' and form.is_valid():
             form.save_obj_perms()
-            messages.success(request, _("Permissions saved"))
+            msg = ugettext("Permissions saved.")
+            messages.success(request, msg)
             info = (
                 self.admin_site.name,
                 self.model._meta.app_label,
