@@ -83,7 +83,7 @@ There is an online documentation available at
 http://packages.python.org/django-guardian/.
 
 
-.. [1] Great peper about this feature is available at 
+.. [1] Great paper about this feature is available at 
    http://djangoadvent.com/1.2/object-permissions/.
 
 .. _Django: http://www.djangoprojecto.org/
