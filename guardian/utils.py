@@ -1,5 +1,9 @@
 """
 django-guardian helper functions.
+
+Functions defined within this module should be considered as django-guardian's
+internal functionality. They are **not** guaranteed to be stable - which means
+they actual input parameters/output type may change in future releases.
 """
 import logging
 from django.contrib.auth.models import User, AnonymousUser, Group
