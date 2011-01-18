@@ -24,6 +24,7 @@ setup(
     include_package_data = True,
     scripts = [],
     requires = [],
+    license = 'BSD',
     install_requires = [
         'Django>=1.2',
     ],

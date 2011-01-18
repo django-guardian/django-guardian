@@ -17,6 +17,7 @@
     userguide/index
     api/index
     develop/index
+    license
 
 
 Indices and tables
