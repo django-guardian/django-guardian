@@ -79,6 +79,6 @@ setattr(Group, 'del_obj_perm',
 # Make sure the nonrel permissions backend has created the models it needs
 # TODO: permission_backend_nonrel should be going this, not here
 def create_user_permission_list(sender, **kwargs):
-	if kwargs['created'] == True:
-		UserPermissionList.objects.create(user=kwargs['instance'])
+    if kwargs['created'] == True:
+        UserPermissionList.objects.create(user=kwargs['instance'])
 post_save.connect(create_user_permission_list, sender=User)
