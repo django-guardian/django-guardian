@@ -32,8 +32,9 @@ class UserObjectPermissionManager(models.Manager):
         if getattr(obj, 'pk', None) is None:
             raise ObjectNotPersisted("Object %s needs to be persisted first"
                 % obj)
+        permission = Permission.objects.get(codename=perm)
         self.filter(
-            permission__codename=perm,
+            permission=permission,
             user=user,
             object_pk=obj.pk,
             content_type=ContentType.objects.get_for_model(obj))\
@@ -78,8 +79,9 @@ class GroupObjectPermissionManager(models.Manager):
         if getattr(obj, 'pk', None) is None:
             raise ObjectNotPersisted("Object %s needs to be persisted first"
                 % obj)
+        permission = Permission.objects.get(codename=perm)
         self.filter(
-            permission__codename=perm,
+            permission=permission,
             group=group,
             object_pk=obj.pk,
             content_type=ContentType.objects.get_for_model(obj))\

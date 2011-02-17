@@ -13,333 +13,344 @@ from guardian.models import UserObjectPermission, GroupObjectPermission
 from guardian.utils import get_identity
 from itertools import groupby
 
+from permission_backend_nonrel.models import UserPermissionList, GroupPermissionList
+from permission_backend_nonrel.utils import add_permission_to_user, add_permission_to_group
+
 def assign(perm, user_or_group, obj=None):
-    """
-    Assigns permission to user/group and object pair.
+	"""
+	Assigns permission to user/group and object pair.
 
-    :param perm: proper permission for given ``obj``, as string (in format:
-      ``app_label.codename`` or ``codename``). If ``obj`` is not given, must
-      be in format ``app_label.codename``.
+	:param perm: proper permission for given ``obj``, as string (in format:
+	  ``app_label.codename`` or ``codename``). If ``obj`` is not given, must
+	  be in format ``app_label.codename``.
 
-    :param user_or_group: instance of ``User``, ``AnonymousUser`` or ``Group``;
-      passing any other object would raise
-      ``guardian.exceptions.NotUserNorGroup`` exception
+	:param user_or_group: instance of ``User``, ``AnonymousUser`` or ``Group``;
+	  passing any other object would raise
+	  ``guardian.exceptions.NotUserNorGroup`` exception
 
-    :param obj: persisted Django's ``Model`` instance or ``None`` if assigning
-      global permission. Default is ``None``.
+	:param obj: persisted Django's ``Model`` instance or ``None`` if assigning
+	  global permission. Default is ``None``.
 
-    We can assign permission for ``Model`` instance for specific user:
+	We can assign permission for ``Model`` instance for specific user:
 
-    >>> from django.contrib.sites.models import Site
-    >>> from django.contrib.auth.models import User, Group
-    >>> from guardian.shortcuts import assign
-    >>> site = Site.objects.get_current()
-    >>> user = User.objects.create(username='joe')
-    >>> assign("change_site", user, site)
-    <UserObjectPermission: example.com | joe | change_site>
-    >>> user.has_perm("change_site", site)
-    True
+	>>> from django.contrib.sites.models import Site
+	>>> from django.contrib.auth.models import User, Group
+	>>> from guardian.shortcuts import assign
+	>>> site = Site.objects.get_current()
+	>>> user = User.objects.create(username='joe')
+	>>> assign("change_site", user, site)
+	<UserObjectPermission: example.com | joe | change_site>
+	>>> user.has_perm("change_site", site)
+	True
 
-    ... or we can assign permission for group:
+	... or we can assign permission for group:
 
-    >>> group = Group.objects.create(name='joe-group')
-    >>> user.groups.add(group)
-    >>> assign("delete_site", group, site)
-    <GroupObjectPermission: example.com | joe-group | delete_site>
-    >>> user.has_perm("delete_site", site)
-    True
+	>>> group = Group.objects.create(name='joe-group')
+	>>> user.groups.add(group)
+	>>> assign("delete_site", group, site)
+	<GroupObjectPermission: example.com | joe-group | delete_site>
+	>>> user.has_perm("delete_site", site)
+	True
 
-    **Global permissions**
+	**Global permissions**
 
-    This function may also be used to assign standard, *global* permissions if
-    ``obj`` parameter is omitted. Added Permission would be returned in that
-    case:
+	This function may also be used to assign standard, *global* permissions if
+	``obj`` parameter is omitted. Added Permission would be returned in that
+	case:
 
-    >>> assign("sites.change_site", user)
-    <Permission: sites | site | Can change site>
+	>>> assign("sites.change_site", user)
+	<Permission: sites | site | Can change site>
 
-    """
+	"""
 
-    user, group = get_identity(user_or_group)
-    # If obj is None we try to operate on global permissions
-    if obj is None:
-        try:
-            app_label, codename = perm.split('.', 1)
-        except ValueError:
-            raise ValueError("For global permissions, first argument must be in"
-                " format: 'app_label.codename' (is %r)" % perm)
-        perm = Permission.objects.get(content_type__app_label=app_label,
-            codename=codename)
-        if user:
-            user.user_permissions.add(perm)
-            return perm
-        if group:
-            group.permissions.add(perm)
-            return perm
-    perm = perm.split('.')[-1]
-    if user:
-        return UserObjectPermission.objects.assign(perm, user, obj)
-    if group:
-        return GroupObjectPermission.objects.assign(perm, group, obj)
+	user, group = get_identity(user_or_group)
+	# If obj is None we try to operate on global permissions
+	if obj is None:
+		try:
+			app_label, codename = perm.split('.', 1)
+		except ValueError:
+			raise ValueError("For global permissions, first argument must be in"
+				" format: 'app_label.codename' (is %r)" % perm)
+		ctype = ContentType.objects.get(app_label=app_label)
+		perm = Permission.objects.get(content_type=ctype,
+			codename=codename)
+		if user:
+			add_permission_to_user(perm, user)
+			return perm
+		if group:
+			add_permission_to_group(perm, group)
+			return perm
+	perm = perm.split('.')[-1]
+	if user:
+		return UserObjectPermission.objects.assign(perm, user, obj)
+	if group:
+		return GroupObjectPermission.objects.assign(perm, group, obj)
 
 def remove_perm(perm, user_or_group=None, obj=None):
-    """
-    Removes permission from user/group and object pair.
+	"""
+	Removes permission from user/group and object pair.
 
-    :param perm: proper permission for given ``obj``, as string (in format:
-      ``app_label.codename`` or ``codename``). If ``obj`` is not given, must
-      be in format ``app_label.codename``.
+	:param perm: proper permission for given ``obj``, as string (in format:
+	  ``app_label.codename`` or ``codename``). If ``obj`` is not given, must
+	  be in format ``app_label.codename``.
 
-    :param user_or_group: instance of ``User``, ``AnonymousUser`` or ``Group``;
-      passing any other object would raise
-      ``guardian.exceptions.NotUserNorGroup`` exception
+	:param user_or_group: instance of ``User``, ``AnonymousUser`` or ``Group``;
+	  passing any other object would raise
+	  ``guardian.exceptions.NotUserNorGroup`` exception
 
-    :param obj: persisted Django's ``Model`` instance or ``None`` if assigning
-      global permission. Default is ``None``.
+	:param obj: persisted Django's ``Model`` instance or ``None`` if assigning
+	  global permission. Default is ``None``.
 
-    """
-    user, group = get_identity(user_or_group)
-    if obj is None:
-        try:
-            app_label, codename = perm.split('.', 1)
-        except ValueError:
-            raise ValueError("For global permissions, first argument must be in"
-                " format: 'app_label.codename' (is %r)" % perm)
-        perm = Permission.objects.get(content_type__app_label=app_label,
-            codename=codename)
-        if user:
-            user.user_permissions.remove(perm)
-            return
-        elif group:
-            group.permissions.remove(perm)
-            return
-    perm = perm.split('.')[-1]
-    if user:
-        UserObjectPermission.objects.remove_perm(perm, user, obj)
-    if group:
-        GroupObjectPermission.objects.remove_perm(perm, group, obj)
+	"""
+	user, group = get_identity(user_or_group)
+	if obj is None:
+		try:
+			app_label, codename = perm.split('.', 1)
+		except ValueError:
+			raise ValueError("For global permissions, first argument must be in"
+				" format: 'app_label.codename' (is %r)" % perm)	
+		if user:
+			user_perm_list = UserPermissionList.objects.get(user=user)
+			user_perm_list.permission_list.remove(perm)
+			user_perm_list.save()
+			return
+		elif group:
+			group_perm_list = GroupPermissionList.objects.get(group=group)
+			group_perm_list.permission_list.remove(perm)
+			group_perm_list.save()
+			return
+	perm = perm.split('.')[-1]
+	if user:
+		UserObjectPermission.objects.remove_perm(perm, user, obj)
+	if group:
+		GroupObjectPermission.objects.remove_perm(perm, group, obj)
 
 def get_perms(user_or_group, obj):
-    """
-    Returns permissions for given user/group and object pair, as list of
-    strings.
-    """
-    check = ObjectPermissionChecker(user_or_group)
-    return check.get_perms(obj)
+	"""
+	Returns permissions for given user/group and object pair, as list of
+	strings.
+	"""
+	check = ObjectPermissionChecker(user_or_group)
+	return check.get_perms(obj)
 
 def get_perms_for_model(cls):
-    """
-    Returns queryset of all Permission objects for the given class. It is
-    possible to pass Model as class or instance.
-    """
-    if isinstance(cls, str):
-        app_label, model_name = cls.split('.')
-        model = models.get_model(app_label, model_name)
-    else:
-        model = cls
-    ctype = ContentType.objects.get_for_model(model)
-    return Permission.objects.filter(content_type=ctype)
+	"""
+	Returns queryset of all Permission objects for the given class. It is
+	possible to pass Model as class or instance.
+	"""
+	if isinstance(cls, str):
+		app_label, model_name = cls.split('.')
+		model = models.get_model(app_label, model_name)
+	else:
+		model = cls
+	ctype = ContentType.objects.get_for_model(model)
+	return Permission.objects.filter(content_type=ctype)
 
 def get_users_with_perms(obj, attach_perms=False):
-    """
-    Returns queryset of all ``User`` objects with *any* object permissions for
-    the given ``obj``.
+	"""
+	Returns queryset of all ``User`` objects with *any* object permissions for
+	the given ``obj``.
 
-    :param obj: persisted Django's ``Model`` instance
+	:param obj: persisted Django's ``Model`` instance
 
-    :param attach_perms: Default: ``False``. If set to ``True`` result would be
-      dictionary of ``User`` instances with permissions' codenames list as
-      values. This would fetch users eagerly!
+	:param attach_perms: Default: ``False``. If set to ``True`` result would be
+	  dictionary of ``User`` instances with permissions' codenames list as
+	  values. This would fetch users eagerly!
 
-    Example::
+	Example::
 
-        >>> from django.contrib.auth.models import User
-        >>> from django.contrib.flatpages.models import FlatPage
-        >>> from guardian.shortcuts import assign, get_users_with_perms
-        >>>
-        >>> page = FlatPage.objects.create(title='Some page', path='/some/page/')
-        >>> joe = User.objects.create_user('joe', 'joe@example.com', 'joesecret')
-        >>> assign('change_flatpage', joe, page)
-        >>>
-        >>> get_users_with_perms(page)
-        [<User: joe>]
-        >>>
-        >>> get_users_with_perms(page, attach_perms=True)
-        {<User: joe>: [u'change_flatpage']}
+		>>> from django.contrib.auth.models import User
+		>>> from django.contrib.flatpages.models import FlatPage
+		>>> from guardian.shortcuts import assign, get_users_with_perms
+		>>>
+		>>> page = FlatPage.objects.create(title='Some page', path='/some/page/')
+		>>> joe = User.objects.create_user('joe', 'joe@example.com', 'joesecret')
+		>>> assign('change_flatpage', joe, page)
+		>>>
+		>>> get_users_with_perms(page)
+		[<User: joe>]
+		>>>
+		>>> get_users_with_perms(page, attach_perms=True)
+		{<User: joe>: [u'change_flatpage']}
 
-    """
-    ctype = ContentType.objects.get_for_model(obj)
-    if not attach_perms:
-        # It's much easier without attached perms so we do it first if that is
-        # the case
-        qset = Q(
-            userobjectpermission__content_type=ctype,
-            userobjectpermission__object_pk=obj.pk)
-        qset = qset | Q(
-            groups__groupobjectpermission__content_type=ctype,
-            groups__groupobjectpermission__object_pk=obj.pk,
-        )
-        return User.objects.filter(qset).distinct()
-    else:
-        # TODO: Do not hit db for each user!
-        users = {}
-        for user in get_users_with_perms(obj):
-            users[user] = get_perms(user, obj)
-        return users
+	"""
+	ctype = ContentType.objects.get_for_model(obj)
+	if not attach_perms:
+		# It's much easier without attached perms so we do it first if that is
+		# the case
+		
+		# TODO: Not sure how to get around this one without modifying the way the 
+		# norel permissions backend handles group membership
+		user_pks = list(UserObjectPermission.objects.filter(content_type=ctype, object_pk=obj.pk)\
+			.values_list('user', flat=True))
+		group_pks = list(GroupObjectPermission.objects.filter(content_type=ctype, object_pk=obj.pk)\
+			.values_list('group', flat=True))
+		
+		# Find all group members
+		user_perm_lists = UserPermissionList.objects.all()
+		for user_perm_list in user_perm_lists:
+			if len(set(user_perm_list.group_fk_list).intersection(set(group_pks))) > 0:
+				user_pks.append(user_perm_list.user.pk)
+
+		return User.objects.filter(pk__in=list(set(user_pks)))
+		
+	else:
+		# TODO: Do not hit db for each user!
+		users = {}
+		for user in get_users_with_perms(obj):
+			users[user] = get_perms(user, obj)
+		return users
 
 def get_groups_with_perms(obj, attach_perms=False):
-    """
-    Returns queryset of all ``Group`` objects with *any* object permissions for
-    the given ``obj``.
+	"""
+	Returns queryset of all ``Group`` objects with *any* object permissions for
+	the given ``obj``.
 
-    :param obj: persisted Django's ``Model`` instance
+	:param obj: persisted Django's ``Model`` instance
 
-    :param attach_perms: Default: ``False``. If set to ``True`` result would be
-      dictionary of ``Group`` instances with permissions' codenames list as
-      values. This would fetch groups eagerly!
+	:param attach_perms: Default: ``False``. If set to ``True`` result would be
+	  dictionary of ``Group`` instances with permissions' codenames list as
+	  values. This would fetch groups eagerly!
 
-    Example::
+	Example::
 
-        >>> from django.contrib.auth.models import Group
-        >>> from django.contrib.flatpages.models import FlatPage
-        >>> from guardian.shortcuts import assign, get_groups_with_perms
-        >>>
-        >>> page = FlatPage.objects.create(title='Some page', path='/some/page/')
-        >>> admins = Group.objects.create(name='Admins')
-        >>> assign('change_flatpage', group, page)
-        >>>
-        >>> get_groups_with_perms(page)
-        [<Group: admins>]
-        >>>
-        >>> get_groups_with_perms(page, attach_perms=True)
-        {<Group: admins>: [u'change_flatpage']}
+		>>> from django.contrib.auth.models import Group
+		>>> from django.contrib.flatpages.models import FlatPage
+		>>> from guardian.shortcuts import assign, get_groups_with_perms
+		>>>
+		>>> page = FlatPage.objects.create(title='Some page', path='/some/page/')
+		>>> admins = Group.objects.create(name='Admins')
+		>>> assign('change_flatpage', group, page)
+		>>>
+		>>> get_groups_with_perms(page)
+		[<Group: admins>]
+		>>>
+		>>> get_groups_with_perms(page, attach_perms=True)
+		{<Group: admins>: [u'change_flatpage']}
 
-    """
-    ctype = ContentType.objects.get_for_model(obj)
-    if not attach_perms:
-        # It's much easier without attached perms so we do it first if that is
-        # the case
-        groups = Group.objects\
-            .filter(
-                groupobjectpermission__content_type=ctype,
-                groupobjectpermission__object_pk=obj.pk,
-            )\
-            .distinct()
-        return groups
-    else:
-        # TODO: Do not hit db for each group!
-        groups = {}
-        for group in get_groups_with_perms(obj):
-            if not group in groups:
-                groups[group] = get_perms(group, obj)
-        return groups
+	"""
+	ctype = ContentType.objects.get_for_model(obj)
+	if not attach_perms:
+		# It's much easier without attached perms so we do it first if that is
+		# the case
+		group_pks = list(set(GroupObjectPermission.objects.filter(content_type=ctype, object_pk=obj.pk)
+			.values_list('group', flat=True)))
+		groups = Group.objects.filter(pk__in=group_pks)
+		return groups
+	else:
+		# TODO: Do not hit db for each group!
+		groups = {}
+		for group in get_groups_with_perms(obj):
+			if not group in groups:
+				groups[group] = get_perms(group, obj)
+		return groups
 
 def get_objects_for_user(user, perms, klass=None, use_groups=True):
-    """
-    Returns queryset of objects for which given ``user`` has *all*
-    permissions present at ``perms``.
+	"""
+	Returns queryset of objects for which given ``user`` has *all*
+	permissions present at ``perms``.
 
-    :param user: ``User`` instance for which objects would be returned
-    :param perms: sequence with permissions as strings which should be checked.
-      If ``klass`` parameter is not given, those should be full permission
-      names rather than only codenames (i.e. ``auth.change_user``). If more than
-      one permission is present within sequence, theirs content type **must** be
-      the same or ``MixedContentTypeError`` exception would be raised. For
-      convenience, may be given as single permission (string).
-    :param klass: may be a Model, Manager or QuerySet object. If not given
-      this parameter would be computed based on given ``params``.
-    :param use_groups: if ``False``, wouldn't check user's groups object
-      permissions. Default is ``True``.
+	:param user: ``User`` instance for which objects would be returned
+	:param perms: sequence with permissions as strings which should be checked.
+	  If ``klass`` parameter is not given, those should be full permission
+	  names rather than only codenames (i.e. ``auth.change_user``). If more than
+	  one permission is present within sequence, theirs content type **must** be
+	  the same or ``MixedContentTypeError`` exception would be raised. For
+	  convenience, may be given as single permission (string).
+	:param klass: may be a Model, Manager or QuerySet object. If not given
+	  this parameter would be computed based on given ``params``.
+	:param use_groups: if ``False``, wouldn't check user's groups object
+	  permissions. Default is ``True``.
 
-    :raises MixedContentTypeError: when computed content type for ``perms``
-      and/or ``klass`` clashes.
-    :raises WrongAppError: if cannot compute app label for given ``perms``/
-      ``klass``.
+	:raises MixedContentTypeError: when computed content type for ``perms``
+	  and/or ``klass`` clashes.
+	:raises WrongAppError: if cannot compute app label for given ``perms``/
+	  ``klass``.
 
-    Example::
+	Example::
 
-        >>> from guardian.shortcuts import get_objects_for_user
-        >>> joe = User.objects.get(username='joe')
-        >>> get_objects_for_user(joe, ['auth.change_group'])
-        []
-        >>> from guardian.shortcuts import assign
-        >>> group = Group.objects.create('some group')
-        >>> assign('auth.change_group', joe, group)
-        >>> get_objects_for_user(joe, ['auth.change_group'])
-        [<Group some group>]
+		>>> from guardian.shortcuts import get_objects_for_user
+		>>> joe = User.objects.get(username='joe')
+		>>> get_objects_for_user(joe, ['auth.change_group'])
+		[]
+		>>> from guardian.shortcuts import assign
+		>>> group = Group.objects.create('some group')
+		>>> assign('auth.change_group', joe, group)
+		>>> get_objects_for_user(joe, ['auth.change_group'])
+		[<Group some group>]
 
-    """
-    if isinstance(perms, basestring):
-        perms = [perms]
-    ctype = None
-    app_label = None
-    codenames = set()
+	"""
+	if isinstance(perms, basestring):
+		perms = [perms]
+	ctype = None
+	app_label = None
+	codenames = set()
 
-    # Compute codenames set and ctype if possible
-    for perm in perms:
-        if '.' in perm:
-            new_app_label, codename = perm.split('.', 1)
-            if app_label is not None and app_label != new_app_label:
-                raise MixedContentTypeError("Given perms must have same app "
-                    "label (%s != %s)" % (app_label, new_app_label))
-            else:
-                app_label = new_app_label
-        else:
-            codename = perm
-        codenames.add(codename)
-        if app_label is not None:
-            new_ctype = ContentType.objects.get(app_label=app_label,
-                permission__codename=codename)
-            if ctype is not None and ctype != new_ctype:
-                raise MixedContentTypeError("ContentType was once computed "
-                    "to be %s and another one %s" % (ctype, new_ctype))
-            else:
-                ctype = new_ctype
+	# Compute codenames set and ctype if possible
+	for perm in perms:
+		if '.' in perm:
+			new_app_label, codename = perm.split('.', 1)
+			if app_label is not None and app_label != new_app_label:
+				raise MixedContentTypeError("Given perms must have same app "
+					"label (%s != %s)" % (app_label, new_app_label))
+			else:
+				app_label = new_app_label
+		else:
+			codename = perm
+		codenames.add(codename)
+		if app_label is not None:
+			permission = Permission.objects.get(codename=codename)
+			new_ctype = ContentType.objects.get(app_label=app_label,
+				name=permission.content_type.name)
+			if ctype is not None and ctype != new_ctype:
+				raise MixedContentTypeError("ContentType was once computed "
+					"to be %s and another one %s" % (ctype, new_ctype))
+			else:
+				ctype = new_ctype
 
-    # Compute queryset and ctype if still missing
-    if ctype is None and klass is None:
-        raise WrongAppError("Cannot determine content type")
-    elif ctype is None and klass is not None:
-        queryset = _get_queryset(klass)
-        ctype = ContentType.objects.get_for_model(queryset.model)
-    elif ctype is not None and klass is None:
-        queryset = _get_queryset(ctype.model_class())
-    else:
-        queryset = _get_queryset(klass)
-        if ctype.model_class() != queryset.model:
-            raise MixedContentTypeError("Content type for given perms and "
-                "klass differs")
+	# Compute queryset and ctype if still missing
+	if ctype is None and klass is None:
+		raise WrongAppError("Cannot determine content type")
+	elif ctype is None and klass is not None:
+		queryset = _get_queryset(klass)
+		ctype = ContentType.objects.get_for_model(queryset.model)
+	elif ctype is not None and klass is None:
+		queryset = _get_queryset(ctype.model_class())
+	else:
+		queryset = _get_queryset(klass)
+		if ctype.model_class() != queryset.model:
+			raise MixedContentTypeError("Content type for given perms and "
+				"klass differs")
 
-    # At this point, we should have both ctype and queryset and they should
-    # match which means: ctype.model_class() == queryset.model
-    # we should also have ``codenames`` list
+	# At this point, we should have both ctype and queryset and they should
+	# match which means: ctype.model_class() == queryset.model
+	# we should also have ``codenames`` list
 
-    # First check if user is superuser and if so, return queryset immediately
-    if user.is_superuser:
-        return queryset
+	# First check if user is superuser and if so, return queryset immediately
+	if user.is_superuser:
+		return queryset
 
-    # Now we should extract list of pk values for which we would filter queryset
-    user_obj_perms = UserObjectPermission.objects\
-        .filter(user=user)\
-        .filter(permission__content_type=ctype)\
-        .filter(permission__codename__in=codenames)\
-        .values_list('object_pk', 'permission__codename')
-    data = list(user_obj_perms)
-    if use_groups:
-        groups_obj_perms = GroupObjectPermission.objects\
-            .filter(group__user=user)\
-            .filter(permission__content_type=ctype)\
-            .filter(permission__codename__in=codenames)\
-            .values_list('object_pk', 'permission__codename')
-        data += list(groups_obj_perms)
-    keyfunc = lambda t: t[0] # sorting/grouping by pk (first in result tuple)
-    data = sorted(data, key=keyfunc)
-    pk_list = []
-    for pk, group in groupby(data, keyfunc):
-        obj_codenames = set((e[1] for e in group))
-        if codenames.issubset(obj_codenames):
-            pk_list.append(pk)
+	# Now we should extract list of pk values for which we would filter queryset
+	permissions = list(Permission.objects.filter(content_type=ctype)\
+		.filter(codename__in=codenames).values_list('pk', flat=True))
+	user_obj_perms = UserObjectPermission.objects\
+		.filter(user=user)\
+		.filter(permission__in=permissions)
+	data = [(uop.object_pk, uop.permission.codename) for uop in user_obj_perms]
+	if use_groups:
+		group_pks = UserPermissionList.objects.get(user=user).group_fk_list
+		group_obj_perms = GroupObjectPermission.objects\
+			.filter(group__in=group_pks)\
+			.filter(permission__in=permissions)
+		data += [(gop.object_pk, gop.permission.codename) for gop in group_obj_perms]
+	keyfunc = lambda t: t[0] # sorting/grouping by pk (first in result tuple)
+	data = sorted(data, key=keyfunc)
+	pk_list = []
+	for pk, group in groupby(data, keyfunc):
+		obj_codenames = set((e[1] for e in group))
+		if codenames.issubset(obj_codenames):
+			pk_list.append(pk)
 
-    objects = queryset.filter(pk__in=pk_list)
-    return objects
+	objects = queryset.filter(pk__in=pk_list)
+	return objects
 

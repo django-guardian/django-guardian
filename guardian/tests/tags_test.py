@@ -7,6 +7,8 @@ from django.contrib.contenttypes.models import ContentType
 from guardian.exceptions import NotUserNorGroup
 from guardian.models import UserObjectPermission, GroupObjectPermission
 
+from permission_backend_nonrel.utils import add_user_to_group
+
 def render(template, context):
     """
     Returns rendered ``template`` with ``context``, which are given as string
@@ -22,7 +24,7 @@ class GetObjPermsTagTest(TestCase):
             app_label='fake-for-guardian-tests')
         self.group = Group.objects.create(name='jackGroup')
         self.user = User.objects.create(username='jack')
-        self.user.groups.add(self.group)
+        add_user_to_group(self.user, self.group)
 
     def test_wrong_formats(self):
         wrong_formats = (

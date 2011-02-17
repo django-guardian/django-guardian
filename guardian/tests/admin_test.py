@@ -40,7 +40,7 @@ class AdminTests(TestCase):
     def test_view_manage_wrong_obj(self):
         self._login_superuser()
         url = reverse('admin:%s_%s_permissions_manage_user' % self.obj_info,
-                kwargs={'object_pk': -10, 'user_id': self.user.id})
+                kwargs={'object_pk': "000000000000000000000000", 'user_id': self.user.id})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
@@ -55,7 +55,7 @@ class AdminTests(TestCase):
     def test_view_manage_wrong_user(self):
         self._login_superuser()
         url = reverse('admin:%s_%s_permissions_manage_user' % self.obj_info,
-            kwargs={'object_pk': self.obj.pk, 'user_id': -10})
+            kwargs={'object_pk': self.obj.pk, 'user_id': "000000000000000000000000"})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
@@ -76,7 +76,7 @@ class AdminTests(TestCase):
         self._login_superuser()
         url = reverse('admin:%s_%s_permissions' % self.obj_info,
             args=[self.obj.pk])
-        self.user = User.objects.create(username='negative_id_user', id=-2010)
+        self.user = User.objects.create(username='negative_id_user', id="000000000000000000000000")
         data = {'user': self.user.username, 'submit_manage_user': 'submit'}
         response = self.client.post(url, data, follow=True)
         self.assertEqual(len(response.redirect_chain), 1)
@@ -84,7 +84,6 @@ class AdminTests(TestCase):
         redirect_url = reverse('admin:%s_%s_permissions_manage_user' %
             self.obj_info, args=[self.obj.pk, self.user.id])
         self.assertEqual(response.request['PATH_INFO'], redirect_url)
-
 
     def test_view_manage_user_form_wrong_user(self):
         self._login_superuser()
@@ -180,7 +179,7 @@ class AdminTests(TestCase):
         self._login_superuser()
         url = reverse('admin:%s_%s_permissions' % self.obj_info,
             args=[self.obj.pk])
-        self.group = Group.objects.create(name='neagive_id_group', id=-2010)
+        self.group = Group.objects.create(name='neagive_id_group', id="000000000000000000000000")
         data = {'group': self.group.name, 'submit_manage_group': 'submit'}
         response = self.client.post(url, data, follow=True)
         self.assertEqual(len(response.redirect_chain), 1)
@@ -312,14 +311,12 @@ class GuardedModelAdminTests(TestCase):
         gma = self._get_gma(attrs=attrs)
         self.assertTrue(gma.get_obj_perms_manage_group_form(), forms.Form)
 
+"""
 class GrappelliGuardedModelAdminTests(TestCase):
 
-    org_settings = copy.copy(settings)
+    org_settings = None
 
     def _get_gma(self, attrs=None, name=None, model=None):
-        """
-        Returns ``GuardedModelAdmin`` instance.
-        """
         attrs = attrs or {}
         name = name or 'GMA'
         model = model or User
@@ -328,6 +325,7 @@ class GrappelliGuardedModelAdminTests(TestCase):
         return gma
 
     def setUp(self):
+        self.org_settings = copy.copy(settings)
         settings.INSTALLED_APPS = ['grappelli'] + list(settings.INSTALLED_APPS)
 
     def tearDown(self):
@@ -347,4 +345,4 @@ class GrappelliGuardedModelAdminTests(TestCase):
         gma = self._get_gma()
         self.assertEqual(gma.get_obj_perms_manage_group_template(),
             'admin/guardian/contrib/grappelli/obj_perms_manage_group.html')
-
+"""

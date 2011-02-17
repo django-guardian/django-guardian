@@ -1,6 +1,6 @@
 [
     {
-        "pk": -1, 
+        "pk": "4d128b6ea794fc13a8000001", 
         "model": "auth.user", 
         "fields": {
             "username": "", 
@@ -18,7 +18,7 @@
         }
     },
     {
-        "pk": 1,
+        "pk": "4d128b6ea794fc13a8000002",
         "model": "auth.user", 
         "fields": {
             "username": "jack", 
@@ -28,7 +28,7 @@
             "is_superuser": false, 
             "is_staff": false, 
             "last_login": "2010-05-28 04:02:34", 
-            "groups": [2], 
+            "groups": ["4d128b6ea794fc13a8000004"], 
             "user_permissions": [], 
             "password": "", 
             "email": "", 
@@ -36,7 +36,7 @@
         }
     }, 
     {
-        "pk": 1, 
+        "pk": "4d128b6ea794fc13a8000003", 
         "model": "auth.group", 
         "fields": {
             "name": "admins", 
@@ -44,7 +44,7 @@
         }
     },
     {
-        "pk": 2,
+        "pk": "4d128b6ea794fc13a8000004",
         "model": "auth.group", 
         "fields": {
             "name": "jackGroup", 

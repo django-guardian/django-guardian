@@ -78,7 +78,7 @@ def clean_orphan_obj_perms():
     for perm in chain(UserObjectPermission.objects.all(),
         GroupObjectPermission.objects.all()):
         if perm.content_object is None:
-            logger.debug("Removing %s (pk=%d)" % (perm, perm.pk))
+            logger.debug("Removing %s (pk=%s)" % (perm, perm.pk))
             perm.delete()
             deleted += 1
     logger.info("Total removed orphan object permissions instances: %d" %
