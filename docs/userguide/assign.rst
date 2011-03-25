@@ -52,7 +52,7 @@ added to default set of permissions.
 
 There is nothing new here since creation of permissions is 
 `handled by django <http://docs.djangoproject.com/en/1.2/topics/auth/#id1>`_.
-Now we can move to :ref:`assign-obj-perms <assigning object permissions>`.
+Now we can move to :ref:`assigning object permissions <assign-obj-perms>`.
 
 .. _assign-obj-perms:
 
