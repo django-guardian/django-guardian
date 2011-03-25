@@ -1,8 +1,9 @@
+import os
 import sys
 from setuptools import setup, find_packages
 
 guardian = __import__('guardian')
-readme_file = 'README.rst'
+readme_file = os.path.join(os.path.dirname(__file__), 'README.rst')
 try:
     long_description = open(readme_file).read()
 except IOError, err:

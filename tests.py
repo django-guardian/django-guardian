@@ -9,8 +9,8 @@ instructions how to interpret ``test`` command when we run::
 import os
 import sys
 
-os.environ["DJANGO_SETTINGS_MODULE"] = 'example_project.settings'
-from example_project import settings
+os.environ["DJANGO_SETTINGS_MODULE"] = 'guardian.testsettings'
+from guardian import testsettings as settings
 
 settings.DJALOG_LEVEL = 40
 settings.INSTALLED_APPS = (
