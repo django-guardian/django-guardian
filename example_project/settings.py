@@ -1,5 +1,6 @@
 import os
 import sys
+import django
 
 from django.conf import global_settings
 
@@ -35,11 +36,12 @@ INSTALLED_APPS = (
     'django_coverage',
     'posts',
 )
-try:
-    __import__('grappelli')
-    INSTALLED_APPS = ('grappelli',) + INSTALLED_APPS
-except ImportError:
-    pass
+if django.VERSION < '1.3':
+    try:
+        __import__('grappelli')
+        INSTALLED_APPS = ('grappelli',) + INSTALLED_APPS
+    except ImportError:
+        pass
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
