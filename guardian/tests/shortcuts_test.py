@@ -141,7 +141,7 @@ class GetPermsTest(ObjectPermissionTestCase):
         for perm in perms_to_assign:
             self.assertTrue(perm in perms)
 
-class GetUsersWithPerms(TestCase):
+class GetUsersWithPermsTest(TestCase):
     """
     Tests get_users_with_perms function.
     """
@@ -255,6 +255,17 @@ class GetUsersWithPerms(TestCase):
             set(result),
             set([self.user1, self.user2]),
         )
+
+    def test_with_superusers(self):
+        admin = User.objects.create(username='admin', is_superuser=True)
+        assign("change_contenttype", self.user1, self.obj1)
+
+        result = get_users_with_perms(self.obj1, with_superusers=True)
+        self.assertEqual(
+            set(result),
+            set([self.user1, admin]),
+        )
+
 
 class GetGroupsWithPerms(TestCase):
     """

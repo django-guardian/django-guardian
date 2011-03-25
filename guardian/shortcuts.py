@@ -140,7 +140,7 @@ def get_perms_for_model(cls):
     ctype = ContentType.objects.get_for_model(model)
     return Permission.objects.filter(content_type=ctype)
 
-def get_users_with_perms(obj, attach_perms=False):
+def get_users_with_perms(obj, attach_perms=False, with_superusers=False):
     """
     Returns queryset of all ``User`` objects with *any* object permissions for
     the given ``obj``.
@@ -150,6 +150,9 @@ def get_users_with_perms(obj, attach_perms=False):
     :param attach_perms: Default: ``False``. If set to ``True`` result would be
       dictionary of ``User`` instances with permissions' codenames list as
       values. This would fetch users eagerly!
+
+    :param with_superusers: Default: ``False``. If set to ``True`` result would
+      contain all superusers.
 
     Example::
 
@@ -179,6 +182,8 @@ def get_users_with_perms(obj, attach_perms=False):
             groups__groupobjectpermission__content_type=ctype,
             groups__groupobjectpermission__object_pk=obj.pk,
         )
+        if with_superusers:
+            qset = qset | Q(is_superuser=True)
         return User.objects.filter(qset).distinct()
     else:
         # TODO: Do not hit db for each user!
