@@ -1,17 +1,26 @@
-Release 1.0.1 (Mar 25, 2010)
+Release 1.0.2 (Apr 12, 2011)
+==================================
+
+* get_users_with_perms now accepts *with_group_users* flag
+* Fixed group_id issue at admin templates
+* Small fix for documentation building process
+* It's 2011 (updated dates within this file)
+
+
+Release 1.0.1 (Mar 25, 2011)
 ==================================
 
 * get_users_with_perms now accepts *with_superusers* flag
 * Small fix for documentation building process
 
 
-Release 1.0.0 (Jan 27, 2010)
+Release 1.0.0 (Jan 27, 2011)
 ==================================
 
 * A final v1.0 release!
 
 
-Release 1.0.0.beta2 (Jan 14, 2010)
+Release 1.0.0.beta2 (Jan 14, 2011)
 ==================================
 
 * Added get_objects_for_user shortcut function
@@ -20,7 +29,7 @@ Release 1.0.0.beta2 (Jan 14, 2010)
 * Removed example project from source distribution
 
 
-Release 1.0.0.beta1 (Jan 11, 2010)
+Release 1.0.0.beta1 (Jan 11, 2011)
 ==================================
 
 * Simplified example project
