@@ -266,13 +266,43 @@ class GetUsersWithPermsTest(TestCase):
             set([self.user1, admin]),
         )
 
-    def test_with_group_users(self):
+    def test_without_group_users(self):
+        self.user1.groups.add(self.group1)
+        self.user2.groups.add(self.group2)
+        assign("change_contenttype", self.group1, self.obj1)
+        assign("change_contenttype", self.user2, self.obj1)
+        assign("change_contenttype", self.group2, self.obj1)
+        result = get_users_with_perms(self.obj1, with_group_users=False)
+        expected = set([self.user2])
+        self.assertEqual(set(result), expected)
+
+    def test_without_group_users_but_perms_attached(self):
+        self.user1.groups.add(self.group1)
+        self.user2.groups.add(self.group2)
+        assign("change_contenttype", self.group1, self.obj1)
+        assign("change_contenttype", self.user2, self.obj1)
+        assign("change_contenttype", self.group2, self.obj1)
+        result = get_users_with_perms(self.obj1, with_group_users=False,
+            attach_perms=True)
+        expected = {self.user2: ["change_contenttype"]}
+        self.assertEqual(result, expected)
+
+    def test_without_group_users_no_result(self):
         self.user1.groups.add(self.group1)
         assign("change_contenttype", self.group1, self.obj1)
         result = get_users_with_perms(self.obj1, attach_perms=True,
                 with_group_users=False)
         expected = {}
         self.assertEqual(result, expected)
+
+    def test_without_group_users_no_result_but_with_superusers(self):
+        admin = User.objects.create(username='admin', is_superuser=True)
+        self.user1.groups.add(self.group1)
+        assign("change_contenttype", self.group1, self.obj1)
+        result = get_users_with_perms(self.obj1, with_group_users=False,
+            with_superusers=True)
+        expected = [admin]
+        self.assertEqual(set(result), set(expected))
 
 
 class GetGroupsWithPerms(TestCase):

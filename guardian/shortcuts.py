@@ -155,6 +155,10 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
     :param with_superusers: Default: ``False``. If set to ``True`` result would
       contain all superusers.
 
+    :param with_group_users: Default: ``True``. If set to ``False`` result would
+      **not** contain those users who have only group permissions for given
+      ``obj``.
+
     Example::
 
         >>> from django.contrib.auth.models import User
