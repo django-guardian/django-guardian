@@ -266,6 +266,14 @@ class GetUsersWithPermsTest(TestCase):
             set([self.user1, admin]),
         )
 
+    def test_with_group_users(self):
+        self.user1.groups.add(self.group1)
+        assign("change_contenttype", self.group1, self.obj1)
+        result = get_users_with_perms(self.obj1, attach_perms=True,
+                with_group_users=False)
+        expected = {}
+        self.assertEqual(result, expected)
+
 
 class GetGroupsWithPerms(TestCase):
     """

@@ -145,7 +145,8 @@ class GuardedModelAdmin(admin.ModelAdmin):
         """
         obj = get_object_or_404(self.queryset(request), pk=object_pk)
         users_perms = SortedDict(
-            get_users_with_perms(obj, attach_perms=True))
+            get_users_with_perms(obj, attach_perms=True,
+                with_group_users=False))
         users_perms.keyOrder.sort(key=lambda user: user.username)
         groups_perms = SortedDict(
             get_groups_with_perms(obj, attach_perms=True))

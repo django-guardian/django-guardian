@@ -140,7 +140,8 @@ def get_perms_for_model(cls):
     ctype = ContentType.objects.get_for_model(model)
     return Permission.objects.filter(content_type=ctype)
 
-def get_users_with_perms(obj, attach_perms=False, with_superusers=False):
+def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
+        with_group_users=True):
     """
     Returns queryset of all ``User`` objects with *any* object permissions for
     the given ``obj``.
@@ -178,17 +179,19 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False):
         qset = Q(
             userobjectpermission__content_type=ctype,
             userobjectpermission__object_pk=obj.pk)
-        qset = qset | Q(
-            groups__groupobjectpermission__content_type=ctype,
-            groups__groupobjectpermission__object_pk=obj.pk,
-        )
+        if with_group_users:
+            qset = qset | Q(
+                groups__groupobjectpermission__content_type=ctype,
+                groups__groupobjectpermission__object_pk=obj.pk,
+            )
         if with_superusers:
             qset = qset | Q(is_superuser=True)
         return User.objects.filter(qset).distinct()
     else:
         # TODO: Do not hit db for each user!
         users = {}
-        for user in get_users_with_perms(obj):
+        for user in get_users_with_perms(obj,
+                with_group_users=with_group_users):
             users[user] = get_perms(user, obj)
         return users
 
