@@ -3,9 +3,11 @@ import copy
 from django import forms
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
+from django.http import HttpRequest
 from django.test import TestCase
 from django.test.client import Client
 
@@ -84,7 +86,6 @@ class AdminTests(TestCase):
         redirect_url = reverse('admin:%s_%s_permissions_manage_user' %
             self.obj_info, args=[self.obj.pk, self.user.id])
         self.assertEqual(response.request['PATH_INFO'], redirect_url)
-
 
     def test_view_manage_user_form_wrong_user(self):
         self._login_superuser()
@@ -311,6 +312,43 @@ class GuardedModelAdminTests(TestCase):
         attrs = {'obj_perms_manage_group_form': forms.Form}
         gma = self._get_gma(attrs=attrs)
         self.assertTrue(gma.get_obj_perms_manage_group_form(), forms.Form)
+
+    def test_user_can_acces_owned_objects_only(self):
+        attrs = {
+            'user_can_access_owned_objects_only': True,
+            'user_owned_objects_field': 'user',
+        }
+        gma = self._get_gma(attrs=attrs, model=LogEntry)
+        joe = User.objects.create_user('joe', 'joe@example.com', 'joe')
+        jane = User.objects.create_user('jane', 'jane@example.com', 'jane')
+        ctype = ContentType.objects.get_for_model(User)
+        joe_entry = LogEntry.objects.create(user=joe, content_type=ctype,
+            object_id=joe.id, action_flag=1, change_message='foo')
+        LogEntry.objects.create(user=jane, content_type=ctype,
+            object_id=jane.id, action_flag=1, change_message='bar')
+        request = HttpRequest()
+        request.user = joe
+        qs = gma.queryset(request)
+        self.assertEqual([e.pk for e in qs], [joe_entry.pk])
+
+    def test_user_can_acces_owned_objects_only_unless_superuser(self):
+        attrs = {
+            'user_can_access_owned_objects_only': True,
+            'user_owned_objects_field': 'user',
+        }
+        gma = self._get_gma(attrs=attrs, model=LogEntry)
+        joe = User.objects.create_superuser('joe', 'joe@example.com', 'joe')
+        jane = User.objects.create_user('jane', 'jane@example.com', 'jane')
+        ctype = ContentType.objects.get_for_model(User)
+        joe_entry = LogEntry.objects.create(user=joe, content_type=ctype,
+            object_id=joe.id, action_flag=1, change_message='foo')
+        jane_entry = LogEntry.objects.create(user=jane, content_type=ctype,
+            object_id=jane.id, action_flag=1, change_message='bar')
+        request = HttpRequest()
+        request.user = joe
+        qs = gma.queryset(request)
+        self.assertItemsEqual([e.pk for e in qs], [joe_entry.pk, jane_entry.pk])
+
 
 class GrappelliGuardedModelAdminTests(TestCase):
 
