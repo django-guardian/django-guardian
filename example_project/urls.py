@@ -13,7 +13,7 @@ urlpatterns = patterns('',
                 'template_object_name': 'flatpage'},
         name='home'),
     (r'^admin/', include(admin.site.urls)),
-    (r'^accounts/', include('registration.urls')),
+    #(r'^accounts/', include('registration.urls')),
     (r'^posts/', include('example_project.posts.urls')),
 )
 
