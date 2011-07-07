@@ -33,7 +33,7 @@ INSTALLED_APPS = (
 
     'guardian',
     #'south',
-    'django_coverage',
+    #'django_coverage',
     'posts',
 )
 if django.VERSION < '1.3':

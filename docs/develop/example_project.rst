@@ -10,10 +10,6 @@ directory::
 
     $ pip install -r requirements.txt
 
-Now we need to import some media::
-
-    $ python manage.py import_media richtemplates
-
 And last thing before we can run example project is to create sqlite database::
 
     $ python manage.py syncdb

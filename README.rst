@@ -86,5 +86,5 @@ http://packages.python.org/django-guardian/.
 .. [1] Great paper about this feature is available at 
    http://djangoadvent.com/1.2/object-permissions/.
 
-.. _Django: http://www.djangoprojecto.org/
+.. _Django: http://www.djangoproject.org/
 
