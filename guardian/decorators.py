@@ -1,7 +1,8 @@
 
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
-from django.http import HttpResponseForbidden, HttpResponseRedirect
+from django.core.exceptions import PermissionDenied
+from django.http import HttpResponseRedirect
 from django.utils.functional import wraps
 from django.utils.http import urlquote
 from django.db.models import Model, get_model
@@ -25,8 +26,8 @@ def permission_required(perm, lookup_variables=None, **kwargs):
     :param redirect_field_name: name of the parameter passed if redirected.
       Defaults to ``django.contrib.auth.REDIRECT_FIELD_NAME``.
     :param return_403: if set to ``True`` then instead of redirecting to the
-      login page, response with status code 403 is returned (
-      ``django.http.HttpResponseForbidden`` instance). Defaults to ``False``.
+      login page, response with status code 403 is returned by raising the
+      ``PermissionDenied`` exception. Defaults to ``False``.
 
     Examples::
 
@@ -94,7 +95,7 @@ def permission_required(perm, lookup_variables=None, **kwargs):
             # as ``obj`` defaults to None
             if not request.user.has_perm(perm, obj):
                 if return_403:
-                    return HttpResponseForbidden()
+                    raise PermissionDenied()
                 else:
                     path = urlquote(request.get_full_path())
                     tup = login_url, redirect_field_name, path
