@@ -248,16 +248,16 @@ def get_groups_with_perms(obj, attach_perms=False):
 
 def get_objects_for_user(user, perms, klass=None, use_groups=True):
     """
-    Returns queryset of objects for which given ``user`` has *all*
+    Returns queryset of objects for which a given ``user`` has *all*
     permissions present at ``perms``.
 
     :param user: ``User`` instance for which objects would be returned
-    :param perms: sequence with permissions as strings which should be checked.
+    :param perms: single permission string, or sequence of permission strings 
+      which should be checked.
       If ``klass`` parameter is not given, those should be full permission
       names rather than only codenames (i.e. ``auth.change_user``). If more than
-      one permission is present within sequence, theirs content type **must** be
-      the same or ``MixedContentTypeError`` exception would be raised. For
-      convenience, may be given as single permission (string).
+      one permission is present within sequence, their content type **must** be
+      the same or ``MixedContentTypeError`` exception would be raised.
     :param klass: may be a Model, Manager or QuerySet object. If not given
       this parameter would be computed based on given ``params``.
     :param use_groups: if ``False``, wouldn't check user's groups object
@@ -272,13 +272,21 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True):
 
         >>> from guardian.shortcuts import get_objects_for_user
         >>> joe = User.objects.get(username='joe')
-        >>> get_objects_for_user(joe, ['auth.change_group'])
+        >>> get_objects_for_user(joe, 'auth.change_group')
         []
         >>> from guardian.shortcuts import assign
         >>> group = Group.objects.create('some group')
         >>> assign('auth.change_group', joe, group)
-        >>> get_objects_for_user(joe, ['auth.change_group'])
+        >>> get_objects_for_user(joe, 'auth.change_group')
         [<Group some group>]
+        
+    The permission string can also be an iterable. Continuing with the previous example:
+      
+        >>> get_objects_for_user(joe, ['auth.change_group', 'auth.delete_group'], 'auth.delete_group'])
+        []
+        >>> assign('auth.delete_group', joe, group)
+        >>> get_objects_for_user(joe, ['auth.change_group', 'auth.delete_group'])
+        [<Group some group>]        
 
     """
     if isinstance(perms, basestring):
@@ -357,16 +365,16 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True):
 
 def get_objects_for_group(group, perms, klass=None):
     """
-    Returns queryset of objects for which given ``group`` has *all*
+    Returns queryset of objects for which a given ``group`` has *all*
     permissions present at ``perms``.
 
-    :param group: ``Group`` instance for which objects would be returned
-    :param perms: sequence with permissions as strings which should be checked.
+    :param group: ``Group`` instance for which objects would be returned.
+    :param perms: single permission string, or sequence of permission strings 
+      which should be checked.
       If ``klass`` parameter is not given, those should be full permission
       names rather than only codenames (i.e. ``auth.change_user``). If more than
-      one permission is present within sequence, theirs content type **must** be
-      the same or ``MixedContentTypeError`` exception would be raised. For
-      convenience, may be given as single permission (string).
+      one permission is present within sequence, their content type **must** be
+      the same or ``MixedContentTypeError`` exception would be raised.
     :param klass: may be a Model, Manager or QuerySet object. If not given
       this parameter would be computed based on given ``params``.
 
@@ -375,22 +383,30 @@ def get_objects_for_group(group, perms, klass=None):
     :raises WrongAppError: if cannot compute app label for given ``perms``/
       ``klass``.
 
-    Example::
+    Example:
     
     Let's assume we have a ``Task`` model belonging to the ``tasker`` app with 
-    the default add_task, change_task and delete_task provided by Django.
+    the default add_task, change_task and delete_task permissions provided 
+    by Django::
 
         >>> from guardian.shortcuts import get_objects_for_group
         >>> from tasker import Task
         >>> group = Group.objects.create('some group')
         >>> task = Task.objects.create('some task')
-        >>> get_objects_for_group(group, ['task.add_task'], Task)
+        >>> get_objects_for_group(group, 'tasker.add_task')
         []
         >>> from guardian.shortcuts import assign
         >>> assign('tasker.add_task', group, task)
-        >>> get_objects_for_group(group, ['auth.change_group'], Task)
+        >>> get_objects_for_group(group, 'tasker.add_task')
         [<Task some task>]
 
+    The permission string can also be an iterable. Continuing with the previous example:
+        >>> get_objects_for_group(group, ['tasker.add_task', 'tasker.delete_task'])
+        []
+        >>> assign('tasker.delete_task', group, task)
+        >>> get_objects_for_group(group, ['tasker.add_task', 'tasker.delete_task'])
+        [<Task some task>]
+                
     """
     if isinstance(perms, basestring):
         perms = [perms]

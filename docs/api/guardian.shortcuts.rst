@@ -61,3 +61,7 @@ get_objects_for_user
 
 .. autofunction:: guardian.shortcuts.get_objects_for_user
 
+get_objects_for_group
+---------------------
+
+.. autofunction:: guardian.shortcuts.get_objects_for_group
