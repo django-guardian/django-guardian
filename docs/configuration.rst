@@ -42,34 +42,36 @@ optional configuration variables:
 
 .. setting:: GUARDIAN_RENDER_403
 
-* ``GUARDIAN_RENDER_403``
+GUARDIAN_RENDER_403
+-------------------
 
-  .. versionadded:: 1.0.4
+.. versionadded:: 1.0.4
 
-  If set to ``True``, guardian would try to render 403 response rather than
-  return contentless ``django.http.HttpResponseForbidden``. Would use template
-  pointed by :setting:`GUARDIAN_TEMPLATE_403` to do that. Default is ``False``.
+If set to ``True``, guardian would try to render 403 response rather than
+return contentless ``django.http.HttpResponseForbidden``. Would use template
+pointed by :setting:`GUARDIAN_TEMPLATE_403` to do that. Default is ``False``.
 
-  .. warning::
+.. warning::
 
-     Remember that you cannot use both :setting:`GUARDIAN_RENDER_403` **AND**
-     :setting:`GUARDIAN_RAISE_403` - if both are set to ``True``,
-     ``django.core.exceptions.ImproperlyConfigured`` would be raised.
+ Remember that you cannot use both :setting:`GUARDIAN_RENDER_403` **AND**
+ :setting:`GUARDIAN_RAISE_403` - if both are set to ``True``,
+ ``django.core.exceptions.ImproperlyConfigured`` would be raised.
 
 
 .. setting:: GUARDIAN_TEMPLATE_403
 
-* ``GUARDIAN_TEMPLATE_403``
+GUARDIAN_TEMPLATE_403
+---------------------
 
-  .. versionadded:: 1.0.4
+.. versionadded:: 1.0.4
 
-    Tells parts of guardian what template to use for responses with status code
-    ``403`` (i.e. :ref:`api-decorators-permission_required`). Defaults to
-    ``403.html``.
+Tells parts of guardian what template to use for responses with status code
+``403`` (i.e. :ref:`api-decorators-permission_required`). Defaults to
+``403.html``.
 
-  .. warning::
+.. warning::
 
-     Remember that you cannot use both :setting:`GUARDIAN_RENDER_403` **AND**
-     :setting:`GUARDIAN_RAISE_403` - if both are set to ``True``,
-     ``django.core.exceptions.ImproperlyConfigured`` would be raised.
+ Remember that you cannot use both :setting:`GUARDIAN_RENDER_403` **AND**
+ :setting:`GUARDIAN_RAISE_403` - if both are set to ``True``,
+ ``django.core.exceptions.ImproperlyConfigured`` would be raised.
 
