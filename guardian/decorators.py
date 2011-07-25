@@ -27,7 +27,8 @@ def permission_required(perm, lookup_variables=None, **kwargs):
       Defaults to ``django.contrib.auth.REDIRECT_FIELD_NAME``.
     :param return_403: if set to ``True`` then instead of redirecting to the
       login page, response with status code 403 is returned (
-      ``django.http.HttpResponseForbidden`` instance). Defaults to ``False``.
+      ``django.http.HttpResponseForbidden`` instance or rendered template -
+      see :setting:`GUARDIAN_RENDER_403`). Defaults to ``False``.
 
     Examples::
 
