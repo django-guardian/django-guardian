@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
+from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseForbidden, HttpResponseRedirect
 from django.utils.functional import wraps
 from django.utils.http import urlquote
@@ -106,6 +107,8 @@ def permission_required(perm, lookup_variables=None, **kwargs):
                         except TemplateDoesNotExist, e:
                             if settings.DEBUG:
                                 raise e
+                    elif guardian_settings.RAISE_403:
+                        raise PermissionDenied
                     return HttpResponseForbidden()
                 else:
                     path = urlquote(request.get_full_path())

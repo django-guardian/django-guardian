@@ -1,4 +1,5 @@
 from admin_test import *
+from conf_test import *
 from core_test import *
 from custompkmodel_test import *
 from decorators_test import *

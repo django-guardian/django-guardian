@@ -2,6 +2,7 @@ import mock
 from django.test import TestCase
 from django.conf import settings
 from django.contrib.auth.models import User, Group, AnonymousUser
+from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest
 from django.http import HttpResponse
 from django.http import HttpResponseForbidden
@@ -91,6 +92,18 @@ class PermissionRequiredTest(TestCase):
             '_non-exisitng-403.html'):
             self.assertRaises(TemplateDoesNotExist, dummy_view, request)
         settings.DEBUG = org_DEBUG
+
+    @mock.patch('guardian.conf.settings.RENDER_403', False)
+    @mock.patch('guardian.conf.settings.RAISE_403', True)
+    def test_RAISE_403_setting_is_true(self):
+        request = self._get_request(self.anon)
+
+        @permission_required_or_403('not_installed_app.change_user')
+        def dummy_view(request):
+            return HttpResponse('dummy_view')
+
+        with self.assertRaises(PermissionDenied):
+            dummy_view(request)
 
     def test_anonymous_user_wrong_app(self):
 

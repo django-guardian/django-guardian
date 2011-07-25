@@ -9,4 +9,12 @@ if ANONYMOUS_USER_ID is None:
 
 RENDER_403 = getattr(settings, 'GUARDIAN_RENDER_403', False)
 TEMPLATE_403 = getattr(settings, 'GUARDIAN_TEMPLATE_403', '403.html')
+RAISE_403 = getattr(settings, 'GUARDIAN_RAISE_403', False)
+
+def check_configuration():
+    if RENDER_403 and RAISE_403:
+        raise ImproperlyConfigured("Cannot use both GUARDIAN_RENDER_403 AND "
+            "GUARDIAN_RAISE_403 - only one of this config may be True")
+
+check_configuration()
 
