@@ -463,8 +463,8 @@ class GetObjectsForUser(TestCase):
         self.assertEqual(len(objects), len(groups))
         self.assertTrue(isinstance(objects, QuerySet))
         self.assertEqual(
-            set(objects.values_list('name', flat=True)),
-            set(group_names))
+            set(objects),
+            set(groups))
 
     def test_multiple_perms_to_check(self):
         group_names = ['group1', 'group2', 'group3']
@@ -578,13 +578,13 @@ class GetObjectsForGroup(TestCase):
         assign('contenttypes.change_contenttype', self.group1, self.obj1)
         objects = get_objects_for_group(self.group1, ['change_contenttype'],
             ContentType.objects)
-        self.assertEqual(objects[0], self.obj1)
+        self.assertEqual(list(objects), [self.obj1])
         
     def test_klass_as_queryset(self):
         assign('contenttypes.change_contenttype', self.group1, self.obj1)
         objects = get_objects_for_group(self.group1, ['change_contenttype'],
             ContentType.objects.all())
-        self.assertEqual(objects[0], self.obj1)
+        self.assertEqual(list(objects), [self.obj1])
         
     def test_ensure_returns_queryset(self):
         objects = get_objects_for_group(self.group1, ['contenttypes.change_contenttype'])
@@ -598,8 +598,8 @@ class GetObjectsForGroup(TestCase):
         self.assertEqual(len(objects), 2)
         self.assertTrue(isinstance(objects, QuerySet))
         self.assertEqual(
-            set(objects.values_list('name', flat=True)),
-            set([self.obj1.name, self.obj2.name]))
+            set(objects),
+            set([self.obj1, self.obj2]))
         
     def test_simple_after_removal(self):
         self.test_simple()
@@ -618,3 +618,15 @@ class GetObjectsForGroup(TestCase):
         self.assertEqual(len(objects), 1)
         self.assertTrue(isinstance(objects, QuerySet))
         self.assertEqual(objects[0], self.obj1)
+
+    def test_results_for_different_groups_are_correct(self):
+        assign('change_contenttype', self.group1, self.obj1)
+        assign('delete_contenttype', self.group2, self.obj2)
+
+        self.assertEqual(set(get_objects_for_group(self.group1, 'contenttypes.change_contenttype')),
+            set([self.obj1]))
+        self.assertEqual(set(get_objects_for_group(self.group2, 'contenttypes.change_contenttype')),
+            set())
+        self.assertEqual(set(get_objects_for_group(self.group2, 'contenttypes.delete_contenttype')),
+            set([self.obj2]))
+
