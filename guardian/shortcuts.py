@@ -248,16 +248,16 @@ def get_groups_with_perms(obj, attach_perms=False):
 
 def get_objects_for_user(user, perms, klass=None, use_groups=True):
     """
-    Returns queryset of objects for which given ``user`` has *all*
+    Returns queryset of objects for which a given ``user`` has *all*
     permissions present at ``perms``.
 
     :param user: ``User`` instance for which objects would be returned
-    :param perms: sequence with permissions as strings which should be checked.
+    :param perms: single permission string, or sequence of permission strings 
+      which should be checked.
       If ``klass`` parameter is not given, those should be full permission
       names rather than only codenames (i.e. ``auth.change_user``). If more than
-      one permission is present within sequence, theirs content type **must** be
-      the same or ``MixedContentTypeError`` exception would be raised. For
-      convenience, may be given as single permission (string).
+      one permission is present within sequence, their content type **must** be
+      the same or ``MixedContentTypeError`` exception would be raised.
     :param klass: may be a Model, Manager or QuerySet object. If not given
       this parameter would be computed based on given ``params``.
     :param use_groups: if ``False``, wouldn't check user's groups object
@@ -272,13 +272,21 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True):
 
         >>> from guardian.shortcuts import get_objects_for_user
         >>> joe = User.objects.get(username='joe')
-        >>> get_objects_for_user(joe, ['auth.change_group'])
+        >>> get_objects_for_user(joe, 'auth.change_group')
         []
         >>> from guardian.shortcuts import assign
         >>> group = Group.objects.create('some group')
         >>> assign('auth.change_group', joe, group)
-        >>> get_objects_for_user(joe, ['auth.change_group'])
+        >>> get_objects_for_user(joe, 'auth.change_group')
         [<Group some group>]
+        
+    The permission string can also be an iterable. Continuing with the previous example:
+      
+        >>> get_objects_for_user(joe, ['auth.change_group', 'auth.delete_group'], 'auth.delete_group'])
+        []
+        >>> assign('auth.delete_group', joe, group)
+        >>> get_objects_for_user(joe, ['auth.change_group', 'auth.delete_group'])
+        [<Group some group>]        
 
     """
     if isinstance(perms, basestring):
@@ -355,3 +363,111 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True):
     objects = queryset.filter(pk__in=pk_list)
     return objects
 
+def get_objects_for_group(group, perms, klass=None):
+    """
+    Returns queryset of objects for which a given ``group`` has *all*
+    permissions present at ``perms``.
+
+    :param group: ``Group`` instance for which objects would be returned.
+    :param perms: single permission string, or sequence of permission strings 
+      which should be checked.
+      If ``klass`` parameter is not given, those should be full permission
+      names rather than only codenames (i.e. ``auth.change_user``). If more than
+      one permission is present within sequence, their content type **must** be
+      the same or ``MixedContentTypeError`` exception would be raised.
+    :param klass: may be a Model, Manager or QuerySet object. If not given
+      this parameter would be computed based on given ``params``.
+
+    :raises MixedContentTypeError: when computed content type for ``perms``
+      and/or ``klass`` clashes.
+    :raises WrongAppError: if cannot compute app label for given ``perms``/
+      ``klass``.
+
+    Example:
+    
+    Let's assume we have a ``Task`` model belonging to the ``tasker`` app with 
+    the default add_task, change_task and delete_task permissions provided 
+    by Django::
+
+        >>> from guardian.shortcuts import get_objects_for_group
+        >>> from tasker import Task
+        >>> group = Group.objects.create('some group')
+        >>> task = Task.objects.create('some task')
+        >>> get_objects_for_group(group, 'tasker.add_task')
+        []
+        >>> from guardian.shortcuts import assign
+        >>> assign('tasker.add_task', group, task)
+        >>> get_objects_for_group(group, 'tasker.add_task')
+        [<Task some task>]
+
+    The permission string can also be an iterable. Continuing with the previous example:
+        >>> get_objects_for_group(group, ['tasker.add_task', 'tasker.delete_task'])
+        []
+        >>> assign('tasker.delete_task', group, task)
+        >>> get_objects_for_group(group, ['tasker.add_task', 'tasker.delete_task'])
+        [<Task some task>]
+                
+    """
+    if isinstance(perms, basestring):
+        perms = [perms]
+    ctype = None
+    app_label = None
+    codenames = set()
+
+    # Compute codenames set and ctype if possible
+    for perm in perms:
+        if '.' in perm:
+            new_app_label, codename = perm.split('.', 1)
+            if app_label is not None and app_label != new_app_label:
+                raise MixedContentTypeError("Given perms must have same app "
+                    "label (%s != %s)" % (app_label, new_app_label))
+            else:
+                app_label = new_app_label
+        else:
+            codename = perm
+        codenames.add(codename)
+        if app_label is not None:
+            new_ctype = ContentType.objects.get(app_label=app_label,
+                permission__codename=codename)
+            if ctype is not None and ctype != new_ctype:
+                raise MixedContentTypeError("ContentType was once computed "
+                    "to be %s and another one %s" % (ctype, new_ctype))
+            else:
+                ctype = new_ctype
+
+    # Compute queryset and ctype if still missing
+    if ctype is None and klass is None:
+        raise WrongAppError("Cannot determine content type")
+    elif ctype is None and klass is not None:
+        queryset = _get_queryset(klass)
+        ctype = ContentType.objects.get_for_model(queryset.model)
+    elif ctype is not None and klass is None:
+        queryset = _get_queryset(ctype.model_class())
+    else:
+        queryset = _get_queryset(klass)
+        if ctype.model_class() != queryset.model:
+            raise MixedContentTypeError("Content type for given perms and "
+                "klass differs")
+
+    # At this point, we should have both ctype and queryset and they should
+    # match which means: ctype.model_class() == queryset.model
+    # we should also have ``codenames`` list
+
+    # Now we should extract list of pk values for which we would filter queryset
+    groups_obj_perms = GroupObjectPermission.objects\
+        .filter(group=group)\
+        .filter(permission__content_type=ctype)\
+        .filter(permission__codename__in=codenames)\
+        .values_list('object_pk', 'permission__codename')
+    data = list(groups_obj_perms)
+
+    keyfunc = lambda t: t[0] # sorting/grouping by pk (first in result tuple)
+    data = sorted(data, key=keyfunc)
+    pk_list = []
+    for pk, group in groupby(data, keyfunc):
+        obj_codenames = set((e[1] for e in group))
+        if codenames.issubset(obj_codenames):
+            pk_list.append(pk)
+
+    objects = queryset.filter(pk__in=pk_list)
+    return objects
