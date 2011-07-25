@@ -106,7 +106,7 @@ pygments_style = 'sphinx'
 # Sphinx are currently 'default' and 'sphinxdoc'.
 #html_theme = 'default'
 # Theme URL: https://github.com/coordt/ADCtheme/ 
-html_theme = 'ADC'
+html_theme = 'ADCtheme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
