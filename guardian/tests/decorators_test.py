@@ -1,8 +1,8 @@
 from django.test import TestCase
 from django.contrib.auth.models import User, Group, AnonymousUser
+from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest
 from django.http import HttpResponse
-from django.http import HttpResponseForbidden
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 
@@ -46,7 +46,7 @@ class PermissionRequiredTest(TestCase):
         @permission_required_or_403('not_installed_app.change_user')
         def dummy_view(request):
             return HttpResponse('dummy_view')
-        self.assertTrue(isinstance(dummy_view(request), HttpResponseForbidden))
+        self.assertRaises(PermissionDenied, dummy_view, request)
 
     def test_anonymous_user_wrong_codename(self):
 
@@ -55,7 +55,7 @@ class PermissionRequiredTest(TestCase):
         @permission_required_or_403('auth.wrong_codename')
         def dummy_view(request):
             return HttpResponse('dummy_view')
-        self.assertTrue(isinstance(dummy_view(request), HttpResponseForbidden))
+        self.assertRaises(PermissionDenied, dummy_view, request)
 
     def test_anonymous_user(self):
 
@@ -64,7 +64,7 @@ class PermissionRequiredTest(TestCase):
         @permission_required_or_403('auth.change_user')
         def dummy_view(request):
             return HttpResponse('dummy_view')
-        self.assertTrue(isinstance(dummy_view(request), HttpResponseForbidden))
+        self.assertRaises(PermissionDenied, dummy_view, request)
 
     def test_wrong_lookup_variables_number(self):
 
