@@ -1,8 +1,17 @@
+Release 1.0.3 (Jul 25, 2011)
+==================================
+
+* added ``get_objects_for_group`` shortcut (thanks to Rafael Ponieman)
+* added ``user_can_access_owned_objects_only`` flag to ``GuardedModelAdmin``
+* updated and fixed issues with example app (thanks to Bojan Mihelac)
+* minor typo fixed at documentation
+* included ADC theme for documentation
+
 Release 1.0.2 (Apr 12, 2011)
 ==================================
 
-* get_users_with_perms now accepts *with_group_users* flag
-* Fixed group_id issue at admin templates
+* ``get_users_with_perms`` now accepts ``with_group_users`` flag
+* Fixed ``group_id`` issue at admin templates
 * Small fix for documentation building process
 * It's 2011 (updated dates within this file)
 
@@ -10,7 +19,7 @@ Release 1.0.2 (Apr 12, 2011)
 Release 1.0.1 (Mar 25, 2011)
 ==================================
 
-* get_users_with_perms now accepts *with_superusers* flag
+* ``get_users_with_perms`` now accepts ``with_superusers`` flag
 * Small fix for documentation building process
 
 
@@ -23,9 +32,9 @@ Release 1.0.0 (Jan 27, 2011)
 Release 1.0.0.beta2 (Jan 14, 2011)
 ==================================
 
-* Added get_objects_for_user shortcut function
+* Added ``get_objects_for_user`` shortcut function
 * Added few tests
-* Fixed issues related with django.contrib.auth tests
+* Fixed issues related with ``django.contrib.auth`` tests
 * Removed example project from source distribution
 
 
@@ -35,16 +44,16 @@ Release 1.0.0.beta1 (Jan 11, 2011)
 * Simplified example project
 * Fixed issues related with test suite
 * Added ability to clear orphaned object permissions
-* Added clean_orphan_obj_perms management command
+* Added ``clean_orphan_obj_perms`` management command
 * Documentation cleanup
-* Added grappelli admin templates
+* Added grappelli_ admin templates
 
 
 Release 1.0.0.alpha2 (Dec 2, 2010)
 ==================================
 
 * Added possibility to operate with global permissions for assign and
-  remove_perm shortcut functions
+  ``remove_perm`` shortcut functions
 * Added possibility to generate PDF documentation
 * Fixed some tests
 
@@ -52,7 +61,7 @@ Release 1.0.0.alpha2 (Dec 2, 2010)
 Release 1.0.0.alpha1 (Nov 23, 2010)
 ===================================
 
-* Fixed admin templates not included in MANIFEST.in
+* Fixed admin templates not included in ``MANIFEST.in``
 * Fixed admin integration codes
 
 
@@ -67,7 +76,7 @@ Release 0.2.3 (Nov 17, 2010)
 ============================
 
 * Added ``guardian.shortcuts.get_users_with_perms`` function
-* Added AUTHORS file
+* Added ``AUTHORS`` file
 
 
 Release 0.2.2 (Oct 19, 2010)
@@ -122,4 +131,5 @@ Release 0.1.0 (Jun 6, 2010)
 
 
 .. _south: http://south.aeracode.org/
+.. _grappelli: https://github.com/sehmaschine/django-grappelli
 
