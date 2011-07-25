@@ -32,6 +32,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
 
     'guardian',
+    'guardian.tests',
     #'south',
     #'django_coverage',
     'posts',

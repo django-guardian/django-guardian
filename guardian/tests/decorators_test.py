@@ -1,11 +1,13 @@
+import mock
 from django.test import TestCase
+from django.conf import settings
 from django.contrib.auth.models import User, Group, AnonymousUser
 from django.http import HttpRequest
 from django.http import HttpResponse
 from django.http import HttpResponseForbidden
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
-
+from django.template import TemplateDoesNotExist
 from guardian.decorators import permission_required, permission_required_or_403
 from guardian.exceptions import GuardianError
 from guardian.shortcuts import assign
@@ -39,6 +41,57 @@ class PermissionRequiredTest(TestCase):
             self.fail("Trying to decorate using permission_required without "
                 "permission as first argument should raise exception")
 
+    def test_RENDER_403_is_false(self):
+        request = self._get_request(self.anon)
+
+        @permission_required_or_403('not_installed_app.change_user')
+        def dummy_view(request):
+            return HttpResponse('dummy_view')
+
+        with mock.patch('guardian.conf.settings.RENDER_403', False):
+            response = dummy_view(request)
+            self.assertEqual(response.content, '')
+            self.assertTrue(isinstance(response, HttpResponseForbidden))
+
+    @mock.patch('guardian.conf.settings.RENDER_403', True)
+    def test_TEMPLATE_403_setting(self):
+        request = self._get_request(self.anon)
+
+        @permission_required_or_403('not_installed_app.change_user')
+        def dummy_view(request):
+            return HttpResponse('dummy_view')
+
+        with mock.patch('guardian.conf.settings.TEMPLATE_403', 'dummy403.html'):
+            response = dummy_view(request)
+            self.assertEqual(response.content, 'foobar403\n')
+
+    @mock.patch('guardian.conf.settings.RENDER_403', True)
+    def test_403_response_is_empty_if_template_cannot_be_found(self):
+        request = self._get_request(self.anon)
+
+        @permission_required_or_403('not_installed_app.change_user')
+        def dummy_view(request):
+            return HttpResponse('dummy_view')
+        with mock.patch('guardian.conf.settings.TEMPLATE_403',
+            '_non-exisitng-403.html'):
+            response = dummy_view(request)
+            self.assertEqual(response.status_code, 403)
+            self.assertEqual(response.content, '')
+
+    @mock.patch('guardian.conf.settings.RENDER_403', True)
+    def test_403_response_raises_error_if_debug_is_turned_on(self):
+        org_DEBUG = settings.DEBUG
+        settings.DEBUG = True
+        request = self._get_request(self.anon)
+
+        @permission_required_or_403('not_installed_app.change_user')
+        def dummy_view(request):
+            return HttpResponse('dummy_view')
+        with mock.patch('guardian.conf.settings.TEMPLATE_403',
+            '_non-exisitng-403.html'):
+            self.assertRaises(TemplateDoesNotExist, dummy_view, request)
+        settings.DEBUG = org_DEBUG
+
     def test_anonymous_user_wrong_app(self):
 
         request = self._get_request(self.anon)
@@ -46,7 +99,7 @@ class PermissionRequiredTest(TestCase):
         @permission_required_or_403('not_installed_app.change_user')
         def dummy_view(request):
             return HttpResponse('dummy_view')
-        self.assertTrue(isinstance(dummy_view(request), HttpResponseForbidden))
+        self.assertEqual(dummy_view(request).status_code, 403)
 
     def test_anonymous_user_wrong_codename(self):
 
@@ -55,7 +108,7 @@ class PermissionRequiredTest(TestCase):
         @permission_required_or_403('auth.wrong_codename')
         def dummy_view(request):
             return HttpResponse('dummy_view')
-        self.assertTrue(isinstance(dummy_view(request), HttpResponseForbidden))
+        self.assertEqual(dummy_view(request).status_code, 403)
 
     def test_anonymous_user(self):
 
@@ -64,7 +117,7 @@ class PermissionRequiredTest(TestCase):
         @permission_required_or_403('auth.change_user')
         def dummy_view(request):
             return HttpResponse('dummy_view')
-        self.assertTrue(isinstance(dummy_view(request), HttpResponseForbidden))
+        self.assertEqual(dummy_view(request).status_code, 403)
 
     def test_wrong_lookup_variables_number(self):
 

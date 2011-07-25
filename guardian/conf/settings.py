@@ -7,3 +7,6 @@ if ANONYMOUS_USER_ID is None:
         "ObjectPermissionBackend authorization backend you have to configure "
         "ANONYMOUS_USER_ID at your settings module")
 
+RENDER_403 = getattr(settings, 'GUARDIAN_RENDER_403', False)
+TEMPLATE_403 = getattr(settings, 'GUARDIAN_TEMPLATE_403', '403.html')
+

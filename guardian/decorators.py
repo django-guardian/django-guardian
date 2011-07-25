@@ -1,4 +1,3 @@
-
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.http import HttpResponseForbidden, HttpResponseRedirect
@@ -7,9 +6,11 @@ from django.utils.http import urlquote
 from django.db.models import Model, get_model
 from django.db.models.base import ModelBase
 from django.db.models.query import QuerySet
-from django.shortcuts import get_object_or_404
-
+from django.shortcuts import get_object_or_404, render_to_response
+from django.template import RequestContext, TemplateDoesNotExist
+from guardian.conf import settings as guardian_settings
 from guardian.exceptions import GuardianError
+
 
 def permission_required(perm, lookup_variables=None, **kwargs):
     """
@@ -94,6 +95,16 @@ def permission_required(perm, lookup_variables=None, **kwargs):
             # as ``obj`` defaults to None
             if not request.user.has_perm(perm, obj):
                 if return_403:
+                    if guardian_settings.RENDER_403:
+                        try:
+                            response = render_to_response(
+                                guardian_settings.TEMPLATE_403, {},
+                                RequestContext(request))
+                            response.status_code = 403
+                            return response
+                        except TemplateDoesNotExist, e:
+                            if settings.DEBUG:
+                                raise e
                     return HttpResponseForbidden()
                 else:
                     path = urlquote(request.get_full_path())
