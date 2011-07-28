@@ -60,6 +60,10 @@ def get_obj_perms(parser, token):
             <a href="/pages/delete?target={{ flatpage.url }}">Remove page</a>
         {% endif %}
 
+    .. note::
+       Please remember that superusers would always get full list of permissions
+       for a given object.
+
     """
     bits = token.split_contents()
     format = '{% get_obj_perms user/group for obj as "context_var" %}'
