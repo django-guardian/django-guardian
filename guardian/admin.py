@@ -151,6 +151,7 @@ class GuardedModelAdmin(admin.ModelAdmin):
         related content.
         """
         context = {
+            'adminform': {'model_admin': self},
             'object': obj,
             'app_label': self.model._meta.app_label,
             'opts': self.model._meta,

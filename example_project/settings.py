@@ -30,6 +30,7 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.admin',
     'django.contrib.messages',
+    'django.contrib.staticfiles',
 
     'guardian',
     'guardian.tests',
@@ -37,12 +38,12 @@ INSTALLED_APPS = (
     #'django_coverage',
     'posts',
 )
-if django.VERSION < '1.3':
+if 'GRAPPELLI' in os.environ:
     try:
         __import__('grappelli')
         INSTALLED_APPS = ('grappelli',) + INSTALLED_APPS
     except ImportError:
-        pass
+        print "django-grappelli not installed"
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
@@ -53,9 +54,11 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.transaction.TransactionMiddleware',
 )
 
+STATIC_ROOT = abspath(PROJECT_ROOT, '..', 'public', 'static')
+STATIC_URL = '/static/'
 MEDIA_ROOT = abspath(PROJECT_ROOT, 'media')
 MEDIA_URL = '/media/'
-ADMIN_MEDIA_PREFIX = '/admin-media/'
+ADMIN_MEDIA_PREFIX = STATIC_URL + 'grappelli/'
 
 ROOT_URLCONF = 'example_project.urls'
 
