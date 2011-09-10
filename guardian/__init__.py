@@ -1,5 +1,5 @@
 """
-Implementation of per object permissions for Django 1.2.
+Implementation of per object permissions for Django 1.2 or later.
 """
 VERSION = (1, 0, 4, 'dev')
 

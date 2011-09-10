@@ -18,7 +18,7 @@ setup(
     author = 'Lukasz Balcerzak',
     author_email = 'lukaszbalcerzak@gmail.com',
     download_url='http://github.com/lukaszb/django-guardian/downloads',
-    description = guardian.__doc__,
+    description = guardian.__doc__.strip(),
     long_description = long_description,
     zip_safe = False,
     packages = find_packages(),
