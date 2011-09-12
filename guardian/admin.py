@@ -345,39 +345,11 @@ class GuardedModelAdmin(admin.ModelAdmin):
 
 
 class UserManage(forms.Form):
-    user = forms.RegexField(label=_("Username"), max_length=30,
-        regex=r'^[\w.@+-]+$',
-        error_messages = {
-            'invalid': _("This value may contain only letters, numbers and "
-                         "@/./+/-/_ characters."),
-            'does_not_exist': _("This user does not exist")})
-
-    def clean_user(self):
-        """
-        Returns ``User`` instance based on the given username.
-        """
-        username = self.cleaned_data['user']
-        try:
-            user = User.objects.get(username=username)
-            return user
-        except User.DoesNotExist:
-            raise forms.ValidationError(
-                self.fields['user'].error_messages['does_not_exist'])
+    user = forms.ModelChoiceField(queryset=User.objects.filter(is_active=True))
+    
 
 
 class GroupManage(forms.Form):
-    group = forms.CharField(max_length=80, error_messages={'does_not_exist':
-        _("This group does not exist")})
+    group = forms.ModelChoiceField(queryset=Group.objects.all())
 
-    def clean_group(self):
-        """
-        Returns ``Group`` instance based on the given group name.
-        """
-        name = self.cleaned_data['group']
-        try:
-            group = Group.objects.get(name=name)
-            return group
-        except Group.DoesNotExist:
-            raise forms.ValidationError(
-                self.fields['group'].error_messages['does_not_exist'])
 
