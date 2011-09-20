@@ -1,3 +1,5 @@
+import django
+
 from admin_test import *
 from conf_test import *
 from core_test import *
@@ -9,3 +11,8 @@ from other_test import *
 from utils_test import *
 from shortcuts_test import *
 from tags_test import *
+
+
+if django.VERSION >= (1, 3):
+    from mixins_test import *
+

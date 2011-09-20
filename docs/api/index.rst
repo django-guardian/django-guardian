@@ -13,6 +13,7 @@ API Reference
    guardian.forms
    guardian.management.commands
    guardian.managers
+   guardian.mixins
    guardian.models
    guardian.shortcuts
    guardian.utils

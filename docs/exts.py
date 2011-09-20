@@ -21,6 +21,11 @@ def setup(app):
         indextemplate = "pair: %s; manager",
     )
     app.add_crossref_type(
+        directivename = "mixin",
+        rolename      = "mixin",
+        indextemplate = "pair: %s; mixin",
+    )
+    app.add_crossref_type(
         directivename = "model",
         rolename      = "model",
         indextemplate = "pair: %s; model",
