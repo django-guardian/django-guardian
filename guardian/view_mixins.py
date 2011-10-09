@@ -1,3 +1,12 @@
+from django.conf import settings
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import REDIRECT_FIELD_NAME
+from django.http import HttpResponseForbidden
+from django.http import HttpResponseRedirect
+from django.utils.html import urlquote
+from django.utils.decorators import method_decorator
+
+
 class LoginRequiredMixin(object):
     """ 
     A login required mixin for use with class based views. This Class is a light wrapper around the
