@@ -391,9 +391,7 @@ div.body p.centered {
 
 table.docutils {
     border-collapse: collapse;
-    border-top: 1px solid #919699;
-    border-left: 1px solid #919699;
-    border-right: 1px solid #919699;
+    border: 1px solid #919699;
     font-size:12px;
     padding:8px;
     text-align:left;

@@ -9,4 +9,3 @@ from other_test import *
 from utils_test import *
 from shortcuts_test import *
 from tags_test import *
-
