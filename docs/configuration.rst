@@ -40,6 +40,25 @@ In addition to requried ``ANONYMOUS_USER_ID`` setting, guardian has following,
 optional configuration variables:
 
 
+.. setting:: GUARDIAN_RAISE_403
+
+GUARDIAN_RAISE_403
+------------------
+
+.. versionadded:: 1.0.4
+
+If set to ``True``, guardian would raise
+``django.core.exceptions.PermissionDenied`` error instead of returning empty
+``django.http.HttpResponseForbidden``.
+
+.. warning::
+
+ Remember that you cannot use both :setting:`GUARDIAN_RENDER_403` **AND**
+ :setting:`GUARDIAN_RAISE_403` - if both are set to ``True``,
+ ``django.core.exceptions.ImproperlyConfigured`` would be raised.
+
+
+
 .. setting:: GUARDIAN_RENDER_403
 
 GUARDIAN_RENDER_403
@@ -68,10 +87,4 @@ GUARDIAN_TEMPLATE_403
 Tells parts of guardian what template to use for responses with status code
 ``403`` (i.e. :ref:`api-decorators-permission_required`). Defaults to
 ``403.html``.
-
-.. warning::
-
- Remember that you cannot use both :setting:`GUARDIAN_RENDER_403` **AND**
- :setting:`GUARDIAN_RAISE_403` - if both are set to ``True``,
- ``django.core.exceptions.ImproperlyConfigured`` would be raised.
 
