@@ -7,5 +7,6 @@ Development
     
     example_project
     testing
+    supported-versions
     changes
 

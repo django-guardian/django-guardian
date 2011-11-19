@@ -12,6 +12,7 @@ dist
 .DS_Store
 .coverage
 .hgignore
+.tox
 
 example_project/media
 example_project/conf/*.py

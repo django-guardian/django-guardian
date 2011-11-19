@@ -102,8 +102,7 @@ class PermissionRequiredTest(TestCase):
         def dummy_view(request):
             return HttpResponse('dummy_view')
 
-        with self.assertRaises(PermissionDenied):
-            dummy_view(request)
+        self.assertRaises(PermissionDenied, dummy_view, request)
 
     def test_anonymous_user_wrong_app(self):
 

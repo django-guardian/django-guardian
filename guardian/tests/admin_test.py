@@ -347,7 +347,8 @@ class GuardedModelAdminTests(TestCase):
         request = HttpRequest()
         request.user = joe
         qs = gma.queryset(request)
-        self.assertItemsEqual([e.pk for e in qs], [joe_entry.pk, jane_entry.pk])
+        self.assertEqual(sorted([e.pk for e in qs]),
+            sorted([joe_entry.pk, jane_entry.pk]))
 
 
 class GrappelliGuardedModelAdminTests(TestCase):

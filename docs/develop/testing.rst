@@ -17,6 +17,10 @@ security issue exposed in web applications.
 Having this on mind we tried to build small set of necessary functions and
 created a lot of testing scenarios. Neverteless, if anyone would found a bug in
 this application, please take a minute and file it at `issue-tracker`_.
+Moreover, if someone would spot a *security hole* (a bug that might affect
+security of systems that use ``django-guardian`` as permission management
+library), please **DO NOT** create a public issue but contact me directly
+(lukaszbalcerzak@gmail.com).
 
 Running tests
 -------------
@@ -71,7 +75,26 @@ Result should be somehow similar to following::
     -------------------------------------------------------------------
     TOTAL                                   231    231   100% 
 
+Tox
+---
+
+.. versionadded:: 1.0.4
+
+We also started using tox_ to ensure ``django-guardian``'s tests would pass on
+all supported Python and Django versions (see :ref:`supported-versions`). To
+use it, simply install ``tox``::
+
+    pip install tox
+
+and run it within ``django-guardian`` checkout directory::
+
+    tox
+
+First time should take some time (it needs to create separate virtual
+environments and pull dependencies) but would ensure everything is fine.
+
+
 .. _owasp: http://www.owasp.org/
 .. _issue-tracker: http://github.com/lukaszb/django-guardian
 .. _coverage: http://nedbatchelder.com/code/coverage/
-
+.. _tox: http://pypi.python.org/pypi/tox
