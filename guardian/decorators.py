@@ -49,6 +49,12 @@ def permission_required(perm, lookup_variables=None, **kwargs):
                 group__name=group_name)
             return user.get_absolute_url()
 
+    .. note::
+       This decorator does NOT check for standard, global permissions - it was
+       intended to be used with *row level permissions* only. If you i.e. want
+       to allow users with global permissions **OR** object level permission,
+       you'd need to write your own decorator.
+
     """
     login_url = kwargs.pop('login_url', settings.LOGIN_URL)
     redirect_field_name = kwargs.pop('redirect_field_name', REDIRECT_FIELD_NAME)
