@@ -30,6 +30,12 @@ def permission_required(perm, lookup_variables=None, **kwargs):
       login page, response with status code 403 is returned (
       ``django.http.HttpResponseForbidden`` instance or rendered template -
       see :setting:`GUARDIAN_RENDER_403`). Defaults to ``False``.
+    :param accept_global_perms: if set to ``True``, then *object level
+      permission* would be required **only if user does NOT have global
+      permission** for target *model*. If turned on, makes this decorator
+      like an extension over standard
+      ``django.contrib.admin.decorators.permission_required`` as it would
+      check for global permissions first. Defaults to ``False``.
 
     Examples::
 
@@ -49,16 +55,11 @@ def permission_required(perm, lookup_variables=None, **kwargs):
                 group__name=group_name)
             return user.get_absolute_url()
 
-    .. note::
-       This decorator does NOT check for standard, global permissions - it was
-       intended to be used with *row level permissions* only. If you i.e. want
-       to allow users with global permissions **OR** object level permission,
-       you'd need to write your own decorator.
-
     """
     login_url = kwargs.pop('login_url', settings.LOGIN_URL)
     redirect_field_name = kwargs.pop('redirect_field_name', REDIRECT_FIELD_NAME)
     return_403 = kwargs.pop('return_403', False)
+    accept_global_perms = kwargs.pop('accept_global_perms', False)
 
     # Check if perm is given as string in order not to decorate
     # view function itself which makes debugging harder
@@ -101,7 +102,8 @@ def permission_required(perm, lookup_variables=None, **kwargs):
 
             # Handles both original and with object provided permission check
             # as ``obj`` defaults to None
-            if not request.user.has_perm(perm, obj):
+            has_perm = accept_global_perms and request.user.has_perm(perm)
+            if not has_perm and not request.user.has_perm(perm, obj):
                 if return_403:
                     if guardian_settings.RENDER_403:
                         try:
