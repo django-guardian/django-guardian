@@ -35,5 +35,4 @@ SITE_ID = 1
 TEMPLATE_DIRS = (
     os.path.join(os.path.dirname(__file__), 'tests', 'templates'),
 )
-print TEMPLATE_DIRS
 
