@@ -46,7 +46,7 @@ class ObjectPermissionBackend(object):
             user_obj = User.objects.get(pk=settings.ANONYMOUS_USER_ID)
 
         # Do not check any further if user is not active
-        if user_obj.is_active is not True:
+        if not user_obj.is_active:
             return False
 
         if len(perm.split('.')) > 1:
