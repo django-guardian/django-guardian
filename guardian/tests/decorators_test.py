@@ -20,8 +20,8 @@ class PermissionRequiredTest(TestCase):
 
     def setUp(self):
         self.anon = AnonymousUser()
-        self.user = User.objects.get(username='jack')
-        self.group = Group.objects.get(name='jackGroup')
+        self.user = User.objects.get_or_create(username='jack')[0]
+        self.group = Group.objects.get_or_create(name='jackGroup')[0]
 
     def _get_request(self, user=None):
         if user is None:
