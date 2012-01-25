@@ -246,7 +246,7 @@ def get_groups_with_perms(obj, attach_perms=False):
                 groups[group] = get_perms(group, obj)
         return groups
 
-def get_objects_for_user(user, perms, klass=None, use_groups=True):
+def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=False):
     """
     Returns queryset of objects for which a given ``user`` has *all*
     permissions present at ``perms``.
@@ -262,6 +262,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True):
       this parameter would be computed based on given ``params``.
     :param use_groups: if ``False``, wouldn't check user's groups object
       permissions. Default is ``True``.
+    :param any_perm: if True, any of permission in sequence is accepted
 
     :raises MixedContentTypeError: when computed content type for ``perms``
       and/or ``klass`` clashes.
@@ -282,8 +283,10 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True):
         
     The permission string can also be an iterable. Continuing with the previous example:
       
-        >>> get_objects_for_user(joe, ['auth.change_group', 'auth.delete_group'], 'auth.delete_group'])
+        >>> get_objects_for_user(joe, ['auth.change_group', 'auth.delete_group'])
         []
+        >>> get_objects_for_user(joe, ['auth.change_group', 'auth.delete_group'], any_perm=True)
+        [<Group some group>]
         >>> assign('auth.delete_group', joe, group)
         >>> get_objects_for_user(joe, ['auth.change_group', 'auth.delete_group'])
         [<Group some group>]        
@@ -357,7 +360,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True):
     pk_list = []
     for pk, group in groupby(data, keyfunc):
         obj_codenames = set((e[1] for e in group))
-        if codenames.issubset(obj_codenames):
+        if any_perm or codenames.issubset(obj_codenames):
             pk_list.append(pk)
 
     objects = queryset.filter(pk__in=pk_list)
