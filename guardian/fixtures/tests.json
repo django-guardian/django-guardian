@@ -1,5 +1,21 @@
 [
     {
+        "pk": 1, 
+        "model": "auth.group", 
+        "fields": {
+            "name": "admins", 
+            "permissions": []
+        }
+    },
+    {
+        "pk": 2,
+        "model": "auth.group", 
+        "fields": {
+            "name": "jackGroup", 
+            "permissions": []
+        }
+    },
+    {
         "pk": -1, 
         "model": "auth.user", 
         "fields": {
@@ -33,22 +49,6 @@
             "password": "", 
             "email": "", 
             "date_joined": "2010-05-28 04:02:34"
-        }
-    }, 
-    {
-        "pk": 1, 
-        "model": "auth.group", 
-        "fields": {
-            "name": "admins", 
-            "permissions": []
-        }
-    },
-    {
-        "pk": 2,
-        "model": "auth.group", 
-        "fields": {
-            "name": "jackGroup", 
-            "permissions": []
         }
     }
 ]
