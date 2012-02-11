@@ -481,6 +481,20 @@ class GetObjectsForUser(TestCase):
             set(objects.values_list('name', flat=True)),
             set([groups[1].name]))
 
+    def test_any_of_multiple_perms_to_check(self):
+        group_names = ['group1', 'group2', 'group3']
+        groups = [Group.objects.create(name=name) for name in group_names]
+        assign('auth.change_group', self.user, groups[0])
+        assign('auth.delete_group', self.user, groups[2])
+
+        objects = get_objects_for_user(self.user, ['auth.change_group',
+            'auth.delete_group'], any_perm=True)
+        self.assertEqual(len(objects), 2)
+        self.assertTrue(isinstance(objects, QuerySet))
+        self.assertEqual(
+            set(objects.values_list('name', flat=True)),
+            set([groups[0].name, groups[2].name]))
+
     def test_groups_perms(self):
         group1 = Group.objects.create(name='group1')
         group2 = Group.objects.create(name='group2')
