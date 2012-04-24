@@ -62,7 +62,7 @@ class PermissionRequiredTest(TestCase):
         def dummy_view(request):
             return HttpResponse('dummy_view')
         
-        settings.TEMPLATE_DIRS += os.path.join(os.path.dirname(__file__), 'tests/templates/')
+        settings.TEMPLATE_DIRS += os.path.join(os.path.dirname(__file__), 'templates/')
         with mock.patch('guardian.conf.settings.TEMPLATE_403', 'dummy403.html'):
             response = dummy_view(request)
             self.assertEqual(response.content, 'foobar403\n')
