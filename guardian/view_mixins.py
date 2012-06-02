@@ -5,6 +5,7 @@ from django.http import HttpResponseForbidden
 from django.http import HttpResponseRedirect
 from django.utils.html import urlquote
 from django.utils.decorators import method_decorator
+from django.core.exceptions ImproperlyConfigured
 
 
 class LoginRequiredMixin(object):
