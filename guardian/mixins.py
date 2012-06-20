@@ -6,6 +6,7 @@ from django.http import HttpResponseForbidden, HttpResponseRedirect
 from django.utils.http import urlquote
 from django.core.exceptions import ImproperlyConfigured
 from django.contrib.auth.models import User
+from django.views.generic import TemplateView
 class LoginRequiredMixin(object):
     """ 
     A login required mixin for use with class based views. This Class is a light wrapper around the
@@ -41,7 +42,7 @@ class PermissionRequiredMixin(object):
      
     If a `get_object()` method is defined either manually or by including another mixin (for example
     ``SingleObjectMixin``) or ``self.object`` is defined then the permission will be tested against 
-    that specific instance.
+    that specific object instance - the test is first tried against `self.object` then using `get_object()`.
     
     .. NOTE: Testing of a permission against a specific object instance requires an authentication backend
              that supports. Please see ``django-guardian`` to add object level permissions to your project.  
@@ -86,9 +87,6 @@ class PermissionRequiredMixin(object):
     redirect_field_name = REDIRECT_FIELD_NAME
 
     def dispatch(self, request, *args, **kwargs):
-        # call the parent dispatch first to pre-populate few things before we check for permissions
-        original_return_value = super(PermissionRequiredMixin, self).dispatch(request, *args, **kwargs)
-
         # verify class settings
         if self.permission_required == None or len(self.permission_required.split('.')) != 2:
             raise ImproperlyConfigured("'PermissionRequiredMixin' requires 'permission_required' attribute to be set to '<app_label>.<permission codename>' but is set to '%s' instead" % self.permission_required)
@@ -118,4 +116,4 @@ class PermissionRequiredMixin(object):
                 return HttpResponseRedirect("%s?%s=%s" % tup)
 
         # user passed permission check so just return the result of calling .dispatch()
-        return original_return_value
+        return super(PermissionRequiredMixin, self).dispatch(request, *args, **kwargs)
