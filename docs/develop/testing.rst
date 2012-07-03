@@ -94,7 +94,21 @@ First time should take some time (it needs to create separate virtual
 environments and pull dependencies) but would ensure everything is fine.
 
 
+Travis CI
+---------
+
+.. versionadded:: 1.0.4
+
+.. image:: https://secure.travis-ci.org/lukaszb/django-guardian.png?branch=master
+  :target: http://travis-ci.org/lukaszb/django-guardian
+
+Recently we have added support for Travis_, continuous integration server so it
+is even more easy to follow if test fails with new commits: http://travis-ci.org/#!/lukaszb/django-guardian.
+
+
 .. _owasp: http://www.owasp.org/
 .. _issue-tracker: http://github.com/lukaszb/django-guardian
 .. _coverage: http://nedbatchelder.com/code/coverage/
 .. _tox: http://pypi.python.org/pypi/tox
+.. _travis: http://travis-ci.org/
+
