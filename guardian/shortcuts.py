@@ -366,7 +366,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
     objects = queryset.filter(pk__in=pk_list)
     return objects
 
-def get_objects_for_group(group, perms, klass=None):
+def get_objects_for_group(group, perms, klass=None, any_perm=False):
     """
     Returns queryset of objects for which a given ``group`` has *all*
     permissions present at ``perms``.
@@ -380,6 +380,7 @@ def get_objects_for_group(group, perms, klass=None):
       the same or ``MixedContentTypeError`` exception would be raised.
     :param klass: may be a Model, Manager or QuerySet object. If not given
       this parameter would be computed based on given ``params``.
+    :param any_perm: if True, any of permission in sequence is accepted
 
     :raises MixedContentTypeError: when computed content type for ``perms``
       and/or ``klass`` clashes.
@@ -469,7 +470,7 @@ def get_objects_for_group(group, perms, klass=None):
     pk_list = []
     for pk, group in groupby(data, keyfunc):
         obj_codenames = set((e[1] for e in group))
-        if codenames.issubset(obj_codenames):
+        if any_perm or codenames.issubset(obj_codenames):
             pk_list.append(pk)
 
     objects = queryset.filter(pk__in=pk_list)

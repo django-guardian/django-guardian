@@ -544,6 +544,8 @@ class GetObjectsForGroup(TestCase):
             app_label='guardian-tests')
         self.obj2 = ContentType.objects.create(name='ct2', model='bar',
             app_label='guardian-tests')
+        self.obj3 = ContentType.objects.create(name='ct3', model='baz',
+            app_label='guardian-tests')
         self.user1 = User.objects.create(username='user1')
         self.user2 = User.objects.create(username='user2')
         self.user3 = User.objects.create(username='user3')
@@ -627,11 +629,25 @@ class GetObjectsForGroup(TestCase):
         assign('delete_contenttype', self.group1, self.obj1)
         assign('change_contenttype', self.group1, self.obj2)
 
-        objects = get_objects_for_group(self.group1, ['contenttypes.change_contenttype',
+        objects = get_objects_for_group(self.group1, [
+            'contenttypes.change_contenttype',
             'contenttypes.delete_contenttype'])
         self.assertEqual(len(objects), 1)
         self.assertTrue(isinstance(objects, QuerySet))
         self.assertEqual(objects[0], self.obj1)
+
+    def test_any_of_multiple_perms_to_check(self):
+        assign('change_contenttype', self.group1, self.obj1)
+        assign('delete_contenttype', self.group1, self.obj1)
+        assign('add_contenttype', self.group1, self.obj2)
+        assign('delete_contenttype', self.group1, self.obj3)
+
+        objects = get_objects_for_group(self.group1,
+            ['contenttypes.change_contenttype',
+            'contenttypes.delete_contenttype'], any_perm=True)
+        self.assertTrue(isinstance(objects, QuerySet))
+        self.assertEqual([obj for obj in objects.order_by('name')],
+            [self.obj1, self.obj3])
 
     def test_results_for_different_groups_are_correct(self):
         assign('change_contenttype', self.group1, self.obj1)
