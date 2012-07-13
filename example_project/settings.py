@@ -1,6 +1,5 @@
 import os
 import sys
-import django
 
 from django.conf import global_settings
 
@@ -34,8 +33,6 @@ INSTALLED_APPS = (
 
     'guardian',
     'guardian.tests',
-    #'south',
-    #'django_coverage',
     'posts',
 )
 if 'GRAPPELLI' in os.environ:
@@ -66,9 +63,8 @@ TEMPLATE_CONTEXT_PROCESSORS = global_settings.TEMPLATE_CONTEXT_PROCESSORS + (
     'django.core.context_processors.request',
 )
 TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.load_template_source',
-    'django.template.loaders.app_directories.load_template_source',
-    'django.template.loaders.eggs.load_template_source',
+    'django.template.loaders.filesystem.Loader',
+    'django.template.loaders.app_directories.Loader',
 )
 
 TEMPLATE_DIRS = (

@@ -51,9 +51,9 @@
                         {% for perm in model_perms %}
                         <td>
                             {% if perm.codename in user_perms %}
-                            <img src="{% admin_media_prefix %}img/admin/icon-yes.gif"/>
+                            {% include "admin/guardian/model/obj_perms_yes.html" %}
                             {% else %}
-                            <img src="{% admin_media_prefix %}img/admin/icon-no.gif"/>
+                            {% include "admin/guardian/model/obj_perms_no.html" %}
                             {% endif %}
                         </td>
                         {% endfor %}
@@ -105,9 +105,9 @@
                         {% for perm in model_perms %}
                         <td>
                             {% if perm.codename in group_perms %}
-                            <img src="{% admin_media_prefix %}img/admin/icon-yes.gif"/>
+                            {% include "admin/guardian/model/obj_perms_yes.html" %}
                             {% else %}
-                            <img src="{% admin_media_prefix %}img/admin/icon-no.gif"/>
+                            {% include "admin/guardian/model/obj_perms_no.html" %}
                             {% endif %}
                         </td>
                         {% endfor %}
