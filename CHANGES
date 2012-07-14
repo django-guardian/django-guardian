@@ -1,5 +1,5 @@
 Release 1.0.3 (Jul 25, 2011)
-==================================
+============================
 
 * added ``get_objects_for_group`` shortcut (thanks to Rafael Ponieman)
 * added ``user_can_access_owned_objects_only`` flag to ``GuardedModelAdmin``
@@ -8,7 +8,7 @@ Release 1.0.3 (Jul 25, 2011)
 * included ADC theme for documentation
 
 Release 1.0.2 (Apr 12, 2011)
-==================================
+============================
 
 * ``get_users_with_perms`` now accepts ``with_group_users`` flag
 * Fixed ``group_id`` issue at admin templates
@@ -17,14 +17,14 @@ Release 1.0.2 (Apr 12, 2011)
 
 
 Release 1.0.1 (Mar 25, 2011)
-==================================
+============================
 
 * ``get_users_with_perms`` now accepts ``with_superusers`` flag
 * Small fix for documentation building process
 
 
 Release 1.0.0 (Jan 27, 2011)
-==================================
+============================
 
 * A final v1.0 release!
 
