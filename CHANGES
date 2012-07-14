@@ -1,11 +1,29 @@
+Release 1.0.4 (Jul 15, 2012)
+============================
+
+* Added ``GUARDIAN_RENDER_403`` and ``GUARDIAN_RAISE_403`` settings (#40)
+* Updated docstring for ``get_obj_perms`` (#43)
+* Updated codes to run with newest django-grappelli (#51)
+* Fixed problem with building a RPM package (#50)
+* Updated caveats docs related with oprhaned object permissions (#47)
+* Updated ``permission_required`` docstring (#49)
+* Added ``accept_global_perms`` for decorators (#49)
+* Fixed problem with MySQL and booleans (#56)
+* Added flag to check for *any* permission in ``get_objects_for_user`` and
+  ``get_objects_for_group`` (#65)
+* Added missing *tag closing* at template (#63)
+* Added view mixins related with authorization and authentication (#73)
+* Added tox_ support
+* Added Travis_ support
+
 Release 1.0.3 (Jul 25, 2011)
 ============================
 
-* added ``get_objects_for_group`` shortcut (thanks to Rafael Ponieman)
-* added ``user_can_access_owned_objects_only`` flag to ``GuardedModelAdmin``
-* updated and fixed issues with example app (thanks to Bojan Mihelac)
-* minor typo fixed at documentation
-* included ADC theme for documentation
+* Added ``get_objects_for_group`` shortcut (thanks to Rafael Ponieman)
+* Added ``user_can_access_owned_objects_only`` flag to ``GuardedModelAdmin``
+* Updated and fixed issues with example app (thanks to Bojan Mihelac)
+* Minor typo fixed at documentation
+* Included ADC theme for documentation
 
 Release 1.0.2 (Apr 12, 2011)
 ============================
@@ -132,4 +150,9 @@ Release 0.1.0 (Jun 6, 2010)
 
 .. _south: http://south.aeracode.org/
 .. _grappelli: https://github.com/sehmaschine/django-grappelli
+.. _tox: http://tox.testrun.org/
+.. _travis: http://travis-ci.org/
+
+
+.. vim: ft=rst
 
