@@ -14,6 +14,8 @@ from django.test.client import Client
 from guardian.admin import GuardedModelAdmin
 from guardian.shortcuts import get_perms
 from guardian.shortcuts import get_perms_for_model
+from guardian.tests.conf import TEST_SETTINGS
+from guardian.tests.conf import override_settings
 
 class ContentTypeGuardedAdmin(GuardedModelAdmin):
     pass
@@ -21,6 +23,7 @@ class ContentTypeGuardedAdmin(GuardedModelAdmin):
 admin.site.register(ContentType, ContentTypeGuardedAdmin)
 
 
+@override_settings(**TEST_SETTINGS)
 class AdminTests(TestCase):
 
     def setUp(self):

@@ -5,6 +5,7 @@ Functions defined within this module should be considered as django-guardian's
 internal functionality. They are **not** guaranteed to be stable - which means
 they actual input parameters/output type may change in future releases.
 """
+import os
 import logging
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
@@ -19,6 +20,9 @@ from guardian.exceptions import NotUserNorGroup
 from itertools import chain
 
 logger = logging.getLogger(__name__)
+
+
+abspath = lambda *p: os.path.abspath(os.path.join(*p))
 
 
 def get_anonymous_user():
