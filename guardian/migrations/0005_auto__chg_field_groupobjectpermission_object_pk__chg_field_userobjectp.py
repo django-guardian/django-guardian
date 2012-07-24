@@ -7,13 +7,23 @@ from django.db import models
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        
-        pass
+
+        # Deleting field 'GroupObjectPermission.object_id'
+        db.delete_column('guardian_groupobjectpermission', 'object_id')
+
+        # Deleting field 'UserObjectPermission.object_id'
+        db.delete_column('guardian_userobjectpermission', 'object_id')
 
 
     def backwards(self, orm):
-        
-        pass
+
+        # We cannot add back in field 'GroupObjectPermission.object_id'
+        raise RuntimeError(
+            "Cannot reverse this migration. 'GroupObjectPermission.object_id' and its values cannot be restored.")
+
+        # We cannot add back in field 'UserObjectPermission.object_id'
+        raise RuntimeError(
+            "Cannot reverse this migration. 'UserObjectPermission.object_id' and its values cannot be restored.")
 
     models = {
         'auth.group': {
