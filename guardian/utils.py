@@ -5,7 +5,6 @@ Functions defined within this module should be considered as django-guardian's
 internal functionality. They are **not** guaranteed to be stable - which means
 they actual input parameters/output type may change in future releases.
 """
-import os
 import logging
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
@@ -20,9 +19,6 @@ from guardian.exceptions import NotUserNorGroup
 from itertools import chain
 
 logger = logging.getLogger(__name__)
-
-
-abspath = lambda *p: os.path.abspath(os.path.join(*p))
 
 
 def get_anonymous_user():
@@ -83,13 +79,17 @@ def get_403_or_None(request, perms, obj=None, login_url=None,
     # Handles both original and with object provided permission check
     # as ``obj`` defaults to None
 
+    user = request.user
+    if not user.is_authenticated():
+        user = get_anonymous_user()
+
     has_permissions = False
     # global perms check first (if accept_global_perms)
     if accept_global_perms:
-        has_permissions = all(request.user.has_perm(perm) for perm in perms)
+        has_permissions = all(user.has_perm(perm) for perm in perms)
     # if still no permission granted, try obj perms
     if not has_permissions:
-        has_permissions = all(request.user.has_perm(perm, obj) for perm in perms)
+        has_permissions = all(user.has_perm(perm, obj) for perm in perms)
 
     if not has_permissions:
         if return_403:
