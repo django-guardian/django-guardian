@@ -10,6 +10,11 @@ django-guardian
 authorization backend which is supported since Django_ 1.2. It won't
 work with older Django_ releases.
 
+Documentation
+-------------
+
+http://django-guardian.rtfd.org/
+
 Installation
 ------------
 
