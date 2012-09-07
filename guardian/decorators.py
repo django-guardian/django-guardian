@@ -1,9 +1,13 @@
+import logging
+from .shortcuts import get_perms_for_model, assign
+
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.utils.functional import wraps
 from django.db.models import Model, get_model
 from django.db.models.base import ModelBase
 from django.db.models.query import QuerySet
+from django.db.models.signals import post_save
 from django.shortcuts import get_object_or_404
 from guardian.exceptions import GuardianError
 from guardian.utils import get_403_or_None
@@ -119,3 +123,31 @@ def permission_required_or_403(perm, *args, **kwargs):
     kwargs['return_403'] = True
     return permission_required(perm, *args, **kwargs)
 
+
+def owned_by(owner_lookup, perms=None):
+    """
+    The user specified by ``owner_lookup`` will be assigned permissions in ``perms``, or all available permissions on the decorated model class.
+    """
+    def decorator(cls):
+        ownership_chain = owner_lookup.split('__')
+        logging.debug('decoraded %s' % cls)
+
+        def add_owner_permissions(sender, instance, **kwargs):
+            """
+            Assigns all or specified permissions on ``instance`` to its owner when ``instance`` is created.
+            """
+            if not kwargs['created']:
+                return
+
+            owner = instance
+            for name in ownership_chain:
+                owner = getattr(owner, name)
+
+            for perm in perms or get_perms_for_model(sender):
+                assign(perm.codename, owner, instance)
+                logging.debug('assigned %s %s %s' % (perm.codename, owner, instance.pk))
+
+        post_save.connect(add_owner_permissions, sender=cls, weak=False)
+        return cls
+
+    return decorator
