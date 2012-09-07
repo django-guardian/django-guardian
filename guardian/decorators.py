@@ -130,7 +130,6 @@ def owned_by(owner_lookup, perms=None):
     """
     def decorator(cls):
         ownership_chain = owner_lookup.split('__')
-        logging.debug('decoraded %s' % cls)
 
         def add_owner_permissions(sender, instance, created, raw, **kwargs):
             """
@@ -145,9 +144,10 @@ def owned_by(owner_lookup, perms=None):
 
             for perm in perms or get_perms_for_model(sender):
                 assign(perm.codename, owner, instance)
-                logging.debug('assigned %s %s %s' % (perm.codename, owner, instance.pk))
+                logging.debug('assigned %s to %s on %s' % (perm.codename, owner, instance))
 
         post_save.connect(add_owner_permissions, sender=cls, weak=False)
+        logging.debug('Permissions on model %s will be installed automatically' % cls)
         return cls
 
     return decorator
