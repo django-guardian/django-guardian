@@ -142,9 +142,9 @@ def owned_by(owner_lookup, perms=None):
             for name in ownership_chain:
                 owner = getattr(owner, name)
 
-            for perm in perms or get_perms_for_model(sender):
-                assign(perm.codename, owner, instance)
-                logging.debug('assigned %s to %s on %s' % (perm.codename, owner, instance))
+            for perm in perms or (p.codename for p in get_perms_for_model(sender)):
+                logging.debug('assigning %s to %s on %s' % (perm, owner, instance))
+                assign(perm, owner, instance)
 
         post_save.connect(add_owner_permissions, sender=cls, weak=False)
         logging.debug('Permissions on model %s will be installed automatically' % cls)
