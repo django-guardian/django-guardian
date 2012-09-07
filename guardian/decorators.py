@@ -132,11 +132,11 @@ def owned_by(owner_lookup, perms=None):
         ownership_chain = owner_lookup.split('__')
         logging.debug('decoraded %s' % cls)
 
-        def add_owner_permissions(sender, instance, **kwargs):
+        def add_owner_permissions(sender, instance, created, raw, **kwargs):
             """
             Assigns all or specified permissions on ``instance`` to its owner when ``instance`` is created.
             """
-            if not kwargs['created']:
+            if not created or raw:  # proceed only if it's creation and not syncdb (raw)
                 return
 
             owner = instance
