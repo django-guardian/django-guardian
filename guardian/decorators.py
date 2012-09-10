@@ -7,10 +7,12 @@ from django.utils.functional import wraps
 from django.db.models import Model, get_model
 from django.db.models.base import ModelBase
 from django.db.models.query import QuerySet
-from django.db.models.signals import post_save, post_syncdb, post_init
+from django.db.models.signals import post_save
 from django.shortcuts import get_object_or_404
 from guardian.exceptions import GuardianError
 from guardian.utils import get_403_or_None
+from guardian.conf import settings as guardian_settings
+from django.contrib.auth.models import User
 
 
 def permission_required(perm, lookup_variables=None, **kwargs):
@@ -151,3 +153,36 @@ def owned_by(owner_lookup, *perms):
         return cls
 
     return decorator
+
+DEFAULT_PERMISSIONS = []
+
+
+def default_model_permissions(*perms):
+    """
+    Every new user will have ``perms`` on the decorated model.
+    """
+    if not perms:
+        raise ValueError('Supply at least 1 permission')
+
+    def decorator(cls):
+        logging.debug('creating default permissions %s on %s' % (perms, cls))
+        DEFAULT_PERMISSIONS.extend(perms)
+        return cls
+
+    return decorator
+
+
+def assign_default_permissions(sender, instance, created, raw, **kwargs):
+    """
+    Assigns default model-wide permissions when a new User is created.
+    """
+    # do not do anything when user is updated or created from fixtures (raw)
+    # Guardian defines AnonymousUser in its model files, so this user is created
+    # before any of the site models is defined => permissions in the list
+    # do not exist yet.
+    if created and not raw and instance.pk != guardian_settings.ANONYMOUS_USER_ID:
+        for perm in DEFAULT_PERMISSIONS:
+            logging.debug('assigning model-wide permission %s to %s' % (perm, instance))
+            assign(perm, instance)  # TODO: rewrite this to use bulk permission creation
+
+post_save.connect(assign_default_permissions, sender=User, weak=False)
