@@ -7,7 +7,7 @@ from django.utils.functional import wraps
 from django.db.models import Model, get_model
 from django.db.models.base import ModelBase
 from django.db.models.query import QuerySet
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_syncdb, post_init
 from django.shortcuts import get_object_or_404
 from guardian.exceptions import GuardianError
 from guardian.utils import get_403_or_None
@@ -124,7 +124,7 @@ def permission_required_or_403(perm, *args, **kwargs):
     return permission_required(perm, *args, **kwargs)
 
 
-def owned_by(owner_lookup, perms=None):
+def owned_by(owner_lookup, *perms):
     """
     The user specified by ``owner_lookup`` will be assigned permissions in ``perms``, or all available permissions on the decorated model class.
     """
