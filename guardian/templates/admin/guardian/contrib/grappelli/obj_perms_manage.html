@@ -63,7 +63,7 @@
                         </td>
                         {% endfor %}
                         <td>
-                            <a href="user-manage/{{ user.id }}/">{% trans "Edit" %}</a>
+                            <a href="user-manage/{{ user.id|safe }}/">{% trans "Edit" %}</a>
                         </td>
                     </tr>
                     {% endfor %}
@@ -123,7 +123,7 @@
                         </td>
                         {% endfor %}
                         <td>
-                            <a href="group-manage/{{ group.id }}/">{% trans "Edit" %}</a>
+                            <a href="group-manage/{{ group.id|safe }}/">{% trans "Edit" %}</a>
                         </td>
                     </tr>
                     {% endfor %}
