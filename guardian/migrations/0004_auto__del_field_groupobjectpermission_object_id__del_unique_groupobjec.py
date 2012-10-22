@@ -20,14 +20,8 @@ class Migration(SchemaMigration):
         # Removing unique constraint on 'GroupObjectPermission', fields ['group', 'object_id', 'content_type', 'permission']
         db.delete_unique('guardian_groupobjectpermission', ['group_id', 'object_id', 'content_type_id', 'permission_id'])
 
-        # Deleting field 'GroupObjectPermission.object_id'
-        db.delete_column('guardian_groupobjectpermission', 'object_id')
-
         # Adding unique constraint on 'GroupObjectPermission', fields ['object_pk', 'group', 'content_type', 'permission']
         db.create_unique('guardian_groupobjectpermission', ['object_pk', 'group_id', 'content_type_id', 'permission_id'])
-
-        # Deleting field 'UserObjectPermission.object_id'
-        db.delete_column('guardian_userobjectpermission', 'object_id')
 
         # Adding unique constraint on 'UserObjectPermission', fields ['object_pk', 'user', 'content_type', 'permission']
         db.create_unique('guardian_userobjectpermission', ['object_pk', 'user_id', 'content_type_id', 'permission_id'])
@@ -47,16 +41,8 @@ class Migration(SchemaMigration):
         # Removing unique constraint on 'GroupObjectPermission', fields ['object_pk', 'group', 'content_type', 'permission']
         db.delete_unique('guardian_groupobjectpermission', ['object_pk', 'group_id', 'content_type_id', 'permission_id'])
 
-        # We cannot add back in field 'GroupObjectPermission.object_id'
-        raise RuntimeError(
-            "Cannot reverse this migration. 'GroupObjectPermission.object_id' and its values cannot be restored.")
-
         # Adding unique constraint on 'GroupObjectPermission', fields ['group', 'object_id', 'content_type', 'permission']
         db.create_unique('guardian_groupobjectpermission', ['group_id', 'object_id', 'content_type_id', 'permission_id'])
-
-        # We cannot add back in field 'UserObjectPermission.object_id'
-        raise RuntimeError(
-            "Cannot reverse this migration. 'UserObjectPermission.object_id' and its values cannot be restored.")
 
         # Adding unique constraint on 'UserObjectPermission', fields ['object_id', 'user', 'content_type', 'permission']
         db.create_unique('guardian_userobjectpermission', ['object_id', 'user_id', 'content_type_id', 'permission_id'])
