@@ -29,6 +29,9 @@ setup(
     install_requires = [
         'Django>=1.2',
     ],
+    tests_require = [
+        'mock',
+    ],
     classifiers = ['Development Status :: 5 - Production/Stable',
                    'Environment :: Web Environment',
                    'Framework :: Django',
