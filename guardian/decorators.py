@@ -126,7 +126,7 @@ def permission_required_or_403(perm, *args, **kwargs):
     return permission_required(perm, *args, **kwargs)
 
 
-def owned_by(owner_lookup, *perms):
+def owned_by(owner_lookup, *perms, **kwargs):
     """
     The user specified by ``owner_lookup`` will be assigned permissions in ``perms``, or all available permissions on the decorated model class.
     """
@@ -137,18 +137,22 @@ def owned_by(owner_lookup, *perms):
             """
             Assigns all or specified permissions on ``instance`` to its owner when ``instance`` is created.
             """
-            if not created or raw:  # proceed only if it's creation and not syncdb (raw)
+            # stop if it's syncdb (raw) or if it's not a child model
+            if not created or raw or not isinstance(instance, cls):
                 return
 
             owner = instance
             for name in ownership_chain:
                 owner = getattr(owner, name)
 
-            for perm in perms or (p.codename for p in get_perms_for_model(sender)):
-                logging.debug('assigning %s to %s on %s' % (perm, owner, instance))
-                assign(perm, owner, instance)
+            #import ipdb; ipdb.set_trace()
 
-        post_save.connect(add_owner_permissions, sender=cls, weak=False)
+            for perm in perms or (p.codename for p in get_perms_for_model(cls)):
+                logging.debug('assigning %s to %s on %s' % (perm, owner, instance))
+                assign(perm, owner, cls._default_manager.get(pk=instance.pk))
+
+        extra = {'sender': cls} if not kwargs.get('include_children') else {}
+        post_save.connect(add_owner_permissions, weak=False, **extra)
         logging.debug('Permissions on model %s will be installed automatically' % cls)
         return cls
 
