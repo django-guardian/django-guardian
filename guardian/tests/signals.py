@@ -5,7 +5,6 @@ import mock
 from django.contrib.auth.models import User, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.dispatch.dispatcher import receiver
 from guardian.core import ObjectPermissionChecker
 
 from guardian.shortcuts import get_perm_codenames_for_model
@@ -14,8 +13,6 @@ from guardian.tests.core_test import ObjectPermissionTestCase
 from guardian.tests.tags_test import render
 
 
-@receiver(get_perms, sender=User, weak=False,
-          dispatch_uid='guardian.test.signals.signal_get_perms_user')
 def signal_get_perms_user(sender, user, obj, **kwargs):
     """ return the permissions of @user on object @obj
     """
@@ -25,6 +22,9 @@ def signal_get_perms_user(sender, user, obj, **kwargs):
         if user.username == 'bob':
             return ['another_custom_perm', ]
     return []
+
+get_perms.connect(signal_get_perms_user, sender=User,
+                  dispatch_uid='guardian.test.signals.signal_get_perms_user')
 
 
 class GetPermsSignalTest(ObjectPermissionTestCase):
