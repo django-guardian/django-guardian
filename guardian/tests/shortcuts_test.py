@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User, Group, Permission
+
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.query import QuerySet
 from django.test import TestCase
@@ -15,8 +15,8 @@ from guardian.shortcuts import get_objects_for_group
 from guardian.exceptions import MixedContentTypeError
 from guardian.exceptions import NotUserNorGroup
 from guardian.exceptions import WrongAppError
-
 from guardian.tests.core_test import ObjectPermissionTestCase
+from guardian.models import User, Group, Permission
 
 class ShortcutsTests(ObjectPermissionTestCase):
 

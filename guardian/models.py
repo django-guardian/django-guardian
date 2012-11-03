@@ -1,14 +1,24 @@
+
 from django.db import models
+from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.contrib.auth.models import User, Group, Permission
+from django.contrib.auth.models import Group, Permission, AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.utils.translation import ugettext_lazy as _
 
+# Django 1.5+ compatibility
+try:
+    from django.contrib.auth.models import get_user_model
+    User = get_user_model()
+except ImportError:
+    from django.contrib.auth.models import User
+    setattr(settings, 'AUTH_USER_MODEL', User)
+    
 from guardian.managers import UserObjectPermissionManager
 from guardian.managers import GroupObjectPermissionManager
 from guardian.utils import get_anonymous_user
-
+    
 class BaseObjectPermission(models.Model):
     """
     Abstract ObjectPermission class.
@@ -39,7 +49,7 @@ class UserObjectPermission(BaseObjectPermission):
     """
     **Manager**: :manager:`UserObjectPermissionManager`
     """
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL)
 
     objects = UserObjectPermissionManager()
 

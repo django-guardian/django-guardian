@@ -4,6 +4,8 @@ DEBUG = False
 
 ANONYMOUS_USER_ID = -1
 
+SECRET_KEY = 'CHANGE_THIS_TO_SOMETHING_UNIQUE_AND_SECURE'
+
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',

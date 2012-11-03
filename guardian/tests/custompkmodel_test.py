@@ -1,7 +1,8 @@
-from django.contrib.auth.models import User
+
 from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 from guardian.shortcuts import assign, remove_perm
+from guardian.models import User, Group, Permission, AnonymousUser
 
 class CustomPKModelTest(TestCase):
     """

@@ -1,10 +1,10 @@
 from itertools import chain
 
-from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q, F
 
 from guardian.utils import get_identity
+from guardian.models import Permission
 
 class ObjectPermissionChecker(object):
     """

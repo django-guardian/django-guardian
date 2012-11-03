@@ -1,13 +1,12 @@
 from django.contrib.auth import models as auth_app
 from django.contrib.auth.management import create_permissions
-from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.test import TestCase
 
 from guardian.utils import clean_orphan_obj_perms
 from guardian.shortcuts import assign
-
+from guardian.models import User, Group
 
 class OrphanedObjectPermissionsTest(TestCase):
 

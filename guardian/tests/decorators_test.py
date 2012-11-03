@@ -1,6 +1,5 @@
 import mock
 from django.conf import settings
-from django.contrib.auth.models import User, Group, AnonymousUser
 from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest
 from django.http import HttpResponse
@@ -14,6 +13,7 @@ from guardian.exceptions import GuardianError
 from guardian.shortcuts import assign
 from guardian.tests.conf import TEST_SETTINGS
 from guardian.tests.conf import override_settings
+from guardian.models import User, Group, AnonymousUser
 
 @override_settings(**TEST_SETTINGS)
 class PermissionRequiredTest(TestCase):
