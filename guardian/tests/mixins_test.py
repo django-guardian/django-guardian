@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User, AnonymousUser
+
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
 from django.core.exceptions import PermissionDenied
@@ -10,7 +10,7 @@ from mock import Mock
 
 from guardian.mixins import LoginRequiredMixin
 from guardian.mixins import PermissionRequiredMixin
-
+from guardian.models import User, AnonymousUser
 
 class DatabaseRemovedError(Exception):
     pass

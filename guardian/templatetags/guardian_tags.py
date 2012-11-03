@@ -6,10 +6,10 @@
 
 """
 from django import template
-from django.contrib.auth.models import User, Group, AnonymousUser
 
 from guardian.exceptions import NotUserNorGroup
 from guardian.core import ObjectPermissionChecker
+from guardian.models import User, Group, AnonymousUser
 
 register = template.Library()
 

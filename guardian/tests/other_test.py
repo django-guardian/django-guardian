@@ -1,11 +1,10 @@
-import guardian
-from django.contrib.auth.models import AnonymousUser
-from django.contrib.auth.models import Group
-from django.contrib.auth.models import Permission
-from django.contrib.auth.models import User
+
+from itertools import chain
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.test import TestCase
+
+import guardian
 from guardian.backends import ObjectPermissionBackend
 from guardian.exceptions import GuardianError
 from guardian.exceptions import NotUserNorGroup
@@ -13,7 +12,10 @@ from guardian.exceptions import ObjectNotPersisted
 from guardian.exceptions import WrongAppError
 from guardian.models import GroupObjectPermission
 from guardian.models import UserObjectPermission
-from itertools import chain
+from guardian.models import AnonymousUser
+from guardian.models import Group
+from guardian.models import Permission
+from guardian.models import User
 
 
 class UserPermissionTests(TestCase):

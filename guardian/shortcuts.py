@@ -1,17 +1,19 @@
 """
 Convenient shortcuts to manage or check object permissions.
 """
-from django.contrib.auth.models import Permission, User, Group
+
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Q
 from django.shortcuts import _get_queryset
+from itertools import groupby
+
 from guardian.core import ObjectPermissionChecker
 from guardian.exceptions import MixedContentTypeError
 from guardian.exceptions import WrongAppError
 from guardian.models import UserObjectPermission, GroupObjectPermission
 from guardian.utils import get_identity
-from itertools import groupby
+from guardian.models import Permission, User, Group
 
 def assign(perm, user_or_group, obj=None):
     """
@@ -31,7 +33,7 @@ def assign(perm, user_or_group, obj=None):
     We can assign permission for ``Model`` instance for specific user:
 
     >>> from django.contrib.sites.models import Site
-    >>> from django.contrib.auth.models import User, Group
+    >>> from guardian.models import User, Group
     >>> from guardian.shortcuts import assign
     >>> site = Site.objects.get_current()
     >>> user = User.objects.create(username='joe')
@@ -161,8 +163,8 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
 
     Example::
 
-        >>> from django.contrib.auth.models import User
         >>> from django.contrib.flatpages.models import FlatPage
+        >>> from guardian.models import User
         >>> from guardian.shortcuts import assign, get_users_with_perms
         >>>
         >>> page = FlatPage.objects.create(title='Some page', path='/some/page/')
@@ -212,9 +214,9 @@ def get_groups_with_perms(obj, attach_perms=False):
 
     Example::
 
-        >>> from django.contrib.auth.models import Group
         >>> from django.contrib.flatpages.models import FlatPage
         >>> from guardian.shortcuts import assign, get_groups_with_perms
+        >>> from guardian.models import Group
         >>>
         >>> page = FlatPage.objects.create(title='Some page', path='/some/page/')
         >>> admins = Group.objects.create(name='Admins')

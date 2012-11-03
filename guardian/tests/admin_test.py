@@ -4,7 +4,6 @@ from django import forms
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.admin.models import LogEntry
-from django.contrib.auth.models import User, Group
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.http import HttpRequest
@@ -16,6 +15,7 @@ from guardian.shortcuts import get_perms
 from guardian.shortcuts import get_perms_for_model
 from guardian.tests.conf import TEST_SETTINGS
 from guardian.tests.conf import override_settings
+from guardian.models import User, Group
 
 class ContentTypeGuardedAdmin(GuardedModelAdmin):
     pass

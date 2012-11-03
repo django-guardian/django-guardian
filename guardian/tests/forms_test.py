@@ -1,8 +1,8 @@
-from django.contrib.auth.models import User
+
 from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 from guardian.forms import BaseObjectPermissionsForm
-
+from guardian.models import User
 
 class BaseObjectPermissionsFormTests(TestCase):
 
