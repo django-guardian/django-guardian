@@ -1,4 +1,6 @@
+
 from django.db import models
+from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import Group, Permission, AnonymousUser
 from django.contrib.contenttypes.models import ContentType
@@ -46,7 +48,7 @@ class UserObjectPermission(BaseObjectPermission):
     """
     **Manager**: :manager:`UserObjectPermissionManager`
     """
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL)
 
     objects = UserObjectPermissionManager()
 
