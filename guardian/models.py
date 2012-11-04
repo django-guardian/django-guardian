@@ -13,12 +13,12 @@ try:
     User = get_user_model()
 except ImportError:
     from django.contrib.auth.models import User
-    setattr(settings, 'AUTH_USER_MODEL', User)
-    
+    setattr(settings, 'AUTH_USER_MODEL', 'auth.User')
+
 from guardian.managers import UserObjectPermissionManager
 from guardian.managers import GroupObjectPermissionManager
 from guardian.utils import get_anonymous_user
-    
+
 class BaseObjectPermission(models.Model):
     """
     Abstract ObjectPermission class.
