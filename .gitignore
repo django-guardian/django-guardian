@@ -13,6 +13,7 @@ dist
 .coverage
 .hgignore
 .tox
+.ropeproject
 
 example_project/media
 example_project/conf/*.py
