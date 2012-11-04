@@ -1,11 +1,11 @@
 from django.conf import settings
 from django.test import TestCase
 from django.template import Template, Context, TemplateSyntaxError
-from django.contrib.auth.models import User, Group, AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 
 from guardian.exceptions import NotUserNorGroup
 from guardian.models import UserObjectPermission, GroupObjectPermission
+from guardian.models import User, Group, AnonymousUser
 
 def render(template, context):
     """

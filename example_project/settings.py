@@ -7,6 +7,7 @@ abspath = lambda *p: os.path.abspath(os.path.join(*p))
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
+SECRET_KEY = 'CHANGE_THIS_TO_SOMETHING_UNIQUE_AND_SECURE'
 
 PROJECT_ROOT = abspath(os.path.dirname(__file__))
 GUARDIAN_MODULE_PATH = abspath(PROJECT_ROOT, '..')
