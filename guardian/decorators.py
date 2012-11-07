@@ -77,7 +77,7 @@ def permission_required(perm, lookup_variables=None, **kwargs):
                         raise GuardianError("If model should be looked up from "
                             "string it needs format: 'app_label.ModelClass'")
                     model = get_model(*splitted)
-                elif type(model) in (Model, ModelBase, QuerySet):
+                elif issubclass(model.__class__, (Model, ModelBase, QuerySet)):
                     pass
                 else:
                     raise GuardianError("First lookup argument must always be "
