@@ -14,6 +14,8 @@ from guardian.shortcuts import assign
 from guardian.tests.conf import TEST_SETTINGS
 from guardian.tests.conf import override_settings
 from guardian.models import User, Group, AnonymousUser
+from django.db.models.base import ModelBase
+
 
 @override_settings(**TEST_SETTINGS)
 class PermissionRequiredTest(TestCase):
@@ -190,6 +192,37 @@ class PermissionRequiredTest(TestCase):
 
         @permission_required_or_403(perm, (
             'auth.User', 'username', 'username'))
+        def dummy_view(request, username):
+            return HttpResponse('dummy_view')
+        response = dummy_view(request, username='joe')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, 'dummy_view')
+
+    def test_user_has_access_on_model_with_metaclass(self):
+        """
+        Test to the fix issues of comparaison made via type()
+        in the decorator. In the case of a `Model` implementing
+        a custom metaclass, the decorator fail because type
+        doesn't return `ModelBase`
+        """
+        perm = 'auth.change_user'
+
+        class TestMeta(ModelBase):
+            pass
+
+        class ProxyUser(User):
+            class Meta:
+                proxy = True
+                app_label = 'auth'
+            __metaclass__ = TestMeta
+
+        joe, created = ProxyUser.objects.get_or_create(username='joe')
+        assign(perm, self.user, obj=joe)
+
+        request = self._get_request(self.user)
+
+        @permission_required_or_403(perm, (
+            ProxyUser, 'username', 'username'))
         def dummy_view(request, username):
             return HttpResponse('dummy_view')
         response = dummy_view(request, username='joe')
