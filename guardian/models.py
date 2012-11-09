@@ -1,23 +1,24 @@
 
 from django.db import models
-from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.contrib.auth.models import Group, Permission, AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.utils.translation import ugettext_lazy as _
 
-# Django 1.5+ compatibility
-try:
-    from django.contrib.auth.models import get_user_model
-    User = get_user_model()
-except ImportError:
-    from django.contrib.auth.models import User
-    setattr(settings, 'AUTH_USER_MODEL', 'auth.User')
-
-from guardian.managers import UserObjectPermissionManager
+from guardian.compat import AnonymousUser
+from guardian.compat import Group
+from guardian.compat import Permission
+from guardian.compat import User
 from guardian.managers import GroupObjectPermissionManager
+from guardian.managers import UserObjectPermissionManager
 from guardian.utils import get_anonymous_user
+
+
+__all__ = ['BaseObjectPermission', 'UserObjectPermission',
+    'GroupObjectPermission', 'UserObjectPermissionManager',
+    'GroupObjectPermissionManager', 'User', 'Group', 'Permission',
+    'AnonymousUser']
+
 
 class BaseObjectPermission(models.Model):
     """
@@ -45,16 +46,18 @@ class BaseObjectPermission(models.Model):
                 % (self.permission.content_type, self.content_type))
         return super(BaseObjectPermission, self).save(*args, **kwargs)
 
+
 class UserObjectPermission(BaseObjectPermission):
     """
     **Manager**: :manager:`UserObjectPermissionManager`
     """
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    user = models.ForeignKey(User)
 
     objects = UserObjectPermissionManager()
 
     class Meta:
         unique_together = ['user', 'permission', 'content_type', 'object_pk']
+
 
 class GroupObjectPermission(BaseObjectPermission):
     """
