@@ -489,9 +489,9 @@ def bulk_remove_perms(perms, user_or_group, objects):
     :param group single, list, tuple or queryset of objects (same type)
     """
     if not isinstance(perms, (types.ListType, types.TupleType)):
-		perms = list(perms)
-	if not isinstance(objects, (types.ListType, types.TupleType)) and not isinstance(objects, QuerySet):
-		objects = list(objects)
+	perms = list(perms)
+    if not isinstance(objects, (types.ListType, types.TupleType)) and not isinstance(objects, QuerySet):
+	objects = list(objects)
 	
 	user, group = get_identity(user_or_group)
 	ctype = ContentType.objects.get_for_model(objects[0])
