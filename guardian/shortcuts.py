@@ -482,13 +482,13 @@ def get_objects_for_group(group, perms, klass=None, any_perm=False):
 
 
 def bulk_remove_perms(perms, user_or_group, objects):
-    """
-    Deletes permissions in bulk.
-    :param perms single Permission or list of Permissions
-    :param user_or_group, django.contrib.auth.models User or Group object
-    :param group single, list, tuple or queryset of objects (same type)
-    """
-    if not isinstance(perms, (types.ListType, types.TupleType)):
+	"""
+	Deletes permissions in bulk.
+	:param perms single Permission or list of Permissions
+	:param user_or_group, django.contrib.auth.models User or Group object
+	:param group single, list, tuple or queryset of objects (same type)
+	"""
+	if not isinstance(perms, (types.ListType, types.TupleType)):
 		perms = list(perms)
 	if not isinstance(objects, (types.ListType, types.TupleType)) and not isinstance(objects, QuerySet):
 		objects = list(objects)
