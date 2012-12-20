@@ -1,10 +1,12 @@
 """
 Convenient shortcuts to manage or check object permissions.
 """
+import types
 
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Q
+from django.db.models.query import QuerySet
 from django.shortcuts import _get_queryset
 from itertools import groupby
 
@@ -477,3 +479,25 @@ def get_objects_for_group(group, perms, klass=None, any_perm=False):
 
     objects = queryset.filter(pk__in=pk_list)
     return objects
+
+
+def bulk_remove_perms(perms, user_or_group, objects):
+    """
+    Deletes permissions in bulk.
+    :param perms single Permission or list of Permissions
+    :param user_or_group, django.contrib.auth.models User or Group object
+    :param group single, list, tuple or queryset of objects (same type)
+    """
+    if not isinstance(perms, (types.ListType, types.TupleType)):
+		perms = list(perms)
+	if not isinstance(objects, (types.ListType, types.TupleType)) and not isinstance(objects, QuerySet):
+		objects = list(objects)
+	
+	user, group = get_identity(user_or_group)
+	ctype = ContentType.objects.get_for_model(objects[0])
+	objects = [object.id for object in objects]
+
+	if user:
+		UserObjectPermission.objects.filter(permission__codename__in = perms, user = user, object_pk__in = objects, content_type = ctype).delete()
+	if group:
+		GroupObjectPermission.objects.filter(permission__codename__in = perms, group = group, object_pk__in = objects, content_type = ctype).delete()
