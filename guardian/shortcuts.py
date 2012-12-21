@@ -501,3 +501,56 @@ def bulk_remove_perms(perms, user_or_group, objects):
 		UserObjectPermission.objects.filter(permission__codename__in = perms, user = user, object_pk__in = objects, content_type = ctype).delete()
 	if group:
 		GroupObjectPermission.objects.filter(permission__codename__in = perms, group = group, object_pk__in = objects, content_type = ctype).delete()
+
+def bulk_add_perms(perms, user_or_group, objects):
+	"""
+	Adds permissions in bulk.
+	:param perms single Permission or list of Permissions
+	:param user_or_group, django.contrib.auth.models User or Group object
+	:param group single, list, tuple or queryset of objects (same type)
+	NB!!! ONLY TESTED IN POSTGRESQL
+	"""
+	if not isinstance(perms, (types.ListType, types.TupleType)):
+		perms = [perms]
+	if not isinstance(objects, (types.ListType, types.TupleType)) and not isinstance(objects, QuerySet):
+		objects = [objects]
+	
+	user, group = get_identity(user_or_group)
+	ctype = ContentType.objects.get_for_model(objects[0])
+	permissions = Permission.objects.filter(content_type = ctype, codename__in = perms)
+	objects = [str(object.pk) for object in objects]
+	permissions_ids = [perm.id for perm in permissions]
+	
+	sql_values_list = []
+
+	if user:
+		dict = {'column':'user_id',
+				'table' : 'guardian_userobjectpermission' }
+		target_id = str(user.id)
+		
+	if group:
+		dict = {'column':'group_id',
+				'table' : 'guardian_groupobjectpermission' }
+		target_id = str(group.id) 
+
+	for permission_id in permissions_ids:
+		for obj_pk in objects:
+			sql_values_list.append("SELECT %s, %s, '%s', %s " % (permission_id, str(ctype.id), obj_pk, target_id))
+	
+	sql_values = 'UNION ALL '.join(sql_values_list)
+	
+	dict['sql_values'] = sql_values
+	dict['str_permission_ids'] = str(permissions_ids).replace('[','').replace(']','')
+	dict['str_object_pks'] = str(objects).replace('[','').replace(']','')
+	dict['target_id'] = target_id
+
+	sql = "INSERT INTO %(table)s (permission_id, content_type_id, object_pk, %(column)s)" % dict
+	sql += " (%(sql_values)s" % dict
+	sql += "EXCEPT SELECT permission_id,content_type_id, object_pk, %(column)s from %(table)s" % dict
+	sql += " WHERE permission_id in (%(str_permission_ids)s) and object_pk in (%(str_object_pks)s) and %(column)s = %(target_id)s" % dict
+	sql += ")"
+
+	from django.db import connection, transaction
+	with transaction.commit_on_success():
+		cursor = connection.cursor()
+		cursor.execute(sql)
