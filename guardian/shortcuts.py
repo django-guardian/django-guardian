@@ -495,7 +495,7 @@ def bulk_remove_perms(perms, user_or_group, objects):
 	
 	user, group = get_identity(user_or_group)
 	ctype = ContentType.objects.get_for_model(objects[0])
-	objects = [object.id for object in objects]
+	objects = [object.pk for object in objects]
 
 	if user:
 		UserObjectPermission.objects.filter(permission__codename__in = perms, user = user, object_pk__in = objects, content_type = ctype).delete()
