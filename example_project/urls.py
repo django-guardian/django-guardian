@@ -1,4 +1,7 @@
-from django.conf.urls.defaults import *
+try:
+    from django.conf.urls import *
+except ImportError:
+    from django.conf.urls.defaults import *
 from django.conf import settings
 from django.contrib import admin
 
