@@ -493,6 +493,9 @@ def bulk_remove_perms(perms, user_or_group, objects):
 	if not isinstance(objects, (types.ListType, types.TupleType)) and not isinstance(objects, QuerySet):
 		objects = list(objects)
 	
+	if len(objects) == 0:
+		return
+	
 	user, group = get_identity(user_or_group)
 	ctype = ContentType.objects.get_for_model(objects[0])
 	objects = [object.pk for object in objects]
@@ -514,6 +517,9 @@ def bulk_add_perms(perms, user_or_group, objects):
 		perms = [perms]
 	if not isinstance(objects, (types.ListType, types.TupleType)) and not isinstance(objects, QuerySet):
 		objects = [objects]
+	
+	if len(objects) == 0:
+		return
 	
 	user, group = get_identity(user_or_group)
 	ctype = ContentType.objects.get_for_model(objects[0])
