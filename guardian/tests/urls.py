@@ -1,7 +1,4 @@
-try:
-    from django.conf.urls import patterns, include
-except ImportError:
-    from django.conf.urls.defaults import *
+from guardian.compat import url, include, patterns, handler404, handler500
 from django.contrib import admin
 
 admin.autodiscover()

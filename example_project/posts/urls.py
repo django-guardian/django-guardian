@@ -1,7 +1,4 @@
-try:
-    from django.conf.urls import patterns, url
-except ImportError:
-    from django.conf.urls.defaults import patterns, url
+from guardian.compat import url, include, patterns, handler404, handler500
 
 
 urlpatterns = patterns('posts.views',
