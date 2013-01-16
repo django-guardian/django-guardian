@@ -48,7 +48,7 @@ class ObjectPermissionChecker(object):
             return True
         return perm in self.get_perms(obj)
 
-    def get_perms(self, obj):
+    def get_perms(self, obj, with_group_users=True):
         """
         Returns list of ``codename``'s of all permissions for given ``obj``.
 
@@ -65,15 +65,16 @@ class ObjectPermissionChecker(object):
                     .filter(content_type=ctype)
                     .values_list("codename")))
             elif self.user:
+                qset = Q(userobjectpermission__content_type=F('content_type'),
+                    userobjectpermission__user=self.user,
+                    userobjectpermission__object_pk=obj.pk)
+                if with_group_users:
+                    qset = qset | Q(groupobjectpermission__content_type=F('content_type'),
+                        groupobjectpermission__group__user=self.user,
+                        groupobjectpermission__object_pk=obj.pk)
                 perms = list(set(chain(*Permission.objects
                     .filter(content_type=ctype)
-                    .filter(
-                        Q(userobjectpermission__content_type=F('content_type'),
-                            userobjectpermission__user=self.user,
-                            userobjectpermission__object_pk=obj.pk) |
-                        Q(groupobjectpermission__content_type=F('content_type'),
-                            groupobjectpermission__group__user=self.user,
-                            groupobjectpermission__object_pk=obj.pk))
+                    .filter(qset)
                     .values_list("codename"))))
             else:
                 perms = list(set(chain(*Permission.objects

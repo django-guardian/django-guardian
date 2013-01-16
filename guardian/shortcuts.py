@@ -121,13 +121,13 @@ def remove_perm(perm, user_or_group=None, obj=None):
     if group:
         GroupObjectPermission.objects.remove_perm(perm, group, obj)
 
-def get_perms(user_or_group, obj):
+def get_perms(user_or_group, obj, with_group_users=True):
     """
     Returns permissions for given user/group and object pair, as list of
     strings.
     """
     check = ObjectPermissionChecker(user_or_group)
-    return check.get_perms(obj)
+    return check.get_perms(obj, with_group_users)
 
 def get_perms_for_model(cls):
     """
@@ -198,7 +198,7 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
         users = {}
         for user in get_users_with_perms(obj,
                 with_group_users=with_group_users):
-            users[user] = get_perms(user, obj)
+            users[user] = get_perms(user, obj, with_group_users)
         return users
 
 def get_groups_with_perms(obj, attach_perms=False):
