@@ -88,8 +88,7 @@ For example::
     admin.site.register(Author, AuthorAdmin)
 
 
-.. [1] Great paper about this feature is available at 
-   http://djangoadvent.com/1.2/object-permissions/.
+.. [1] Great paper about this feature is available at `djangoadvent articles <https://github.com/djangoadvent/djangoadvent-articles/blob/master/1.2/06_object-permissions.rst>`_.
 
 .. _Django: http://www.djangoproject.org/
 
