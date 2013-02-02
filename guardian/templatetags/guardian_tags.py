@@ -6,12 +6,51 @@
 
 """
 from django import template
+from django.template import get_library
+from django.template import InvalidTemplateLibrary
+from django.template.defaulttags import LoadNode
 
 from guardian.exceptions import NotUserNorGroup
 from guardian.core import ObjectPermissionChecker
 from guardian.models import User, Group, AnonymousUser
 
 register = template.Library()
+
+
+@register.tag
+def friendly_load(parser, token):
+    '''
+    Tries to load a custom template tag set. Non existing tag libraries
+    are ignored.
+
+    This means that, if used in conjuction with ``if_has_tag``, you can try to
+    load the comments template tag library to enable comments even if the
+    comments framework is not installed.
+
+    For example::
+
+        {% load friendly_loader %}
+        {% friendly_load comments webdesign %}
+
+        {% if_has_tag render_comment_list %}
+            {% render_comment_list for obj %}
+        {% else %}
+            {% if_has_tag lorem %}
+                {% lorem %}
+            {% endif_has_tag %}
+        {% endif_has_tag %}
+    '''
+    bits = token.contents.split()
+    for taglib in bits[1:]:
+        try:
+            lib = get_library(taglib)
+            parser.add_library(lib)
+        except InvalidTemplateLibrary:
+            pass
+    return LoadNode()
+
+
+
 
 class ObjectPermissionsNode(template.Node):
     def __init__(self, for_whom, obj, context_var):
