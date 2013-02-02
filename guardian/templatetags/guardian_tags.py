@@ -51,6 +51,10 @@ def get_obj_perms(parser, token):
 
         {% get_obj_perms user/group for obj as "context_var" %}
 
+    .. note::
+       Make sure that you set and use those permissions in same template
+       block (``{% block %}``).
+
     Example of usage (assuming ``flatpage`` and ``perm`` objects are
     available from *context*)::
 
