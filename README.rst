@@ -87,8 +87,36 @@ For example::
 
     admin.site.register(Author, AuthorAdmin)
 
+Using signals
+-------------
+
+If you need to specify permissions based on some very specific logic, you
+can use signals to make your life easier.
+
+Suppose for example that you have a model such this::
+
+    class MyModel(models.Model):
+        owner = models.ForeignKey(User)
+        # other stuff
+
+and that the ``owner`` of an instance of ``MyModel`` has special permissions
+of his/her instances. Instead of updating the permissions every time the ``owner``
+changes, you can just register a signal such this::
+
+    from guardian.signals import get_perms
+    from guardian.shortcuts import get_perm_codenames_for_model
+    
+    @receiver(get_perms, sender=MyModel,
+              dispatch_uid='myapp.signal_get_perms_mymodel')
+    def signal_get_perms_mymodel(sender, user, obj, **kwargs):
+        if user == obj.owner:
+            return get_perm_codenames_for_model(MyModel)
+        return []
+
+All the permissions returned by such handlers will be added to the user permissions,
+and will be cached for future calls.
+
 
 .. [1] Great paper about this feature is available at `djangoadvent articles <https://github.com/djangoadvent/djangoadvent-articles/blob/master/1.2/06_object-permissions.rst>`_.
 
 .. _Django: http://www.djangoproject.org/
-

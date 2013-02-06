@@ -65,7 +65,7 @@ class ObjectPermissionChecker(object):
                     .filter(content_type=ctype)
                     .values_list("codename")))
             elif self.user:
-                perms = list(set(chain(*Permission.objects
+                perms = set(chain(*Permission.objects
                     .filter(content_type=ctype)
                     .filter(
                         Q(userobjectpermission__content_type=F('content_type'),
@@ -74,7 +74,13 @@ class ObjectPermissionChecker(object):
                         Q(groupobjectpermission__content_type=F('content_type'),
                             groupobjectpermission__group__user=self.user,
                             groupobjectpermission__object_pk=obj.pk))
-                    .values_list("codename"))))
+                    .values_list("codename")))
+                from guardian.signals import get_perms as get_perms_signal
+                for _, extra_perms in get_perms_signal.send_robust(
+                    sender=type(obj), user=self.user, obj=obj):
+                    if hasattr(extra_perms, '__iter__'):
+                        perms.update(extra_perms)
+                perms = list(perms)
             else:
                 perms = list(set(chain(*Permission.objects
                     .filter(content_type=ctype)

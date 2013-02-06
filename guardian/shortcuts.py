@@ -142,6 +142,12 @@ def get_perms_for_model(cls):
     ctype = ContentType.objects.get_for_model(model)
     return Permission.objects.filter(content_type=ctype)
 
+def get_perm_codenames_for_model(cls):
+    """
+    Returns the codename of all the permissions returned by get_perms_for_model
+    """
+    return get_perms_for_model(cls).values_list('codename', flat=True)
+
 def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
         with_group_users=True):
     """
