@@ -1,12 +1,18 @@
+import logging
+from .shortcuts import get_perms_for_model, assign
+
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.utils.functional import wraps
 from django.db.models import Model, get_model
 from django.db.models.base import ModelBase
 from django.db.models.query import QuerySet
+from django.db.models.signals import post_save
 from django.shortcuts import get_object_or_404
 from guardian.exceptions import GuardianError
 from guardian.utils import get_403_or_None
+from guardian.conf import settings as guardian_settings
+from django.contrib.auth.models import User
 
 
 def permission_required(perm, lookup_variables=None, **kwargs):
@@ -119,3 +125,68 @@ def permission_required_or_403(perm, *args, **kwargs):
     kwargs['return_403'] = True
     return permission_required(perm, *args, **kwargs)
 
+
+def owned_by(owner_lookup, *perms, **kwargs):
+    """
+    The user specified by ``owner_lookup`` will be assigned permissions in ``perms``, or all available permissions on the decorated model class.
+    """
+    def decorator(cls):
+        ownership_chain = owner_lookup.split('__')
+
+        def add_owner_permissions(sender, instance, created, raw, **kwargs):
+            """
+            Assigns all or specified permissions on ``instance`` to its owner when ``instance`` is created.
+            """
+            # stop if it's syncdb (raw) or if it's not a child model
+            if not created or raw or not isinstance(instance, cls):
+                return
+
+            owner = instance
+            for name in ownership_chain:
+                owner = getattr(owner, name)
+
+            #import ipdb; ipdb.set_trace()
+
+            for perm in perms or (p.codename for p in get_perms_for_model(cls)):
+                logging.debug('assigning %s to %s on %s' % (perm, owner, instance))
+                assign(perm, owner, cls._default_manager.get(pk=instance.pk))
+
+        extra = {'sender': cls} if not kwargs.get('include_children') else {}
+        post_save.connect(add_owner_permissions, weak=False, **extra)
+        logging.debug('Permissions on model %s will be installed automatically' % cls)
+        return cls
+
+    return decorator
+
+DEFAULT_PERMISSIONS = []
+
+
+def default_model_permissions(*perms):
+    """
+    Every new user will have ``perms`` on the decorated model.
+    """
+    if not perms:
+        raise ValueError('Supply at least 1 permission')
+
+    def decorator(cls):
+        logging.debug('creating default permissions %s on %s' % (perms, cls))
+        DEFAULT_PERMISSIONS.extend(perms)
+        return cls
+
+    return decorator
+
+
+def assign_default_permissions(sender, instance, created, raw, **kwargs):
+    """
+    Assigns default model-wide permissions when a new User is created.
+    """
+    # do not do anything when user is updated or created from fixtures (raw)
+    # Guardian defines AnonymousUser in its model files, so this user is created
+    # before any of the site models is defined => permissions in the list
+    # do not exist yet.
+    if created and not raw and instance.pk != guardian_settings.ANONYMOUS_USER_ID:
+        for perm in DEFAULT_PERMISSIONS:
+            logging.debug('assigning model-wide permission %s to %s' % (perm, instance))
+            assign(perm, instance)  # TODO: rewrite this to use bulk permission creation
+
+post_save.connect(assign_default_permissions, sender=User, weak=False)
