@@ -7,20 +7,28 @@ they actual input parameters/output type may change in future releases.
 """
 import os
 import logging
+import django
 from itertools import chain
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
+from django.contrib.auth.models import Group
+from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext, TemplateDoesNotExist
 from django.utils.http import urlquote
 
-from guardian.compat import AnonymousUser
-from guardian.compat import Group
-from guardian.compat import User
 from guardian.conf import settings as guardian_settings
 from guardian.exceptions import NotUserNorGroup
+
+# Django 1.5+ compatibility
+if django.VERSION >= (1, 5):
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+else:
+    from django.contrib.auth.models import User
+
 
 logger = logging.getLogger(__name__)
 abspath = lambda *p: os.path.abspath(os.path.join(*p))

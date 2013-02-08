@@ -1,17 +1,24 @@
 
+import django
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import Group
+from django.contrib.auth.models import Permission
+from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
 from django.utils.translation import ugettext_lazy as _
 
-from guardian.compat import AnonymousUser
-from guardian.compat import Group
-from guardian.compat import Permission
-from guardian.compat import User
+from guardian.conf import settings as guardian_settings
 from guardian.managers import GroupObjectPermissionManager
 from guardian.managers import UserObjectPermissionManager
-from guardian.utils import get_anonymous_user
+
+# Django 1.5+ compatibility
+if django.VERSION >= (1, 5):
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+else:
+    from django.contrib.auth.models import User
 
 
 __all__ = ['BaseObjectPermission', 'UserObjectPermission',
@@ -51,7 +58,7 @@ class UserObjectPermission(BaseObjectPermission):
     """
     **Manager**: :manager:`UserObjectPermissionManager`
     """
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(getattr(django.conf.settings, 'AUTH_USER_MODEL', 'auth.User'))
 
     objects = UserObjectPermissionManager()
 
@@ -82,4 +89,3 @@ setattr(Group, 'add_obj_perm',
     lambda self, perm, obj: GroupObjectPermission.objects.assign(perm, self, obj))
 setattr(Group, 'del_obj_perm',
     lambda self, perm, obj: GroupObjectPermission.objects.remove_perm(perm, self, obj))
-
