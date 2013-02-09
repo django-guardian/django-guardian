@@ -1,6 +1,6 @@
 import os
 import sys
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, Command
 
 guardian = __import__('guardian')
 readme_file = os.path.join(os.path.dirname(__file__), 'README.rst')
@@ -10,6 +10,40 @@ except IOError, err:
     sys.stderr.write("[ERROR] Cannot find file specified as "
         "``long_description`` (%s)\n" % readme_file)
     sys.exit(1)
+
+class run_flakes(Command):
+    """
+    Runs pyflakes against guardian codebase.
+    """
+    description = "Check sources with pyflakes"
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        try:
+            import pyflakes.scripts.pyflakes as flakes
+        except ImportError:
+            sys.stderr.write("No pyflakes installed!\n")
+            sys.exit(-1)
+
+        warns = 0
+        # Define top-level directories
+        for topdir, dirnames, filenames in os.walk(guardian.__path__[0]):
+            paths = (os.path.join(topdir, f) for f in filenames if f .endswith('.py'))
+            for path in paths:
+                warns += flakes.checkPath(path)
+        if warns > 0:
+            sys.stderr.write("ERROR: Finished with total %d warnings.\n" % warns)
+            sys.exit(1)
+        else:
+            print "No problems found in source codes."
+
+
 
 setup(
     name = 'django-guardian',
@@ -42,5 +76,6 @@ setup(
                    'Topic :: Security',
     ],
     test_suite='tests.main',
+    cmdclass={'flakes': run_flakes},
 )
 
