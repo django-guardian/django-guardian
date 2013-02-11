@@ -24,6 +24,8 @@ class TestView(PermissionRequiredMixin, RemoveDatabaseView):
     permission_required = 'contenttypes.change_contenttype'
     object = None # should be set at each tests explicitly
 
+class NoObjectView(PermissionRequiredMixin, RemoveDatabaseView):
+    permission_required = 'contenttypes.change_contenttype'
 
 class TestViewMixins(TestCase):
 
@@ -87,6 +89,19 @@ class TestViewMixins(TestCase):
         view = TestView.as_view(object=self.ctype)
         with self.assertRaises(DatabaseRemovedError):
             view(request)
+
+    def test_permission_required_no_object(self):
+        """
+        This test would fail if permission is checked on a view's
+        object when it has none
+        """
+
+        request = self.factory.get('/')
+        request.user = self.user
+        request.user.add_obj_perm('change_contenttype', self.ctype)
+        view = NoObjectView.as_view()
+        response = view(request)
+        self.assertEqual(response.status_code, 302)
 
     def test_permission_required_as_list(self):
         """
