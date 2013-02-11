@@ -139,8 +139,10 @@ class PermissionRequiredMixin(object):
 
         :param request: Original request.
         """
-        obj = hasattr(self, 'get_object') and self.get_object() \
-              or getattr(self, 'object', None)
+        obj = (hasattr(self, 'get_object') and self.get_object()
+            or getattr(self, 'object', None))
+
+
         forbidden = get_403_or_None(request,
             perms=self.get_required_permissions(request),
             obj=obj,
@@ -166,6 +168,9 @@ class PermissionRequiredMixin(object):
         """
 
     def dispatch(self, request, *args, **kwargs):
+        self.request = request
+        self.args = args
+        self.kwargs = kwargs
         response = self.check_permissions(request)
         if response:
             return response
