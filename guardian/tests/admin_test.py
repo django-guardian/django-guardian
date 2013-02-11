@@ -22,7 +22,6 @@ class ContentTypeGuardedAdmin(GuardedModelAdmin):
 
 admin.site.register(ContentType, ContentTypeGuardedAdmin)
 
-
 @override_settings(**TEST_SETTINGS)
 class AdminTests(TestCase):
 
@@ -274,6 +273,8 @@ class AdminTests(TestCase):
 if 'django.contrib.admin' not in settings.INSTALLED_APPS:
     # Skip admin tests if admin app is not registered
     # we simpy clean up AdminTests class ...
+    # TODO: use @unittest.skipUnless('django.contrib.admin' in settings.INSTALLED_APPS)
+    #       if possible (requires Python 2.7, though)
     AdminTests = type('AdminTests', (TestCase,), {})
 
 

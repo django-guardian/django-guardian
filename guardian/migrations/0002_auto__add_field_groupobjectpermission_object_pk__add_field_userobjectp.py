@@ -1,13 +1,11 @@
 # encoding: utf-8
-import datetime
 from south.db import db
 from south.v2 import SchemaMigration
-from django.db import models
 
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        
+
         # Adding field 'GroupObjectPermission.object_pk'
         db.add_column('guardian_groupobjectpermission', 'object_pk', self.gf('django.db.models.fields.TextField')(default=''), keep_default=False)
 
@@ -16,7 +14,7 @@ class Migration(SchemaMigration):
 
 
     def backwards(self, orm):
-        
+
         # Deleting field 'GroupObjectPermission.object_pk'
         db.delete_column('guardian_groupobjectpermission', 'object_pk')
 

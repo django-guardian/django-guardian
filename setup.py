@@ -36,6 +36,9 @@ class run_flakes(Command):
         for topdir, dirnames, filenames in os.walk(guardian.__path__[0]):
             paths = (os.path.join(topdir, f) for f in filenames if f .endswith('.py'))
             for path in paths:
+                if path.endswith('tests/__init__.py'):
+                    # ignore that module (it should only gather test cases with *)
+                    continue
                 warns += flakes.checkPath(path)
         if warns > 0:
             sys.stderr.write("ERROR: Finished with total %d warnings.\n" % warns)

@@ -1,13 +1,11 @@
 # encoding: utf-8
-import datetime
 from south.db import db
 from south.v2 import SchemaMigration
-from django.db import models
 
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        
+
         # Adding model 'UserObjectPermission'
         db.create_table('guardian_userobjectpermission', (
             ('id', self.gf('django.db.models.fields.AutoField')(primary_key=True)),
@@ -36,7 +34,7 @@ class Migration(SchemaMigration):
 
 
     def backwards(self, orm):
-        
+
         # Removing unique constraint on 'GroupObjectPermission', fields ['group', 'permission', 'content_type', 'object_id']
         db.delete_unique('guardian_groupobjectpermission', ['group_id', 'permission_id', 'content_type_id', 'object_id'])
 
