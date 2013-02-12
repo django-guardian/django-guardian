@@ -1,6 +1,15 @@
 # encoding: utf-8
 from south.db import db
 from south.v2 import SchemaMigration
+from django.db import models
+
+try:
+    from django.contrib.auth import get_user_model
+except ImportError: # django < 1.5
+    from django.contrib.auth.models import User
+else:
+    User = get_user_model()
+
 
 class Migration(SchemaMigration):
 
@@ -12,7 +21,7 @@ class Migration(SchemaMigration):
             ('permission', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.Permission'])),
             ('content_type', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['contenttypes.ContentType'])),
             ('object_id', self.gf('django.db.models.fields.PositiveIntegerField')()),
-            ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=orm['auth.User'])),
+            ('user', self.gf('django.db.models.fields.related.ForeignKey')(to=User)),
         ))
         db.send_create_signal('guardian', ['UserObjectPermission'])
 
