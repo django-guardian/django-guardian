@@ -5,6 +5,7 @@ from django.test import TestCase
 
 from guardian.shortcuts import get_perms_for_model
 from guardian.core import ObjectPermissionChecker
+from guardian.compat import get_user_model
 from guardian.shortcuts import assign
 from guardian.shortcuts import remove_perm
 from guardian.shortcuts import get_perms
@@ -16,7 +17,9 @@ from guardian.exceptions import MixedContentTypeError
 from guardian.exceptions import NotUserNorGroup
 from guardian.exceptions import WrongAppError
 from guardian.tests.core_test import ObjectPermissionTestCase
-from guardian.models import User, Group, Permission
+from guardian.models import Group, Permission
+
+User = get_user_model()
 
 class ShortcutsTests(ObjectPermissionTestCase):
 

@@ -10,9 +10,10 @@ from django.template import get_library
 from django.template import InvalidTemplateLibrary
 from django.template.defaulttags import LoadNode
 
+from guardian.compat import get_user_model
 from guardian.exceptions import NotUserNorGroup
 from guardian.core import ObjectPermissionChecker
-from guardian.models import User, Group, AnonymousUser
+from guardian.models import Group, AnonymousUser
 
 register = template.Library()
 
@@ -60,11 +61,11 @@ class ObjectPermissionsNode(template.Node):
 
     def render(self, context):
         for_whom = self.for_whom.resolve(context)
-        if isinstance(for_whom, User):
+        if isinstance(for_whom, get_user_model()):
             self.user = for_whom
             self.group = None
         elif isinstance(for_whom, AnonymousUser):
-            self.user = User.get_anonymous()
+            self.user = get_user_model().get_anonymous()
             self.group = None
         elif isinstance(for_whom, Group):
             self.user = None

@@ -11,11 +11,14 @@ from django.test import TestCase
 from django.test.client import Client
 
 from guardian.admin import GuardedModelAdmin
+from guardian.compat import get_user_model
 from guardian.shortcuts import get_perms
 from guardian.shortcuts import get_perms_for_model
 from guardian.tests.conf import TEST_SETTINGS
 from guardian.tests.conf import override_settings
-from guardian.models import User, Group
+from guardian.models import Group
+
+User = get_user_model()
 
 class ContentTypeGuardedAdmin(GuardedModelAdmin):
     pass

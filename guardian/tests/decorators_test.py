@@ -1,6 +1,7 @@
 import mock
 from django.conf import settings
 from django.core.exceptions import PermissionDenied
+from django.db.models.base import ModelBase
 from django.http import HttpRequest
 from django.http import HttpResponse
 from django.http import HttpResponseForbidden
@@ -8,14 +9,16 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template import TemplateDoesNotExist
 from django.test import TestCase
+
+from guardian.compat import get_user_model
 from guardian.decorators import permission_required, permission_required_or_403
 from guardian.exceptions import GuardianError
 from guardian.shortcuts import assign
 from guardian.tests.conf import TEST_SETTINGS
 from guardian.tests.conf import override_settings
-from guardian.models import User, Group, AnonymousUser
-from django.db.models.base import ModelBase
+from guardian.models import Group, AnonymousUser
 
+User = get_user_model()
 
 @override_settings(**TEST_SETTINGS)
 class PermissionRequiredTest(TestCase):
