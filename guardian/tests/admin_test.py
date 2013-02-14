@@ -23,6 +23,10 @@ User = get_user_model()
 class ContentTypeGuardedAdmin(GuardedModelAdmin):
     pass
 
+try:
+    admin.site.unregister(ContentType)
+except admin.sites.NotRegistered:
+    pass
 admin.site.register(ContentType, ContentTypeGuardedAdmin)
 
 @override_settings(**TEST_SETTINGS)
