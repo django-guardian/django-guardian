@@ -8,7 +8,8 @@ from django.utils.translation import ugettext_lazy as _
 from guardian.compat import AnonymousUser
 from guardian.compat import Group
 from guardian.compat import Permission
-from guardian.compat import User
+from guardian.compat import get_user_model
+from guardian.compat import user_model_label
 from guardian.managers import GroupObjectPermissionManager
 from guardian.managers import UserObjectPermissionManager
 from guardian.utils import get_anonymous_user
@@ -51,7 +52,7 @@ class UserObjectPermission(BaseObjectPermission):
     """
     **Manager**: :manager:`UserObjectPermissionManager`
     """
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(user_model_label)
 
     objects = UserObjectPermissionManager()
 
@@ -71,13 +72,16 @@ class GroupObjectPermission(BaseObjectPermission):
         unique_together = ['group', 'permission', 'content_type', 'object_pk']
 
 
+# At this point, it's safe to call get_user_model without risking a circular
+# import, since all the models have been parsed
+User = get_user_model()
 # Prototype User and Group methods
 setattr(User, 'get_anonymous', staticmethod(lambda: get_anonymous_user()))
 setattr(User, 'add_obj_perm',
     lambda self, perm, obj: UserObjectPermission.objects.assign(perm, self, obj))
 setattr(User, 'del_obj_perm',
     lambda self, perm, obj: UserObjectPermission.objects.remove_perm(perm, self, obj))
-
+ 
 setattr(Group, 'add_obj_perm',
     lambda self, perm, obj: GroupObjectPermission.objects.assign(perm, self, obj))
 setattr(Group, 'del_obj_perm',

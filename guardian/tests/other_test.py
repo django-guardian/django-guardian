@@ -6,6 +6,7 @@ from django.test import TestCase
 
 import guardian
 from guardian.backends import ObjectPermissionBackend
+from guardian.compat import get_user_model
 from guardian.exceptions import GuardianError
 from guardian.exceptions import NotUserNorGroup
 from guardian.exceptions import ObjectNotPersisted
@@ -15,7 +16,8 @@ from guardian.models import UserObjectPermission
 from guardian.models import AnonymousUser
 from guardian.models import Group
 from guardian.models import Permission
-from guardian.models import User
+
+User = get_user_model()
 
 
 class UserPermissionTests(TestCase):

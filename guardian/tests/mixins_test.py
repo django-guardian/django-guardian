@@ -8,9 +8,10 @@ from django.test.client import RequestFactory
 from django.views.generic import View
 from mock import Mock
 
+from guardian.compat import get_user_model
 from guardian.mixins import LoginRequiredMixin
 from guardian.mixins import PermissionRequiredMixin
-from guardian.models import User, AnonymousUser
+from guardian.models import AnonymousUser
 
 class DatabaseRemovedError(Exception):
     pass
@@ -33,7 +34,8 @@ class TestViewMixins(TestCase):
         self.ctype = ContentType.objects.create(name='foo', model='bar',
             app_label='fake-for-guardian-tests')
         self.factory = RequestFactory()
-        self.user = User.objects.create_user('joe', 'joe@doe.com', 'doe')
+        self.user = get_user_model().objects.create_user(
+            'joe', 'joe@doe.com', 'doe')
         self.client.login(username='joe', password='doe')
 
     def test_permission_is_checked_before_view_is_computed(self):

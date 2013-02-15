@@ -7,10 +7,13 @@ from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 
 from guardian.core import ObjectPermissionChecker
+from guardian.compat import get_user_model
 from guardian.exceptions import NotUserNorGroup
 from guardian.models import UserObjectPermission, GroupObjectPermission
 from guardian.shortcuts import assign
-from guardian.models import User, Group, Permission, AnonymousUser
+from guardian.models import Group, Permission, AnonymousUser
+
+User = get_user_model()
 
 class ObjectPermissionTestCase(TestCase):
 
