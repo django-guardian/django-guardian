@@ -106,7 +106,7 @@ class UserObjectPermissionsForm(BaseObjectPermissionsForm):
         from django.shortcuts import get_object_or_404
         from myapp.models import Post
         from guardian.forms import UserObjectPermissionsForm
-        from guardian.models import User
+        from django.contrib.auth.models import User
         
         def my_view(request, post_slug, user_id):
             user = get_object_or_404(User, id=user_id)

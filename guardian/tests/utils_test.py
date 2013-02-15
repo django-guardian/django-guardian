@@ -1,10 +1,13 @@
 
 from django.test import TestCase
 
+from guardian.compat import get_user_model
 from guardian.tests.core_test import ObjectPermissionTestCase
 from guardian.utils import get_anonymous_user, get_identity
 from guardian.exceptions import NotUserNorGroup
-from guardian.models import User, Group, AnonymousUser
+from guardian.models import Group, AnonymousUser
+
+User = get_user_model()
 
 class GetAnonymousUserTest(TestCase):
 

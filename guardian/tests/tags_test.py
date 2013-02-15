@@ -3,9 +3,12 @@ from django.test import TestCase
 from django.template import Template, Context, TemplateSyntaxError
 from django.contrib.contenttypes.models import ContentType
 
+from guardian.compat import get_user_model
 from guardian.exceptions import NotUserNorGroup
 from guardian.models import UserObjectPermission, GroupObjectPermission
-from guardian.models import User, Group, AnonymousUser
+from guardian.models import Group, AnonymousUser
+
+User = get_user_model()
 
 def render(template, context):
     """

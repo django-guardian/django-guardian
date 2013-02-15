@@ -18,7 +18,7 @@ from django.utils.http import urlquote
 
 from guardian.compat import AnonymousUser
 from guardian.compat import Group
-from guardian.compat import User
+from guardian.compat import get_user_model
 from guardian.conf import settings as guardian_settings
 from guardian.exceptions import NotUserNorGroup
 
@@ -31,7 +31,7 @@ def get_anonymous_user():
     Returns ``User`` instance (not ``AnonymousUser``) depending on
     ``ANONYMOUS_USER_ID`` configuration.
     """
-    return User.objects.get(id=guardian_settings.ANONYMOUS_USER_ID)
+    return get_user_model().objects.get(id=guardian_settings.ANONYMOUS_USER_ID)
 
 
 def get_identity(identity):
@@ -67,7 +67,7 @@ def get_identity(identity):
     if isinstance(identity, AnonymousUser):
         identity = get_anonymous_user()
 
-    if isinstance(identity, User):
+    if isinstance(identity, get_user_model()):
         return identity, None
     elif isinstance(identity, Group):
         return None, identity

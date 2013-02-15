@@ -1,8 +1,9 @@
-
 from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
+
+from guardian.compat import get_user_model
 from guardian.shortcuts import assign, remove_perm
-from guardian.models import User
+
 
 class CustomPKModelTest(TestCase):
     """
@@ -11,7 +12,7 @@ class CustomPKModelTest(TestCase):
     """
 
     def setUp(self):
-        self.user = User.objects.create(username='joe')
+        self.user = get_user_model().objects.create(username='joe')
         self.ctype = ContentType.objects.create(name='foo', model='bar',
             app_label='fake-for-guardian-tests')
 

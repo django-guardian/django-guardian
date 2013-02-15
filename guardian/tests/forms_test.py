@@ -1,13 +1,14 @@
 
 from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
+from guardian.compat import get_user_model
 from guardian.forms import BaseObjectPermissionsForm
-from guardian.models import User
 
 class BaseObjectPermissionsFormTests(TestCase):
 
     def setUp(self):
-        self.user = User.objects.create_user('joe', 'joe@example.com', 'joe')
+        self.user = get_user_model().objects.create_user(
+            'joe', 'joe@example.com', 'joe')
         self.obj = ContentType.objects.create(name='foo', model='bar',
             app_label='fake-for-guardian-tests')
 

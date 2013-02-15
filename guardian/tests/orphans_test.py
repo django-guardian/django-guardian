@@ -4,15 +4,16 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.test import TestCase
 
+from guardian.compat import get_user_model
 from guardian.utils import clean_orphan_obj_perms
 from guardian.shortcuts import assign
-from guardian.models import User, Group
+from guardian.models import Group
 
 class OrphanedObjectPermissionsTest(TestCase):
 
     def setUp(self):
         # Create objects for which we would assing obj perms
-        self.target_user1 = User.objects.create(username='user1')
+        self.target_user1 = get_user_model().objects.create(username='user1')
         self.target_group1 = Group.objects.create(name='group1')
         self.target_obj1 = ContentType.objects.create(name='ct1', model='foo',
             app_label='fake-for-guardian-tests')
@@ -22,7 +23,7 @@ class OrphanedObjectPermissionsTest(TestCase):
         create_permissions(auth_app, [], 1)
 
 
-        self.user = User.objects.create(username='user')
+        self.user = get_user_model().objects.create(username='user')
         self.group = Group.objects.create(name='group')
 
     def test_clean_perms(self):

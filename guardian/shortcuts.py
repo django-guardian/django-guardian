@@ -8,12 +8,13 @@ from django.db.models import Q
 from django.shortcuts import _get_queryset
 from itertools import groupby
 
+from guardian.compat import get_user_model
 from guardian.core import ObjectPermissionChecker
 from guardian.exceptions import MixedContentTypeError
 from guardian.exceptions import WrongAppError
 from guardian.models import UserObjectPermission, GroupObjectPermission
 from guardian.utils import get_identity
-from guardian.models import Permission, User, Group
+from guardian.models import Permission, Group
 
 def assign(perm, user_or_group, obj=None):
     """
@@ -164,7 +165,7 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
     Example::
 
         >>> from django.contrib.flatpages.models import FlatPage
-        >>> from guardian.models import User
+        >>> from django.contrib.auth.models import User
         >>> from guardian.shortcuts import assign, get_users_with_perms
         >>>
         >>> page = FlatPage.objects.create(title='Some page', path='/some/page/')
@@ -192,7 +193,7 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
             )
         if with_superusers:
             qset = qset | Q(is_superuser=True)
-        return User.objects.filter(qset).distinct()
+        return get_user_model().objects.filter(qset).distinct()
     else:
         # TODO: Do not hit db for each user!
         users = {}
