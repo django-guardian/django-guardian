@@ -282,7 +282,7 @@ if 'django.contrib.admin' not in settings.INSTALLED_APPS:
     # we simpy clean up AdminTests class ...
     # TODO: use @unittest.skipUnless('django.contrib.admin' in settings.INSTALLED_APPS)
     #       if possible (requires Python 2.7, though)
-    AdminTests = type('AdminTests', (TestCase,), {})
+    AdminTests = type('AdminTests', (TestCase,), {}) # pyflakes:ignore
 
 
 class GuardedModelAdminTests(TestCase):
