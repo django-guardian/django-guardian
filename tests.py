@@ -20,27 +20,14 @@ settings.INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.sites',
     'guardian',
+    'guardian.tests.testapp',
 )
 
 def run_tests(settings):
     from django.test.utils import get_runner
-    from django.utils.termcolors import colorize
-    db_conf = settings.DATABASES['default']
-    output = []
-    msg = "Starting tests for db backend: %s" % db_conf['ENGINE']
-    embracer = '=' * len(msg)
-    output.append(msg)
-    for key, value in db_conf.iteritems():
-        if key == 'PASSWORD':
-            value = '****************'
-        line = '    %s: "%s"' % (key, value)
-        output.append(line)
-    embracer = colorize('=' * len(max(output, key=lambda s: len(s))),
-        fg='green', opts=['bold'])
-    output = [colorize(line, fg='blue') for line in output]
-    output.insert(0, embracer)
-    output.append(embracer)
-    print '\n'.join(output)
+    from utils import show_settings
+
+    show_settings(settings, 'tests')
 
     TestRunner = get_runner(settings)
     test_runner = TestRunner(interactive=False)

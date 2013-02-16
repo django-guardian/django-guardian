@@ -1,4 +1,6 @@
 import os
+import random
+import string
 
 DEBUG = False
 
@@ -14,6 +16,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.messages',
     'guardian',
+    'guardian.tests.testapp',
 )
 
 AUTHENTICATION_BACKENDS = (
@@ -37,6 +40,8 @@ SITE_ID = 1
 TEMPLATE_DIRS = (
     os.path.join(os.path.dirname(__file__), 'tests', 'templates'),
 )
+
+SECRET_KEY = ''.join([random.choice(string.printable) for x in range(40)])
 
 # Database specific
 

@@ -33,7 +33,7 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
 
     'guardian',
-    'guardian.tests',
+    'guardian.tests.testapp',
     'posts',
 )
 if 'GRAPPELLI' in os.environ:

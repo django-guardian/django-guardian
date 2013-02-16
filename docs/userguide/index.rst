@@ -10,5 +10,6 @@ User Guide
     check
     remove
     admin-integration
+    performance
     caveats
     

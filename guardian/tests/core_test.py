@@ -43,11 +43,13 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
             ContentType.objects.clear_cache()
             checker = ObjectPermissionChecker(self.user)
 
-            # has_perm on Checker should spawn only one query plus one extra for
-            # fetching the content type first time we check for specific model
+            # has_perm on Checker should spawn only one query plus one extra
+            # for fetching the content type first time we check for specific
+            # model and two more content types as there are additional checks
+            # at get_user_obj_perms_model and get_group_obj_perms_model
             query_count = len(connection.queries)
             res = checker.has_perm("change_group", self.group)
-            self.assertEqual(len(connection.queries), query_count + 2)
+            self.assertEqual(len(connection.queries), query_count + 4)
 
             # Checking again shouldn't spawn any queries
             query_count = len(connection.queries)
@@ -67,8 +69,8 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
             checker.has_perm("change_group", new_group)
             self.assertEqual(len(connection.queries), query_count + 1)
 
-            # Checking for permission for other model should spawn 2 queries
-            # (again: content type and actual permissions for the object)
+            # Checking for permission for other model should spawn 3 queries
+            # (again: content type and actual permissions for the object...
             query_count = len(connection.queries)
             checker.has_perm("change_user", self.user)
             self.assertEqual(len(connection.queries), query_count + 2)
