@@ -11,21 +11,27 @@ from django.template import TemplateDoesNotExist
 from django.test import TestCase
 
 from guardian.compat import get_user_model
+from guardian.compat import get_user_model_path
+from guardian.compat import get_user_permission_full_codename
 from guardian.decorators import permission_required, permission_required_or_403
 from guardian.exceptions import GuardianError
 from guardian.shortcuts import assign
 from guardian.tests.conf import TEST_SETTINGS
+from guardian.tests.conf import TestDataMixin
 from guardian.tests.conf import override_settings
 from guardian.models import Group, AnonymousUser
 
 User = get_user_model()
+user_model_path = get_user_model_path()
+
 
 @override_settings(**TEST_SETTINGS)
-class PermissionRequiredTest(TestCase):
+class PermissionRequiredTest(TestDataMixin, TestCase):
 
-    fixtures = ['tests.json']
+    #fixtures = ['tests.json']
 
     def setUp(self):
+        super(PermissionRequiredTest, self).setUp()
         self.anon = AnonymousUser()
         self.user = User.objects.get_or_create(username='jack')[0]
         self.group = Group.objects.get_or_create(name='jackGroup')[0]
@@ -297,12 +303,12 @@ class PermissionRequiredTest(TestCase):
 
         request = self._get_request(self.user)
 
-        perm = 'auth.change_user'
+        perm = get_user_permission_full_codename('change')
         joe, created = User.objects.get_or_create(username='joe')
         assign(perm, self.user, obj=joe)
 
         models = (
-            'auth.User',
+            user_model_path,
             User,
             User.objects.filter(is_active=True),
         )

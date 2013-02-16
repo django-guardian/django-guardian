@@ -13,6 +13,21 @@ TEST_SETTINGS = dict(
     TEMPLATE_DIRS=[TEST_TEMPLATES_DIR],
 )
 
+class TestDataMixin(object):
+    def setUp(self):
+        super(TestDataMixin, self).setUp()
+        from django.contrib.auth.models import Group
+        try:
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+        except ImportError:
+            from django.contrib.auth.models import User
+        Group.objects.create(pk=1, name='admins')
+        jack_group = Group.objects.create(pk=2, name='jackGroup')
+        User.objects.get_or_create(id=settings.ANONYMOUS_USER_ID)
+        jack = User.objects.create(id=1, username='jack', is_active=True,
+            is_superuser=False, is_staff=False)
+        jack.groups.add(jack_group)
 
 
 class override_settings(object):

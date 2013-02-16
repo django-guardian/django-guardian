@@ -20,6 +20,7 @@ from guardian.tests.core_test import ObjectPermissionTestCase
 from guardian.models import Group, Permission
 
 User = get_user_model()
+user_app_label = User._meta.app_label
 
 class ShortcutsTests(ObjectPermissionTestCase):
 
@@ -405,12 +406,17 @@ class GetObjectsForUser(TestCase):
         self.assertEqual(set(ctypes), set(objects))
 
     def test_mixed_perms(self):
+        codenames = ['%s.change_user' % user_app_label, 'auth.change_permission']
         self.assertRaises(MixedContentTypeError, get_objects_for_user,
-            self.user, ['auth.change_user', 'auth.change_permission'])
+            self.user, codenames)
 
     def test_perms_with_mixed_apps(self):
+        codenames = [
+            '%s.change_user' % user_app_label,
+            'contenttypes.change_contenttype',
+        ]
         self.assertRaises(MixedContentTypeError, get_objects_for_user,
-            self.user, ['auth.change_user', 'contenttypes.change_contenttype'])
+            self.user, codenames)
 
     def test_mixed_perms_and_klass(self):
         self.assertRaises(MixedContentTypeError, get_objects_for_user,
@@ -555,19 +561,20 @@ class GetObjectsForGroup(TestCase):
         self.group1 = Group.objects.create(name='group1')
         self.group2 = Group.objects.create(name='group2')
         self.group3 = Group.objects.create(name='group3')
-      
+
     def test_mixed_perms(self):
         self.assertRaises(MixedContentTypeError, get_objects_for_group,
-            self.group1, ['auth.change_user', 'auth.change_permission'])
+            self.group1, ['%s.change_user' % user_app_label, 'auth.change_permission'])
 
     def test_perms_with_mixed_apps(self):
         self.assertRaises(MixedContentTypeError, get_objects_for_group,
-            self.group1, ['auth.change_user', 'contenttypes.change_contenttype'])
+            self.group1, ['%s.change_user' % user_app_label,
+                          'contenttypes.contenttypes.change_contenttype'])
 
     def test_mixed_perms_and_klass(self):
         self.assertRaises(MixedContentTypeError, get_objects_for_group,
             self.group1, ['auth.change_group'], User)
-        
+
     def test_no_app_label_nor_klass(self):
         self.assertRaises(WrongAppError, get_objects_for_group, self.group1,
             ['change_contenttype'])
@@ -585,7 +592,7 @@ class GetObjectsForGroup(TestCase):
             set(get_objects_for_group(self.group1, perm)),
             set(get_objects_for_group(self.group1, [perm]))
         )
-        
+
     def test_klass_as_model(self):
         assign('contenttypes.change_contenttype', self.group1, self.obj1)
 
@@ -598,17 +605,17 @@ class GetObjectsForGroup(TestCase):
         objects = get_objects_for_group(self.group1, ['change_contenttype'],
             ContentType.objects)
         self.assertEqual(list(objects), [self.obj1])
-        
+
     def test_klass_as_queryset(self):
         assign('contenttypes.change_contenttype', self.group1, self.obj1)
         objects = get_objects_for_group(self.group1, ['change_contenttype'],
             ContentType.objects.all())
         self.assertEqual(list(objects), [self.obj1])
-        
+
     def test_ensure_returns_queryset(self):
         objects = get_objects_for_group(self.group1, ['contenttypes.change_contenttype'])
         self.assertTrue(isinstance(objects, QuerySet))
-        
+
     def test_simple(self):
         assign('change_contenttype', self.group1, self.obj1)
         assign('change_contenttype', self.group1, self.obj2)
@@ -619,7 +626,7 @@ class GetObjectsForGroup(TestCase):
         self.assertEqual(
             set(objects),
             set([self.obj1, self.obj2]))
-        
+
     def test_simple_after_removal(self):
         self.test_simple()
         remove_perm('change_contenttype', self.group1, self.obj1)
