@@ -1,3 +1,4 @@
+import django
 import os
 import sys
 
@@ -8,6 +9,8 @@ abspath = lambda *p: os.path.abspath(os.path.join(*p))
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 SECRET_KEY = 'CHANGE_THIS_TO_SOMETHING_UNIQUE_AND_SECURE'
+
+TEST_SOUTH = 'GUARDIAN_TEST_SOUTH' in os.environ
 
 PROJECT_ROOT = abspath(os.path.dirname(__file__))
 GUARDIAN_MODULE_PATH = abspath(PROJECT_ROOT, '..')
@@ -35,7 +38,10 @@ INSTALLED_APPS = (
     'guardian',
     'guardian.tests',
     'posts',
+    'core',
 )
+if TEST_SOUTH:
+    INSTALLED_APPS += ('south',)
 if 'GRAPPELLI' in os.environ:
     try:
         __import__('grappelli')
@@ -90,7 +96,12 @@ ANONYMOUS_USER_ID = -1
 
 # Neede as some models (located at guardian/tests/models.py)
 # are not migrated for tests
-SOUTH_TESTS_MIGRATE = False
+SOUTH_TESTS_MIGRATE = TEST_SOUTH
+
+# Django >= 1.5 (earlier versoions would ignore this setting; we don't want this
+# however, to be set for earlier versions so we don't relay on it)
+if django.VERSION >= (1, 5):
+    AUTH_USER_MODEL = 'core.CustomUser'
 
 try:
     from conf.localsettings import *

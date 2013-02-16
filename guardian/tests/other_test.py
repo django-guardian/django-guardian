@@ -7,6 +7,8 @@ from django.test import TestCase
 import guardian
 from guardian.backends import ObjectPermissionBackend
 from guardian.compat import get_user_model
+from guardian.compat import get_user_model_path
+from guardian.compat import get_user_permission_full_codename
 from guardian.exceptions import GuardianError
 from guardian.exceptions import NotUserNorGroup
 from guardian.exceptions import ObjectNotPersisted
@@ -16,14 +18,17 @@ from guardian.models import UserObjectPermission
 from guardian.models import AnonymousUser
 from guardian.models import Group
 from guardian.models import Permission
+from guardian.tests.conf import TestDataMixin
 
 User = get_user_model()
+user_model_path = get_user_model_path()
 
 
-class UserPermissionTests(TestCase):
-    fixtures = ['tests.json']
+class UserPermissionTests(TestDataMixin, TestCase):
+    #fixtures = ['tests.json']
 
     def setUp(self):
+        super(UserPermissionTests, self).setUp()
         self.user = User.objects.get(username='jack')
         self.ctype = ContentType.objects.create(name='foo', model='bar',
             app_label='fake-for-guardian-tests')
@@ -122,10 +127,10 @@ class UserPermissionTests(TestCase):
             UserObjectPermission.objects.get_for_object,
             "change_user", not_saved_user)
 
-class GroupPermissionTests(TestCase):
-    fixtures = ['tests.json']
+class GroupPermissionTests(TestDataMixin, TestCase):
 
     def setUp(self):
+        super(GroupPermissionTests, self).setUp()
         self.user = User.objects.get(username='jack')
         self.group, created = Group.objects.get_or_create(name='jackGroup')
         self.user.groups.add(self.group)
