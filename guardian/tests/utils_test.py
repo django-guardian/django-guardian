@@ -1,5 +1,3 @@
-from mock import Mock
-from mock import patch
 from django.test import TestCase
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import Group, AnonymousUser
@@ -16,7 +14,6 @@ from guardian.utils import get_identity
 from guardian.utils import get_user_obj_perms_model
 from guardian.utils import get_group_obj_perms_model
 from guardian.exceptions import NotUserNorGroup
-from guardian.models import Group, AnonymousUser
 
 User = get_user_model()
 

@@ -5,7 +5,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericForeignKey
 from django.utils.translation import ugettext_lazy as _
 
-from guardian.compat import AnonymousUser
 from guardian.compat import Group
 from guardian.compat import Permission
 from guardian.compat import get_user_model
@@ -92,7 +91,7 @@ setattr(User, 'add_obj_perm',
     lambda self, perm, obj: UserObjectPermission.objects.assign(perm, self, obj))
 setattr(User, 'del_obj_perm',
     lambda self, perm, obj: UserObjectPermission.objects.remove_perm(perm, self, obj))
- 
+
 setattr(Group, 'add_obj_perm',
     lambda self, perm, obj: GroupObjectPermission.objects.assign(perm, self, obj))
 setattr(Group, 'del_obj_perm',

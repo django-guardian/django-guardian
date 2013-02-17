@@ -19,8 +19,6 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext, TemplateDoesNotExist
 from django.utils.http import urlquote
 
-from guardian.compat import AnonymousUser
-from guardian.compat import Group
 from guardian.compat import get_user_model
 from guardian.conf import settings as guardian_settings
 from guardian.exceptions import NotUserNorGroup

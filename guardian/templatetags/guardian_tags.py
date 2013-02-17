@@ -6,6 +6,7 @@
 
 """
 from django import template
+from django.contrib.auth.models import Group, AnonymousUser
 from django.template import get_library
 from django.template import InvalidTemplateLibrary
 from django.template.defaulttags import LoadNode
@@ -13,7 +14,6 @@ from django.template.defaulttags import LoadNode
 from guardian.compat import get_user_model
 from guardian.exceptions import NotUserNorGroup
 from guardian.core import ObjectPermissionChecker
-from guardian.models import Group, AnonymousUser
 
 register = template.Library()
 

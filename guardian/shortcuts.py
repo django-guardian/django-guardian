@@ -17,7 +17,7 @@ from guardian.exceptions import WrongAppError
 from guardian.utils import get_identity
 from guardian.utils import get_user_obj_perms_model
 from guardian.utils import get_group_obj_perms_model
-from itertools import groupby
+
 
 def assign(perm, user_or_group, obj=None):
     """

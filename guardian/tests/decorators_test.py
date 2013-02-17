@@ -1,5 +1,6 @@
 import mock
 from django.conf import settings
+from django.contrib.auth.models import Group, AnonymousUser
 from django.core.exceptions import PermissionDenied
 from django.db.models.base import ModelBase
 from django.http import HttpRequest
@@ -20,7 +21,6 @@ from guardian.shortcuts import assign
 from guardian.tests.conf import TEST_SETTINGS
 from guardian.tests.conf import TestDataMixin
 from guardian.tests.conf import override_settings
-from guardian.models import Group, AnonymousUser
 
 User = get_user_model()
 user_model_path = get_user_model_path()
