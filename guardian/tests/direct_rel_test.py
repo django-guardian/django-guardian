@@ -1,16 +1,19 @@
 from .testapp.models import Mixed
-from .testapp.models import MixedGroupObjectPermission
 from .testapp.models import Project
 from .testapp.models import ProjectGroupObjectPermission
 from .testapp.models import ProjectUserObjectPermission
-from django.contrib.auth.models import User, Group, Permission
+from django.contrib.auth.models import Group, Permission
 from django.test import TestCase
+from guardian.compat import get_user_model
 from guardian.shortcuts import assign
 from guardian.shortcuts import get_groups_with_perms
 from guardian.shortcuts import get_objects_for_group
 from guardian.shortcuts import get_objects_for_user
 from guardian.shortcuts import get_users_with_perms
 from guardian.shortcuts import remove_perm
+
+
+User = get_user_model()
 
 
 class TestDirectUserPermissions(TestCase):
@@ -75,7 +78,7 @@ class TestDirectUserPermissions(TestCase):
         User.objects.create_user('john', 'john@foobar.com', 'john')
         jane = User.objects.create_user('jane', 'jane@foobar.com', 'jane')
         group = Group.objects.create(name='devs')
-        group.user_set.add(self.joe)
+        self.joe.groups.add(group)
         assign('add_project', self.joe, self.project)
         assign('change_project', group, self.project)
         assign('change_project', jane, self.project)
@@ -101,7 +104,7 @@ class TestDirectGroupPermissions(TestCase):
     def setUp(self):
         self.joe = User.objects.create_user('joe', 'joe@example.com', 'foobar')
         self.group = Group.objects.create(name='admins')
-        self.group.user_set.add(self.joe)
+        self.joe.groups.add(self.group)
         self.project = Project.objects.create(name='Foobar')
 
     def get_perm(self, codename):
@@ -172,14 +175,14 @@ class TestMixedDirectAndGenericObjectPermission(TestCase):
     def setUp(self):
         self.joe = User.objects.create_user('joe', 'joe@example.com', 'foobar')
         self.group = Group.objects.create(name='admins')
-        self.group.user_set.add(self.joe)
+        self.joe.groups.add(self.group)
         self.mixed = Mixed.objects.create(name='Foobar')
 
     def test_get_users_with_perms_plus_groups(self):
         User.objects.create_user('john', 'john@foobar.com', 'john')
         jane = User.objects.create_user('jane', 'jane@foobar.com', 'jane')
         group = Group.objects.create(name='devs')
-        group.user_set.add(self.joe)
+        self.joe.groups.add(group)
         assign('add_mixed', self.joe, self.mixed)
         assign('change_mixed', group, self.mixed)
         assign('change_mixed', jane, self.mixed)

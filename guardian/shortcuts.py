@@ -2,6 +2,8 @@
 Convenient shortcuts to manage or check object permissions.
 """
 
+from django.contrib.auth.models import Group
+from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Q
@@ -382,10 +384,12 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
     data = list(user_obj_perms)
     if use_groups:
         group_model = get_group_obj_perms_model(queryset.model)
-        groups_obj_perms_queryset = (group_model.objects
-            .filter(group__user=user)
-            .filter(permission__content_type=ctype)
-            .filter(permission__codename__in=codenames))
+        group_filters = {
+            'permission__content_type': ctype,
+            'permission__codename__in': codenames,
+            'group__%s' % get_user_model()._meta.module_name: user,
+        }
+        groups_obj_perms_queryset = group_model.objects.filter(**group_filters)
         if group_model.objects.is_generic():
             fields = ['object_pk', 'permission__codename']
         else:

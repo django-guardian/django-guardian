@@ -15,6 +15,7 @@ from guardian.compat import get_user_model_path
 from guardian.compat import get_user_permission_full_codename
 from guardian.decorators import permission_required, permission_required_or_403
 from guardian.exceptions import GuardianError
+from guardian.exceptions import WrongAppError
 from guardian.shortcuts import assign
 from guardian.tests.conf import TEST_SETTINGS
 from guardian.tests.conf import TestDataMixin
@@ -193,14 +194,14 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
 
     def test_user_has_access(self):
 
-        perm = 'auth.change_user'
+        perm = get_user_permission_full_codename('change')
         joe, created = User.objects.get_or_create(username='joe')
         assign(perm, self.user, obj=joe)
 
         request = self._get_request(self.user)
 
         @permission_required_or_403(perm, (
-            'auth.User', 'username', 'username'))
+            user_model_path, 'username', 'username'))
         def dummy_view(request, username):
             return HttpResponse('dummy_view')
         response = dummy_view(request, username='joe')
@@ -214,7 +215,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
         a custom metaclass, the decorator fail because type
         doesn't return `ModelBase`
         """
-        perm = 'auth.change_user'
+        perm = get_user_permission_full_codename('change')
 
         class TestMeta(ModelBase):
             pass
@@ -222,7 +223,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
         class ProxyUser(User):
             class Meta:
                 proxy = True
-                app_label = 'auth'
+                app_label = User._meta.app_label
             __metaclass__ = TestMeta
 
         joe, created = ProxyUser.objects.get_or_create(username='joe')
@@ -240,14 +241,14 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
 
     def test_user_has_obj_access_even_if_we_also_check_for_global(self):
 
-        perm = 'auth.change_user'
+        perm = get_user_permission_full_codename('change')
         joe, created = User.objects.get_or_create(username='joe')
         assign(perm, self.user, obj=joe)
 
         request = self._get_request(self.user)
 
         @permission_required_or_403(perm, (
-            'auth.User', 'username', 'username'), accept_global_perms=True)
+            user_model_path, 'username', 'username'), accept_global_perms=True)
         def dummy_view(request, username):
             return HttpResponse('dummy_view')
         response = dummy_view(request, username='joe')
@@ -256,13 +257,13 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
 
     def test_user_has_no_obj_perm_access(self):
 
-        perm = 'auth.change_user'
+        perm = get_user_permission_full_codename('change')
         joe, created = User.objects.get_or_create(username='joe')
 
         request = self._get_request(self.user)
 
         @permission_required_or_403(perm, (
-            'auth.User', 'username', 'username'))
+            user_model_path, 'username', 'username'))
         def dummy_view(request, username):
             return HttpResponse('dummy_view')
         response = dummy_view(request, username='joe')
@@ -270,14 +271,14 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
 
     def test_user_has_global_perm_access_but_flag_not_set(self):
 
-        perm = 'auth.change_user'
+        perm = get_user_permission_full_codename('change')
         joe, created = User.objects.get_or_create(username='joe')
         assign(perm, self.user)
 
         request = self._get_request(self.user)
 
         @permission_required_or_403(perm, (
-            'auth.User', 'username', 'username'))
+            user_model_path, 'username', 'username'))
         def dummy_view(request, username):
             return HttpResponse('dummy_view')
         response = dummy_view(request, username='joe')
@@ -285,14 +286,14 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
 
     def test_user_has_global_perm_access(self):
 
-        perm = 'auth.change_user'
+        perm = get_user_permission_full_codename('change')
         joe, created = User.objects.get_or_create(username='joe')
         assign(perm, self.user)
 
         request = self._get_request(self.user)
 
         @permission_required_or_403(perm, (
-            'auth.User', 'username', 'username'), accept_global_perms=True)
+            user_model_path, 'username', 'username'), accept_global_perms=True)
         def dummy_view(request, username):
             return HttpResponse('dummy_view')
         response = dummy_view(request, username='joe')
@@ -320,7 +321,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
             response = dummy_view(request, username=joe.username)
             self.assertEqual(response.content, 'hello')
 
-    def test_redirection(self):
+    def test_redirection_raises_wrong_app_error(self):
 
         request = self._get_request(self.user)
 
@@ -329,6 +330,23 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
         foo.groups.add(foobar)
 
         @permission_required('auth.change_group',
+            (User, 'groups__name', 'group_name'),
+            login_url='/foobar/')
+        def dummy_view(request, group_name):
+            pass
+        # 'auth.change_group' is wrong permission codename (should be one
+        # related with User
+        self.assertRaises(WrongAppError, dummy_view, request, group_name='foobar')
+
+    def test_redirection(self):
+
+        request = self._get_request(self.user)
+
+        foo = User.objects.create(username='foo')
+        foobar = Group.objects.create(name='foobar')
+        foo.groups.add(foobar)
+
+        @permission_required(get_user_permission_full_codename('change_user'),
             (User, 'groups__name', 'group_name'),
             login_url='/foobar/')
         def dummy_view(request, group_name):

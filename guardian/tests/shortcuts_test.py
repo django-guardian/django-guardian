@@ -6,6 +6,7 @@ from django.test import TestCase
 from guardian.shortcuts import get_perms_for_model
 from guardian.core import ObjectPermissionChecker
 from guardian.compat import get_user_model
+from guardian.compat import get_user_permission_full_codename
 from guardian.shortcuts import assign
 from guardian.shortcuts import remove_perm
 from guardian.shortcuts import get_perms
@@ -21,6 +22,7 @@ from guardian.models import Group, Permission
 
 User = get_user_model()
 user_app_label = User._meta.app_label
+user_module_name = User._meta.module_name
 
 class ShortcutsTests(ObjectPermissionTestCase):
 
@@ -253,7 +255,7 @@ class GetUsersWithPermsTest(TestCase):
         assign("delete_contenttype", self.user2, self.obj1)
         assign("delete_contenttype", self.user2, self.obj2)
         assign("change_contenttype", self.user3, self.obj2)
-        assign("change_user", self.user3, self.user1)
+        assign("change_%s" % user_module_name, self.user3, self.user1)
 
         result = get_users_with_perms(self.obj1)
         self.assertEqual(
@@ -362,11 +364,11 @@ class GetGroupsWithPerms(TestCase):
     def test_mixed(self):
         assign("change_contenttype", self.group1, self.obj1)
         assign("change_contenttype", self.group1, self.obj2)
-        assign("change_user", self.group1, self.user3)
+        assign("change_%s" % user_module_name, self.group1, self.user3)
         assign("change_contenttype", self.group2, self.obj2)
         assign("change_contenttype", self.group2, self.obj1)
         assign("delete_contenttype", self.group2, self.obj1)
-        assign("change_user", self.group3, self.user1)
+        assign("change_%s" % user_module_name, self.group3, self.user1)
 
         result = get_groups_with_perms(self.obj1)
         self.assertEqual(set(result), set([self.group1, self.group2]))
@@ -406,13 +408,16 @@ class GetObjectsForUser(TestCase):
         self.assertEqual(set(ctypes), set(objects))
 
     def test_mixed_perms(self):
-        codenames = ['%s.change_user' % user_app_label, 'auth.change_permission']
+        codenames = [
+            get_user_permission_full_codename('change'),
+            'auth.change_permission',
+        ]
         self.assertRaises(MixedContentTypeError, get_objects_for_user,
             self.user, codenames)
 
     def test_perms_with_mixed_apps(self):
         codenames = [
-            '%s.change_user' % user_app_label,
+            get_user_permission_full_codename('change'),
             'contenttypes.change_contenttype',
         ]
         self.assertRaises(MixedContentTypeError, get_objects_for_user,
@@ -563,13 +568,20 @@ class GetObjectsForGroup(TestCase):
         self.group3 = Group.objects.create(name='group3')
 
     def test_mixed_perms(self):
+        codenames = [
+            get_user_permission_full_codename('change'),
+            'auth.change_permission',
+        ]
         self.assertRaises(MixedContentTypeError, get_objects_for_group,
-            self.group1, ['%s.change_user' % user_app_label, 'auth.change_permission'])
+            self.group1, codenames)
 
     def test_perms_with_mixed_apps(self):
+        codenames = [
+            get_user_permission_full_codename('change'),
+            'contenttypes.contenttypes.change_contenttype',
+        ]
         self.assertRaises(MixedContentTypeError, get_objects_for_group,
-            self.group1, ['%s.change_user' % user_app_label,
-                          'contenttypes.contenttypes.change_contenttype'])
+            self.group1, codenames)
 
     def test_mixed_perms_and_klass(self):
         self.assertRaises(MixedContentTypeError, get_objects_for_group,

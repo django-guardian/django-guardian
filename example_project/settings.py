@@ -38,7 +38,6 @@ INSTALLED_APPS = (
     'guardian',
     'guardian.tests.testapp',
     'posts',
-    'core',
 )
 if TEST_SOUTH:
     INSTALLED_APPS += ('south',)
@@ -101,6 +100,7 @@ SOUTH_TESTS_MIGRATE = TEST_SOUTH
 # Django >= 1.5 (earlier versoions would ignore this setting; we don't want this
 # however, to be set for earlier versions so we don't relay on it)
 if django.VERSION >= (1, 5):
+    INSTALLED_APPS += ('core',)
     AUTH_USER_MODEL = 'core.CustomUser'
 
 try:

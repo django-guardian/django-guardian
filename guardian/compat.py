@@ -52,3 +52,11 @@ def get_user_permission_full_codename(perm):
     User = get_user_model()
     return '%s.%s_%s' % (User._meta.app_label, perm, User._meta.module_name)
 
+def get_user_permission_codename(perm):
+    """
+    Returns '<perm>_<usermodulename>'. If standard ``auth.User`` is
+    used, for 'change' perm this would return ``change_user`` and if
+    ``myapp.CustomUser`` is used it would return ``change_customuser``.
+    """
+    return get_user_permission_full_codename(perm).split('.')[1]
+

@@ -8,7 +8,7 @@ import guardian
 from guardian.backends import ObjectPermissionBackend
 from guardian.compat import get_user_model
 from guardian.compat import get_user_model_path
-from guardian.compat import get_user_permission_full_codename
+from guardian.compat import get_user_permission_codename
 from guardian.exceptions import GuardianError
 from guardian.exceptions import NotUserNorGroup
 from guardian.exceptions import ObjectNotPersisted
@@ -99,7 +99,8 @@ class UserPermissionTests(TestDataMixin, TestCase):
 
         group = Group.objects.create(name='test_group_assign_validation')
         ctype = ContentType.objects.get_for_model(group)
-        perm = Permission.objects.get(codename='change_user')
+        codename = codename=get_user_permission_codename('change')
+        perm = Permission.objects.get(codename=codename)
 
         create_info = dict(
             permission = perm,
@@ -111,21 +112,23 @@ class UserPermissionTests(TestDataMixin, TestCase):
             **create_info)
 
     def test_unicode(self):
-        obj_perm = UserObjectPermission.objects.assign("change_user",
+        codename = get_user_permission_codename('change')
+        obj_perm = UserObjectPermission.objects.assign(codename,
             self.user, self.user)
         self.assertTrue(isinstance(obj_perm.__unicode__(), unicode))
 
     def test_errors(self):
         not_saved_user = User(username='not_saved_user')
+        codename = get_user_permission_codename('change')
         self.assertRaises(ObjectNotPersisted,
             UserObjectPermission.objects.assign,
-            "change_user", self.user, not_saved_user)
+            codename, self.user, not_saved_user)
         self.assertRaises(ObjectNotPersisted,
             UserObjectPermission.objects.remove_perm,
-            "change_user", self.user, not_saved_user)
+                codename, self.user, not_saved_user)
         self.assertRaises(ObjectNotPersisted,
             UserObjectPermission.objects.get_for_object,
-            "change_user", not_saved_user)
+            codename, not_saved_user)
 
 class GroupPermissionTests(TestDataMixin, TestCase):
 

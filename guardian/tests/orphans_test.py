@@ -9,11 +9,16 @@ from guardian.utils import clean_orphan_obj_perms
 from guardian.shortcuts import assign
 from guardian.models import Group
 
+
+User = get_user_model()
+user_module_name = User._meta.module_name
+
+
 class OrphanedObjectPermissionsTest(TestCase):
 
     def setUp(self):
         # Create objects for which we would assing obj perms
-        self.target_user1 = get_user_model().objects.create(username='user1')
+        self.target_user1 = User.objects.create(username='user1')
         self.target_group1 = Group.objects.create(name='group1')
         self.target_obj1 = ContentType.objects.create(name='ct1', model='foo',
             app_label='fake-for-guardian-tests')
@@ -23,14 +28,14 @@ class OrphanedObjectPermissionsTest(TestCase):
         create_permissions(auth_app, [], 1)
 
 
-        self.user = get_user_model().objects.create(username='user')
+        self.user = User.objects.create(username='user')
         self.group = Group.objects.create(name='group')
 
     def test_clean_perms(self):
 
         # assign obj perms
         target_perms = {
-            self.target_user1: ["change_user"],
+            self.target_user1: ["change_%s" % user_module_name],
             self.target_group1: ["delete_group"],
             self.target_obj1: ["change_contenttype", "delete_contenttype"],
             self.target_obj2: ["change_contenttype"],
@@ -64,7 +69,7 @@ class OrphanedObjectPermissionsTest(TestCase):
 
         # assign obj perms
         target_perms = {
-            self.target_user1: ["change_user"],
+            self.target_user1: ["change_%s" % user_module_name],
             self.target_group1: ["delete_group"],
             self.target_obj1: ["change_contenttype", "delete_contenttype"],
             self.target_obj2: ["change_contenttype"],
