@@ -72,7 +72,7 @@ generic solution.
 Direct foreign keys
 -------------------
 
-.. versionadded:: 1.3
+.. versionadded:: 1.1
 
 In order to make our permission checks faster we can use direct foreign key
 solution. It actually is very simple to setup - we need to declare two new
