@@ -81,6 +81,6 @@ class RunFlakesCommand(Command):
             sys.stderr.write("ERROR: Finished with total %d warnings.\n" % warns)
             sys.exit(1)
         else:
-            print "No problems found in source codes."
+            print("No problems found in source codes.")
 
 

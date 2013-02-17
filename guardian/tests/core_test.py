@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from itertools import chain
 
 from django.conf import settings

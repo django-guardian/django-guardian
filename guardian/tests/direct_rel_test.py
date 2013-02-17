@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from .testapp.models import Mixed
 from .testapp.models import Project
 from .testapp.models import ProjectGroupObjectPermission

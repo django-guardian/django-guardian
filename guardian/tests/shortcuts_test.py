@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.query import QuerySet
@@ -229,7 +230,7 @@ class GetUsersWithPermsTest(TestCase):
             self.user2: ["change_contenttype", "delete_contenttype"],
         }
         self.assertEqual(result.keys(), expected.keys())
-        for key, perms in result.iteritems():
+        for key, perms in result.items():
             self.assertEqual(set(perms), set(expected[key]))
 
         # Check contenttype2
@@ -238,7 +239,7 @@ class GetUsersWithPermsTest(TestCase):
             self.user3: ["change_contenttype", "delete_contenttype"],
         }
         self.assertEqual(result.keys(), expected.keys())
-        for key, perms in result.iteritems():
+        for key, perms in result.items():
             self.assertEqual(set(perms), set(expected[key]))
 
     def test_attach_groups_only_has_perms(self):
@@ -388,7 +389,7 @@ class GetGroupsWithPerms(TestCase):
             self.group2: ["change_contenttype", "delete_contenttype"],
         }
         self.assertEqual(result.keys(), expected.keys())
-        for key, perms in result.iteritems():
+        for key, perms in result.items():
             self.assertEqual(set(perms), set(expected[key]))
 
 

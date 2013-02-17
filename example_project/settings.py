@@ -33,12 +33,16 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.admin',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
 
     'guardian',
     'guardian.tests.testapp',
     'posts',
 )
+if django.VERSION < (1, 3):
+    INSTALLED_APPS += ('staticfiles',)
+else:
+    INSTALLED_APPS += ('django.contrib.staticfiles',)
+
 if TEST_SOUTH:
     INSTALLED_APPS += ('south',)
 if 'GRAPPELLI' in os.environ:
@@ -46,7 +50,7 @@ if 'GRAPPELLI' in os.environ:
         __import__('grappelli')
         INSTALLED_APPS = ('grappelli',) + INSTALLED_APPS
     except ImportError:
-        print "django-grappelli not installed"
+        print("django-grappelli not installed")
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',

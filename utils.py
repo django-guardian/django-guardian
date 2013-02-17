@@ -5,7 +5,7 @@ def show_settings(settings, action):
 
     guardian_path = guardian.__path__[0]
     msg = "django-guardian module's path: %r" % guardian_path
-    print colorize(msg, fg='magenta')
+    print(colorize(msg, fg='magenta'))
     db_conf = settings.DATABASES['default']
     output = []
     msg = "Starting %s for db backend: %s" % (action, db_conf['ENGINE'])
@@ -23,5 +23,5 @@ def show_settings(settings, action):
     output = [colorize(line, fg='blue') for line in output]
     output.insert(0, embracer)
     output.append(embracer)
-    print '\n'.join(output)
+    print('\n'.join(output))
 

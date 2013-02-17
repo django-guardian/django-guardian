@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import AnonymousUser
@@ -152,5 +153,5 @@ class TestViewMixins(TestCase):
         request.user = self.user
         response = view(request)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'secret-view')
+        self.assertEqual(response.content, b'secret-view')
 

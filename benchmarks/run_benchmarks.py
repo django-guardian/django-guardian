@@ -97,7 +97,7 @@ class Benchmark(object):
         self.perm = 'auth.change_%s' % model._meta.module_name
 
     def info(self, msg):
-        print colorize(msg + '\n', fg='green')
+        print(colorize(msg + '\n', fg='green'))
 
     def prepare_db(self):
         from django.core.management import call_command

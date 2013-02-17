@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
@@ -59,4 +61,12 @@ def get_user_permission_codename(perm):
     ``myapp.CustomUser`` is used it would return ``change_customuser``.
     """
     return get_user_permission_full_codename(perm).split('.')[1]
+
+# Python 3
+try:
+    unicode = unicode # pyflakes:ignore
+    basestring = basestring # pyflakes:ignore
+    str = str # pyflakes:ignore
+except NameError:
+    basestring = unicode = str = str
 

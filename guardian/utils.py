@@ -5,6 +5,7 @@ Functions defined within this module should be considered as django-guardian's
 internal functionality. They are **not** guaranteed to be stable - which means
 they actual input parameters/output type may change in future releases.
 """
+from __future__ import unicode_literals
 import os
 import logging
 from itertools import chain
@@ -102,7 +103,7 @@ def get_403_or_None(request, perms, obj=None, login_url=None,
                         RequestContext(request))
                     response.status_code = 403
                     return response
-                except TemplateDoesNotExist, e:
+                except TemplateDoesNotExist as e:
                     if settings.DEBUG:
                         raise e
             elif guardian_settings.RAISE_403:

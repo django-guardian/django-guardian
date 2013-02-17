@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 
 from django.db import models
 from django.core.exceptions import ValidationError
@@ -9,6 +10,7 @@ from guardian.compat import Group
 from guardian.compat import Permission
 from guardian.compat import get_user_model
 from guardian.compat import user_model_label
+from guardian.compat import unicode
 from guardian.managers import GroupObjectPermissionManager
 from guardian.managers import UserObjectPermissionManager
 from guardian.utils import get_anonymous_user

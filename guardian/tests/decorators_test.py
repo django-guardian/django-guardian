@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import mock
 from django.conf import settings
 from django.contrib.auth.models import Group, AnonymousUser
@@ -63,7 +64,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
 
         with mock.patch('guardian.conf.settings.RENDER_403', False):
             response = dummy_view(request)
-            self.assertEqual(response.content, '')
+            self.assertEqual(response.content, b'')
             self.assertTrue(isinstance(response, HttpResponseForbidden))
 
     @mock.patch('guardian.conf.settings.RENDER_403', True)
@@ -76,7 +77,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
 
         with mock.patch('guardian.conf.settings.TEMPLATE_403', 'dummy403.html'):
             response = dummy_view(request)
-            self.assertEqual(response.content, 'foobar403\n')
+            self.assertEqual(response.content, b'foobar403\n')
 
     @mock.patch('guardian.conf.settings.RENDER_403', True)
     def test_403_response_is_empty_if_template_cannot_be_found(self):
@@ -89,7 +90,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
             '_non-exisitng-403.html'):
             response = dummy_view(request)
             self.assertEqual(response.status_code, 403)
-            self.assertEqual(response.content, '')
+            self.assertEqual(response.content, b'')
 
     @mock.patch('guardian.conf.settings.RENDER_403', True)
     def test_403_response_raises_error_if_debug_is_turned_on(self):
@@ -204,7 +205,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
             return HttpResponse('dummy_view')
         response = dummy_view(request, username='joe')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'dummy_view')
+        self.assertEqual(response.content, b'dummy_view')
 
     def test_user_has_access_on_model_with_metaclass(self):
         """
@@ -235,7 +236,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
             return HttpResponse('dummy_view')
         response = dummy_view(request, username='joe')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'dummy_view')
+        self.assertEqual(response.content, b'dummy_view')
 
     def test_user_has_obj_access_even_if_we_also_check_for_global(self):
 
@@ -251,7 +252,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
             return HttpResponse('dummy_view')
         response = dummy_view(request, username='joe')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'dummy_view')
+        self.assertEqual(response.content, b'dummy_view')
 
     def test_user_has_no_obj_perm_access(self):
 
@@ -296,7 +297,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
             return HttpResponse('dummy_view')
         response = dummy_view(request, username='joe')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'dummy_view')
+        self.assertEqual(response.content, b'dummy_view')
 
     def test_model_lookup(self):
 
@@ -317,7 +318,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
                 get_object_or_404(User, username=username)
                 return HttpResponse('hello')
             response = dummy_view(request, username=joe.username)
-            self.assertEqual(response.content, 'hello')
+            self.assertEqual(response.content, b'hello')
 
     def test_redirection_raises_wrong_app_error(self):
         from .testapp.models import Project

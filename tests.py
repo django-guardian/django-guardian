@@ -12,7 +12,6 @@ import sys
 os.environ["DJANGO_SETTINGS_MODULE"] = 'guardian.testsettings'
 from guardian import testsettings as settings
 
-settings.DJALOG_LEVEL = 40
 settings.INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.sessions',

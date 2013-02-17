@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 
 from itertools import chain
 from django.contrib.auth.models import AnonymousUser
@@ -12,6 +13,8 @@ from guardian.backends import ObjectPermissionBackend
 from guardian.compat import get_user_model
 from guardian.compat import get_user_model_path
 from guardian.compat import get_user_permission_codename
+from guardian.compat import basestring
+from guardian.compat import unicode
 from guardian.exceptions import GuardianError
 from guardian.exceptions import NotUserNorGroup
 from guardian.exceptions import ObjectNotPersisted
@@ -296,10 +299,10 @@ class GuardianBaseTests(TestCase):
 
     def test_version(self):
         for x in guardian.VERSION:
-            self.assertTrue(isinstance(x, (int, str)))
+            self.assertTrue(isinstance(x, (int, basestring)))
 
     def test_get_version(self):
-        self.assertTrue(isinstance(guardian.get_version(), str))
+        self.assertTrue(isinstance(guardian.get_version(), basestring))
 
 
 class TestExceptions(TestCase):

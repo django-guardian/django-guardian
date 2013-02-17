@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from django.db import models
 
 from guardian.compat import get_user_model

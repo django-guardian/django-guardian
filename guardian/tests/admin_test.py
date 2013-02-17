@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import copy
 
 from django import forms
@@ -12,6 +13,7 @@ from django.test.client import Client
 
 from guardian.admin import GuardedModelAdmin
 from guardian.compat import get_user_model
+from guardian.compat import str
 from guardian.shortcuts import get_perms
 from guardian.shortcuts import get_perms_for_model
 from guardian.tests.conf import TEST_SETTINGS
@@ -292,7 +294,7 @@ class GuardedModelAdminTests(TestCase):
         Returns ``GuardedModelAdmin`` instance.
         """
         attrs = attrs or {}
-        name = name or 'GMA'
+        name = str(name or 'GMA')
         model = model or User
         GMA = type(name, (GuardedModelAdmin,), attrs)
         gma = GMA(model, admin.site)
@@ -371,7 +373,7 @@ class GrappelliGuardedModelAdminTests(TestCase):
         Returns ``GuardedModelAdmin`` instance.
         """
         attrs = attrs or {}
-        name = name or 'GMA'
+        name = str(name or 'GMA')
         model = model or User
         GMA = type(name, (GuardedModelAdmin,), attrs)
         gma = GMA(model, admin.site)

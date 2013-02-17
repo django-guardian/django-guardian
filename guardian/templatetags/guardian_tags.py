@@ -5,6 +5,7 @@
     {% load guardian_tags %}
 
 """
+from __future__ import unicode_literals
 from django import template
 from django.contrib.auth.models import Group, AnonymousUser
 from django.template import get_library

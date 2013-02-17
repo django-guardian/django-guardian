@@ -1,6 +1,7 @@
 """
 Convenient shortcuts to manage or check object permissions.
 """
+from __future__ import unicode_literals
 
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
@@ -11,6 +12,7 @@ from django.shortcuts import _get_queryset
 from itertools import groupby
 
 from guardian.compat import get_user_model
+from guardian.compat import basestring
 from guardian.core import ObjectPermissionChecker
 from guardian.exceptions import MixedContentTypeError
 from guardian.exceptions import WrongAppError
@@ -142,7 +144,7 @@ def get_perms_for_model(cls):
     Returns queryset of all Permission objects for the given class. It is
     possible to pass Model as class or instance.
     """
-    if isinstance(cls, str):
+    if isinstance(cls, basestring):
         app_label, model_name = cls.split('.')
         model = models.get_model(app_label, model_name)
     else:
@@ -221,7 +223,7 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
         users = {}
         for user in get_users_with_perms(obj,
                 with_group_users=with_group_users):
-            users[user] = get_perms(user, obj)
+            users[user] = sorted(get_perms(user, obj))
         return users
 
 def get_groups_with_perms(obj, attach_perms=False):
@@ -272,7 +274,7 @@ def get_groups_with_perms(obj, attach_perms=False):
         groups = {}
         for group in get_groups_with_perms(obj):
             if not group in groups:
-                groups[group] = get_perms(group, obj)
+                groups[group] = sorted(get_perms(group, obj))
         return groups
 
 def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=False):
