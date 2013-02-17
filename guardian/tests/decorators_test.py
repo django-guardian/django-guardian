@@ -29,8 +29,6 @@ user_model_path = get_user_model_path()
 @override_settings(**TEST_SETTINGS)
 class PermissionRequiredTest(TestDataMixin, TestCase):
 
-    #fixtures = ['tests.json']
-
     def setUp(self):
         super(PermissionRequiredTest, self).setUp()
         self.anon = AnonymousUser()

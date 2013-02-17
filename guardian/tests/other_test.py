@@ -25,7 +25,6 @@ user_model_path = get_user_model_path()
 
 
 class UserPermissionTests(TestDataMixin, TestCase):
-    #fixtures = ['tests.json']
 
     def setUp(self):
         super(UserPermissionTests, self).setUp()
