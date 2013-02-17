@@ -322,36 +322,35 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
             self.assertEqual(response.content, 'hello')
 
     def test_redirection_raises_wrong_app_error(self):
-
+        from .testapp.models import Project
         request = self._get_request(self.user)
 
-        foo = User.objects.create(username='foo')
-        foobar = Group.objects.create(name='foobar')
-        foo.groups.add(foobar)
+        User.objects.create(username='foo')
+        Project.objects.create(name='foobar')
 
         @permission_required('auth.change_group',
-            (User, 'groups__name', 'group_name'),
+            (Project, 'name', 'group_name'),
             login_url='/foobar/')
-        def dummy_view(request, group_name):
+        def dummy_view(request, project_name):
             pass
         # 'auth.change_group' is wrong permission codename (should be one
         # related with User
         self.assertRaises(WrongAppError, dummy_view, request, group_name='foobar')
 
     def test_redirection(self):
+        from .testapp.models import Project
 
         request = self._get_request(self.user)
 
-        foo = User.objects.create(username='foo')
-        foobar = Group.objects.create(name='foobar')
-        foo.groups.add(foobar)
+        User.objects.create(username='foo')
+        Project.objects.create(name='foobar')
 
-        @permission_required(get_user_permission_full_codename('change_user'),
-            (User, 'groups__name', 'group_name'),
+        @permission_required('testapp.change_project',
+            (Project, 'name', 'project_name'),
             login_url='/foobar/')
-        def dummy_view(request, group_name):
+        def dummy_view(request, project_name):
             pass
-        response = dummy_view(request, group_name='foobar')
+        response = dummy_view(request, project_name='foobar')
         self.assertTrue(isinstance(response, HttpResponseRedirect))
         self.assertTrue(response._headers['location'][1].startswith(
             '/foobar/'))
