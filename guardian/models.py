@@ -1,7 +1,11 @@
 from __future__ import unicode_literals
 
+import django
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.contrib.auth.models import Group
+from django.contrib.auth.models import Permission
+from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericForeignKey
 from django.utils.translation import ugettext_lazy as _
@@ -11,9 +15,9 @@ from guardian.compat import Permission
 from guardian.compat import get_user_model
 from guardian.compat import user_model_label
 from guardian.compat import unicode
+from guardian.utils import get_anonymous_user
 from guardian.managers import GroupObjectPermissionManager
 from guardian.managers import UserObjectPermissionManager
-from guardian.utils import get_anonymous_user
 
 
 class BaseObjectPermission(models.Model):
@@ -98,4 +102,3 @@ setattr(Group, 'add_obj_perm',
     lambda self, perm, obj: GroupObjectPermission.objects.assign(perm, self, obj))
 setattr(Group, 'del_obj_perm',
     lambda self, perm, obj: GroupObjectPermission.objects.remove_perm(perm, self, obj))
-

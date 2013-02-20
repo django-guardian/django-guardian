@@ -24,6 +24,8 @@ from guardian.compat import get_user_model
 from guardian.conf import settings as guardian_settings
 from guardian.exceptions import NotUserNorGroup
 
+User = get_user_model()
+
 logger = logging.getLogger(__name__)
 abspath = lambda *p: os.path.abspath(os.path.join(*p))
 
