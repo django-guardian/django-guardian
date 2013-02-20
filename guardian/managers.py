@@ -1,10 +1,24 @@
+from __future__ import unicode_literals
+
 from django.db import models
 from django.contrib.contenttypes.models import ContentType
 
 from guardian.exceptions import ObjectNotPersisted
 from guardian.models import Permission
 
-class UserObjectPermissionManager(models.Manager):
+# TODO: consolidate UserObjectPermissionManager and GroupObjectPermissionManager
+
+class BaseObjectPermissionManager(models.Manager):
+
+    def is_generic(self):
+        try:
+            self.model._meta.get_field('object_pk')
+            return True
+        except models.fields.FieldDoesNotExist:
+            return False
+
+
+class UserObjectPermissionManager(BaseObjectPermissionManager):
 
     def assign(self, perm, user, obj):
         """
@@ -15,14 +29,15 @@ class UserObjectPermissionManager(models.Manager):
             raise ObjectNotPersisted("Object %s needs to be persisted first"
                 % obj)
         ctype = ContentType.objects.get_for_model(obj)
-        permission = Permission.objects.get(
-            content_type=ctype, codename=perm)
+        permission = Permission.objects.get(content_type=ctype, codename=perm)
 
-        obj_perm, created = self.get_or_create(
-            content_type = ctype,
-            permission = permission,
-            object_pk = obj.pk,
-            user = user)
+        kwargs = {'permission': permission, 'user': user}
+        if self.is_generic():
+            kwargs['content_type'] = ctype
+            kwargs['object_pk'] = obj.pk
+        else:
+            kwargs['content_object'] = obj
+        obj_perm, created = self.get_or_create(**kwargs)
         return obj_perm
 
     def remove_perm(self, perm, user, obj):
@@ -32,12 +47,16 @@ class UserObjectPermissionManager(models.Manager):
         if getattr(obj, 'pk', None) is None:
             raise ObjectNotPersisted("Object %s needs to be persisted first"
                 % obj)
-        self.filter(
-            permission__codename=perm,
-            user=user,
-            object_pk=obj.pk,
-            content_type=ContentType.objects.get_for_model(obj))\
-            .delete()
+        filters = {
+            'permission__codename': perm,
+            'permission__content_type': ContentType.objects.get_for_model(obj),
+            'user': user,
+        }
+        if self.is_generic():
+            filters['object_pk'] = obj.pk
+        else:
+            filters['content_object__pk'] = obj.pk
+        self.filter(**filters).delete()
 
     def get_for_object(self, user, obj):
         if getattr(obj, 'pk', None) is None:
@@ -50,7 +69,8 @@ class UserObjectPermissionManager(models.Manager):
         )
         return perms
 
-class GroupObjectPermissionManager(models.Manager):
+
+class GroupObjectPermissionManager(BaseObjectPermissionManager):
 
     def assign(self, perm, group, obj):
         """
@@ -61,14 +81,15 @@ class GroupObjectPermissionManager(models.Manager):
             raise ObjectNotPersisted("Object %s needs to be persisted first"
                 % obj)
         ctype = ContentType.objects.get_for_model(obj)
-        permission = Permission.objects.get(
-            content_type=ctype, codename=perm)
+        permission = Permission.objects.get(content_type=ctype, codename=perm)
 
-        obj_perm, created = self.get_or_create(
-            content_type = ctype,
-            permission = permission,
-            object_pk = obj.pk,
-            group = group)
+        kwargs = {'permission': permission, 'group': group}
+        if self.is_generic():
+            kwargs['content_type'] = ctype
+            kwargs['object_pk'] = obj.pk
+        else:
+            kwargs['content_object'] = obj
+        obj_perm, created = self.get_or_create(**kwargs)
         return obj_perm
 
     def remove_perm(self, perm, group, obj):
@@ -78,12 +99,17 @@ class GroupObjectPermissionManager(models.Manager):
         if getattr(obj, 'pk', None) is None:
             raise ObjectNotPersisted("Object %s needs to be persisted first"
                 % obj)
-        self.filter(
-            permission__codename=perm,
-            group=group,
-            object_pk=obj.pk,
-            content_type=ContentType.objects.get_for_model(obj))\
-            .delete()
+        filters = {
+            'permission__codename': perm,
+            'permission__content_type': ContentType.objects.get_for_model(obj),
+            'group': group,
+        }
+        if self.is_generic():
+            filters['object_pk'] = obj.pk
+        else:
+            filters['content_object__pk'] = obj.pk
+
+        self.filter(**filters).delete()
 
     def get_for_object(self, group, obj):
         if getattr(obj, 'pk', None) is None:

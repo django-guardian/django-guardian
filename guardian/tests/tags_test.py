@@ -1,11 +1,15 @@
+from __future__ import unicode_literals
 from django.conf import settings
-from django.test import TestCase
-from django.template import Template, Context, TemplateSyntaxError
+from django.contrib.auth.models import Group, AnonymousUser
 from django.contrib.contenttypes.models import ContentType
+from django.template import Template, Context, TemplateSyntaxError
+from django.test import TestCase
 
+from guardian.compat import get_user_model
 from guardian.exceptions import NotUserNorGroup
 from guardian.models import UserObjectPermission, GroupObjectPermission
-from guardian.models import User, Group, AnonymousUser
+
+User = get_user_model()
 
 def render(template, context):
     """

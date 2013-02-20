@@ -32,7 +32,7 @@ try:
     if rst2pdf.version >= '0.16':
         extensions.append('rst2pdf.pdfbuilder')
 except ImportError:
-    print "[NOTE] In order to build PDF you need rst2pdf with version >=0.16"
+    print("[NOTE] In order to build PDF you need rst2pdf with version >=0.16")
 
 
 autoclass_content = "both"
@@ -105,7 +105,7 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  Major themes that come with
 # Sphinx are currently 'default' and 'sphinxdoc'.
 #html_theme = 'default'
-# Theme URL: https://github.com/coordt/ADCtheme/ 
+# Theme URL: https://github.com/coordt/ADCtheme/
 html_theme = 'ADCtheme'
 
 # Theme options are theme-specific and customize the look and feel of a theme

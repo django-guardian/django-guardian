@@ -1,6 +1,9 @@
+from __future__ import unicode_literals
 import mock
 from django.conf import settings
+from django.contrib.auth.models import Group, AnonymousUser
 from django.core.exceptions import PermissionDenied
+from django.db.models.base import ModelBase
 from django.http import HttpRequest
 from django.http import HttpResponse
 from django.http import HttpResponseForbidden
@@ -8,21 +11,27 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template import TemplateDoesNotExist
 from django.test import TestCase
+
+from guardian.compat import get_user_model
+from guardian.compat import get_user_model_path
+from guardian.compat import get_user_permission_full_codename
 from guardian.decorators import permission_required, permission_required_or_403
 from guardian.exceptions import GuardianError
+from guardian.exceptions import WrongAppError
 from guardian.shortcuts import assign
 from guardian.tests.conf import TEST_SETTINGS
+from guardian.tests.conf import TestDataMixin
 from guardian.tests.conf import override_settings
-from guardian.models import User, Group, AnonymousUser
-from django.db.models.base import ModelBase
+
+User = get_user_model()
+user_model_path = get_user_model_path()
 
 
 @override_settings(**TEST_SETTINGS)
-class PermissionRequiredTest(TestCase):
-
-    fixtures = ['tests.json']
+class PermissionRequiredTest(TestDataMixin, TestCase):
 
     def setUp(self):
+        super(PermissionRequiredTest, self).setUp()
         self.anon = AnonymousUser()
         self.user = User.objects.get_or_create(username='jack')[0]
         self.group = Group.objects.get_or_create(name='jackGroup')[0]
@@ -55,7 +64,7 @@ class PermissionRequiredTest(TestCase):
 
         with mock.patch('guardian.conf.settings.RENDER_403', False):
             response = dummy_view(request)
-            self.assertEqual(response.content, '')
+            self.assertEqual(response.content, b'')
             self.assertTrue(isinstance(response, HttpResponseForbidden))
 
     @mock.patch('guardian.conf.settings.RENDER_403', True)
@@ -68,7 +77,7 @@ class PermissionRequiredTest(TestCase):
 
         with mock.patch('guardian.conf.settings.TEMPLATE_403', 'dummy403.html'):
             response = dummy_view(request)
-            self.assertEqual(response.content, 'foobar403\n')
+            self.assertEqual(response.content, b'foobar403\n')
 
     @mock.patch('guardian.conf.settings.RENDER_403', True)
     def test_403_response_is_empty_if_template_cannot_be_found(self):
@@ -81,7 +90,7 @@ class PermissionRequiredTest(TestCase):
             '_non-exisitng-403.html'):
             response = dummy_view(request)
             self.assertEqual(response.status_code, 403)
-            self.assertEqual(response.content, '')
+            self.assertEqual(response.content, b'')
 
     @mock.patch('guardian.conf.settings.RENDER_403', True)
     def test_403_response_raises_error_if_debug_is_turned_on(self):
@@ -184,19 +193,19 @@ class PermissionRequiredTest(TestCase):
 
     def test_user_has_access(self):
 
-        perm = 'auth.change_user'
+        perm = get_user_permission_full_codename('change')
         joe, created = User.objects.get_or_create(username='joe')
         assign(perm, self.user, obj=joe)
 
         request = self._get_request(self.user)
 
         @permission_required_or_403(perm, (
-            'auth.User', 'username', 'username'))
+            user_model_path, 'username', 'username'))
         def dummy_view(request, username):
             return HttpResponse('dummy_view')
         response = dummy_view(request, username='joe')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'dummy_view')
+        self.assertEqual(response.content, b'dummy_view')
 
     def test_user_has_access_on_model_with_metaclass(self):
         """
@@ -205,7 +214,7 @@ class PermissionRequiredTest(TestCase):
         a custom metaclass, the decorator fail because type
         doesn't return `ModelBase`
         """
-        perm = 'auth.change_user'
+        perm = get_user_permission_full_codename('change')
 
         class TestMeta(ModelBase):
             pass
@@ -213,7 +222,7 @@ class PermissionRequiredTest(TestCase):
         class ProxyUser(User):
             class Meta:
                 proxy = True
-                app_label = 'auth'
+                app_label = User._meta.app_label
             __metaclass__ = TestMeta
 
         joe, created = ProxyUser.objects.get_or_create(username='joe')
@@ -227,33 +236,33 @@ class PermissionRequiredTest(TestCase):
             return HttpResponse('dummy_view')
         response = dummy_view(request, username='joe')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'dummy_view')
+        self.assertEqual(response.content, b'dummy_view')
 
     def test_user_has_obj_access_even_if_we_also_check_for_global(self):
 
-        perm = 'auth.change_user'
+        perm = get_user_permission_full_codename('change')
         joe, created = User.objects.get_or_create(username='joe')
         assign(perm, self.user, obj=joe)
 
         request = self._get_request(self.user)
 
         @permission_required_or_403(perm, (
-            'auth.User', 'username', 'username'), accept_global_perms=True)
+            user_model_path, 'username', 'username'), accept_global_perms=True)
         def dummy_view(request, username):
             return HttpResponse('dummy_view')
         response = dummy_view(request, username='joe')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'dummy_view')
+        self.assertEqual(response.content, b'dummy_view')
 
     def test_user_has_no_obj_perm_access(self):
 
-        perm = 'auth.change_user'
+        perm = get_user_permission_full_codename('change')
         joe, created = User.objects.get_or_create(username='joe')
 
         request = self._get_request(self.user)
 
         @permission_required_or_403(perm, (
-            'auth.User', 'username', 'username'))
+            user_model_path, 'username', 'username'))
         def dummy_view(request, username):
             return HttpResponse('dummy_view')
         response = dummy_view(request, username='joe')
@@ -261,14 +270,14 @@ class PermissionRequiredTest(TestCase):
 
     def test_user_has_global_perm_access_but_flag_not_set(self):
 
-        perm = 'auth.change_user'
+        perm = get_user_permission_full_codename('change')
         joe, created = User.objects.get_or_create(username='joe')
         assign(perm, self.user)
 
         request = self._get_request(self.user)
 
         @permission_required_or_403(perm, (
-            'auth.User', 'username', 'username'))
+            user_model_path, 'username', 'username'))
         def dummy_view(request, username):
             return HttpResponse('dummy_view')
         response = dummy_view(request, username='joe')
@@ -276,30 +285,30 @@ class PermissionRequiredTest(TestCase):
 
     def test_user_has_global_perm_access(self):
 
-        perm = 'auth.change_user'
+        perm = get_user_permission_full_codename('change')
         joe, created = User.objects.get_or_create(username='joe')
         assign(perm, self.user)
 
         request = self._get_request(self.user)
 
         @permission_required_or_403(perm, (
-            'auth.User', 'username', 'username'), accept_global_perms=True)
+            user_model_path, 'username', 'username'), accept_global_perms=True)
         def dummy_view(request, username):
             return HttpResponse('dummy_view')
         response = dummy_view(request, username='joe')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'dummy_view')
+        self.assertEqual(response.content, b'dummy_view')
 
     def test_model_lookup(self):
 
         request = self._get_request(self.user)
 
-        perm = 'auth.change_user'
+        perm = get_user_permission_full_codename('change')
         joe, created = User.objects.get_or_create(username='joe')
         assign(perm, self.user, obj=joe)
 
         models = (
-            'auth.User',
+            user_model_path,
             User,
             User.objects.filter(is_active=True),
         )
@@ -309,22 +318,38 @@ class PermissionRequiredTest(TestCase):
                 get_object_or_404(User, username=username)
                 return HttpResponse('hello')
             response = dummy_view(request, username=joe.username)
-            self.assertEqual(response.content, 'hello')
+            self.assertEqual(response.content, b'hello')
+
+    def test_redirection_raises_wrong_app_error(self):
+        from .testapp.models import Project
+        request = self._get_request(self.user)
+
+        User.objects.create(username='foo')
+        Project.objects.create(name='foobar')
+
+        @permission_required('auth.change_group',
+            (Project, 'name', 'group_name'),
+            login_url='/foobar/')
+        def dummy_view(request, project_name):
+            pass
+        # 'auth.change_group' is wrong permission codename (should be one
+        # related with User
+        self.assertRaises(WrongAppError, dummy_view, request, group_name='foobar')
 
     def test_redirection(self):
+        from .testapp.models import Project
 
         request = self._get_request(self.user)
 
-        foo = User.objects.create(username='foo')
-        foobar = Group.objects.create(name='foobar')
-        foo.groups.add(foobar)
+        User.objects.create(username='foo')
+        Project.objects.create(name='foobar')
 
-        @permission_required('auth.change_group',
-            (User, 'groups__name', 'group_name'),
+        @permission_required('testapp.change_project',
+            (Project, 'name', 'project_name'),
             login_url='/foobar/')
-        def dummy_view(request, group_name):
+        def dummy_view(request, project_name):
             pass
-        response = dummy_view(request, group_name='foobar')
+        response = dummy_view(request, project_name='foobar')
         self.assertTrue(isinstance(response, HttpResponseRedirect))
         self.assertTrue(response._headers['location'][1].startswith(
             '/foobar/'))

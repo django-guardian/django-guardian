@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from django import forms
 from django.utils.translation import ugettext as _
 
@@ -106,8 +108,8 @@ class UserObjectPermissionsForm(BaseObjectPermissionsForm):
         from django.shortcuts import get_object_or_404
         from myapp.models import Post
         from guardian.forms import UserObjectPermissionsForm
-        from guardian.models import User
-        
+        from django.contrib.auth.models import User
+
         def my_view(request, post_slug, user_id):
             user = get_object_or_404(User, id=user_id)
             post = get_object_or_404(Post, slug=post_slug)
@@ -154,7 +156,7 @@ class GroupObjectPermissionsForm(BaseObjectPermissionsForm):
         from myapp.models import Post
         from guardian.forms import GroupObjectPermissionsForm
         from guardian.models import Group
-        
+
         def my_view(request, post_slug, group_id):
             group = get_object_or_404(Group, id=group_id)
             post = get_object_or_404(Post, slug=post_slug)

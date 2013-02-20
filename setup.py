@@ -1,15 +1,21 @@
 import os
 import sys
 from setuptools import setup, find_packages
+from extras import RunFlakesCommand
 
 guardian = __import__('guardian')
 readme_file = os.path.join(os.path.dirname(__file__), 'README.rst')
 try:
     long_description = open(readme_file).read()
-except IOError, err:
+except IOError as err:
     sys.stderr.write("[ERROR] Cannot find file specified as "
         "``long_description`` (%s)\n" % readme_file)
     sys.exit(1)
+
+if sys.version_info >= (3,):
+    extra_kwargs = {'use_2to3': True}
+else:
+    extra_kwargs = {}
 
 setup(
     name = 'django-guardian',
@@ -17,14 +23,12 @@ setup(
     url = 'http://github.com/lukaszb/django-guardian',
     author = 'Lukasz Balcerzak',
     author_email = 'lukaszbalcerzak@gmail.com',
-    download_url='http://github.com/lukaszb/django-guardian/downloads',
+    download_url='https://github.com/lukaszb/django-guardian/tags',
     description = guardian.__doc__.strip(),
     long_description = long_description,
     zip_safe = False,
     packages = find_packages(),
     include_package_data = True,
-    scripts = [],
-    requires = [],
     license = 'BSD',
     install_requires = [
         'Django>=1.2',
@@ -42,5 +46,7 @@ setup(
                    'Topic :: Security',
     ],
     test_suite='tests.main',
+    cmdclass={'flakes': RunFlakesCommand},
+    **extra_kwargs
 )
 

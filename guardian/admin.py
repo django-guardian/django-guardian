@@ -1,6 +1,8 @@
+from __future__ import unicode_literals
+
 from django import forms
 from django.conf import settings
-from django.conf.urls.defaults import patterns, url
+from guardian.compat import url, patterns
 from django.contrib import admin
 from django.contrib import messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
@@ -10,13 +12,15 @@ from django.template import RequestContext
 from django.utils.datastructures import SortedDict
 from django.utils.translation import ugettext, ugettext_lazy as _
 
+from guardian.compat import get_user_model
 from guardian.forms import UserObjectPermissionsForm
 from guardian.forms import GroupObjectPermissionsForm
 from guardian.shortcuts import get_perms
 from guardian.shortcuts import get_users_with_perms
 from guardian.shortcuts import get_groups_with_perms
 from guardian.shortcuts import get_perms_for_model
-from guardian.models import User, Group
+from guardian.models import Group
+
 
 class AdminUserObjectPermissionsForm(UserObjectPermissionsForm):
     """
@@ -240,7 +244,7 @@ class GuardedModelAdmin(admin.ModelAdmin):
         """
         Manages selected users' permissions for current object.
         """
-        user = get_object_or_404(User, id=user_id)
+        user = get_object_or_404(get_user_model(), id=user_id)
         obj = get_object_or_404(self.queryset(request), pk=object_pk)
         form_class = self.get_obj_perms_manage_user_form()
         form = form_class(user, obj, request.POST or None)
@@ -357,9 +361,9 @@ class UserManage(forms.Form):
         """
         username = self.cleaned_data['user']
         try:
-            user = User.objects.get(username=username)
+            user = get_user_model().objects.get(username=username)
             return user
-        except User.DoesNotExist:
+        except get_user_model().DoesNotExist:
             raise forms.ValidationError(
                 self.fields['user'].error_messages['does_not_exist'])
 

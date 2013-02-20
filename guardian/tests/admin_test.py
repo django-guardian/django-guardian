@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import copy
 
 from django import forms
@@ -11,17 +12,24 @@ from django.test import TestCase
 from django.test.client import Client
 
 from guardian.admin import GuardedModelAdmin
+from guardian.compat import get_user_model
+from guardian.compat import str
 from guardian.shortcuts import get_perms
 from guardian.shortcuts import get_perms_for_model
 from guardian.tests.conf import TEST_SETTINGS
 from guardian.tests.conf import override_settings
-from guardian.models import User, Group
+from guardian.models import Group
+
+User = get_user_model()
 
 class ContentTypeGuardedAdmin(GuardedModelAdmin):
     pass
 
+try:
+    admin.site.unregister(ContentType)
+except admin.sites.NotRegistered:
+    pass
 admin.site.register(ContentType, ContentTypeGuardedAdmin)
-
 
 @override_settings(**TEST_SETTINGS)
 class AdminTests(TestCase):
@@ -274,7 +282,9 @@ class AdminTests(TestCase):
 if 'django.contrib.admin' not in settings.INSTALLED_APPS:
     # Skip admin tests if admin app is not registered
     # we simpy clean up AdminTests class ...
-    AdminTests = type('AdminTests', (TestCase,), {})
+    # TODO: use @unittest.skipUnless('django.contrib.admin' in settings.INSTALLED_APPS)
+    #       if possible (requires Python 2.7, though)
+    AdminTests = type('AdminTests', (TestCase,), {}) # pyflakes:ignore
 
 
 class GuardedModelAdminTests(TestCase):
@@ -284,7 +294,7 @@ class GuardedModelAdminTests(TestCase):
         Returns ``GuardedModelAdmin`` instance.
         """
         attrs = attrs or {}
-        name = name or 'GMA'
+        name = str(name or 'GMA')
         model = model or User
         GMA = type(name, (GuardedModelAdmin,), attrs)
         gma = GMA(model, admin.site)
@@ -363,7 +373,7 @@ class GrappelliGuardedModelAdminTests(TestCase):
         Returns ``GuardedModelAdmin`` instance.
         """
         attrs = attrs or {}
-        name = name or 'GMA'
+        name = str(name or 'GMA')
         model = model or User
         GMA = type(name, (GuardedModelAdmin,), attrs)
         gma = GMA(model, admin.site)

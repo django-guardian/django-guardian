@@ -1,13 +1,14 @@
 # encoding: utf-8
-import datetime
 from south.db import db
 from south.v2 import SchemaMigration
-from django.db import models
+
+from guardian.compat import user_model_label
+
 
 class Migration(SchemaMigration):
 
     def forwards(self, orm):
-        
+
         # Changing field 'GroupObjectPermission.object_pk'
         db.alter_column('guardian_groupobjectpermission', 'object_pk', self.gf('django.db.models.fields.CharField')(max_length=255))
 
@@ -34,7 +35,7 @@ class Migration(SchemaMigration):
 
         # Changing field 'UserObjectPermission.object_pk'
         db.alter_column('guardian_userobjectpermission', 'object_pk', self.gf('django.db.models.fields.TextField')())
-        
+
         # Removing unique constraint on 'UserObjectPermission', fields ['object_pk', 'user', 'content_type', 'permission']
         db.delete_unique('guardian_userobjectpermission', ['object_pk', 'user_id', 'content_type_id', 'permission_id'])
 
@@ -62,8 +63,8 @@ class Migration(SchemaMigration):
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '50'})
         },
-        'auth.user': {
-            'Meta': {'object_name': 'User'},
+        user_model_label: {
+            'Meta': {'object_name': user_model_label.split('.')[-1]},
             'date_joined': ('django.db.models.fields.DateTimeField', [], {'default': 'datetime.datetime.now'}),
             'email': ('django.db.models.fields.EmailField', [], {'max_length': '75', 'blank': 'True'}),
             'first_name': ('django.db.models.fields.CharField', [], {'max_length': '30', 'blank': 'True'}),
@@ -99,7 +100,7 @@ class Migration(SchemaMigration):
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'object_pk': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'permission': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.Permission']"}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']"})
+            'user': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['%s']" % user_model_label})
         }
     }
 

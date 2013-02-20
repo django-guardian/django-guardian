@@ -10,5 +10,7 @@ User Guide
     check
     remove
     admin-integration
+    custom-user-model
+    performance
     caveats
     

@@ -5,30 +5,26 @@ Functions defined within this module should be considered as django-guardian's
 internal functionality. They are **not** guaranteed to be stable - which means
 they actual input parameters/output type may change in future releases.
 """
+from __future__ import unicode_literals
 import os
 import logging
-import django
 from itertools import chain
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
-from django.contrib.auth.models import Group
-from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.models import AnonymousUser, Group
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
+from django.db.models import Model
 from django.http import HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.template import RequestContext, TemplateDoesNotExist
 from django.utils.http import urlquote
 
+from guardian.compat import get_user_model
 from guardian.conf import settings as guardian_settings
 from guardian.exceptions import NotUserNorGroup
 
-# Django 1.5+ compatibility
-if django.VERSION >= (1, 5):
-    from django.contrib.auth import get_user_model
-    User = get_user_model()
-else:
-    from django.contrib.auth.models import User
-
+User = get_user_model()
 
 logger = logging.getLogger(__name__)
 abspath = lambda *p: os.path.abspath(os.path.join(*p))
@@ -39,7 +35,7 @@ def get_anonymous_user():
     Returns ``User`` instance (not ``AnonymousUser``) depending on
     ``ANONYMOUS_USER_ID`` configuration.
     """
-    return User.objects.get(id=guardian_settings.ANONYMOUS_USER_ID)
+    return get_user_model().objects.get(id=guardian_settings.ANONYMOUS_USER_ID)
 
 
 def get_identity(identity):
@@ -75,7 +71,7 @@ def get_identity(identity):
     if isinstance(identity, AnonymousUser):
         identity = get_anonymous_user()
 
-    if isinstance(identity, User):
+    if isinstance(identity, get_user_model()):
         return identity, None
     elif isinstance(identity, Group):
         return None, identity
@@ -109,7 +105,7 @@ def get_403_or_None(request, perms, obj=None, login_url=None,
                         RequestContext(request))
                     response.status_code = 403
                     return response
-                except TemplateDoesNotExist, e:
+                except TemplateDoesNotExist as e:
                     if settings.DEBUG:
                         raise e
             elif guardian_settings.RAISE_403:
@@ -144,3 +140,44 @@ def clean_orphan_obj_perms():
         deleted)
     return deleted
 
+
+# TODO: should raise error when multiple UserObjectPermission direct relations
+# are defined
+
+def get_obj_perms_model(obj, base_cls, generic_cls):
+    if isinstance(obj, Model):
+        obj = obj.__class__
+    ctype = ContentType.objects.get_for_model(obj)
+    for name in dir(obj):
+        attr = getattr(obj, name)
+        if hasattr(attr, 'related'):
+            related = attr.related
+            model = getattr(related, 'model', None)
+            if (model and issubclass(model, base_cls) and
+                    model is not generic_cls):
+                # if model is generic one it would be returned anyway
+                if not model.objects.is_generic():
+                    # make sure that content_object's content_type is same as
+                    # the one of given obj
+                    fk = model._meta.get_field_by_name('content_object')[0]
+                    if ctype == ContentType.objects.get_for_model(fk.rel.to):
+                        return model
+    return generic_cls
+
+
+def get_user_obj_perms_model(obj):
+    """
+    Returns model class that connects given ``obj`` and User class.
+    """
+    from guardian.models import UserObjectPermissionBase
+    from guardian.models import UserObjectPermission
+    return get_obj_perms_model(obj, UserObjectPermissionBase, UserObjectPermission)
+
+
+def get_group_obj_perms_model(obj):
+    """
+    Returns model class that connects given ``obj`` and Group class.
+    """
+    from guardian.models import GroupObjectPermissionBase
+    from guardian.models import GroupObjectPermission
+    return get_obj_perms_model(obj, GroupObjectPermissionBase, GroupObjectPermission)

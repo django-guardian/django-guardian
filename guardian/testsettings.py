@@ -1,10 +1,10 @@
 import os
+import random
+import string
 
 DEBUG = False
 
 ANONYMOUS_USER_ID = -1
-
-SECRET_KEY = 'CHANGE_THIS_TO_SOMETHING_UNIQUE_AND_SECURE'
 
 INSTALLED_APPS = (
     'django.contrib.auth',
@@ -14,6 +14,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.messages',
     'guardian',
+    'guardian.tests.testapp',
 )
 
 AUTHENTICATION_BACKENDS = (
@@ -37,6 +38,8 @@ SITE_ID = 1
 TEMPLATE_DIRS = (
     os.path.join(os.path.dirname(__file__), 'tests', 'templates'),
 )
+
+SECRET_KEY = ''.join([random.choice(string.ascii_letters) for x in range(40)])
 
 # Database specific
 

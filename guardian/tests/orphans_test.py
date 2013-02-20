@@ -1,12 +1,19 @@
+from __future__ import unicode_literals
 from django.contrib.auth import models as auth_app
 from django.contrib.auth.management import create_permissions
 from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.test import TestCase
 
+from guardian.compat import get_user_model
 from guardian.utils import clean_orphan_obj_perms
 from guardian.shortcuts import assign
-from guardian.models import User, Group
+from guardian.models import Group
+
+
+User = get_user_model()
+user_module_name = User._meta.module_name
+
 
 class OrphanedObjectPermissionsTest(TestCase):
 
@@ -29,7 +36,7 @@ class OrphanedObjectPermissionsTest(TestCase):
 
         # assign obj perms
         target_perms = {
-            self.target_user1: ["change_user"],
+            self.target_user1: ["change_%s" % user_module_name],
             self.target_group1: ["delete_group"],
             self.target_obj1: ["change_contenttype", "delete_contenttype"],
             self.target_obj2: ["change_contenttype"],
@@ -63,7 +70,7 @@ class OrphanedObjectPermissionsTest(TestCase):
 
         # assign obj perms
         target_perms = {
-            self.target_user1: ["change_user"],
+            self.target_user1: ["change_%s" % user_module_name],
             self.target_group1: ["delete_group"],
             self.target_obj1: ["change_contenttype", "delete_contenttype"],
             self.target_obj2: ["change_contenttype"],

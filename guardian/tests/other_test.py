@@ -1,27 +1,36 @@
+from __future__ import unicode_literals
 
 from itertools import chain
+from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.models import Group
+from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 
 import guardian
 from guardian.backends import ObjectPermissionBackend
+from guardian.compat import get_user_model
+from guardian.compat import get_user_model_path
+from guardian.compat import get_user_permission_codename
+from guardian.compat import basestring
+from guardian.compat import unicode
 from guardian.exceptions import GuardianError
 from guardian.exceptions import NotUserNorGroup
 from guardian.exceptions import ObjectNotPersisted
 from guardian.exceptions import WrongAppError
 from guardian.models import GroupObjectPermission
 from guardian.models import UserObjectPermission
-from guardian.models import AnonymousUser
-from guardian.models import Group
-from guardian.models import Permission
-from guardian.models import User
+from guardian.tests.conf import TestDataMixin
+
+User = get_user_model()
+user_model_path = get_user_model_path()
 
 
-class UserPermissionTests(TestCase):
-    fixtures = ['tests.json']
+class UserPermissionTests(TestDataMixin, TestCase):
 
     def setUp(self):
+        super(UserPermissionTests, self).setUp()
         self.user = User.objects.get(username='jack')
         self.ctype = ContentType.objects.create(name='foo', model='bar',
             app_label='fake-for-guardian-tests')
@@ -92,7 +101,8 @@ class UserPermissionTests(TestCase):
 
         group = Group.objects.create(name='test_group_assign_validation')
         ctype = ContentType.objects.get_for_model(group)
-        perm = Permission.objects.get(codename='change_user')
+        codename = codename=get_user_permission_codename('change')
+        perm = Permission.objects.get(codename=codename)
 
         create_info = dict(
             permission = perm,
@@ -104,26 +114,28 @@ class UserPermissionTests(TestCase):
             **create_info)
 
     def test_unicode(self):
-        obj_perm = UserObjectPermission.objects.assign("change_user",
+        codename = get_user_permission_codename('change')
+        obj_perm = UserObjectPermission.objects.assign(codename,
             self.user, self.user)
         self.assertTrue(isinstance(obj_perm.__unicode__(), unicode))
 
     def test_errors(self):
         not_saved_user = User(username='not_saved_user')
+        codename = get_user_permission_codename('change')
         self.assertRaises(ObjectNotPersisted,
             UserObjectPermission.objects.assign,
-            "change_user", self.user, not_saved_user)
+            codename, self.user, not_saved_user)
         self.assertRaises(ObjectNotPersisted,
             UserObjectPermission.objects.remove_perm,
-            "change_user", self.user, not_saved_user)
+                codename, self.user, not_saved_user)
         self.assertRaises(ObjectNotPersisted,
             UserObjectPermission.objects.get_for_object,
-            "change_user", not_saved_user)
+            codename, not_saved_user)
 
-class GroupPermissionTests(TestCase):
-    fixtures = ['tests.json']
+class GroupPermissionTests(TestDataMixin, TestCase):
 
     def setUp(self):
+        super(GroupPermissionTests, self).setUp()
         self.user = User.objects.get(username='jack')
         self.group, created = Group.objects.get_or_create(name='jackGroup')
         self.user.groups.add(self.group)
@@ -287,10 +299,10 @@ class GuardianBaseTests(TestCase):
 
     def test_version(self):
         for x in guardian.VERSION:
-            self.assertTrue(isinstance(x, (int, str)))
+            self.assertTrue(isinstance(x, (int, basestring)))
 
     def test_get_version(self):
-        self.assertTrue(isinstance(guardian.get_version(), str))
+        self.assertTrue(isinstance(guardian.get_version(), basestring))
 
 
 class TestExceptions(TestCase):

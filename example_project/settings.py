@@ -1,3 +1,4 @@
+import django
 import os
 import sys
 
@@ -8,6 +9,8 @@ abspath = lambda *p: os.path.abspath(os.path.join(*p))
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 SECRET_KEY = 'CHANGE_THIS_TO_SOMETHING_UNIQUE_AND_SECURE'
+
+TEST_SOUTH = 'GUARDIAN_TEST_SOUTH' in os.environ
 
 PROJECT_ROOT = abspath(os.path.dirname(__file__))
 GUARDIAN_MODULE_PATH = abspath(PROJECT_ROOT, '..')
@@ -30,18 +33,24 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.admin',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
 
     'guardian',
-    'guardian.tests',
+    'guardian.tests.testapp',
     'posts',
 )
+if django.VERSION < (1, 3):
+    INSTALLED_APPS += ('staticfiles',)
+else:
+    INSTALLED_APPS += ('django.contrib.staticfiles',)
+
+if TEST_SOUTH:
+    INSTALLED_APPS += ('south',)
 if 'GRAPPELLI' in os.environ:
     try:
         __import__('grappelli')
         INSTALLED_APPS = ('grappelli',) + INSTALLED_APPS
     except ImportError:
-        print "django-grappelli not installed"
+        print("django-grappelli not installed")
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
@@ -90,7 +99,13 @@ ANONYMOUS_USER_ID = -1
 
 # Neede as some models (located at guardian/tests/models.py)
 # are not migrated for tests
-SOUTH_TESTS_MIGRATE = False
+SOUTH_TESTS_MIGRATE = TEST_SOUTH
+
+# Django >= 1.5 (earlier versoions would ignore this setting; we don't want this
+# however, to be set for earlier versions so we don't relay on it)
+if django.VERSION >= (1, 5):
+    INSTALLED_APPS += ('core',)
+    AUTH_USER_MODEL = 'core.CustomUser'
 
 try:
     from conf.localsettings import *
