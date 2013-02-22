@@ -7,7 +7,7 @@ from django.test import TestCase
 
 from guardian.compat import get_user_model
 from guardian.utils import clean_orphan_obj_perms
-from guardian.shortcuts import assign
+from guardian.shortcuts import assign_perm
 from guardian.models import Group
 
 
@@ -45,7 +45,7 @@ class OrphanedObjectPermissionsTest(TestCase):
         for target, perms in target_perms.items():
             target.__old_pk = target.pk # Store pkeys
             for perm in perms:
-                assign(perm, self.user, target)
+                assign_perm(perm, self.user, target)
 
         # Remove targets
         for target, perms in target_perms.items():
@@ -78,7 +78,7 @@ class OrphanedObjectPermissionsTest(TestCase):
         for target, perms in target_perms.items():
             target.__old_pk = target.pk # Store pkeys
             for perm in perms:
-                assign(perm, self.user, target)
+                assign_perm(perm, self.user, target)
 
         # Remove targets
         for target, perms in target_perms.items():

@@ -12,7 +12,7 @@ from guardian.core import ObjectPermissionChecker
 from guardian.compat import get_user_model
 from guardian.exceptions import NotUserNorGroup
 from guardian.models import UserObjectPermission, GroupObjectPermission
-from guardian.shortcuts import assign
+from guardian.shortcuts import assign_perm
 
 User = get_user_model()
 
@@ -115,7 +115,7 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
 
     def test_not_active_user(self):
         user = User.objects.create(username='notactive')
-        assign("change_contenttype", user, self.ctype)
+        assign_perm("change_contenttype", user, self.ctype)
 
         # new ObjectPermissionChecker is created for each User.has_perm call
         self.assertTrue(user.has_perm("change_contenttype", self.ctype))
@@ -125,7 +125,7 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
         # use on one checker only (as user's is_active attr should be checked
         # before try to use cache
         user = User.objects.create(username='notactive-cache')
-        assign("change_contenttype", user, self.ctype)
+        assign_perm("change_contenttype", user, self.ctype)
 
         check = ObjectPermissionChecker(user)
         self.assertTrue(check.has_perm("change_contenttype", self.ctype))
@@ -149,13 +149,13 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
 
         for obj, perms in assign_perms.items():
             for perm in perms:
-                UserObjectPermission.objects.assign(perm, self.user, obj)
+                UserObjectPermission.objects.assign_perm(perm, self.user, obj)
             self.assertEqual(sorted(perms), sorted(check.get_perms(obj)))
 
         check = ObjectPermissionChecker(self.group)
 
         for obj, perms in assign_perms.items():
             for perm in perms:
-                GroupObjectPermission.objects.assign(perm, self.group, obj)
+                GroupObjectPermission.objects.assign_perm(perm, self.group, obj)
             self.assertEqual(sorted(perms), sorted(check.get_perms(obj)))
 

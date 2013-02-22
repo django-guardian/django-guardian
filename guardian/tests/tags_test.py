@@ -90,9 +90,9 @@ class GetObjPermsTagTest(TestCase):
             self.assertTrue(perm in output)
 
     def test_user(self):
-        UserObjectPermission.objects.assign("change_contenttype", self.user,
+        UserObjectPermission.objects.assign_perm("change_contenttype", self.user,
             self.ctype)
-        GroupObjectPermission.objects.assign("delete_contenttype", self.group,
+        GroupObjectPermission.objects.assign_perm("delete_contenttype", self.group,
             self.ctype)
 
         template = ''.join((
@@ -108,7 +108,7 @@ class GetObjPermsTagTest(TestCase):
             set('change_contenttype delete_contenttype'.split(' ')))
 
     def test_group(self):
-        GroupObjectPermission.objects.assign("delete_contenttype", self.group,
+        GroupObjectPermission.objects.assign_perm("delete_contenttype", self.group,
             self.ctype)
 
         template = ''.join((
