@@ -5,7 +5,8 @@ from django.conf import settings
 from guardian.compat import url, patterns
 from django.contrib import admin
 from django.contrib import messages
-from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.contrib.admin.widgets import FilteredSelectMultiple, ForeignKeyRawIdWidget
+from django.contrib.admin.sites import site as adminsite
 from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
@@ -110,6 +111,14 @@ class GuardedModelAdmin(admin.ModelAdmin):
     user_can_access_owned_objects_only = False
     user_owned_objects_field = 'user'
 
+    @property
+    def user_manage_form(self):
+        return UserManage
+
+    @property
+    def group_manage_form(self):
+        return GroupManage
+
     def queryset(self, request):
         qs = super(GuardedModelAdmin, self).queryset(request)
         if self.user_can_access_owned_objects_only and \
@@ -184,8 +193,8 @@ class GuardedModelAdmin(admin.ModelAdmin):
         groups_perms.keyOrder.sort(key=lambda group: group.name)
 
         if request.method == 'POST' and 'submit_manage_user' in request.POST:
-            user_form = UserManage(request.POST)
-            group_form = GroupManage()
+            user_form = self.user_manage_form(request.POST)
+            group_form = self.group_manage_form()
             info = (
                 self.admin_site.name,
                 self.model._meta.app_label,
@@ -199,8 +208,8 @@ class GuardedModelAdmin(admin.ModelAdmin):
                 )
                 return redirect(url)
         elif request.method == 'POST' and 'submit_manage_group' in request.POST:
-            user_form = UserManage()
-            group_form = GroupManage(request.POST)
+            user_form = self.user_manage_form()
+            group_form = self.group_manage_form(request.POST)
             info = (
                 self.admin_site.name,
                 self.model._meta.app_label,
@@ -214,8 +223,8 @@ class GuardedModelAdmin(admin.ModelAdmin):
                 )
                 return redirect(url)
         else:
-            user_form = UserManage()
-            group_form = GroupManage()
+            user_form = self.user_manage_form()
+            group_form = self.group_manage_form()
 
         context = self.get_obj_perms_base_context(request, obj)
         context['users_perms'] = users_perms
@@ -384,3 +393,82 @@ class GroupManage(forms.Form):
             raise forms.ValidationError(
                 self.fields['group'].error_messages['does_not_exist'])
 
+
+class RawIdGuardedModelAdmin(GuardedModelAdmin):
+    """Overrides user/group management forms."""
+
+    @property
+    def user_manage_form(self):
+        return RawIdUserManage
+
+    @property
+    def group_manage_form(self):
+        return RawIdGroupManage
+
+
+class DummyRel(object):
+    """Fake a 'rel'."""
+    def __init__(self, cls, limit_choices_to=None):
+        self.to = cls
+        self.limit_choices_to = limit_choices_to
+
+    def get_related_field(self):
+        return
+
+
+class LookupRawIdWidget(ForeignKeyRawIdWidget):
+    """Removes some relationship-specific fns."""
+
+    def url_parameters(self):
+        params = self.base_url_parameters()
+        return params
+
+    def label_for_value(self, value):
+        return ''
+
+
+class RawIdUserManage(forms.Form):
+    user = forms.CharField(
+        label=_("User"),
+        widget=LookupRawIdWidget(DummyRel(User), adminsite),
+        error_messages={
+            'does_no_exist': _('This user does not exist'),
+        })
+
+    class Media:
+        js = ('admin/js/admin/RelatedObjectLookups.js',)
+
+    def clean_user(self):
+        """
+        Returns ``User`` instance based on the given user pk.
+        """
+        user_id = self.cleaned_data['user']
+        try:
+            user = User.objects.get(pk=user_id)
+            return user
+        except User.DoesNotExist:
+            raise forms.ValidationError(
+                self.fields['user'].error_messages['does_not_exist'])
+
+
+class RawIdGroupManage(forms.Form):
+    group = forms.CharField(max_length=80,
+        widget=LookupRawIdWidget(DummyRel(Group), adminsite),
+         error_messages={
+             'does_not_exist': _("This group does not exist"),
+         })
+
+    class Media:
+        js = ('admin/js/admin/RelatedObjectLookups.js',)
+
+    def clean_group(self):
+        """
+        Returns ``Group`` instance based on the given group pk.
+        """
+        group_id = self.cleaned_data['group']
+        try:
+            group = Group.objects.get(pk=group_id)
+            return group
+        except Group.DoesNotExist:
+            raise forms.ValidationError(
+                self.fields['group'].error_messages['does_not_exist'])
