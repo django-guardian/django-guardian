@@ -60,7 +60,7 @@ Assign object permissions
 -------------------------
 
 We can assign permissions for any user/group and object pairs using same,
-convenient function: :func:`guardian.shortcuts.assign`.
+convenient function: :func:`guardian.shortcuts.assign_perm`.
 
 For user
 ~~~~~~~~
@@ -79,8 +79,8 @@ Well, not so fast Joe, let us create an object permission finally:
 
 .. code-block:: python
 
-    >>> from guardian.shortcuts import assign
-    >>> assign('view_task', joe, task)
+    >>> from guardian.shortcuts import assign_perm
+    >>> assign_perm('view_task', joe, task)
     >>> joe.has_perm('view_task', task)
     True
 
@@ -94,7 +94,7 @@ difference is we have to pass ``Group`` instance rather than ``User``.
 .. code-block:: python
 
     >>> group = Group.objects.create(name='employees')
-    >>> assign('change_task', group, task)
+    >>> assign_perm('change_task', group, task)
     >>> joe.has_perm('change_task', task)
     False
     >>> # Well, joe is not yet within an *employees* group

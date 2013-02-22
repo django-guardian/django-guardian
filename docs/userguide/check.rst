@@ -24,8 +24,8 @@ additional argument::
 
 Lets assign permission and check again::
 
-    >>> from guardian.shortcuts import assign
-    >>> assign('sites.change_site', joe, site)
+    >>> from guardian.shortcuts import assign_perm
+    >>> assign_perm('sites.change_site', joe, site)
     <UserObjectPermission: example.com | joe | change_site>
     >>> joe = User.objects.get(username='joe')
     >>> joe.has_perm('sites.change_site', site)
@@ -147,8 +147,8 @@ decorator::
     >>> edit_group(request, group_name='foobars')
     <django.http.HttpResponseForbidden object at 0x102b43e50>
     >>>
-    >>> from guardian.shortcuts import assign
-    >>> assign('auth.change_group', joe, foobars)
+    >>> from guardian.shortcuts import assign_perm
+    >>> assign_perm('auth.change_group', joe, foobars)
     <UserObjectPermission: foobars | joe | change_group>
     >>>
     >>> edit_group(request, group_name='foobars')

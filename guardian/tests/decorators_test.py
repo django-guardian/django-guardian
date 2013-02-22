@@ -18,7 +18,7 @@ from guardian.compat import get_user_permission_full_codename
 from guardian.decorators import permission_required, permission_required_or_403
 from guardian.exceptions import GuardianError
 from guardian.exceptions import WrongAppError
-from guardian.shortcuts import assign
+from guardian.shortcuts import assign_perm
 from guardian.tests.conf import TEST_SETTINGS
 from guardian.tests.conf import TestDataMixin
 from guardian.tests.conf import override_settings
@@ -195,7 +195,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
 
         perm = get_user_permission_full_codename('change')
         joe, created = User.objects.get_or_create(username='joe')
-        assign(perm, self.user, obj=joe)
+        assign_perm(perm, self.user, obj=joe)
 
         request = self._get_request(self.user)
 
@@ -226,7 +226,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
             __metaclass__ = TestMeta
 
         joe, created = ProxyUser.objects.get_or_create(username='joe')
-        assign(perm, self.user, obj=joe)
+        assign_perm(perm, self.user, obj=joe)
 
         request = self._get_request(self.user)
 
@@ -242,7 +242,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
 
         perm = get_user_permission_full_codename('change')
         joe, created = User.objects.get_or_create(username='joe')
-        assign(perm, self.user, obj=joe)
+        assign_perm(perm, self.user, obj=joe)
 
         request = self._get_request(self.user)
 
@@ -272,7 +272,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
 
         perm = get_user_permission_full_codename('change')
         joe, created = User.objects.get_or_create(username='joe')
-        assign(perm, self.user)
+        assign_perm(perm, self.user)
 
         request = self._get_request(self.user)
 
@@ -287,7 +287,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
 
         perm = get_user_permission_full_codename('change')
         joe, created = User.objects.get_or_create(username='joe')
-        assign(perm, self.user)
+        assign_perm(perm, self.user)
 
         request = self._get_request(self.user)
 
@@ -305,7 +305,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
 
         perm = get_user_permission_full_codename('change')
         joe, created = User.objects.get_or_create(username='joe')
-        assign(perm, self.user, obj=joe)
+        assign_perm(perm, self.user, obj=joe)
 
         models = (
             user_model_path,

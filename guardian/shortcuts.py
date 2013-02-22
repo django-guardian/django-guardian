@@ -19,9 +19,9 @@ from guardian.exceptions import WrongAppError
 from guardian.utils import get_identity
 from guardian.utils import get_user_obj_perms_model
 from guardian.utils import get_group_obj_perms_model
+import warnings
 
-
-def assign(perm, user_or_group, obj=None):
+def assign_perm(perm, user_or_group, obj=None):
     """
     Assigns permission to user/group and object pair.
 
@@ -40,10 +40,10 @@ def assign(perm, user_or_group, obj=None):
 
     >>> from django.contrib.sites.models import Site
     >>> from guardian.models import User, Group
-    >>> from guardian.shortcuts import assign
+    >>> from guardian.shortcuts import assign_perm
     >>> site = Site.objects.get_current()
     >>> user = User.objects.create(username='joe')
-    >>> assign("change_site", user, site)
+    >>> assign_perm("change_site", user, site)
     <UserObjectPermission: example.com | joe | change_site>
     >>> user.has_perm("change_site", site)
     True
@@ -52,7 +52,7 @@ def assign(perm, user_or_group, obj=None):
 
     >>> group = Group.objects.create(name='joe-group')
     >>> user.groups.add(group)
-    >>> assign("delete_site", group, site)
+    >>> assign_perm("delete_site", group, site)
     <GroupObjectPermission: example.com | joe-group | delete_site>
     >>> user.has_perm("delete_site", site)
     True
@@ -63,7 +63,7 @@ def assign(perm, user_or_group, obj=None):
     ``obj`` parameter is omitted. Added Permission would be returned in that
     case:
 
-    >>> assign("sites.change_site", user)
+    >>> assign_perm("sites.change_site", user)
     <Permission: sites | site | Can change site>
 
     """
@@ -87,10 +87,15 @@ def assign(perm, user_or_group, obj=None):
     perm = perm.split('.')[-1]
     if user:
         model = get_user_obj_perms_model(obj)
-        return model.objects.assign(perm, user, obj)
+        return model.objects.assign_perm(perm, user, obj)
     if group:
         model = get_group_obj_perms_model(obj)
-        return model.objects.assign(perm, group, obj)
+        return model.objects.assign_perm(perm, group, obj)
+
+def assign(perm, user_or_group, obj=None):
+    """ Depreciated function name left in for compatibility"""
+    warnings.warn("Shortcut function 'assign' is being renamed to 'assign_perm'. Update your code accordingly as old name will be depreciated in 1.0.5 version.", DeprecationWarning)
+    return assign_perm(perm, user_or_group, obj)
 
 def remove_perm(perm, user_or_group=None, obj=None):
     """
@@ -175,11 +180,11 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
 
         >>> from django.contrib.flatpages.models import FlatPage
         >>> from django.contrib.auth.models import User
-        >>> from guardian.shortcuts import assign, get_users_with_perms
+        >>> from guardian.shortcuts import assign_perm, get_users_with_perms
         >>>
         >>> page = FlatPage.objects.create(title='Some page', path='/some/page/')
         >>> joe = User.objects.create_user('joe', 'joe@example.com', 'joesecret')
-        >>> assign('change_flatpage', joe, page)
+        >>> assign_perm('change_flatpage', joe, page)
         >>>
         >>> get_users_with_perms(page)
         [<User: joe>]
@@ -240,12 +245,12 @@ def get_groups_with_perms(obj, attach_perms=False):
     Example::
 
         >>> from django.contrib.flatpages.models import FlatPage
-        >>> from guardian.shortcuts import assign, get_groups_with_perms
+        >>> from guardian.shortcuts import assign_perm, get_groups_with_perms
         >>> from guardian.models import Group
         >>>
         >>> page = FlatPage.objects.create(title='Some page', path='/some/page/')
         >>> admins = Group.objects.create(name='Admins')
-        >>> assign('change_flatpage', group, page)
+        >>> assign_perm('change_flatpage', group, page)
         >>>
         >>> get_groups_with_perms(page)
         [<Group: admins>]
@@ -306,9 +311,9 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
         >>> joe = User.objects.get(username='joe')
         >>> get_objects_for_user(joe, 'auth.change_group')
         []
-        >>> from guardian.shortcuts import assign
+        >>> from guardian.shortcuts import assign_perm
         >>> group = Group.objects.create('some group')
-        >>> assign('auth.change_group', joe, group)
+        >>> assign_perm('auth.change_group', joe, group)
         >>> get_objects_for_user(joe, 'auth.change_group')
         [<Group some group>]
 
@@ -318,7 +323,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
         []
         >>> get_objects_for_user(joe, ['auth.change_group', 'auth.delete_group'], any_perm=True)
         [<Group some group>]
-        >>> assign('auth.delete_group', joe, group)
+        >>> assign_perm('auth.delete_group', joe, group)
         >>> get_objects_for_user(joe, ['auth.change_group', 'auth.delete_group'])
         [<Group some group>]
 
@@ -442,15 +447,15 @@ def get_objects_for_group(group, perms, klass=None, any_perm=False):
         >>> task = Task.objects.create('some task')
         >>> get_objects_for_group(group, 'tasker.add_task')
         []
-        >>> from guardian.shortcuts import assign
-        >>> assign('tasker.add_task', group, task)
+        >>> from guardian.shortcuts import assign_perm
+        >>> assign_perm('tasker.add_task', group, task)
         >>> get_objects_for_group(group, 'tasker.add_task')
         [<Task some task>]
 
     The permission string can also be an iterable. Continuing with the previous example:
         >>> get_objects_for_group(group, ['tasker.add_task', 'tasker.delete_task'])
         []
-        >>> assign('tasker.delete_task', group, task)
+        >>> assign_perm('tasker.delete_task', group, task)
         >>> get_objects_for_group(group, ['tasker.add_task', 'tasker.delete_task'])
         [<Task some task>]
 

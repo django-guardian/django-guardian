@@ -5,6 +5,7 @@ from django.contrib.contenttypes.models import ContentType
 
 from guardian.exceptions import ObjectNotPersisted
 from guardian.models import Permission
+import warnings
 
 # TODO: consolidate UserObjectPermissionManager and GroupObjectPermissionManager
 
@@ -20,7 +21,7 @@ class BaseObjectPermissionManager(models.Manager):
 
 class UserObjectPermissionManager(BaseObjectPermissionManager):
 
-    def assign(self, perm, user, obj):
+    def assign_perm(self, perm, user, obj):
         """
         Assigns permission with given ``perm`` for an instance ``obj`` and
         ``user``.
@@ -39,6 +40,11 @@ class UserObjectPermissionManager(BaseObjectPermissionManager):
             kwargs['content_object'] = obj
         obj_perm, created = self.get_or_create(**kwargs)
         return obj_perm
+
+    def assign(self, perm, user, obj):
+        """ Depreciated function name left in for compatibility"""
+        warnings.warn("UserObjectPermissionManager method 'assign' is being renamed to 'assign_perm'. Update your code accordingly as old name will be depreciated in 1.0.5 version.", DeprecationWarning)
+        return self.assign_perm(perm, user, obj)
 
     def remove_perm(self, perm, user, obj):
         """
@@ -72,7 +78,7 @@ class UserObjectPermissionManager(BaseObjectPermissionManager):
 
 class GroupObjectPermissionManager(BaseObjectPermissionManager):
 
-    def assign(self, perm, group, obj):
+    def assign_perm(self, perm, group, obj):
         """
         Assigns permission with given ``perm`` for an instance ``obj`` and
         ``group``.
@@ -91,6 +97,11 @@ class GroupObjectPermissionManager(BaseObjectPermissionManager):
             kwargs['content_object'] = obj
         obj_perm, created = self.get_or_create(**kwargs)
         return obj_perm
+
+    def assign(self, perm, user, obj):
+        """ Depreciated function name left in for compatibility"""
+        warnings.warn("UserObjectPermissionManager method 'assign' is being renamed to 'assign_perm'. Update your code accordingly as old name will be depreciated in 1.0.5 version.", DeprecationWarning)
+        return self.assign_perm(perm, user, obj)
 
     def remove_perm(self, perm, group, obj):
         """

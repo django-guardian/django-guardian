@@ -42,10 +42,10 @@ In order to add a *change_project* permission for *joe* user we would use
 
 .. code-block:: python
 
-    >>> from guardian.shortcuts import assign
+    >>> from guardian.shortcuts import assign_perm
     >>> project = Project.objects.get(name='Foobar')
     >>> joe = User.objects.get(username='joe')
-    >>> assign('change_project', joe, project)
+    >>> assign_perm('change_project', joe, project)
 
 What it really does is: create an instance of :model:`UserObjectPermission`.
 Something similar to:
