@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+import warnings
+
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.query import QuerySet
 from django.test import TestCase
@@ -8,6 +10,7 @@ from guardian.shortcuts import get_perms_for_model
 from guardian.core import ObjectPermissionChecker
 from guardian.compat import get_user_model
 from guardian.compat import get_user_permission_full_codename
+from guardian.shortcuts import assign
 from guardian.shortcuts import assign_perm
 from guardian.shortcuts import remove_perm
 from guardian.shortcuts import get_perms
@@ -80,6 +83,13 @@ class AssignPermTest(ObjectPermissionTestCase):
 
         self.assertTrue(self.user.has_perm("contenttypes.change_contenttype"))
         self.assertTrue(isinstance(perm, Permission))
+
+    def test_deprecation_warning(self):
+        with warnings.catch_warnings(record=True) as warns:
+            warnings.simplefilter('always')
+            assign("contenttypes.change_contenttype", self.group)
+            self.assertEqual(len(warns), 1)
+            self.assertTrue(isinstance(warns[0].message, DeprecationWarning))
 
 
 class RemovePermTest(ObjectPermissionTestCase):
