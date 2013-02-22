@@ -6,7 +6,7 @@ from .testapp.models import ProjectUserObjectPermission
 from django.contrib.auth.models import Group, Permission
 from django.test import TestCase
 from guardian.compat import get_user_model
-from guardian.shortcuts import assign
+from guardian.shortcuts import assign_perm
 from guardian.shortcuts import get_groups_with_perms
 from guardian.shortcuts import get_objects_for_group
 from guardian.shortcuts import get_objects_for_user
@@ -39,8 +39,8 @@ class TestDirectUserPermissions(TestCase):
         )
         self.assertTrue(self.joe.has_perm('add_project', self.project))
 
-    def test_assign(self):
-        assign('add_project', self.joe, self.project)
+    def test_assign_perm(self):
+        assign_perm('add_project', self.joe, self.project)
         filters = {
             'content_object': self.project,
             'permission__codename': 'add_project',
@@ -50,7 +50,7 @@ class TestDirectUserPermissions(TestCase):
         self.assertEqual(result, 1)
 
     def test_remove_perm(self):
-        assign('add_project', self.joe, self.project)
+        assign_perm('add_project', self.joe, self.project)
         filters = {
             'content_object': self.project,
             'permission__codename': 'add_project',
@@ -66,9 +66,9 @@ class TestDirectUserPermissions(TestCase):
     def test_get_users_with_perms(self):
         User.objects.create_user('john', 'john@foobar.com', 'john')
         jane = User.objects.create_user('jane', 'jane@foobar.com', 'jane')
-        assign('add_project', self.joe, self.project)
-        assign('change_project', self.joe, self.project)
-        assign('change_project', jane, self.project)
+        assign_perm('add_project', self.joe, self.project)
+        assign_perm('change_project', self.joe, self.project)
+        assign_perm('change_project', jane, self.project)
         self.assertEqual(get_users_with_perms(self.project, attach_perms=True),
             {
                 self.joe: ['add_project', 'change_project'],
@@ -80,9 +80,9 @@ class TestDirectUserPermissions(TestCase):
         jane = User.objects.create_user('jane', 'jane@foobar.com', 'jane')
         group = Group.objects.create(name='devs')
         self.joe.groups.add(group)
-        assign('add_project', self.joe, self.project)
-        assign('change_project', group, self.project)
-        assign('change_project', jane, self.project)
+        assign_perm('add_project', self.joe, self.project)
+        assign_perm('change_project', group, self.project)
+        assign_perm('change_project', jane, self.project)
         self.assertEqual(get_users_with_perms(self.project, attach_perms=True),
             {
                 self.joe: ['add_project', 'change_project'],
@@ -92,9 +92,9 @@ class TestDirectUserPermissions(TestCase):
     def test_get_objects_for_user(self):
         foo = Project.objects.create(name='foo')
         bar = Project.objects.create(name='bar')
-        assign('add_project', self.joe, foo)
-        assign('add_project', self.joe, bar)
-        assign('change_project', self.joe, bar)
+        assign_perm('add_project', self.joe, foo)
+        assign_perm('add_project', self.joe, bar)
+        assign_perm('change_project', self.joe, bar)
 
         result = get_objects_for_user(self.joe, 'testapp.add_project')
         self.assertEqual(sorted(p.pk for p in result), sorted([foo.pk, bar.pk]))
@@ -124,8 +124,8 @@ class TestDirectGroupPermissions(TestCase):
         )
         self.assertTrue(self.joe.has_perm('add_project', self.project))
 
-    def test_assign(self):
-        assign('add_project', self.group, self.project)
+    def test_assign_perm(self):
+        assign_perm('add_project', self.group, self.project)
         filters = {
             'content_object': self.project,
             'permission__codename': 'add_project',
@@ -135,7 +135,7 @@ class TestDirectGroupPermissions(TestCase):
         self.assertEqual(result, 1)
 
     def test_remove_perm(self):
-        assign('add_project', self.group, self.project)
+        assign_perm('add_project', self.group, self.project)
         filters = {
             'content_object': self.project,
             'permission__codename': 'add_project',
@@ -151,9 +151,9 @@ class TestDirectGroupPermissions(TestCase):
     def test_get_groups_with_perms(self):
         Group.objects.create(name='managers')
         devs = Group.objects.create(name='devs')
-        assign('add_project', self.group, self.project)
-        assign('change_project', self.group, self.project)
-        assign('change_project', devs, self.project)
+        assign_perm('add_project', self.group, self.project)
+        assign_perm('change_project', self.group, self.project)
+        assign_perm('change_project', devs, self.project)
         self.assertEqual(get_groups_with_perms(self.project, attach_perms=True),
             {
                 self.group: ['add_project', 'change_project'],
@@ -163,9 +163,9 @@ class TestDirectGroupPermissions(TestCase):
     def test_get_objects_for_group(self):
         foo = Project.objects.create(name='foo')
         bar = Project.objects.create(name='bar')
-        assign('add_project', self.group, foo)
-        assign('add_project', self.group, bar)
-        assign('change_project', self.group, bar)
+        assign_perm('add_project', self.group, foo)
+        assign_perm('add_project', self.group, bar)
+        assign_perm('change_project', self.group, bar)
 
         result = get_objects_for_group(self.group, 'testapp.add_project')
         self.assertEqual(sorted(p.pk for p in result), sorted([foo.pk, bar.pk]))
@@ -184,9 +184,9 @@ class TestMixedDirectAndGenericObjectPermission(TestCase):
         jane = User.objects.create_user('jane', 'jane@foobar.com', 'jane')
         group = Group.objects.create(name='devs')
         self.joe.groups.add(group)
-        assign('add_mixed', self.joe, self.mixed)
-        assign('change_mixed', group, self.mixed)
-        assign('change_mixed', jane, self.mixed)
+        assign_perm('add_mixed', self.joe, self.mixed)
+        assign_perm('change_mixed', group, self.mixed)
+        assign_perm('change_mixed', jane, self.mixed)
         self.assertEqual(get_users_with_perms(self.mixed, attach_perms=True),
             {
                 self.joe: ['add_mixed', 'change_mixed'],

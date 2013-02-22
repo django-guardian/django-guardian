@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from django import forms
 from django.utils.translation import ugettext as _
 
-from guardian.shortcuts import assign
+from guardian.shortcuts import assign_perm
 from guardian.shortcuts import remove_perm
 from guardian.shortcuts import get_perms
 from guardian.shortcuts import get_perms_for_model
@@ -143,7 +143,7 @@ class UserObjectPermissionsForm(BaseObjectPermissionsForm):
             remove_perm(perm, self.user, self.obj)
 
         for perm in perms:
-            assign(perm, self.user, self.obj)
+            assign_perm(perm, self.user, self.obj)
 
 
 class GroupObjectPermissionsForm(BaseObjectPermissionsForm):
@@ -190,5 +190,5 @@ class GroupObjectPermissionsForm(BaseObjectPermissionsForm):
             remove_perm(perm, self.group, self.obj)
 
         for perm in perms:
-            assign(perm, self.group, self.obj)
+            assign_perm(perm, self.group, self.obj)
 

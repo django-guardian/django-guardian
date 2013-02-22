@@ -8,7 +8,7 @@ from guardian.shortcuts import get_perms_for_model
 from guardian.core import ObjectPermissionChecker
 from guardian.compat import get_user_model
 from guardian.compat import get_user_permission_full_codename
-from guardian.shortcuts import assign
+from guardian.shortcuts import assign_perm
 from guardian.shortcuts import remove_perm
 from guardian.shortcuts import get_perms
 from guardian.shortcuts import get_users_with_perms
@@ -42,41 +42,41 @@ class ShortcutsTests(ObjectPermissionTestCase):
             sorted(get_perms_for_model(model_str).values_list()),
             sorted(get_perms_for_model(obj).values_list()))
 
-class AssignTest(ObjectPermissionTestCase):
+class AssignPermTest(ObjectPermissionTestCase):
     """
     Tests permission assigning for user/group and object.
     """
     def test_not_model(self):
-        self.assertRaises(NotUserNorGroup, assign,
+        self.assertRaises(NotUserNorGroup, assign_perm,
             perm="change_object",
             user_or_group="Not a Model",
             obj=self.ctype)
 
     def test_global_wrong_perm(self):
-        self.assertRaises(ValueError, assign,
+        self.assertRaises(ValueError, assign_perm,
             perm="change_site", # for global permissions must provide app_label
             user_or_group=self.user)
 
-    def test_user_assign(self):
-        assign("change_contenttype", self.user, self.ctype)
-        assign("change_contenttype", self.group, self.ctype)
+    def test_user_assign_perm(self):
+        assign_perm("change_contenttype", self.user, self.ctype)
+        assign_perm("change_contenttype", self.group, self.ctype)
         self.assertTrue(self.user.has_perm("change_contenttype", self.ctype))
 
-    def test_group_assing(self):
-        assign("change_contenttype", self.group, self.ctype)
-        assign("delete_contenttype", self.group, self.ctype)
+    def test_group_assign_perm(self):
+        assign_perm("change_contenttype", self.group, self.ctype)
+        assign_perm("delete_contenttype", self.group, self.ctype)
 
         check = ObjectPermissionChecker(self.group)
         self.assertTrue(check.has_perm("change_contenttype", self.ctype))
         self.assertTrue(check.has_perm("delete_contenttype", self.ctype))
 
-    def test_user_assign_global(self):
-        perm = assign("contenttypes.change_contenttype", self.user)
+    def test_user_assign_perm_global(self):
+        perm = assign_perm("contenttypes.change_contenttype", self.user)
         self.assertTrue(self.user.has_perm("contenttypes.change_contenttype"))
         self.assertTrue(isinstance(perm, Permission))
 
-    def test_group_assing_global(self):
-        perm = assign("contenttypes.change_contenttype", self.group)
+    def test_group_assign_perm_global(self):
+        perm = assign_perm("contenttypes.change_contenttype", self.group)
 
         self.assertTrue(self.user.has_perm("contenttypes.change_contenttype"))
         self.assertTrue(isinstance(perm, Permission))
@@ -99,13 +99,13 @@ class RemovePermTest(ObjectPermissionTestCase):
 
     def test_user_remove_perm(self):
         # assign perm first
-        assign("change_contenttype", self.user, self.ctype)
+        assign_perm("change_contenttype", self.user, self.ctype)
         remove_perm("change_contenttype", self.user, self.ctype)
         self.assertFalse(self.user.has_perm("change_contenttype", self.ctype))
 
     def test_group_remove_perm(self):
         # assign perm first
-        assign("change_contenttype", self.group, self.ctype)
+        assign_perm("change_contenttype", self.group, self.ctype)
         remove_perm("change_contenttype", self.group, self.ctype)
 
         check = ObjectPermissionChecker(self.group)
@@ -114,14 +114,14 @@ class RemovePermTest(ObjectPermissionTestCase):
     def test_user_remove_perm_global(self):
         # assign perm first
         perm = "contenttypes.change_contenttype"
-        assign(perm, self.user)
+        assign_perm(perm, self.user)
         remove_perm(perm, self.user)
         self.assertFalse(self.user.has_perm(perm))
 
     def test_group_remove_perm_global(self):
         # assign perm first
         perm = "contenttypes.change_contenttype"
-        assign(perm, self.group)
+        assign_perm(perm, self.group)
         remove_perm(perm, self.group)
         app_label, codename = perm.split('.')
         perm_obj = Permission.objects.get(codename=codename,
@@ -143,7 +143,7 @@ class GetPermsTest(ObjectPermissionTestCase):
         perms_to_assign = ("change_contenttype",)
 
         for perm in perms_to_assign:
-            assign("change_contenttype", self.user, self.ctype)
+            assign_perm("change_contenttype", self.user, self.ctype)
 
         perms = get_perms(self.user, self.ctype)
         for perm in perms_to_assign:
@@ -175,9 +175,9 @@ class GetUsersWithPermsTest(TestCase):
         self.assertFalse(bool(result))
 
     def test_simple(self):
-        assign("change_contenttype", self.user1, self.obj1)
-        assign("delete_contenttype", self.user2, self.obj1)
-        assign("delete_contenttype", self.user3, self.obj2)
+        assign_perm("change_contenttype", self.user1, self.obj1)
+        assign_perm("delete_contenttype", self.user2, self.obj1)
+        assign_perm("delete_contenttype", self.user3, self.obj2)
 
         result = get_users_with_perms(self.obj1)
         result_vals = result.values_list('username', flat=True)
@@ -191,9 +191,9 @@ class GetUsersWithPermsTest(TestCase):
         self.user1.groups.add(self.group1)
         self.user2.groups.add(self.group2)
         self.user3.groups.add(self.group3)
-        assign("change_contenttype", self.group1, self.obj1)
-        assign("change_contenttype", self.group2, self.obj1)
-        assign("delete_contenttype", self.group3, self.obj2)
+        assign_perm("change_contenttype", self.group1, self.obj1)
+        assign_perm("change_contenttype", self.group2, self.obj1)
+        assign_perm("delete_contenttype", self.group3, self.obj2)
 
         result = get_users_with_perms(self.obj1).values_list('id',
             flat=True)
@@ -217,11 +217,11 @@ class GetUsersWithPermsTest(TestCase):
         self.user1.groups.add(self.group1)
         self.user2.groups.add(self.group2)
         self.user3.groups.add(self.group3)
-        assign("change_contenttype", self.group1, self.obj1)
-        assign("change_contenttype", self.group2, self.obj1)
-        assign("delete_contenttype", self.group3, self.obj2)
-        assign("delete_contenttype", self.user2, self.obj1)
-        assign("change_contenttype", self.user3, self.obj2)
+        assign_perm("change_contenttype", self.group1, self.obj1)
+        assign_perm("change_contenttype", self.group2, self.obj1)
+        assign_perm("delete_contenttype", self.group3, self.obj2)
+        assign_perm("delete_contenttype", self.user2, self.obj1)
+        assign_perm("change_contenttype", self.user3, self.obj2)
 
         # Check contenttype1
         result = get_users_with_perms(self.obj1, attach_perms=True)
@@ -244,19 +244,19 @@ class GetUsersWithPermsTest(TestCase):
 
     def test_attach_groups_only_has_perms(self):
         self.user1.groups.add(self.group1)
-        assign("change_contenttype", self.group1, self.obj1)
+        assign_perm("change_contenttype", self.group1, self.obj1)
         result = get_users_with_perms(self.obj1, attach_perms=True)
         expected = {self.user1: ["change_contenttype"]}
         self.assertEqual(result, expected)
 
     def test_mixed(self):
         self.user1.groups.add(self.group1)
-        assign("change_contenttype", self.group1, self.obj1)
-        assign("change_contenttype", self.user2, self.obj1)
-        assign("delete_contenttype", self.user2, self.obj1)
-        assign("delete_contenttype", self.user2, self.obj2)
-        assign("change_contenttype", self.user3, self.obj2)
-        assign("change_%s" % user_module_name, self.user3, self.user1)
+        assign_perm("change_contenttype", self.group1, self.obj1)
+        assign_perm("change_contenttype", self.user2, self.obj1)
+        assign_perm("delete_contenttype", self.user2, self.obj1)
+        assign_perm("delete_contenttype", self.user2, self.obj2)
+        assign_perm("change_contenttype", self.user3, self.obj2)
+        assign_perm("change_%s" % user_module_name, self.user3, self.user1)
 
         result = get_users_with_perms(self.obj1)
         self.assertEqual(
@@ -266,7 +266,7 @@ class GetUsersWithPermsTest(TestCase):
 
     def test_with_superusers(self):
         admin = User.objects.create(username='admin', is_superuser=True)
-        assign("change_contenttype", self.user1, self.obj1)
+        assign_perm("change_contenttype", self.user1, self.obj1)
 
         result = get_users_with_perms(self.obj1, with_superusers=True)
         self.assertEqual(
@@ -277,9 +277,9 @@ class GetUsersWithPermsTest(TestCase):
     def test_without_group_users(self):
         self.user1.groups.add(self.group1)
         self.user2.groups.add(self.group2)
-        assign("change_contenttype", self.group1, self.obj1)
-        assign("change_contenttype", self.user2, self.obj1)
-        assign("change_contenttype", self.group2, self.obj1)
+        assign_perm("change_contenttype", self.group1, self.obj1)
+        assign_perm("change_contenttype", self.user2, self.obj1)
+        assign_perm("change_contenttype", self.group2, self.obj1)
         result = get_users_with_perms(self.obj1, with_group_users=False)
         expected = set([self.user2])
         self.assertEqual(set(result), expected)
@@ -287,9 +287,9 @@ class GetUsersWithPermsTest(TestCase):
     def test_without_group_users_but_perms_attached(self):
         self.user1.groups.add(self.group1)
         self.user2.groups.add(self.group2)
-        assign("change_contenttype", self.group1, self.obj1)
-        assign("change_contenttype", self.user2, self.obj1)
-        assign("change_contenttype", self.group2, self.obj1)
+        assign_perm("change_contenttype", self.group1, self.obj1)
+        assign_perm("change_contenttype", self.user2, self.obj1)
+        assign_perm("change_contenttype", self.group2, self.obj1)
         result = get_users_with_perms(self.obj1, with_group_users=False,
             attach_perms=True)
         expected = {self.user2: ["change_contenttype"]}
@@ -297,7 +297,7 @@ class GetUsersWithPermsTest(TestCase):
 
     def test_without_group_users_no_result(self):
         self.user1.groups.add(self.group1)
-        assign("change_contenttype", self.group1, self.obj1)
+        assign_perm("change_contenttype", self.group1, self.obj1)
         result = get_users_with_perms(self.obj1, attach_perms=True,
                 with_group_users=False)
         expected = {}
@@ -306,7 +306,7 @@ class GetUsersWithPermsTest(TestCase):
     def test_without_group_users_no_result_but_with_superusers(self):
         admin = User.objects.create(username='admin', is_superuser=True)
         self.user1.groups.add(self.group1)
-        assign("change_contenttype", self.group1, self.obj1)
+        assign_perm("change_contenttype", self.group1, self.obj1)
         result = get_users_with_perms(self.obj1, with_group_users=False,
             with_superusers=True)
         expected = [admin]
@@ -339,7 +339,7 @@ class GetGroupsWithPerms(TestCase):
         self.assertFalse(bool(result))
 
     def test_simple(self):
-        assign("change_contenttype", self.group1, self.obj1)
+        assign_perm("change_contenttype", self.group1, self.obj1)
         result = get_groups_with_perms(self.obj1)
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0], self.group1)
@@ -351,7 +351,7 @@ class GetGroupsWithPerms(TestCase):
         self.assertEqual(len(result), 0)
 
     def test_simple_attach_perms(self):
-        assign("change_contenttype", self.group1, self.obj1)
+        assign_perm("change_contenttype", self.group1, self.obj1)
         result = get_groups_with_perms(self.obj1, attach_perms=True)
         expected = {self.group1: ["change_contenttype"]}
         self.assertEqual(result, expected)
@@ -363,25 +363,25 @@ class GetGroupsWithPerms(TestCase):
         self.assertEqual(len(result), 0)
 
     def test_mixed(self):
-        assign("change_contenttype", self.group1, self.obj1)
-        assign("change_contenttype", self.group1, self.obj2)
-        assign("change_%s" % user_module_name, self.group1, self.user3)
-        assign("change_contenttype", self.group2, self.obj2)
-        assign("change_contenttype", self.group2, self.obj1)
-        assign("delete_contenttype", self.group2, self.obj1)
-        assign("change_%s" % user_module_name, self.group3, self.user1)
+        assign_perm("change_contenttype", self.group1, self.obj1)
+        assign_perm("change_contenttype", self.group1, self.obj2)
+        assign_perm("change_%s" % user_module_name, self.group1, self.user3)
+        assign_perm("change_contenttype", self.group2, self.obj2)
+        assign_perm("change_contenttype", self.group2, self.obj1)
+        assign_perm("delete_contenttype", self.group2, self.obj1)
+        assign_perm("change_%s" % user_module_name, self.group3, self.user1)
 
         result = get_groups_with_perms(self.obj1)
         self.assertEqual(set(result), set([self.group1, self.group2]))
 
     def test_mixed_attach_perms(self):
-        assign("change_contenttype", self.group1, self.obj1)
-        assign("change_contenttype", self.group1, self.obj2)
-        assign("change_group", self.group1, self.group3)
-        assign("change_contenttype", self.group2, self.obj2)
-        assign("change_contenttype", self.group2, self.obj1)
-        assign("delete_contenttype", self.group2, self.obj1)
-        assign("change_group", self.group3, self.group1)
+        assign_perm("change_contenttype", self.group1, self.obj1)
+        assign_perm("change_contenttype", self.group1, self.obj2)
+        assign_perm("change_group", self.group1, self.group3)
+        assign_perm("change_contenttype", self.group2, self.obj2)
+        assign_perm("change_contenttype", self.group2, self.obj1)
+        assign_perm("delete_contenttype", self.group2, self.obj1)
+        assign_perm("change_group", self.group3, self.group1)
 
         result = get_groups_with_perms(self.obj1, attach_perms=True)
         expected = {
@@ -440,26 +440,26 @@ class GetObjectsForUser(TestCase):
 
     def test_perms_single(self):
         perm = 'auth.change_group'
-        assign(perm, self.user, self.group)
+        assign_perm(perm, self.user, self.group)
         self.assertEqual(
             set(get_objects_for_user(self.user, perm)),
             set(get_objects_for_user(self.user, [perm])))
 
     def test_klass_as_model(self):
-        assign('contenttypes.change_contenttype', self.user, self.ctype)
+        assign_perm('contenttypes.change_contenttype', self.user, self.ctype)
 
         objects = get_objects_for_user(self.user,
             ['contenttypes.change_contenttype'], ContentType)
         self.assertEqual([obj.name for obj in objects], [self.ctype.name])
 
     def test_klass_as_manager(self):
-        assign('auth.change_group', self.user, self.group)
+        assign_perm('auth.change_group', self.user, self.group)
         objects = get_objects_for_user(self.user, ['auth.change_group'],
             Group.objects)
         self.assertEqual([obj.name for obj in objects], [self.group.name])
 
     def test_klass_as_queryset(self):
-        assign('auth.change_group', self.user, self.group)
+        assign_perm('auth.change_group', self.user, self.group)
         objects = get_objects_for_user(self.user, ['auth.change_group'],
             Group.objects.all())
         self.assertEqual([obj.name for obj in objects], [self.group.name])
@@ -472,7 +472,7 @@ class GetObjectsForUser(TestCase):
         group_names = ['group1', 'group2', 'group3']
         groups = [Group.objects.create(name=name) for name in group_names]
         for group in groups:
-            assign('change_group', self.user, group)
+            assign_perm('change_group', self.user, group)
 
         objects = get_objects_for_user(self.user, ['auth.change_group'])
         self.assertEqual(len(objects), len(groups))
@@ -485,8 +485,8 @@ class GetObjectsForUser(TestCase):
         group_names = ['group1', 'group2', 'group3']
         groups = [Group.objects.create(name=name) for name in group_names]
         for group in groups:
-            assign('auth.change_group', self.user, group)
-        assign('auth.delete_group', self.user, groups[1])
+            assign_perm('auth.change_group', self.user, group)
+        assign_perm('auth.delete_group', self.user, groups[1])
 
         objects = get_objects_for_user(self.user, ['auth.change_group',
             'auth.delete_group'])
@@ -499,8 +499,8 @@ class GetObjectsForUser(TestCase):
     def test_any_of_multiple_perms_to_check(self):
         group_names = ['group1', 'group2', 'group3']
         groups = [Group.objects.create(name=name) for name in group_names]
-        assign('auth.change_group', self.user, groups[0])
-        assign('auth.delete_group', self.user, groups[2])
+        assign_perm('auth.change_group', self.user, groups[0])
+        assign_perm('auth.delete_group', self.user, groups[2])
 
         objects = get_objects_for_user(self.user, ['auth.change_group',
             'auth.delete_group'], any_perm=True)
@@ -521,15 +521,15 @@ class GetObjectsForUser(TestCase):
         # Objects to operate on
         ctypes = dict(((ct.id, ct) for ct in ContentType.objects.all()))
 
-        assign('change_contenttype', self.user, ctypes[1])
-        assign('change_contenttype', self.user, ctypes[2])
-        assign('delete_contenttype', self.user, ctypes[2])
-        assign('delete_contenttype', self.user, ctypes[3])
+        assign_perm('change_contenttype', self.user, ctypes[1])
+        assign_perm('change_contenttype', self.user, ctypes[2])
+        assign_perm('delete_contenttype', self.user, ctypes[2])
+        assign_perm('delete_contenttype', self.user, ctypes[3])
 
-        assign('change_contenttype', groups[0], ctypes[4])
-        assign('change_contenttype', groups[1], ctypes[4])
-        assign('change_contenttype', groups[2], ctypes[5])
-        assign('delete_contenttype', groups[0], ctypes[1])
+        assign_perm('change_contenttype', groups[0], ctypes[4])
+        assign_perm('change_contenttype', groups[1], ctypes[4])
+        assign_perm('change_contenttype', groups[2], ctypes[5])
+        assign_perm('delete_contenttype', groups[0], ctypes[1])
 
         objects = get_objects_for_user(self.user,
             ['contenttypes.change_contenttype'])
@@ -600,27 +600,27 @@ class GetObjectsForGroup(TestCase):
 
     def test_perms_single(self):
         perm = 'contenttypes.change_contenttype'
-        assign(perm, self.group1, self.obj1)
+        assign_perm(perm, self.group1, self.obj1)
         self.assertEqual(
             set(get_objects_for_group(self.group1, perm)),
             set(get_objects_for_group(self.group1, [perm]))
         )
 
     def test_klass_as_model(self):
-        assign('contenttypes.change_contenttype', self.group1, self.obj1)
+        assign_perm('contenttypes.change_contenttype', self.group1, self.obj1)
 
         objects = get_objects_for_group(self.group1,
             ['contenttypes.change_contenttype'], ContentType)
         self.assertEqual([obj.name for obj in objects], [self.obj1.name])
 
     def test_klass_as_manager(self):
-        assign('contenttypes.change_contenttype', self.group1, self.obj1)
+        assign_perm('contenttypes.change_contenttype', self.group1, self.obj1)
         objects = get_objects_for_group(self.group1, ['change_contenttype'],
             ContentType.objects)
         self.assertEqual(list(objects), [self.obj1])
 
     def test_klass_as_queryset(self):
-        assign('contenttypes.change_contenttype', self.group1, self.obj1)
+        assign_perm('contenttypes.change_contenttype', self.group1, self.obj1)
         objects = get_objects_for_group(self.group1, ['change_contenttype'],
             ContentType.objects.all())
         self.assertEqual(list(objects), [self.obj1])
@@ -630,8 +630,8 @@ class GetObjectsForGroup(TestCase):
         self.assertTrue(isinstance(objects, QuerySet))
 
     def test_simple(self):
-        assign('change_contenttype', self.group1, self.obj1)
-        assign('change_contenttype', self.group1, self.obj2)
+        assign_perm('change_contenttype', self.group1, self.obj1)
+        assign_perm('change_contenttype', self.group1, self.obj2)
 
         objects = get_objects_for_group(self.group1, 'contenttypes.change_contenttype')
         self.assertEqual(len(objects), 2)
@@ -648,9 +648,9 @@ class GetObjectsForGroup(TestCase):
         self.assertEqual(objects[0], self.obj2)
 
     def test_multiple_perms_to_check(self):
-        assign('change_contenttype', self.group1, self.obj1)
-        assign('delete_contenttype', self.group1, self.obj1)
-        assign('change_contenttype', self.group1, self.obj2)
+        assign_perm('change_contenttype', self.group1, self.obj1)
+        assign_perm('delete_contenttype', self.group1, self.obj1)
+        assign_perm('change_contenttype', self.group1, self.obj2)
 
         objects = get_objects_for_group(self.group1, [
             'contenttypes.change_contenttype',
@@ -660,10 +660,10 @@ class GetObjectsForGroup(TestCase):
         self.assertEqual(objects[0], self.obj1)
 
     def test_any_of_multiple_perms_to_check(self):
-        assign('change_contenttype', self.group1, self.obj1)
-        assign('delete_contenttype', self.group1, self.obj1)
-        assign('add_contenttype', self.group1, self.obj2)
-        assign('delete_contenttype', self.group1, self.obj3)
+        assign_perm('change_contenttype', self.group1, self.obj1)
+        assign_perm('delete_contenttype', self.group1, self.obj1)
+        assign_perm('add_contenttype', self.group1, self.obj2)
+        assign_perm('delete_contenttype', self.group1, self.obj3)
 
         objects = get_objects_for_group(self.group1,
             ['contenttypes.change_contenttype',
@@ -673,8 +673,8 @@ class GetObjectsForGroup(TestCase):
             [self.obj1, self.obj3])
 
     def test_results_for_different_groups_are_correct(self):
-        assign('change_contenttype', self.group1, self.obj1)
-        assign('delete_contenttype', self.group2, self.obj2)
+        assign_perm('change_contenttype', self.group1, self.obj1)
+        assign_perm('delete_contenttype', self.group2, self.obj2)
 
         self.assertEqual(set(get_objects_for_group(self.group1, 'contenttypes.change_contenttype')),
             set([self.obj1]))

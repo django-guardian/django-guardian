@@ -90,12 +90,12 @@ User = get_user_model()
 # Prototype User and Group methods
 setattr(User, 'get_anonymous', staticmethod(lambda: get_anonymous_user()))
 setattr(User, 'add_obj_perm',
-    lambda self, perm, obj: UserObjectPermission.objects.assign(perm, self, obj))
+    lambda self, perm, obj: UserObjectPermission.objects.assign_perm(perm, self, obj))
 setattr(User, 'del_obj_perm',
     lambda self, perm, obj: UserObjectPermission.objects.remove_perm(perm, self, obj))
 
 setattr(Group, 'add_obj_perm',
-    lambda self, perm, obj: GroupObjectPermission.objects.assign(perm, self, obj))
+    lambda self, perm, obj: GroupObjectPermission.objects.assign_perm(perm, self, obj))
 setattr(Group, 'del_obj_perm',
     lambda self, perm, obj: GroupObjectPermission.objects.remove_perm(perm, self, obj))
 

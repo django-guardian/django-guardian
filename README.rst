@@ -55,7 +55,7 @@ Lets start really quickly::
     >>> admins = Group.objects.create(name='admins')
     >>> jack.has_perm('change_group', admins)
     False
-    >>> UserObjectPermission.objects.assign('change_group', user=jack, obj=admins)
+    >>> UserObjectPermission.objects.assign_perm('change_group', user=jack, obj=admins)
     <UserObjectPermission: admins | jack | change_group>
     >>> jack.has_perm('change_group', admins)
     True

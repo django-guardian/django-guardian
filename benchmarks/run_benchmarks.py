@@ -20,7 +20,7 @@ sys.path.insert(0, ROOT_DIR)
 
 os.environ["DJANGO_SETTINGS_MODULE"] = 'benchmarks.settings'
 from benchmarks import settings
-from guardian.shortcuts import assign
+from guardian.shortcuts import assign_perm
 
 settings.DJALOG_LEVEL = 40
 settings.INSTALLED_APPS = (
@@ -126,7 +126,7 @@ class Benchmark(object):
                 self.grant_perm(user, obj, self.perm)
 
     def grant_perm(self, user, obj, perm):
-        assign(perm, user, obj)
+        assign_perm(perm, user, obj)
 
     @Timed("Check permissions")
     def check_perms(self):
