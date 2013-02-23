@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 from datetime import datetime
 from django.db import models
+from django.contrib.admin.models import LogEntry
 from guardian.models import UserObjectPermissionBase, GroupObjectPermissionBase
 
 
@@ -36,3 +37,8 @@ class Mixed(models.Model):
 
     def __unicode__(self):
         return self.name
+
+
+class LogEntryWithGroup(LogEntry):
+    group = models.ForeignKey('auth.Group', null=True, blank=True)
+

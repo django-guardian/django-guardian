@@ -71,15 +71,28 @@ class GuardedModelAdmin(admin.ModelAdmin):
         If this would be set to ``True``, ``request.user`` would be used to
         filter out objects he or she doesn't own (checking ``user`` field
         of used model - field name may be overridden by
-        ``user_owned_objects_field`` option.
+        ``user_owned_objects_field`` option).
 
         .. note::
            Please remember that this will **NOT** affect superusers!
            Admins would still see all items.
 
-    ``GuardedModelAdmin.user_owned_objects_field``
+    ``GuardedModelAdmin.user_can_access_owned_by_group_objects_only``
 
-        *Default*: ``user``
+        *Default*: ``False``
+
+        If this would be set to ``True``, ``request.user`` would be used to
+        filter out objects her or his group doesn't own (checking if any group
+        user belongs to is set as ``group`` field of the object; name of the
+        field can be changed by overriding ``group_owned_objects_field``).
+
+        .. note::
+           Please remember that this will **NOT** affect superusers!
+           Admins would still see all items.
+
+    ``GuardedModelAdmin.group_owned_objects_field``
+
+        *Default*: ``group``
 
     **Usage example**
 
@@ -109,12 +122,22 @@ class GuardedModelAdmin(admin.ModelAdmin):
         'admin/guardian/model/obj_perms_manage_group.html'
     user_can_access_owned_objects_only = False
     user_owned_objects_field = 'user'
+    user_can_access_owned_by_group_objects_only = False
+    group_owned_objects_field = 'group'
 
     def queryset(self, request):
         qs = super(GuardedModelAdmin, self).queryset(request)
-        if self.user_can_access_owned_objects_only and \
-            not request.user.is_superuser:
+        if request.user.is_superuser:
+            return qs
+
+        if self.user_can_access_owned_objects_only:
             filters = {self.user_owned_objects_field: request.user}
+            qs = qs.filter(**filters)
+        if self.user_can_access_owned_by_group_objects_only:
+            User = get_user_model()
+            user_rel_name = User.groups.field.related_query_name()
+            qs_key = '%s__%s' % (self.group_owned_objects_field, user_rel_name)
+            filters = {qs_key: request.user}
             qs = qs.filter(**filters)
         return qs
 

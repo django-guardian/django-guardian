@@ -4,7 +4,6 @@ import copy
 from django import forms
 from django.conf import settings
 from django.contrib import admin
-from django.contrib.admin.models import LogEntry
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 from django.http import HttpRequest
@@ -19,6 +18,7 @@ from guardian.shortcuts import get_perms_for_model
 from guardian.tests.conf import TEST_SETTINGS
 from guardian.tests.conf import override_settings
 from guardian.models import Group
+from guardian.tests.testapp.models import LogEntryWithGroup as LogEntry
 
 User = get_user_model()
 
@@ -362,6 +362,60 @@ class GuardedModelAdminTests(TestCase):
         qs = gma.queryset(request)
         self.assertEqual(sorted([e.pk for e in qs]),
             sorted([joe_entry.pk, jane_entry.pk]))
+
+    def test_user_can_access_owned_by_group_objects_only(self):
+        attrs = {
+            'user_can_access_owned_by_group_objects_only': True,
+            'group_owned_objects_field': 'group',
+        }
+        gma = self._get_gma(attrs=attrs, model=LogEntry)
+        joe = User.objects.create_user('joe', 'joe@example.com', 'joe')
+        joe_group = Group.objects.create(name='joe-group')
+        joe.groups.add(joe_group)
+        jane = User.objects.create_user('jane', 'jane@example.com', 'jane')
+        jane_group = Group.objects.create(name='jane-group')
+        jane.groups.add(jane_group)
+        ctype = ContentType.objects.get_for_model(User)
+        LogEntry.objects.create(user=joe, content_type=ctype,
+            object_id=joe.id, action_flag=1, change_message='foo')
+        LogEntry.objects.create(user=jane, content_type=ctype,
+            object_id=jane.id, action_flag=1, change_message='bar')
+        joe_entry_group = LogEntry.objects.create(user=jane, content_type=ctype,
+            object_id=joe.id, action_flag=1, change_message='foo',
+            group=joe_group)
+        request = HttpRequest()
+        request.user = joe
+        qs = gma.queryset(request)
+        self.assertEqual([e.pk for e in qs], [joe_entry_group.pk])
+
+    def test_user_can_access_owned_by_group_objects_only_unless_superuser(self):
+        attrs = {
+            'user_can_access_owned_by_group_objects_only': True,
+            'group_owned_objects_field': 'group',
+        }
+        gma = self._get_gma(attrs=attrs, model=LogEntry)
+        joe = User.objects.create_superuser('joe', 'joe@example.com', 'joe')
+        joe_group = Group.objects.create(name='joe-group')
+        joe.groups.add(joe_group)
+        jane = User.objects.create_user('jane', 'jane@example.com', 'jane')
+        jane_group = Group.objects.create(name='jane-group')
+        jane.groups.add(jane_group)
+        ctype = ContentType.objects.get_for_model(User)
+        LogEntry.objects.create(user=joe, content_type=ctype,
+            object_id=joe.id, action_flag=1, change_message='foo')
+        LogEntry.objects.create(user=jane, content_type=ctype,
+            object_id=jane.id, action_flag=1, change_message='bar')
+        LogEntry.objects.create(user=jane, content_type=ctype,
+            object_id=joe.id, action_flag=1, change_message='foo',
+            group=joe_group)
+        LogEntry.objects.create(user=joe, content_type=ctype,
+            object_id=joe.id, action_flag=1, change_message='foo',
+            group=jane_group)
+        request = HttpRequest()
+        request.user = joe
+        qs = gma.queryset(request)
+        self.assertEqual(sorted(e.pk for e in qs),
+            sorted(LogEntry.objects.values_list('pk', flat=True)))
 
 
 class GrappelliGuardedModelAdminTests(TestCase):
