@@ -88,3 +88,19 @@ Tells parts of guardian what template to use for responses with status code
 ``403`` (i.e. :ref:`api-decorators-permission_required`). Defaults to
 ``403.html``.
 
+
+.. setting:: ANONYMOUS_DEFAULT_USERNAME_VALUE
+
+ANONYMOUS_DEFAULT_USERNAME_VALUE
+--------------------------------
+
+.. versionadded:: 1.1
+
+Due to changes introduced by Django 1.5 user model can have differently named
+``username`` field (it can be removed too, but ``guardian`` currently depends
+on it). After ``syncdb`` command we create anonymous user for convenience,
+however it might be necessary to set this configuration in order to set proper
+value at ``username`` field.
+
+.. seealso:: https://docs.djangoproject.com/en/1.5/topics/auth/customizing/#substituting-a-custom-user-model
+

@@ -2,7 +2,8 @@ from __future__ import unicode_literals
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
-ANONYMOUS_DEFAULT_USERNAME_VALUE = getattr(settings, 'ANONYMOUS_DEFAULT_USERNAME_VALUE', 'AnonymousUser')
+ANONYMOUS_DEFAULT_USERNAME_VALUE = getattr(settings,
+    'ANONYMOUS_DEFAULT_USERNAME_VALUE', 'AnonymousUser')
 ANONYMOUS_USER_ID = getattr(settings, 'ANONYMOUS_USER_ID', None)
 if ANONYMOUS_USER_ID is None:
     raise ImproperlyConfigured("In order to use django-guardian's "
