@@ -178,6 +178,7 @@ class GuardedModelAdmin(admin.ModelAdmin):
         """
         context = {
             'adminform': {'model_admin': self},
+            'media': self.media,
             'object': obj,
             'app_label': self.model._meta.app_label,
             'opts': self.model._meta,
