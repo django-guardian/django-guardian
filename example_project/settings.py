@@ -34,10 +34,10 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
     'guardian',
     'guardian.tests.testapp',
     'posts',
+    'integration_tests',
 )
 if django.VERSION < (1, 3):
     INSTALLED_APPS += ('staticfiles',)
