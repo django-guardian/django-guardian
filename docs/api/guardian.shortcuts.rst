@@ -8,10 +8,10 @@ Shortcuts
 
 .. _api-shortcuts-assign:
 
-assign
-------
+assign_perm
+-----------
 
-.. autofunction:: guardian.shortcuts.assign
+.. autofunction:: guardian.shortcuts.assign_perm
 
 .. _api-shortcuts-remove_perm:
 
