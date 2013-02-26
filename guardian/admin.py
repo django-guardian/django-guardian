@@ -145,9 +145,9 @@ class GuardedModelAdmin(admin.ModelAdmin):
         """
         Extends standard admin model urls with the following:
 
-        - ``.../permissions/``
-        - ``.../permissions/user-manage/<user_id>/``
-        - ``.../permissions/group-manage/<group_id>/``
+        - ``.../permissions/`` under ``app_mdodel_permissions`` url name (params: object_pk)
+        - ``.../permissions/user-manage/<user_id>/`` under ``app_model_permissions_manage_user`` url name (params: object_pk, user_pk)
+        - ``.../permissions/group-manage/<group_id>/`` under ``app_model_permissions_manage_group`` url name (params: object_pk, group_pk)
 
         .. note::
            ``...`` above are standard, instance detail url (i.e.
