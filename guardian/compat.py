@@ -70,3 +70,4 @@ try:
 except NameError:
     basestring = unicode = str = str
 
+__all__ = ['User', 'Group', 'Permission', 'AnonymousUser']
