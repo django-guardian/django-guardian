@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 from django.test import TestCase
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import Group, AnonymousUser
+from django.db import models
 
 from guardian.compat import get_user_model
 from guardian.tests.core_test import ObjectPermissionTestCase
@@ -9,11 +10,13 @@ from guardian.tests.testapp.models import Project
 from guardian.tests.testapp.models import ProjectUserObjectPermission
 from guardian.tests.testapp.models import ProjectGroupObjectPermission
 from guardian.models import UserObjectPermission
+from guardian.models import UserObjectPermissionBase
 from guardian.models import GroupObjectPermission
 from guardian.utils import get_anonymous_user
 from guardian.utils import get_identity
 from guardian.utils import get_user_obj_perms_model
 from guardian.utils import get_group_obj_perms_model
+from guardian.utils import get_obj_perms_model
 from guardian.exceptions import NotUserNorGroup
 
 User = get_user_model()
@@ -90,4 +93,26 @@ class GetGroupObjPermsModelTest(TestCase):
         # model defined (i.e. while testing guardian app in some custom project)
         self.assertEqual(get_group_obj_perms_model(Group),
             GroupObjectPermission)
+
+class GetObjPermsModelTest(TestCase):
+
+    def test_image_field(self):
+
+        class SomeModel(models.Model):
+            image = models.ImageField(upload_to='images/')
+
+        obj = SomeModel()
+        perm_model = get_obj_perms_model(obj, UserObjectPermissionBase,
+            UserObjectPermission)
+        self.assertEqual(perm_model, UserObjectPermission)
+
+    def test_file_field(self):
+
+        class SomeModel(models.Model):
+            file = models.FileField(upload_to='images/')
+
+        obj = SomeModel()
+        perm_model = get_obj_perms_model(obj, UserObjectPermissionBase,
+            UserObjectPermission)
+        self.assertEqual(perm_model, UserObjectPermission)
 

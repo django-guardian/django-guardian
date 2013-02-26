@@ -148,7 +148,11 @@ def get_obj_perms_model(obj, base_cls, generic_cls):
         obj = obj.__class__
     ctype = ContentType.objects.get_for_model(obj)
     for name in dir(obj):
-        attr = getattr(obj, name)
+        try:
+            attr = getattr(obj, name)
+        except AttributeError:
+            # this might be thrown if field is a FileField
+            continue
         if hasattr(attr, 'related'):
             related = attr.related
             model = getattr(related, 'model', None)
