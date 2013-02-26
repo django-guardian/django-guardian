@@ -8,7 +8,7 @@ from django.contrib.auth.models import AnonymousUser
 try:
     from django.conf.urls import url, patterns, include, handler404, handler500
 except ImportError:
-    from django.conf.urls.defaults import url, patterns, include, handler404, handler500
+    from django.conf.urls.defaults import url, patterns, include, handler404, handler500 # pyflakes:ignore
 
 __all__ = [
     'User',

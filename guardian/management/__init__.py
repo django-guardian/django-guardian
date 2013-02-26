@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 import django
 from django.db.models import signals
-from django.conf import settings
 
 from guardian import models as guardian_app
 from guardian.conf import settings as guardian_settings

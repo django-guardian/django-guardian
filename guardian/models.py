@@ -1,17 +1,13 @@
 from __future__ import unicode_literals
 
-import django
 from django.db import models
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
-from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericForeignKey
 from django.utils.translation import ugettext_lazy as _
 
-from guardian.compat import Group
-from guardian.compat import Permission
 from guardian.compat import get_user_model
 from guardian.compat import user_model_label
 from guardian.compat import unicode
