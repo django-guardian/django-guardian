@@ -1,51 +1,58 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="{{ LANGUAGE_CODE }}" lang="{{ LANGUAGE_CODE }}">
-<head>
-    {% block head %}
-    <title>{% block title %}django-guardian - example project{% endblock %}</title>
-    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
-    {% block head-css %}
-    <link rel="stylesheet" type="text/css" href="{{ MEDIA_URL }}css/style.css" />
-    {% endblock %}
-    {% block head-js %}{% endblock %}
-    {% block extra-head %}{% endblock %}
-    {% endblock %}
-</head>
-
-
-<body{% block body-attrs %}{% endblock %}>
-{% block body %}
-    <div id="body-content">
-        {# Message Box #}
-        {# For new message framework, available since Django 1.2 #}
-        {% block messages-block %}
-        {% if messages %}
-        <ul id="global-messages" class="messages">
-            {% for message in messages %}
-            <li class="message message-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">{{ message }}</li>
-            {% endfor %}
-        </ul>
-        {% endif %}
-        {% endblock messages-block %}
-
-        {% block content %}
-        {% endblock content %}
-
-    </div>
-    {# Footer #}
-    <div id="footer-wrapper">
-        {% block footer-wrapper %}
-        <div id="footer">
-            {% block footer %}
-            <p>{% now "Y" %} &copy; <span class="author">Lukasz Balcerzak</span></p>
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>{% block title %}Guardian example{% endblock %}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- Bootstrap -->
+        <link href="{{ STATIC_URL }}css/bootstrap.min.css" rel="stylesheet" media="screen">
+        <style>
+            .container {
+                margin-top: 60px;
+            }
+        </style>
+    </head>
+    <body>
+        {% block navbar %}
+        <div class="navbar navbar-inverse navbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="container-fluid">
+                    <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="brand" href="#">Guardian example project v{{ version }}</a>
+                    <div class="nav-collapse collapse">
+                        <ul class="nav">
+                            <li class="active"><a href="{% url "posts_post_list" %}">Posts</a></li>
+                            <li><a href="https://github.com/lukaszb/django-guardian" target="_repo">Repository</a></li>
+                            <li><a href="https://github.com/lukaszb/django-guardian/issues" target="_issues">Issue tracker</a></li>
+                            <li><a href="https://django-guardian.readthedocs.org/en/latest/" target="_docs">Documentation</a></li>
+                        </ul>
+                        <p class="navbar-text pull-right">
+                        {% if user.is_authenticated %}
+                        Logged in as {{ user }}. <a href="{% url "logout" %}" class="navbar-link">Logout</a>
+                        {% else %}
+                        Not authenticated. Please use <a href="/admin/" class="navbar-link">admin</a> to login.
+                        {% endif %}
+                        </p>
+                    </div><!--/.nav-collapse -->
+                </div>
+            </div>
+        </div>
+        {% endblock %}
+        <div class="container">
+            {% block content %}
+            <div class="row">
+                <div class="span12">
+                    <h1>Hello, world!</h1>
+                </div>
+            </div>
             {% endblock %}
         </div>
-        {% endblock footer-wrapper %}
-    </div>
-{% endblock body %}
-
-{% block extra-body %}{% endblock %}
-{% block end-body %}{% endblock %}
-</body>
+        <script src="http://code.jquery.com/jquery.js"></script>
+        <script src="{{ STATIC_URL }}js/bootstrap.min.js"></script>
+    </body>
 </html>
+
 

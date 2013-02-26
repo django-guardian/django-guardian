@@ -33,6 +33,7 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.admin',
     'django.contrib.messages',
+    'django.contrib.staticfiles',
 
     'guardian',
     'guardian.tests.testapp',
@@ -52,17 +53,18 @@ if 'GRAPPELLI' in os.environ:
     except ImportError:
         print("django-grappelli not installed")
 
-MIDDLEWARE_CLASSES = (
-    'django.middleware.common.CommonMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.transaction.TransactionMiddleware',
-)
+#MIDDLEWARE_CLASSES = (
+    #'django.middleware.common.CommonMiddleware',
+    #'django.contrib.sessions.middleware.SessionMiddleware',
+    #'django.middleware.csrf.CsrfViewMiddleware',
+    #'django.contrib.auth.middleware.AuthenticationMiddleware',
+    #'django.contrib.messages.middleware.MessageMiddleware',
+    #'django.middleware.transaction.TransactionMiddleware',
+#)
 
 STATIC_ROOT = abspath(PROJECT_ROOT, '..', 'public', 'static')
 STATIC_URL = '/static/'
+STATICFILES_DIRS = [abspath(PROJECT_ROOT, 'static')]
 MEDIA_ROOT = abspath(PROJECT_ROOT, 'media')
 MEDIA_URL = '/media/'
 ADMIN_MEDIA_PREFIX = STATIC_URL + 'grappelli/'
@@ -71,6 +73,8 @@ ROOT_URLCONF = 'example_project.urls'
 
 TEMPLATE_CONTEXT_PROCESSORS = global_settings.TEMPLATE_CONTEXT_PROCESSORS + (
     'django.core.context_processors.request',
+    'example_project.context_processors.version',
+    'django.core.context_processors.static',
 )
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',

@@ -1,9 +1,8 @@
-from guardian.compat import url, include, patterns, handler404, handler500
+from guardian.compat import url, patterns
 
 
 urlpatterns = patterns('posts.views',
-    url(r'^(?P<slug>[-\w]+)/$',
-        view='view_post',
-        name='posts_post_detail'),
+    url(r'^$', view='post_list', name='posts_post_list'),
+    url(r'^(?P<slug>[-\w]+)/$', view='post_detail', name='posts_post_detail'),
 )
 

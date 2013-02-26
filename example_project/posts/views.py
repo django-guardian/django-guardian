@@ -1,11 +1,29 @@
+from django.contrib.auth.models import Group
 from django.shortcuts import render_to_response, get_object_or_404
+from django.views.generic import ListView
+from django.template import RequestContext
 from guardian.decorators import permission_required_or_403
+from guardian.compat import get_user_model
 
-from posts.models import Post
+from .models import Post
+
+User = get_user_model()
+
+
+class PostList(ListView):
+    model = Post
+    context_object_name = 'posts'
+
+post_list = PostList.as_view()
 
 
 @permission_required_or_403('posts.view_post', (Post, 'slug', 'slug'))
-def view_post(request, slug, **kwargs):
-    post = get_object_or_404(Post, slug=slug)
-    return render_to_response('posts/post_detail.html', {'object': post})
+def post_detail(request, slug, **kwargs):
+    data = {
+        'post': get_object_or_404(Post, slug=slug),
+        'users': User.objects.all(),
+        'groups': Group.objects.all(),
+    }
+    return render_to_response('posts/post_detail.html', data,
+        RequestContext(request))
 

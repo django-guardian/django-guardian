@@ -1,7 +1,5 @@
-from django.contrib.flatpages.models import FlatPage
+import guardian
 
-def flats(request):
-    return {
-        'flats': FlatPage.objects.all().values('title', 'url'),
-    }
+def version(request):
+    return {'version': guardian.get_version()}
 
