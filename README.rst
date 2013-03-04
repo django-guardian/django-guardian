@@ -68,10 +68,11 @@ Of course our agent jack here would not be able to *change_group* globally::
 Admin integration
 -----------------
 
-Replace ``admin.ModelAdmin`` with ``GuardedModelAdmin`` for those models
-which should have object permissions support within admin panel.
+There two ways to include django-guradian object level admin support for your models. One is relatively straightforward 
+and consists of replacing ``admin.ModelAdmin`` with ``GuardedModelAdmin`` for those models which should have object 
+permissions support within admin panel:
 
-For example::
+.. code-block:: python
 
     from django.contrib import admin
     from myapp.models import Author
@@ -87,6 +88,22 @@ For example::
 
     admin.site.register(Author, AuthorAdmin)
 
+The other consists of sanely monkeypatching. This has the great benefit that existing Django models, third party apps,
+your models and future models - the entire Django site automatically gets object level permission support in the Admin:
+
+.. code-block:: python
+
+	import logging
+	logger = logging.getLogger(__name__)
+	# be nice and tell you are patching
+	logger.info("Patching 'admin.ModelAdmin = GuardedModelAdmin': replace 'admin.ModelAdmin' with 'GuardedModelAdmin' "
+				"which provides an ability to edit object level permissions.")
+	# confirm signature of code we are patching and warn if it has changed
+	if not '3c43401f585ae4a368c901e96f233981' == \
+			hashlib.md5(inspect.getsource(admin.ModelAdmin)).hexdigest():
+		logger.warn("md5 signature of 'admin.ModelAdmin' does not match Django 1.5. There is a slight change patch "
+					"might be broken so please compare and update this monkeypatch.")
+	admin.ModelAdmin = GuardedModelAdmin # apply the patch
 
 .. [1] Great paper about this feature is available at `djangoadvent articles <https://github.com/djangoadvent/djangoadvent-articles/blob/master/1.2/06_object-permissions.rst>`_.
 
