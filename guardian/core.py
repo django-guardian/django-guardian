@@ -89,7 +89,7 @@ class ObjectPermissionChecker(object):
             elif self.user and self.user.is_superuser:
                 perms = list(chain(*Permission.objects
                     .filter(content_type=ctype)
-                    .values_list("codename")))
+                    .distinct().values_list("codename")))
             elif self.user:
                 model = get_user_obj_perms_model(obj)
                 related_name = model.permission.field.related_query_name()
@@ -105,12 +105,12 @@ class ObjectPermissionChecker(object):
                 perms = list(set(chain(*Permission.objects
                     .filter(content_type=ctype)
                     .filter(Q(**user_filters) | Q(**group_filters))
-                    .values_list("codename"))))
+                    .distinct().values_list("codename"))))
             else:
                 perms = list(set(chain(*Permission.objects
                     .filter(content_type=ctype)
                     .filter(**group_filters)
-                    .values_list("codename"))))
+                    .distinct().values_list("codename"))))
             self._obj_perms_cache[key] = perms
         return self._obj_perms_cache[key]
 
