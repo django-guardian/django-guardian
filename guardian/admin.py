@@ -393,6 +393,7 @@ class UserManage(forms.Form):
                 user = get_user_model().objects.get_by_natural_key(username)
             else:
                 user = get_user_model().objects.get(username=username)
+            return user
         except get_user_model().DoesNotExist:
             raise forms.ValidationError(
                 self.fields['user'].error_messages['does_not_exist'])
