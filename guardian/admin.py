@@ -202,7 +202,10 @@ class GuardedModelAdmin(admin.ModelAdmin):
         users_perms = SortedDict(
             get_users_with_perms(obj, attach_perms=True,
                 with_group_users=False))
-        users_perms.keyOrder.sort(key=lambda user: user.username)
+        try:
+            users_perms.keyOrder.sort(key=lambda user: user.natural_key()[0])
+        except AttributeError:
+            users_perms.keyOrder.sort(key=lambda user: user.username)
         groups_perms = SortedDict(
             get_groups_with_perms(obj, attach_perms=True))
         groups_perms.keyOrder.sort(key=lambda group: group.name)
@@ -385,6 +388,9 @@ class UserManage(forms.Form):
         """
         username = self.cleaned_data['user']
         try:
+            user = get_user_model().objects.get_by_natural_key(username)
+            return user
+        except AttributeError:
             user = get_user_model().objects.get(username=username)
             return user
         except get_user_model().DoesNotExist:

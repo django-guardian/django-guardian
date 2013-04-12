@@ -1,5 +1,6 @@
 {% extends "admin/change_form.html" %}
 {% load i18n %}
+{% load staticfiles %}
 {% load guardian_tags %}
 {% friendly_load adminmedia %}
 
@@ -16,8 +17,8 @@
 {% block breadcrumbs %}{% if not is_popup %}
 <div class="breadcrumbs">
      <a href="../../../../">{% trans "Home" %}</a> &rsaquo;
-     <a href="../../../">{{ app_label|capfirst|escape }}</a> &rsaquo; 
-     {% if has_change_permission %}<a href="../../">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %} &rsaquo; 
+     <a href="../../../">{{ app_label|capfirst|escape }}</a> &rsaquo;
+     {% if has_change_permission %}<a href="../../">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %} &rsaquo;
      {% if has_change_permission %}<a href="../">{{ original|truncatewords:"18" }}</a>{% else %}{{ original|truncatewords:"18" }}{% endif %} &rsaquo;
      {% trans "Object permissions" %}
 </div>
@@ -57,9 +58,9 @@
                         {% for perm in model_perms %}
                         <td>
                             {% if perm.codename in user_perms %}
-                            <img src="{% admin_media_prefix %}img/icons/icon-yes.png"/>
+							<img src="{% static "admin/img/icon-yes.gif" %}"/>
                             {% else %}
-                            <img src="{% admin_media_prefix %}img/icons/icon-no.png"/>
+							<img src="{% static "admin/img/icon-no.gif" %}"/>
                             {% endif %}
                         </td>
                         {% endfor %}
@@ -107,7 +108,7 @@
                         {% for perm in model_perms %}
                         <th>{{ perm.name }}</th>
                         {% endfor %}
-                        <th>{% trans "Action" %}</th>            
+                        <th>{% trans "Action" %}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -117,9 +118,9 @@
                         {% for perm in model_perms %}
                         <td>
                             {% if perm.codename in group_perms %}
-                            <img src="{% admin_media_prefix %}img/icons/icon-yes.png"/>
+							<img src="{% static "admin/img/icon-yes.gif" %}"/>
                             {% else %}
-                            <img src="{% admin_media_prefix %}img/icons/icon-no.png"/>
+							<img src="{% static "admin/img/icon-no.gif"%}"/>
                             {% endif %}
                         </td>
                         {% endfor %}
