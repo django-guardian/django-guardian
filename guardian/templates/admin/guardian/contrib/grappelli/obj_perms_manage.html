@@ -1,149 +1,141 @@
 {% extends "admin/change_form.html" %}
 {% load i18n %}
 {% load guardian_tags %}
-{% friendly_load adminmedia %}
-
-{% block extrahead %}{{ block.super }}
-<style type="text/css">
-    .row table caption { text-align: center; font-weight: bold; }
-    div.module-spacer { height: 50px; }
-    div.manage-perms ul.submit-row { padding: 5px; float: left }
-    div.manage-perms ul.submit-row li { float: left; margin: 10px; }
-    div.manage-perms ul.submit-row li input { float: left }
-</style>
-{% endblock %}
+{% friendly_load admin_static %}
 
 {% block breadcrumbs %}{% if not is_popup %}
-<div class="breadcrumbs">
-     <a href="../../../../">{% trans "Home" %}</a> &rsaquo;
-     <a href="../../../">{{ app_label|capfirst|escape }}</a> &rsaquo; 
-     {% if has_change_permission %}<a href="../../">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %} &rsaquo; 
-     {% if has_change_permission %}<a href="../">{{ original|truncatewords:"18" }}</a>{% else %}{{ original|truncatewords:"18" }}{% endif %} &rsaquo;
-     {% trans "Object permissions" %}
-</div>
+<ul>
+    <li><a href="../../../../">{% trans "Home" %}</a></li>
+    <li><a href="../../../">{% trans app_label|capfirst|escape %}</a></li>
+    <li>{% if has_change_permission %}<a href="../../">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}</li>
+    <li>{% if has_change_permission %}<a href="../">{{ original|truncatewords:"18" }}</a>{% else %}{{ original|truncatewords:"18" }}{% endif %}</li>
+    <li>{% trans "Object permissions" %}</li>
+</ul>
 {% endif %}{% endblock %}
 
 {% block content %}
-<div id="content-main">
-
 <form action="." method="post">
     {% csrf_token %}
-    {% if user_form.errors %}
     <div>
-        <p class="errornote">{% trans "Please correct the errors below." %}</p>
-    </div>
+    {% if user_form.errors %}
+        <p class="errornote">{% blocktrans count user_form.errors|length as counter %}Please correct the error below.{% plural %}Please correct the errors below.{% endblocktrans %}</p>
+        <ul class="errorlist">{% for error in user_form.errors %}<li>{{ error }}</li>{% endfor %}</ul>
     {% endif %}
-    <fieldset class="module aligned">
-        <h2>{% trans "Users" %}</h2>
-        {% for error in user_form.errors %}
-            <p class="error">{{ error }}</p>
-        {% endfor %}
-        <div class="row user_permissions">
-            <table id="user-permissions" class="object-perms">
-                <caption>{% trans "User permissions" %}</caption>
-                <thead>
-                    <tr>
-                        <th>{% trans "User" %}</th>
-                        {% for perm in model_perms %}
-                        <th>{{ perm.name }}</th>
-                        {% endfor %}
-                        <th>{% trans "Action" %}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user, user_perms in users_perms.items %}
-                    <tr>
-                        <td>{{ user }}</td>
-                        {% for perm in model_perms %}
-                        <td>
-                            {% if perm.codename in user_perms %}
-                            <img src="{% admin_media_prefix %}img/icons/icon-yes.png"/>
-                            {% else %}
-                            <img src="{% admin_media_prefix %}img/icons/icon-no.png"/>
-                            {% endif %}
-                        </td>
-                        {% endfor %}
-                        <td>
-                            <a href="user-manage/{{ user.id|safe }}/">{% trans "Edit" %}</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <fieldset class="grp-module">
+        <h2 class="grp-collapse-handler">{% trans "Users" %}</h2>
+        <div class="grp-row grp-cells-1 user_permissions">
+            <div class="l-2c-fluid l-d-4">
+                <div class="c-1"><label for="user-permissions" class="required">{% trans "User permissions" %}</label></div>
+                <div class="c-2">
+                    <table id="user-permissions" class="object-perms">
+                        <thead>
+                            <tr>
+                                <th>{% trans "User" %}</th>
+                                {% for perm in model_perms %}
+                                <th>{{ perm.name }}</th>
+                                {% endfor %}
+                                <th>{% trans "Action" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user, user_perms in users_perms.items %}
+                            <tr class="grp-row {% cycle 'grp-row-even' 'grp-row-odd' %}">
+                                <td>{{ user }}</td>
+                                {% for perm in model_perms %}
+                                <td>
+                                    {% if perm.codename in user_perms %}
+                                    <img src="{% static "admin/img/icon-yes.gif" %}"/>
+                                    {% else %}
+                                    <img src="{% static "admin/img/icon-no.gif" %}"/>
+                                    {% endif %}
+                                </td>
+                                {% endfor %}
+                                <td>
+                                    <a href="user-manage/{{ user.id|safe }}/">{% trans "Edit" %}</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-        <div class="module manage-perms">
-            {% for field in user_form %}
-                {% include "admin/guardian/contrib/grappelli/field.html" %}
-            {% endfor %}
-            <ul class="submit-row">
-                <li class="left submit-button-container">
+        {% for field in user_form %}
+            {% include "admin/guardian/contrib/grappelli/field.html" %}
+        {% endfor %}
+        <div class="grp-row grp-cells-1">
+            <div class="l-2c-fluid l-d-4">
+                <div class="c-1">&nbsp;</div>
+                <div class="c-2">
                     <input name="submit_manage_user" type="submit" value="{% trans "Manage user" %}"/>
-                </li>
-            </ul>
+                </div>
+            </div>
         </div>
     </fieldset>
+    </div>
 </form>
-
-<div class="module-spacer"></div>
 
 <form action="." method="post">
     {% csrf_token %}
-    {% if group_form.errors %}
     <div>
-        <p class="errornote">{% trans "Please correct the errors below." %}</p>
-    </div>
+    {% if group_form.errors %}
+        <p class="errornote">{% blocktrans count group_form.errors|length as counter %}Please correct the error below.{% plural %}Please correct the errors below.{% endblocktrans %}</p>
+        <ul class="errorlist">{% for error in group_form.errors %}<li>{{ error }}</li>{% endfor %}</ul>
     {% endif %}
-    <fieldset class="module aligned">
-        <h2>{% trans "Groups" %}</h2>
-        {% for error in group_form.errors %}
-            <p class="error">{{ error }}</p>
-        {% endfor %}
-        <div class="row user_permissions">
-            <table id="group-permissions" class="object-perms">
-                <caption>{% trans "Group permissions" %}</caption>
-                <thead>
-                    <tr>
-                        <th>{% trans "Group" %}</th>
-                        {% for perm in model_perms %}
-                        <th>{{ perm.name }}</th>
-                        {% endfor %}
-                        <th>{% trans "Action" %}</th>            
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for group, group_perms in groups_perms.items %}
-                    <tr>
-                        <td>{{ group }}</td>
-                        {% for perm in model_perms %}
-                        <td>
-                            {% if perm.codename in group_perms %}
-                            <img src="{% admin_media_prefix %}img/icons/icon-yes.png"/>
-                            {% else %}
-                            <img src="{% admin_media_prefix %}img/icons/icon-no.png"/>
-                            {% endif %}
-                        </td>
-                        {% endfor %}
-                        <td>
-                            <a href="group-manage/{{ group.id|safe }}/">{% trans "Edit" %}</a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <fieldset class="grp-module">
+        <h2 class="grp-collapse-handler">{% trans "Groups" %}</h2>
+        <div class="grp-row grp-cells-1 group_permissions">
+            <div class="l-2c-fluid l-d-4">
+                <div class="c-1"><label for="group-permissions" class="required">{% trans "Group permissions" %}</label></div>
+                <div class="c-2">
+                    <table id="group-permissions" class="object-perms">
+                        <thead>
+                            <tr>
+                                <th>{% trans "Group" %}</th>
+                                {% for perm in model_perms %}
+                                <th>{{ perm.name }}</th>
+                                {% endfor %}
+                                <th>{% trans "Action" %}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for group, group_perms in groups_perms.items %}
+                            <tr class="grp-row {% cycle 'grp-row-even' 'grp-row-odd' %}">
+                                <td>{{ group }}</td>
+                                {% for perm in model_perms %}
+                                <td>
+                                    {% if perm.codename in group_perms %}
+                                    <img src="{% static "admin/img/icon-yes.gif" %}"/>
+                                    {% else %}
+                                    <img src="{% static "admin/img/icon-no.gif" %}"/>
+                                    {% endif %}
+                                </td>
+                                {% endfor %}
+                                <td>
+                                    <a href="group-manage/{{ group.id|safe }}/">{% trans "Edit" %}</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-        <div class="module manage-perms">
-            {% for field in group_form %}
-                {% include "admin/guardian/contrib/grappelli/field.html" %}
-            {% endfor %}
-            <ul class="submit-row">
-                <li class="left submit-button-container">
-                    <input name="submit_manage_group" type="submit" value="{% trans "Manage group" %}"/>
-                </li>
-            </ul>
-        </div>
-</form>
 
-</div>
+        {% for field in group_form %}
+            {% include "admin/guardian/contrib/grappelli/field.html" %}
+        {% endfor %}
+        <div class="grp-row grp-cells-1">
+            <div class="l-2c-fluid l-d-4">
+                <div class="c-1">&nbsp;</div>
+                <div class="c-2">
+                    <input name="submit_manage_group" type="submit" value="{% trans "Manage group" %}"/>
+                </div>
+            </div>
+        </div>
+    </fieldset>
+    </div>
+</form>
 {% endblock %}
 
 
