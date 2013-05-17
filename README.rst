@@ -42,6 +42,11 @@ We need to hook ``django-guardian`` into our project.
           'django.contrib.auth.backends.ModelBackend', # default
           'guardian.backends.ObjectPermissionBackend',
       )
+
+3. Configure anonymous user ID ::
+
+     ANONYMOUS_USER_ID = -1
+
          
 Usage
 -----
