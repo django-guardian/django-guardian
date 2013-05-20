@@ -370,6 +370,28 @@ class GuardedModelAdmin(admin.ModelAdmin):
         """
         return AdminGroupObjectPermissionsForm
 
+    def has_change_permission(self, request, obj=None):
+        """
+        Returns True if the given request has permission to change the given
+        Django model instance, the default implementation doesn't examine the
+        `obj` parameter, so it is overridden here.
+        """
+        opts = self.opts
+        return request.user.has_perm(
+            opts.app_label + '.' + opts.get_change_permission(),
+            obj=obj)
+
+    def has_delete_permission(self, request, obj=None):
+        """
+        Returns True if the given request has permission to change the given
+        Django model instance, the default implementation doesn't examine the
+        `obj` parameter, so it is overridden here.
+        """
+        opts = self.opts
+        return request.user.has_perm(
+            opts.app_label + '.' + opts.get_delete_permission(),
+            obj=obj)
+
 
 class UserManage(forms.Form):
     user = forms.RegexField(label=_("Username"), max_length=30,
