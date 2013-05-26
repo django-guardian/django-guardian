@@ -17,5 +17,5 @@ script: python setup.py test
 
 
 notifications:
-  irc: "irc.freenode.org#django-guardian"
+  irc: "irc.freenode.net#django-guardian"
 
