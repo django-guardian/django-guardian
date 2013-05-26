@@ -1,4 +1,4 @@
-Release 1.1 (May 17, 2013)
+Release 1.1 (May 26, 2013)
 ==========================
 
 * Support for Django 1.5 (including Python 3 combination)
@@ -9,6 +9,7 @@ Release 1.1 (May 17, 2013)
 * Minor documentation fixups
 * Spanish translations
 * Better support for grappelli_
+* Updated examples project
 * Speed up ``get_perms`` shortcut function
 
 
