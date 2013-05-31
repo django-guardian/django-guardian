@@ -6,6 +6,7 @@ include extras.py
 include tests.py
 include run_test_and_report.sh
 recursive-include guardian *.py
+recursive-include guardian/locale *.po *.mo
 recursive-include guardian/fixtures *.json
 recursive-include guardian/templates *.html
 recursive-include guardian/tests/templates *.html
