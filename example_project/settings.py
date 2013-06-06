@@ -101,6 +101,10 @@ AUTHENTICATION_BACKENDS = (
 
 ANONYMOUS_USER_ID = -1
 
+PASSWORD_HASHERS = (
+    'django.contrib.auth.hashers.MD5PasswordHasher',
+)
+
 # Neede as some models (located at guardian/tests/models.py)
 # are not migrated for tests
 SOUTH_TESTS_MIGRATE = TEST_SOUTH
