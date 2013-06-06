@@ -23,6 +23,7 @@ settings.INSTALLED_APPS = (
 )
 settings.PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.MD5PasswordHasher',
+    'django.contrib.auth.hashers.SHA1PasswordHasher',
 )
 
 def run_tests(settings):
