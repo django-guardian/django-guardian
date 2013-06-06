@@ -5,6 +5,12 @@ django-guardian
 .. image:: https://secure.travis-ci.org/lukaszb/django-guardian.png?branch=master
   :target: http://travis-ci.org/lukaszb/django-guardian
 
+.. image:: https://pypip.in/v/django-guardian/badge.png
+  :target: https://crate.io/packages/django-guardian/
+
+.. image:: https://pypip.in/d/django-guardian/badge.png
+  :target: https://crate.io/packages/django-guardian/
+
 
 ``django-guardian`` is implementation of per object permissions [1]_ as 
 authorization backend which is supported since Django_ 1.2. It won't
