@@ -5,6 +5,9 @@ django-guardian
 .. image:: https://secure.travis-ci.org/lukaszb/django-guardian.png?branch=master
   :target: http://travis-ci.org/lukaszb/django-guardian
 
+.. image:: https://coveralls.io/repos/lukaszb/django-guardian/badge.png?branch=master
+   :target: https://coveralls.io/r/lukaszb/django-guardian/
+
 .. image:: https://pypip.in/v/django-guardian/badge.png
   :target: https://crate.io/packages/django-guardian/
 
