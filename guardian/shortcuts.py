@@ -415,7 +415,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
             return objects
 
     if not any_perm:
-        counts = user_obj_perms_queryset.annotate(object_pk_count=Count(fields[0]))
+        counts = user_obj_perms_queryset.values(fields[0]).annotate(object_pk_count=Count(fields[0]))
         user_obj_perms_queryset = counts.filter(object_pk_count__gte=len(codenames))
 
     objects = queryset.filter(pk__in=user_obj_perms_queryset.values_list(fields[0], flat=True))
