@@ -15,7 +15,8 @@ from django.test import TestCase
 from guardian.compat import get_user_model
 from guardian.compat import get_user_model_path
 from guardian.compat import get_user_permission_full_codename
-from guardian.decorators import permission_required, permission_required_or_403
+from guardian.decorators import permission_required, \
+        permission_required_or_403, permission_required_user_specific
 from guardian.exceptions import GuardianError
 from guardian.exceptions import WrongAppError
 from guardian.shortcuts import assign_perm
@@ -354,3 +355,22 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
         self.assertTrue(response._headers['location'][1].startswith(
             '/foobar/'))
 
+    def test_user_specific_anonymous(self):
+        request = self._get_request(self.anon)
+
+        @permission_required_user_specific('testapp.change_project')
+        def dummy_view(request):
+            pass
+
+        response = dummy_view(request)
+        self.assertEqual(response.status_code, 302)
+
+    def test_user_specific_logged(self):
+        request = self._get_request(self.user)
+
+        @permission_required_user_specific('testapp.change_project')
+        def dummy_view(request):
+            pass
+
+        response = dummy_view(request)
+        self.assertEqual(response.status_code, 403)
