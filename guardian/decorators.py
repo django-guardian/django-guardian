@@ -98,6 +98,9 @@ def permission_required(perm, lookup_variables=None, **kwargs):
                     lookup_dict[lookup] = kwargs[view_arg]
                 obj = get_object_or_404(model, **lookup_dict)
 
+            if request.user.is_authenticated():
+                return_403 = True
+
             response = get_403_or_None(request, perms=[perm], obj=obj,
                 login_url=login_url, redirect_field_name=redirect_field_name,
                 return_403=return_403, accept_global_perms=accept_global_perms)
