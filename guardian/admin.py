@@ -377,7 +377,7 @@ class UserManage(forms.Form):
     user = forms.CharField(label=_("User identification"), 
                         max_length=200,
                         error_messages = {'does_not_exist': _("This user does not exist")},
-                        help_text=_('The search is based on User.USERNAME_FIELD')
+                        help_text=_('Enter a value compatible with User.USERNAME_FIELD')
                      )
 
     def clean_user(self):
@@ -393,7 +393,7 @@ class UserManage(forms.Form):
             return user
         except user_model.DoesNotExist:
             raise forms.ValidationError(
-                self.fields['identification'].error_messages['does_not_exist'])
+                self.fields['user'].error_messages['does_not_exist'])
 
 
 class GroupManage(forms.Form):
