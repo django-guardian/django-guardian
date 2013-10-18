@@ -59,9 +59,7 @@ class GetObjPermsTagTest(TestCase):
         ))
         context = {'user': User.get_anonymous(), 'object': None}
         output = render(template, context)
-        context = {'user': User.get_anonymous(), 'object': None}
-        real_output = render(template, context)
-        self.assertEqual(output, real_output)
+        self.assertEqual(output, '')
 
     def test_anonymous_user(self):
         template = ''.join((
