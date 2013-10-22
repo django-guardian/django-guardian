@@ -11,7 +11,7 @@ env:
  - DJANGO_VERSION=1.5.4
 
 install:
-  - pip install -q mock==0.8 django-grappelli==2.3.8 Django==$DJANGO_VERSION coverage coveralls
+  - pip install -q mock==0.8 Django==$DJANGO_VERSION coverage coveralls
   - pip install . --use-mirrors
 
 script:
