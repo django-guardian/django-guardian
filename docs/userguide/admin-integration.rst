@@ -11,10 +11,10 @@ system.
 ``django-guardian`` comes with simple object permissions management integration
 for Django's admin application.
 
-Usage
------
+GuardedModelAdmin Approach
+--------------------------
 
-It is very easy to use admin integration. Simply use :admin:`GuardedModelAdmin`
+To proivde object level admin integration for your models use :admin:`GuardedModelAdmin`
 instead of standard ``django.contrib.admin.ModelAdmin`` class for registering
 models within the admin. In example, look at following model:
 
@@ -92,3 +92,47 @@ permissions.
    Example above is shipped with ``django-guardian`` package with the example
    project.
 
+Django Existing Apps or Thrid Party Apps
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To provide admin object level permission support for third party app or existing Django app you must first unregister
+the exsiting ModelAdmin and re-register one that is based on ``GuardedModelAdmin``. Using ``django.contrib.auth`` the 
+user admin as an example we would first create a project level app called ``flatpages_ext`` and then create an ``admin.py``
+file like so: 
+
+.. code-block:: python
+
+	from django.contrib.flatpages.admin import FlatPageAdmin
+	from guardian.admin import GuardedModelAdmin
+	
+	class FlatPageExtAdmin(GuardedModelAdmin, FlatPageAdmin):
+	    """ Our project tailored FlatPageAdmin """
+	    pass
+	
+	admin.site.unregister(FlatPage)
+	admin.site.register(FlatPage, FlatPageExtAdmin)
+
+Monkeypatching Django Approach
+------------------------------
+
+This has the great benefit that existing Django models, third party apps, your models and future models - the entire 
+Django site automatically gets object level permission support in the Admin. Monkeypatching might have negative perception
+surrounding it however when done right it is a valuable programming tool - Python is a dynamic beast so embrace it:
+
+.. code-block:: python
+
+	import logging
+	logger = logging.getLogger(__name__)
+	# be nice and tell you are patching
+	logger.info("Patching 'admin.ModelAdmin = GuardedModelAdmin': replace 'admin.ModelAdmin' with 'GuardedModelAdmin' "
+				"which provides an ability to edit object level permissions.")
+	# confirm signature of code we are patching and warn if it has changed
+	if not '3c43401f585ae4a368c901e96f233981' == \
+			hashlib.md5(inspect.getsource(admin.ModelAdmin)).hexdigest():
+		logger.warn("md5 signature of 'admin.ModelAdmin' does not match Django 1.5. There is a slight change patch "
+					"might be broken so please compare and update this monkeypatch.")
+	admin.ModelAdmin = GuardedModelAdmin # apply the patch
+	
+There is no standard where to place this code, but you could create a project app ``settings`` or ``monkeypatches``, 
+place the above code in file named ``patch_contrib_admin.py``, ensure it is auto imported in the apps ``__init__.py``.
+and lastly include the app in the Django ``INSTALLED_APPS`` setting. 
