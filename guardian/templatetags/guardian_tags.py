@@ -111,6 +111,11 @@ def get_obj_perms(parser, token):
        Please remember that superusers would always get full list of permissions
        for a given object.
 
+    .. versionadded:: 1.2
+
+    As of v1.2, passing ``None`` as ``obj`` for this template tag won't rise
+    obfuscated exception and would return empty permissions set instead.
+
     """
     bits = token.split_contents()
     format = '{% get_obj_perms user/group for obj as "context_var" %}'
