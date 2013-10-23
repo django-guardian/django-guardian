@@ -75,6 +75,8 @@ class ObjectPermissionsNode(template.Node):
             raise NotUserNorGroup("User or Group instance required (got %s)"
                 % for_whom.__class__)
         obj = self.obj.resolve(context)
+        if not obj:
+            return ''
 
         check = ObjectPermissionChecker(for_whom)
         perms = check.get_perms(obj)
