@@ -4,6 +4,7 @@ from itertools import chain
 
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
+from django.core.cache import cache
 
 from guardian.utils import get_identity
 from guardian.utils import get_user_obj_perms_model
@@ -35,7 +36,6 @@ class ObjectPermissionChecker(object):
           ``Group`` instance
         """
         self.user, self.group = get_identity(user_or_group)
-        self._obj_perms_cache = {}
 
     def has_perm(self, perm, obj):
         """
@@ -63,7 +63,7 @@ class ObjectPermissionChecker(object):
         User = get_user_model()
         ctype = ContentType.objects.get_for_model(obj)
         key = self.get_local_cache_key(obj)
-        if not key in self._obj_perms_cache:
+        if cache.get(key):
 
             group_model = get_group_obj_perms_model(obj)
             group_rel_name = group_model.permission.field.related_query_name()
@@ -113,8 +113,8 @@ class ObjectPermissionChecker(object):
                     .filter(content_type=ctype)
                     .filter(**group_filters)
                     .values_list("codename"))))
-            self._obj_perms_cache[key] = perms
-        return self._obj_perms_cache[key]
+            cache.set(key, perms)
+        return cache.get(key)
 
     def get_local_cache_key(self, obj):
         """
