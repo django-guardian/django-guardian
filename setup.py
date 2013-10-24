@@ -44,6 +44,8 @@ setup(
                    'Operating System :: OS Independent',
                    'Programming Language :: Python',
                    'Topic :: Security',
+                   'Programming Language :: Python :: 2',
+                   'Programming Language :: Python :: 3',
     ],
     test_suite='tests.main',
     cmdclass={'flakes': RunFlakesCommand},
