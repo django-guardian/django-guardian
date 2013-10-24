@@ -2,6 +2,8 @@ from __future__ import unicode_literals
 
 from itertools import chain
 
+import pickle
+
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
@@ -63,8 +65,7 @@ class ObjectPermissionChecker(object):
         User = get_user_model()
         ctype = ContentType.objects.get_for_model(obj)
         key = self.get_local_cache_key(obj)
-        if cache.get(key):
-
+        if cache.get(key) is None:
             group_model = get_group_obj_perms_model(obj)
             group_rel_name = group_model.permission.field.related_query_name()
             if self.user:
@@ -114,6 +115,7 @@ class ObjectPermissionChecker(object):
                     .filter(**group_filters)
                     .values_list("codename"))))
             cache.set(key, perms)
+            return perms
         return cache.get(key)
 
     def get_local_cache_key(self, obj):
@@ -121,5 +123,5 @@ class ObjectPermissionChecker(object):
         Returns cache key for ``_obj_perms_cache`` dict.
         """
         ctype = ContentType.objects.get_for_model(obj)
-        return "guargian_ctype%d_obj%d" % (ctype.id, obj.pk)
+        return "guardian_ctype%d_obj%d" % (ctype.id, obj.pk)
 
