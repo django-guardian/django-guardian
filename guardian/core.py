@@ -121,5 +121,5 @@ class ObjectPermissionChecker(object):
         Returns cache key for ``_obj_perms_cache`` dict.
         """
         ctype = ContentType.objects.get_for_model(obj)
-        return (ctype.id, obj.pk)
+        return "guargian_ctype%d_obj%d" % (ctype.id, obj.pk)
 
