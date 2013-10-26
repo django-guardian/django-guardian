@@ -12,7 +12,7 @@ Features
 - Object permissions for Django_
 - AnonymousUser support
 - High level API
-- Heavely tested
+- Heavily tested
 - Django's admin integration
 - Decorators
 
