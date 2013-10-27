@@ -6,6 +6,12 @@ DEBUG = False
 
 ANONYMOUS_USER_ID = -1
 
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
+
 INSTALLED_APPS = (
     'django.contrib.auth',
     'django.contrib.contenttypes',
