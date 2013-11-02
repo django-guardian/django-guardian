@@ -197,6 +197,33 @@ class GetUsersWithPermsTest(TestCase):
             set([user.username for user in (self.user1, self.user2)]),
         )
 
+    def test_only_with_perms(self):
+        assign_perm("change_contenttype", self.user1, self.obj1)
+        assign_perm("delete_contenttype", self.user2, self.obj1)
+        assign_perm("delete_contenttype", self.user3, self.obj2)
+
+        result = get_users_with_perms(self.obj1, only_with_perms=('change_contenttype',))
+        result_vals = result.values_list('username', flat=True)
+
+        self.assertEqual(
+            set(result_vals),
+            set((self.user1.username,)),
+        )
+
+    def test_only_with_perms_attached(self):
+        assign_perm("change_contenttype", self.user1, self.obj1)
+        assign_perm("change_contenttype", self.user2, self.obj1)
+        assign_perm("delete_contenttype", self.user2, self.obj1)
+        assign_perm("delete_contenttype", self.user3, self.obj2)
+
+        result = get_users_with_perms(self.obj1, only_with_perms=('delete_contenttype',),
+            attach_perms=True)
+
+        expected = { self.user2 : ('change_contenttype', 'delete_contenttype') }
+        self.assertEqual(result.keys(), expected.keys())
+        for key, perms in result.items():
+            self.assertEqual(set(perms), set(expected[key]))
+
     def test_users_groups_perms(self):
         self.user1.groups.add(self.group1)
         self.user2.groups.add(self.group2)
