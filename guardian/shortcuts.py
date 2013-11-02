@@ -183,7 +183,7 @@ def get_perms_for_model(cls):
 
 
 def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
-                         with_group_users=True):
+                         with_group_users=True, only_with_perms=None):
     """
     Returns queryset of all ``User`` objects with *any* object permissions for
     the given ``obj``.
@@ -201,6 +201,10 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
       **not** contain those users who have only group permissions for given
       ``obj``.
 
+    :param only_with_perms: Default: ``None``. If set to an iterable of
+      permission strings then only users with those permissions would be
+      returned.
+
     Example::
 
         >>> from django.contrib.flatpages.models import FlatPage
@@ -209,13 +213,17 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
         >>>
         >>> page = FlatPage.objects.create(title='Some page', path='/some/page/')
         >>> joe = User.objects.create_user('joe', 'joe@example.com', 'joesecret')
+        >>> dan = User.objects.create_user('dan', 'dan@example.com', 'dansecret')
         >>> assign_perm('change_flatpage', joe, page)
+        >>> assign_perm('delete_flatpage', dan, page)
         >>>
         >>> get_users_with_perms(page)
-        [<User: joe>]
+        [<User: joe>, <User: dan>]
         >>>
         >>> get_users_with_perms(page, attach_perms=True)
-        {<User: joe>: [u'change_flatpage']}
+        {<User: joe>: [u'change_flatpage'], <User: dan>: [u'delete_flatpage']}
+        >>> get_users_with_perms(page, only_with_perms=['change_flatpage'])
+        [<User: joe>]
 
     """
     ctype = ContentType.objects.get_for_model(obj)
@@ -232,6 +240,14 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
         else:
             user_filters = {'%s__content_object' % related_name: obj}
         qset = Q(**user_filters)
+        if only_with_perms is not None:
+            permission_qset = Q()
+            for permission in only_with_perms:
+                permission_qset |= Q(**{
+                    '%s__permission' % related_name: Permission.objects.get(
+                        content_type=ctype, codename=permission)
+                    })
+            qset &= permission_qset
         if with_group_users:
             group_model = get_group_obj_perms_model(obj)
             group_rel_name = group_model.group.field.related_query_name()
@@ -244,6 +260,11 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
                 group_filters = {
                     'groups__%s__content_object' % group_rel_name: obj,
                 }
+            if only_with_perms is not None:
+                for permission in only_with_perms:
+                    group_filters.update({
+                            'groups__%s__permission' % group_rel_name: permission,
+                            })
             qset = qset | Q(**group_filters)
         if with_superusers:
             qset = qset | Q(is_superuser=True)
@@ -253,6 +274,7 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
         users = {}
         for user in get_users_with_perms(obj,
                                          with_group_users=with_group_users,
+                                         only_with_perms=only_with_perms,
                                          with_superusers=with_superusers):
             # TODO: Support the case of set with_group_users but not with_superusers.
             if with_group_users or with_superusers:
