@@ -49,6 +49,10 @@ class UserObjectPermissionManager(BaseObjectPermissionManager):
     def remove_perm(self, perm, user, obj):
         """
         Removes permission ``perm`` for an instance ``obj`` and given ``user``.
+
+        Please note that we do NOT fetch object permission from database - we
+        use ``Queryset.delete`` method for removing it. Main implication of this
+        is that ``post_delete`` signals would NOT be fired.
         """
         if getattr(obj, 'pk', None) is None:
             raise ObjectNotPersisted("Object %s needs to be persisted first"
