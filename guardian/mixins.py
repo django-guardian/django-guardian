@@ -115,6 +115,7 @@ class PermissionRequiredMixin(object):
     redirect_field_name = REDIRECT_FIELD_NAME
     return_403 = False
     raise_exception = False
+    accept_global_perms = False
 
     def get_required_permissions(self, request=None):
         """
@@ -152,6 +153,7 @@ class PermissionRequiredMixin(object):
             login_url=self.login_url,
             redirect_field_name=self.redirect_field_name,
             return_403=self.return_403,
+            accept_global_perms=self.accept_global_perms
         )
         if forbidden:
             self.on_permission_check_fail(request, forbidden, obj=obj)
