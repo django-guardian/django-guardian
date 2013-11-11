@@ -108,10 +108,12 @@ class PermissionRequiredMixin(object):
 
         `permission_required` - the permission to check of form "<app_label>.<permission codename>"
                                 i.e. 'polls.can_vote' for a permission on a model in the polls application.
+
     ``PermissionRequiredMixin.accept_global_perms``
 
-        *Default*: ``False``, if set to ``True``, then *object level
-        permission* would be required
+        *Default*: ``False``,  If accept_global_perms would be set to True, then
+         mixing would first check for global perms, if none found, then it will
+         proceed to check object level permissions.
 
     """
     ### default class view settings
