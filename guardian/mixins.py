@@ -108,6 +108,11 @@ class PermissionRequiredMixin(object):
 
         `permission_required` - the permission to check of form "<app_label>.<permission codename>"
                                 i.e. 'polls.can_vote' for a permission on a model in the polls application.
+    ``PermissionRequiredMixin.accept_global_perms``
+
+        *Default*: ``False``, if set to ``True``, then *object level
+        permission* would be required
+
     """
     ### default class view settings
     login_url = settings.LOGIN_URL
@@ -115,6 +120,7 @@ class PermissionRequiredMixin(object):
     redirect_field_name = REDIRECT_FIELD_NAME
     return_403 = False
     raise_exception = False
+    accept_global_perms = False
 
     def get_required_permissions(self, request=None):
         """
@@ -152,6 +158,7 @@ class PermissionRequiredMixin(object):
             login_url=self.login_url,
             redirect_field_name=self.redirect_field_name,
             return_403=self.return_403,
+            accept_global_perms=self.accept_global_perms
         )
         if forbidden:
             self.on_permission_check_fail(request, forbidden, obj=obj)
@@ -179,4 +186,3 @@ class PermissionRequiredMixin(object):
             return response
         return super(PermissionRequiredMixin, self).dispatch(request, *args,
             **kwargs)
-
