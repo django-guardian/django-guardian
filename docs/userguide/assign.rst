@@ -69,6 +69,7 @@ Continuing our example we now can allow Joe user to view some task:
 
 .. code-block:: python
 
+    >>> from django.contrib.auth.models import User
     >>> boss = User.objects.create(username='Big Boss')
     >>> joe = User.objects.create(username='joe')
     >>> task = Task.objects.create(summary='Some job', content='', reported_by=boss)
@@ -93,6 +94,7 @@ difference is we have to pass ``Group`` instance rather than ``User``.
 
 .. code-block:: python
 
+    >>> from django.contrib.auth.models import Group
     >>> group = Group.objects.create(name='employees')
     >>> assign_perm('change_task', group, task)
     >>> joe.has_perm('change_task', task)
