@@ -1,4 +1,2 @@
-Django==1.5.1
-distribute==0.6.34
+Django==1.6
 mock==1.0.1
-wsgiref==0.1.2
