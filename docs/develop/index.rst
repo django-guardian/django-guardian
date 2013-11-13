@@ -4,7 +4,7 @@ Development
 ===========
 
 .. toctree::
-    
+
     example_project
     testing
     supported-versions
