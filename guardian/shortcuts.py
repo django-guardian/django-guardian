@@ -7,7 +7,7 @@ from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.shortcuts import _get_queryset
 from itertools import groupby
 
@@ -388,8 +388,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
         fields = ['object_pk', 'permission__codename']
     else:
         fields = ['content_object__pk', 'permission__codename']
-    user_obj_perms = user_obj_perms_queryset.values_list(*fields)
-    data = list(user_obj_perms)
+
     if use_groups:
         group_model = get_group_obj_perms_model(queryset.model)
         group_filters = {
@@ -402,17 +401,28 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
             fields = ['object_pk', 'permission__codename']
         else:
             fields = ['content_object__pk', 'permission__codename']
-        groups_obj_perms = groups_obj_perms_queryset.values_list(*fields)
-        data += list(groups_obj_perms)
-    keyfunc = lambda t: t[0] # sorting/grouping by pk (first in result tuple)
-    data = sorted(data, key=keyfunc)
-    pk_list = []
-    for pk, group in groupby(data, keyfunc):
-        obj_codenames = set((e[1] for e in group))
-        if any_perm or codenames.issubset(obj_codenames):
-            pk_list.append(pk)
+        if not any_perm:
+            user_obj_perms = user_obj_perms_queryset.values_list(*fields)
+            groups_obj_perms = groups_obj_perms_queryset.values_list(*fields)
+            data = list(user_obj_perms) + list(groups_obj_perms)
+            keyfunc = lambda t: t[0] # sorting/grouping by pk (first in result tuple)
+            data = sorted(data, key=keyfunc)
+            pk_list = []
+            for pk, group in groupby(data, keyfunc):
+                obj_codenames = set((e[1] for e in group))
+                if codenames.issubset(obj_codenames):
+                    pk_list.append(pk)
+            objects = queryset.filter(pk__in=pk_list)
+            return objects
 
-    objects = queryset.filter(pk__in=pk_list)
+    if not any_perm:
+        counts = user_obj_perms_queryset.values(fields[0]).annotate(object_pk_count=Count(fields[0]))
+        user_obj_perms_queryset = counts.filter(object_pk_count__gte=len(codenames))
+
+    objects = queryset.filter(pk__in=user_obj_perms_queryset.values_list(fields[0], flat=True))
+    if use_groups:
+        objects |= queryset.filter(pk__in=groups_obj_perms_queryset.values_list(fields[0], flat=True))
+
     return objects
 
 def get_objects_for_group(group, perms, klass=None, any_perm=False):
