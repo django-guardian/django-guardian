@@ -22,6 +22,7 @@ security of systems that use ``django-guardian`` as permission management
 library), please **DO NOT** create a public issue but contact me directly
 (lukaszbalcerzak@gmail.com).
 
+
 Running tests
 -------------
 
@@ -32,6 +33,7 @@ Tests are run by Django's buildin test runner. To call it simply run::
 or inside a project with ``guardian`` set at ``INSTALLED_APPS``::
 
     $ python manage.py test guardian
+
 
 Coverage support
 ----------------
@@ -74,6 +76,7 @@ Result should be somehow similar to following::
     guardian/utils                           13     13   100%   
     -------------------------------------------------------------------
     TOTAL                                   231    231   100% 
+
 
 Tox
 ---
