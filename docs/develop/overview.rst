@@ -3,12 +3,30 @@
 Overview
 ========
 
+Here we describe the development process overview. It's in F.A.Q. format to
+make it simple.
+
+
+Why devel is default branch?
+----------------------------
+
+Since version 1.2 we try to make ``master`` in a production-ready state. It
+does NOT mean it is production ready, but it SHOULD be. In example, tests at
+``master`` should always pass. Actually, whole tox suite should pass. And it's
+test coverage should be at 100% level.
+
+``devel`` branch, on the other hand, can break. It shouldn't but it is
+acceptable. As a user, you should NEVER use non-master branches at production.
+All the changes are pushed from ``devel`` to ``master`` before next release. It
+might happen more frequently.
+
 
 How to file a ticket?
 ---------------------
 
 Just go to https://github.com/lukaszb/django-guardian/issues and create new
 one.
+
 
 How do I get involved?
 ----------------------
@@ -17,7 +35,9 @@ It's simple! If you want to fix a bug, extend documentation or whatever you
 think is appropriate for the project and involves changes, just fork the
 project at github (https://github.com/lukaszb/django-guardian), create a
 separate branch, hack on it, publish changes at your fork and create a pull
-request. Here is a quick how to:
+request.
+
+Here is a quick how to:
 
 1. Fork a project: https://github.com/lukaszb/django-guardian/fork
 2. Checkout project to your local machine::
