@@ -36,16 +36,6 @@ class ObjectPermissionChecker(object):
         """
         self.user, self.group = get_identity(user_or_group)
         self._obj_perms_cache = {}
-        self._ctype = {}
-
-    def ctype(self, obj):
-        cls = obj.__class__
-        if cls not in self._ctype:
-            ctype = ContentType.objects.get_for_model(obj)
-            self._ctype[cls] = ctype
-        else:
-            ctype = self._ctype[cls]
-        return ctype
 
     def has_perm(self, perm, obj):
         """
@@ -73,7 +63,7 @@ class ObjectPermissionChecker(object):
         if self.user and not self.user.is_active:
             return []
         User = get_user_model()
-        ctype = self.ctype(obj)
+        ctype = ContentType.objects.get_for_model(obj)
         key = self.get_local_cache_key(obj)
         if not key in self._obj_perms_cache:
 
@@ -130,6 +120,6 @@ class ObjectPermissionChecker(object):
         """
         Returns cache key for ``_obj_perms_cache`` dict.
         """
-        ctype = self.ctype(obj)
+        ctype = ContentType.objects.get_for_model(obj)
         return (ctype.id, obj.pk)
 
