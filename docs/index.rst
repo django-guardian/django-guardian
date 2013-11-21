@@ -5,6 +5,7 @@
 =====================================================
 
 :Date: |today|
+:Version: |version|
 
 **Documentation**:
 
