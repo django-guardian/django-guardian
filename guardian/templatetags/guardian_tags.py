@@ -78,8 +78,9 @@ class ObjectPermissionsNode(template.Node):
         if not obj:
             return ''
 
-        check = ObjectPermissionChecker(for_whom)
-        perms = check.get_perms(obj)
+        if not hasattr(for_whom, '_checker'):
+            for_whom._checker = ObjectPermissionChecker(for_whom)
+        perms = for_whom._checker.get_perms(obj)
 
         context[self.context_var] = perms
         return ''
