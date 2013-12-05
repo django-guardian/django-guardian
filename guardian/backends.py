@@ -60,6 +60,7 @@ class ObjectPermissionBackend(object):
                 raise WrongAppError("Passed perm has app label of '%s' and "
                     "given obj has '%s'" % (app_label, obj._meta.app_label))
 
-        check = ObjectPermissionChecker(user_obj)
-        return check.has_perm(perm, obj)
+        if not hasattr(user_obj, '_checker'):
+            user_obj._checker = ObjectPermissionChecker(user_obj)
+        return user_obj._checker.has_perm(perm, obj)
 
