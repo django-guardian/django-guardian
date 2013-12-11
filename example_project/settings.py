@@ -45,6 +45,11 @@ if django.VERSION < (1, 3):
 else:
     INSTALLED_APPS += ('django.contrib.staticfiles',)
 
+if 'GUARDIAN_NO_TESTS_APP' in os.environ:
+    _apps = list(INSTALLED_APPS)
+    _apps.remove('guardian.tests.testapp')
+    INSTALLED_APPS = tuple(_apps)
+
 if TEST_SOUTH:
     INSTALLED_APPS += ('south',)
 if 'GRAPPELLI' in os.environ:
