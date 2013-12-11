@@ -202,8 +202,8 @@ class GuardedModelAdmin(admin.ModelAdmin):
         users_perms = SortedDict(
             get_users_with_perms(obj, attach_perms=True,
                 with_group_users=False))
-        
-        users_perms.keyOrder.sort(key=lambda user: 
+
+        users_perms.keyOrder.sort(key=lambda user:
                                   getattr(user, get_user_model().USERNAME_FIELD))
         groups_perms = SortedDict(
             get_groups_with_perms(obj, attach_perms=True))
@@ -374,7 +374,7 @@ class GuardedModelAdmin(admin.ModelAdmin):
 
 
 class UserManage(forms.Form):
-    user = forms.CharField(label=_("User identification"), 
+    user = forms.CharField(label=_("User identification"),
                         max_length=200,
                         error_messages = {'does_not_exist': _("This user does not exist")},
                         help_text=_('Enter a value compatible with User.USERNAME_FIELD')
