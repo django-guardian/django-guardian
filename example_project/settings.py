@@ -37,6 +37,7 @@ INSTALLED_APPS = (
     'guardian',
     'guardian.tests.testapp',
     'posts',
+    'core',
     'integration_tests',
 )
 if django.VERSION < (1, 3):
@@ -101,15 +102,16 @@ AUTHENTICATION_BACKENDS = (
 
 ANONYMOUS_USER_ID = -1
 
+PASSWORD_HASHERS = (
+    'django.contrib.auth.hashers.MD5PasswordHasher',
+    'django.contrib.auth.hashers.SHA1PasswordHasher',
+)
+
 # Neede as some models (located at guardian/tests/models.py)
 # are not migrated for tests
 SOUTH_TESTS_MIGRATE = TEST_SOUTH
 
-# Django >= 1.5 (earlier versoions would ignore this setting; we don't want this
-# however, to be set for earlier versions so we don't relay on it)
-if django.VERSION >= (1, 5):
-    INSTALLED_APPS += ('core',)
-    AUTH_USER_MODEL = 'core.CustomUser'
+AUTH_USER_MODEL = 'core.CustomUser'
 
 try:
     from conf.localsettings import *

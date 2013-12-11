@@ -5,6 +5,15 @@ django-guardian
 .. image:: https://secure.travis-ci.org/lukaszb/django-guardian.png?branch=master
   :target: http://travis-ci.org/lukaszb/django-guardian
 
+.. image:: https://coveralls.io/repos/lukaszb/django-guardian/badge.png?branch=master
+   :target: https://coveralls.io/r/lukaszb/django-guardian/
+
+.. image:: https://pypip.in/v/django-guardian/badge.png
+  :target: https://crate.io/packages/django-guardian/
+
+.. image:: https://pypip.in/d/django-guardian/badge.png
+  :target: https://crate.io/packages/django-guardian/
+
 
 ``django-guardian`` is implementation of per object permissions [1]_ as 
 authorization backend which is supported since Django_ 1.2. It won't
@@ -13,9 +22,7 @@ work with older Django_ releases.
 Documentation
 -------------
 
-Online documentation is available at
-
-http://packages.python.org/django-guardian/ or http://django-guardian.rtfd.org/
+Online documentation is available at http://django-guardian.rtfd.org/.
 
 Installation
 ------------
@@ -42,6 +49,11 @@ We need to hook ``django-guardian`` into our project.
           'django.contrib.auth.backends.ModelBackend', # default
           'guardian.backends.ObjectPermissionBackend',
       )
+
+3. Configure anonymous user ID ::
+
+     ANONYMOUS_USER_ID = -1
+
          
 Usage
 -----
@@ -90,5 +102,5 @@ For example::
 
 .. [1] Great paper about this feature is available at `djangoadvent articles <https://github.com/djangoadvent/djangoadvent-articles/blob/master/1.2/06_object-permissions.rst>`_.
 
-.. _Django: http://www.djangoproject.org/
+.. _Django: http://www.djangoproject.com/
 

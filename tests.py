@@ -21,6 +21,10 @@ settings.INSTALLED_APPS = (
     'guardian',
     'guardian.tests.testapp',
 )
+settings.PASSWORD_HASHERS = (
+    'django.contrib.auth.hashers.MD5PasswordHasher',
+    'django.contrib.auth.hashers.SHA1PasswordHasher',
+)
 
 def run_tests(settings):
     from django.test.utils import get_runner

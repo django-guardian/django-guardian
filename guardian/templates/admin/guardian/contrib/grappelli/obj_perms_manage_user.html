@@ -6,49 +6,47 @@
 {% endblock %}
 
 {% block breadcrumbs %}{% if not is_popup %}
-<div class="breadcrumbs">
-     <a href="../../../../../../">{% trans "Home" %}</a> &rsaquo;
-     <a href="../../../../../">{{ app_label|capfirst|escape }}</a> &rsaquo; 
-     {% if has_change_permission %}<a href="../../../../">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %} &rsaquo; 
-     {% if has_change_permission %}<a href="../../../">{{ original|truncatewords:"18" }}</a>{% else %}{{ original|truncatewords:"18" }}{% endif %} &rsaquo;
-     {% if has_change_permission %}<a href="../../">{% trans "Object permissions" %}</a>{% else %}{% trans "Object permissions" %}{% endif %} &rsaquo;
-     {% trans "Manage user" %}: {{ user_obj|truncatewords:"18" }}
-</div>
+<ul>
+    <li><a href="../../../../../../">{% trans "Home" %}</a></li>
+    <li><a href="../../../../../">{% trans app_label|capfirst|escape %}</a></li>
+    <li>{% if has_change_permission %}<a href="../../../../">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}</li>
+    <li>{% if has_change_permission %}<a href="../../../">{{ original|truncatewords:"18" }}</a>{% else %}{{ original|truncatewords:"18" }}{% endif %}</li>
+    <li>{% if has_change_permission %}<a href="../../">{% trans "Object permissions" %}</a>{% else %}{% trans "Object permissions" %}{% endif %}</li>
+    <li>{% trans "Manage user" %}: {{ user_obj|truncatewords:"18" }}</li>
+</ul>
 {% endif %}{% endblock %}
 
 
 {% block content %}
-<div id="content-main">
 <form action="." method="post">
     {% csrf_token %}
-    <fieldset class="module aligned">
-        <h2>{% trans "Object permissions" %}</h2>
-        <div class="row">
-            <div class="column span-4">
-                <label class="required">{% trans "Object" %}</label>
-            </div>
-            <div class="column span-flexible">
-                <p class="readonly">{{ object }}</p>
+    <div>
+    <fieldset class="grp-module">
+        <h2 class="grp-collapse-handler">{% trans "Object permissions" %}</h2>
+        <div class="grp-row grp-cells-1 object">
+            <div class="l-2c-fluid l-d-4">
+                <div class="c-1"><label for="object" class="required">{% trans "Object" %}</label></div>
+                <div class="c-2"><div id="object" class="grp-readonly">{{ object }}</div></div>
             </div>
         </div>
-        <div class="row">
-            <div class="column span-4">
-                <label class="required">{% trans "User" %}</label>
-            </div>
-            <div class="column span-flexible">
-                <p class="readonly">{{ user_obj }}</p>
+        <div class="grp-row grp-cells-1 user">
+            <div class="l-2c-fluid l-d-4">
+                <div class="c-1"><label for="user" class="required">{% trans "User" %}</label></div>
+                <div class="c-2"><div id="user" class="grp-readonly">{{ user_obj }}</div></div>
             </div>
         </div>
         {% for field in form %}
             {% include "admin/guardian/contrib/grappelli/field.html" %}
         {% endfor %}
+        <div class="grp-row grp-cells-1">
+            <div class="l-2c-fluid l-d-4">
+                <div class="c-1">&nbsp;</div>
+                <div class="c-2">
+                    <input id="submit" type="submit" value="{% trans "Save" %}"/>
+                </div>
+            </div>
+        </div>
     </fieldset>
-    <div class="module footer">
-        <ul class="submit-row">
-            <li class="submit-button-container"><input id="submit" type="submit" value="{% trans "Save" %}"/></li>
-        </ul>
     </div>
 </form>
-</div>
 {% endblock %}
-

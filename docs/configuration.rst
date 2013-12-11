@@ -29,6 +29,10 @@ need to add following to our settings module::
    ``syncdb`` management command would create ``User`` instance for
    anonymous user support (with name of ``AnonymousUser``).
 
+If ``ANONYMOUS_USER_ID`` is set to ``None``, anonymous user object permissions
+are disabled. You may need to choose this option if creating a ``User`` object
+to represent anonymous users would be problematic in your environment.
+
 We can change id to whatever we like. Project should be now ready to use object
 permissions.
  
@@ -36,7 +40,7 @@ permissions.
 Optional settings
 =================
 
-In addition to requried ``ANONYMOUS_USER_ID`` setting, guardian has following,
+In addition to required ``ANONYMOUS_USER_ID`` setting, guardian has following,
 optional configuration variables:
 
 

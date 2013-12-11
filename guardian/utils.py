@@ -50,6 +50,7 @@ def get_identity(identity):
 
     **Examples**::
 
+       >>> from django.contrib.auth.models import User
        >>> user = User.objects.create(username='joe')
        >>> get_identity(user)
        (<User: joe>, None)

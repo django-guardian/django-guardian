@@ -1,2 +1,2 @@
-Django==1.2.4
-wsgiref==0.1.2
+Django==1.6
+mock==1.0.1

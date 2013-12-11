@@ -51,7 +51,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'django-guardian'
-copyright = u'2010-2012, Lukasz Balcerzak'
+copyright = u'2010-2013, Lukasz Balcerzak'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -106,7 +106,8 @@ pygments_style = 'sphinx'
 # Sphinx are currently 'default' and 'sphinxdoc'.
 #html_theme = 'default'
 # Theme URL: https://github.com/coordt/ADCtheme/
-html_theme = 'ADCtheme'
+RTD_NEW_THEME = True
+html_theme = 'rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -135,7 +136,7 @@ html_theme_path = ['theme']
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = []
+html_static_path = ['theme/rtd_theme/static']
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.

@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
-import mock
 from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase
+from guardian.compat import mock
 from guardian.conf import settings as guardian_settings
 
 

@@ -1,3 +1,18 @@
+Release 1.1 (May 26, 2013)
+==========================
+
+* Support for Django 1.5 (including Python 3 combination)
+* Support for custom user models (introduced by Django 1.5)
+* Ability to create permissions using Foreign Keys
+* Added ``user_can_access_owned_by_group_objects_only`` option to
+  ``GuardedModelAdmin.``
+* Minor documentation fixups
+* Spanish translations
+* Better support for grappelli_
+* Updated examples project
+* Speed up ``get_perms`` shortcut function
+
+
 Release 1.0.4 (Jul 15, 2012)
 ============================
 
@@ -15,6 +30,7 @@ Release 1.0.4 (Jul 15, 2012)
 * Added view mixins related with authorization and authentication (#73)
 * Added tox_ support
 * Added Travis_ support
+
 
 Release 1.0.3 (Jul 25, 2011)
 ============================

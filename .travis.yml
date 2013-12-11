@@ -2,16 +2,36 @@ language: python
 python:
  - 2.6
  - 2.7
+ - 3.3
 
 env:
  - DJANGO_VERSION=1.2.7
  - DJANGO_VERSION=1.3.7
- - DJANGO_VERSION=1.4.5
- - DJANGO_VERSION=1.5
+ - DJANGO_VERSION=1.4.10
+ - DJANGO_VERSION=1.5.5
+ - DJANGO_VERSION=1.6
 
 install:
-  - pip install -q mock==0.8 django-grappelli==2.3.8 Django==$DJANGO_VERSION
+  - pip install -q mock==0.8 Django==$DJANGO_VERSION coverage coveralls
   - pip install . --use-mirrors
 
-script: python setup.py test
+script:
+  - coverage run --source=guardian setup.py test
+
+after_success:
+  - coverage report --omit "guardian/compat.py,guardian/testsettings.py" -m guardian/*.py
+  - coveralls
+
+notifications:
+  irc: "irc.freenode.net#django-guardian"
+
+
+matrix:
+    exclude:
+        - python: 3.3
+          env: DJANGO_VERSION=1.2.7
+        - python: 3.3
+          env: DJANGO_VERSION=1.3.7
+        - python: 3.3
+          env: DJANGO_VERSION=1.4.10
 

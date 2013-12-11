@@ -45,6 +45,9 @@ class ObjectPermissionBackend(object):
         # This is how we support anonymous users - simply try to retrieve User
         # instance and perform checks for that predefined user
         if not user_obj.is_authenticated():
+            # If anonymous user permission is disabled then they are always unauthorized
+            if settings.ANONYMOUS_USER_ID is None:
+                return False
             user_obj = get_user_model().objects.get(pk=settings.ANONYMOUS_USER_ID)
 
         # Do not check any further if user is not active

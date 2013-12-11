@@ -4,7 +4,6 @@ from itertools import chain
 
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Q
 
 from guardian.utils import get_identity
 from guardian.utils import get_user_obj_perms_model
@@ -101,11 +100,14 @@ class ObjectPermissionChecker(object):
                     })
                 else:
                     user_filters['%s__content_object' % related_name] = obj
-
-                perms = list(set(chain(*Permission.objects
-                    .filter(content_type=ctype)
-                    .filter(Q(**user_filters) | Q(**group_filters))
-                    .values_list("codename"))))
+                perms_qs = Permission.objects.filter(content_type=ctype)
+                # Query user and group permissions separately and then combine
+                # the results to avoid a slow query
+                user_perms_qs = perms_qs.filter(**user_filters)
+                user_perms = user_perms_qs.values_list("codename", flat=True)
+                group_perms_qs = perms_qs.filter(**group_filters)
+                group_perms = group_perms_qs.values_list("codename", flat=True)
+                perms = list(set(chain(user_perms, group_perms)))
             else:
                 perms = list(set(chain(*Permission.objects
                     .filter(content_type=ctype)
