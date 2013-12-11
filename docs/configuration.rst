@@ -40,7 +40,7 @@ permissions.
 Optional settings
 =================
 
-In addition to requried ``ANONYMOUS_USER_ID`` setting, guardian has following,
+In addition to required ``ANONYMOUS_USER_ID`` setting, guardian has following,
 optional configuration variables:
 
 
