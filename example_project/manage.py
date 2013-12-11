@@ -1,7 +1,13 @@
 #!/usr/bin/env python
-#!/usr/bin/env python3
+import django
 import os
 import sys
+
+if django.VERSION < (1, 5):
+    sys.stderr.write("ERROR: guardian's example project must be run with "
+                     "Django 1.5 or later!\n")
+    sys.exit(1)
+
 
 if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings")

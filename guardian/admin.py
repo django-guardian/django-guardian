@@ -386,9 +386,11 @@ class UserManage(forms.Form):
         """
         identification = self.cleaned_data['user']
         user_model = get_user_model()
-        
         try:
             username_field = user_model.USERNAME_FIELD
+        except AttributeError:
+            username_field = 'username'
+        try:
             user = user_model.objects.get(**{username_field: identification})
             return user
         except user_model.DoesNotExist:

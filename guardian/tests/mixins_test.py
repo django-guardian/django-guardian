@@ -8,9 +8,9 @@ from django.http import HttpResponse
 from django.test import TestCase
 from django.test.client import RequestFactory
 from django.views.generic import View
-from mock import Mock
 
 from guardian.compat import get_user_model
+from guardian.compat import mock
 from guardian.mixins import LoginRequiredMixin
 from guardian.mixins import PermissionRequiredMixin
 
@@ -114,7 +114,7 @@ class TestViewMixins(TestCase):
 
         global TestView
         class SecretView(TestView):
-            on_permission_check_fail = Mock()
+            on_permission_check_fail = mock.Mock()
 
         request = self.factory.get('/')
         request.user = self.user
