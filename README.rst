@@ -22,9 +22,7 @@ work with older Django_ releases.
 Documentation
 -------------
 
-Online documentation is available at
-
-http://packages.python.org/django-guardian/ or http://django-guardian.rtfd.org/
+Online documentation is available at http://django-guardian.rtfd.org/.
 
 Installation
 ------------
@@ -104,5 +102,5 @@ For example::
 
 .. [1] Great paper about this feature is available at `djangoadvent articles <https://github.com/djangoadvent/djangoadvent-articles/blob/master/1.2/06_object-permissions.rst>`_.
 
-.. _Django: http://www.djangoproject.org/
+.. _Django: http://www.djangoproject.com/
 

@@ -39,7 +39,7 @@ def assign_perm(perm, user_or_group, obj=None):
     We can assign permission for ``Model`` instance for specific user:
 
     >>> from django.contrib.sites.models import Site
-    >>> from guardian.models import User, Group
+    >>> from guardian.models import User
     >>> from guardian.shortcuts import assign_perm
     >>> site = Site.objects.get_current()
     >>> user = User.objects.create(username='joe')
@@ -250,7 +250,7 @@ def get_groups_with_perms(obj, attach_perms=False):
         >>>
         >>> page = FlatPage.objects.create(title='Some page', path='/some/page/')
         >>> admins = Group.objects.create(name='Admins')
-        >>> assign_perm('change_flatpage', group, page)
+        >>> assign_perm('change_flatpage', admins, page)
         >>>
         >>> get_groups_with_perms(page)
         [<Group: admins>]
@@ -307,6 +307,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
 
     Example::
 
+        >>> from django.contrib.auth.models import User
         >>> from guardian.shortcuts import get_objects_for_user
         >>> joe = User.objects.get(username='joe')
         >>> get_objects_for_user(joe, 'auth.change_group')
@@ -394,7 +395,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
         group_filters = {
             'permission__content_type': ctype,
             'permission__codename__in': codenames,
-            'group__%s' % get_user_model()._meta.module_name: user,
+            'group__%s' % get_user_model().groups.field.related_query_name(): user,
         }
         groups_obj_perms_queryset = group_model.objects.filter(**group_filters)
         if group_model.objects.is_generic():

@@ -11,5 +11,6 @@ recursive-include guardian/fixtures *.json
 recursive-include guardian/templates *.html
 recursive-include guardian/tests/templates *.html
 recursive-include docs *
-prune example_project
-prune docs/build
+recursive-exclude example_project *
+recursive-exclude docs/build *
+recursive-exclude benchmarks *

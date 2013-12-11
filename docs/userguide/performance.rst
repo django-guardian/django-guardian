@@ -1,6 +1,6 @@
 .. _performance:
 
-Performance tunning
+Performance tuning
 ===================
 
 It is important to remember that by default ``django-guardian`` uses generic
@@ -8,7 +8,7 @@ foreign keys to retain relation with any Django model. For most cases it's
 probably good enough, however if we have a lot of queries being spanned and
 our database seems to be choking it might be a good choice to use *direct*
 foreign keys. Let's start with quick overview of how generic solution work and
-then we will move on to the tunning part.
+then we will move on to the tuning part.
 
 
 Default, generic solution

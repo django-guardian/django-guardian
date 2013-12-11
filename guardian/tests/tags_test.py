@@ -52,6 +52,15 @@ class GetObjPermsTagTest(TestCase):
             except TemplateSyntaxError:
                 pass
 
+    def test_obj_none(self):
+        template = ''.join((
+            '{% load guardian_tags %}',
+            '{% get_obj_perms user for object as "obj_perms" %}{{ perms }}',
+        ))
+        context = {'user': User.get_anonymous(), 'object': None}
+        output = render(template, context)
+        self.assertEqual(output, '')
+
     def test_anonymous_user(self):
         template = ''.join((
             '{% load guardian_tags %}',
