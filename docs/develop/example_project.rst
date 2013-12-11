@@ -21,3 +21,8 @@ Finally we can run dev server::
 Project is really basic and shows almost nothing but eventually it should
 expose some ``django-guardian`` functionality.
 
+
+.. note::
+   Example project must be run with Django 1.5 or later. This is to ensure that
+   custom user model can be used.
+
