@@ -16,6 +16,7 @@ from guardian.compat import basestring
 from guardian.core import ObjectPermissionChecker
 from guardian.exceptions import MixedContentTypeError
 from guardian.exceptions import WrongAppError
+from guardian.utils import get_anonymous_user
 from guardian.utils import get_identity
 from guardian.utils import get_user_obj_perms_model
 from guardian.utils import get_group_obj_perms_model
@@ -282,7 +283,8 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
     Returns queryset of objects for which a given ``user`` has *all*
     permissions present at ``perms``.
 
-    :param user: ``User`` instance for which objects would be returned
+    :param user: ``User`` or ``AnonymousUser`` instance for which objects would
+      be returned.
     :param perms: single permission string, or sequence of permission strings
       which should be checked.
       If ``klass`` parameter is not given, those should be full permission
@@ -372,6 +374,12 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
     # First check if user is superuser and if so, return queryset immediately
     if user.is_superuser:
         return queryset
+
+    # Check if the user is anonymous. The
+    # django.contrib.auth.models.AnonymousUser object doesn't work for queries
+    # and it's nice to be able to pass in request.user blindly.
+    if user.is_anonymous():
+        user = get_anonymous_user()
 
     # Now we should extract list of pk values for which we would filter queryset
     user_model = get_user_obj_perms_model(queryset.model)

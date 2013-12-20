@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.query import QuerySet
 from django.test import TestCase
@@ -407,6 +408,19 @@ class GetObjectsForUser(TestCase):
         objects = get_objects_for_user(self.user,
             ['contenttypes.change_contenttype'], ctypes)
         self.assertEqual(set(ctypes), set(objects))
+
+    def test_anonymous(self):
+        self.user = AnonymousUser()
+        ctypes = ContentType.objects.all()
+        objects = get_objects_for_user(self.user,
+            ['contenttypes.change_contenttype'], ctypes)
+
+        obj1 = ContentType.objects.create(name='ct1', model='foo',
+            app_label='guardian-tests')
+        assign_perm('change_contenttype', self.user, obj1)
+        objects = get_objects_for_user(self.user,
+            ['contenttypes.change_contenttype'], ctypes)
+        self.assertEqual(set([obj1]), set(objects))
 
     def test_mixed_perms(self):
         codenames = [
