@@ -218,7 +218,7 @@ class GroupPermissionTests(TestDataMixin, TestCase):
             GroupObjectPermission.objects.assign_perm, 'change_user', self.group,
             self.group)
 
-        user = User.objects.create(username='test_user_assign_perm_validation')
+        user = User.objects.create(username='testuser')
         ctype = ContentType.objects.get_for_model(user)
         perm = Permission.objects.get(codename='change_group')
 

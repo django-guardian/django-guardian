@@ -25,8 +25,8 @@ class TestDataMixin(object):
             from django.contrib.auth.models import User
         Group.objects.create(pk=1, name='admins')
         jack_group = Group.objects.create(pk=2, name='jackGroup')
-        User.objects.get_or_create(id=settings.ANONYMOUS_USER_ID)
-        jack = User.objects.create(id=1, username='jack', is_active=True,
+        User.objects.get_or_create(pk=settings.ANONYMOUS_USER_ID)
+        jack = User.objects.create(pk=1, username='jack', is_active=True,
             is_superuser=False, is_staff=False)
         jack.groups.add(jack_group)
 

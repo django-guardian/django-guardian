@@ -34,10 +34,11 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
     'guardian',
     'guardian.tests.testapp',
     'posts',
+    'core',
+    'integration_tests',
 )
 if django.VERSION < (1, 3):
     INSTALLED_APPS += ('staticfiles',)
@@ -110,11 +111,7 @@ PASSWORD_HASHERS = (
 # are not migrated for tests
 SOUTH_TESTS_MIGRATE = TEST_SOUTH
 
-# Django >= 1.5 (earlier versoions would ignore this setting; we don't want this
-# however, to be set for earlier versions so we don't relay on it)
-if django.VERSION >= (1, 5):
-    INSTALLED_APPS += ('core',)
-    AUTH_USER_MODEL = 'core.CustomUser'
+AUTH_USER_MODEL = 'core.CustomUser'
 
 try:
     from conf.localsettings import *

@@ -24,9 +24,14 @@ class ObjectPermissionTestCase(TestCase):
         self.user.groups.add(self.group)
         self.ctype = ContentType.objects.create(name='foo', model='bar',
             app_label='fake-for-guardian-tests')
-        self.anonymous_user, created = User.objects.get_or_create(
-            id=settings.ANONYMOUS_USER_ID,
-            username='AnonymousUser')
+        try:
+            self.anonymous_user = User.objects.get(id=settings.ANONYMOUS_USER_ID)
+        except User.DoesNotExist:
+            self.anonymous_user = User(
+                id=settings.ANONYMOUS_USER_ID,
+                username='AnonymousUser',
+            )
+            self.anonymous_user.save()
 
 
 class ObjectPermissionCheckerTest(ObjectPermissionTestCase):

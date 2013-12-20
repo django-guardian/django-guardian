@@ -202,7 +202,9 @@ class GuardedModelAdmin(admin.ModelAdmin):
         users_perms = SortedDict(
             get_users_with_perms(obj, attach_perms=True,
                 with_group_users=False))
-        users_perms.keyOrder.sort(key=lambda user: user.username)
+
+        users_perms.keyOrder.sort(key=lambda user:
+                                  getattr(user, get_user_model().USERNAME_FIELD))
         groups_perms = SortedDict(
             get_groups_with_perms(obj, attach_perms=True))
         groups_perms.keyOrder.sort(key=lambda group: group.name)
@@ -372,22 +374,26 @@ class GuardedModelAdmin(admin.ModelAdmin):
 
 
 class UserManage(forms.Form):
-    user = forms.RegexField(label=_("Username"), max_length=30,
-        regex=r'^[\w.@+-]+$',
-        error_messages = {
-            'invalid': _("This value may contain only letters, numbers and "
-                         "@/./+/-/_ characters."),
-            'does_not_exist': _("This user does not exist")})
+    user = forms.CharField(label=_("User identification"),
+                        max_length=200,
+                        error_messages = {'does_not_exist': _("This user does not exist")},
+                        help_text=_('Enter a value compatible with User.USERNAME_FIELD')
+                     )
 
     def clean_user(self):
         """
-        Returns ``User`` instance based on the given username.
+        Returns ``User`` instance based on the given identification.
         """
-        username = self.cleaned_data['user']
+        identification = self.cleaned_data['user']
+        user_model = get_user_model()
         try:
-            user = get_user_model().objects.get(username=username)
+            username_field = user_model.USERNAME_FIELD
+        except AttributeError:
+            username_field = 'username'
+        try:
+            user = user_model.objects.get(**{username_field: identification})
             return user
-        except get_user_model().DoesNotExist:
+        except user_model.DoesNotExist:
             raise forms.ValidationError(
                 self.fields['user'].error_messages['does_not_exist'])
 

@@ -19,7 +19,10 @@ def permission_required(perm, lookup_variables=None, **kwargs):
 
     Optionally, instances for which check should be made may be passed as an
     second argument or as a tuple parameters same as those passed to
-    ``get_object_or_404`` but must be provided as pairs of strings.
+    ``get_object_or_404`` but must be provided as pairs of strings. This way
+    decorator can fetch i.e. ``User`` instance based on performed request and
+    check permissions on it (without this, one would need to fetch user instance
+    at view's logic and check permission inside a view).
 
     :param login_url: if denied, user would be redirected to location set by
       this parameter. Defaults to ``django.conf.settings.LOGIN_URL``.
@@ -44,12 +47,23 @@ def permission_required(perm, lookup_variables=None, **kwargs):
 
         @permission_required('auth.change_user', (User, 'username', 'username'))
         def my_view(request, username):
+            '''
+            auth.change_user permission would be checked based on given
+            'username'. If view's parameter would be named ``name``, we would
+            rather use following decorator::
+
+                @permission_required('auth.change_user', (User, 'username', 'name'))
+            '''
             user = get_object_or_404(User, username=username)
             return user.get_absolute_url()
 
         @permission_required('auth.change_user',
             (User, 'username', 'username', 'groups__name', 'group_name'))
         def my_view(request, username, group_name):
+            '''
+            Similar to the above example, here however we also make sure that
+            one of user's group is named same as request's ``group_name`` param.
+            '''
             user = get_object_or_404(User, username=username,
                 group__name=group_name)
             return user.get_absolute_url()

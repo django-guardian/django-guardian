@@ -22,6 +22,8 @@ def create_anonymous_user(sender, **kwargs):
             User.objects.create(pk=guardian_settings.ANONYMOUS_USER_ID,
                 username=guardian_settings.ANONYMOUS_DEFAULT_USERNAME_VALUE)
 
-signals.post_syncdb.connect(create_anonymous_user, sender=guardian_app,
-    dispatch_uid="guardian.management.create_anonymous_user")
+# Only create an anonymous user if support is enabled.
+if guardian_settings.ANONYMOUS_USER_ID is not None:
+    signals.post_syncdb.connect(create_anonymous_user, sender=guardian_app,
+        dispatch_uid="guardian.management.create_anonymous_user")
 
