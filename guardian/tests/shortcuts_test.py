@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.query import QuerySet
 from django.test import TestCase
@@ -408,6 +409,19 @@ class GetObjectsForUser(TestCase):
             ['contenttypes.change_contenttype'], ctypes)
         self.assertEqual(set(ctypes), set(objects))
 
+    def test_anonymous(self):
+        self.user = AnonymousUser()
+        ctypes = ContentType.objects.all()
+        objects = get_objects_for_user(self.user,
+            ['contenttypes.change_contenttype'], ctypes)
+
+        obj1 = ContentType.objects.create(name='ct1', model='foo',
+            app_label='guardian-tests')
+        assign_perm('change_contenttype', self.user, obj1)
+        objects = get_objects_for_user(self.user,
+            ['contenttypes.change_contenttype'], ctypes)
+        self.assertEqual(set([obj1]), set(objects))
+
     def test_mixed_perms(self):
         codenames = [
             get_user_permission_full_codename('change'),
@@ -490,6 +504,21 @@ class GetObjectsForUser(TestCase):
 
         objects = get_objects_for_user(self.user, ['auth.change_group',
             'auth.delete_group'])
+        self.assertEqual(len(objects), 1)
+        self.assertTrue(isinstance(objects, QuerySet))
+        self.assertEqual(
+            set(objects.values_list('name', flat=True)),
+            set([groups[1].name]))
+
+    def test_multiple_perms_to_check_no_groups(self):
+        group_names = ['group1', 'group2', 'group3']
+        groups = [Group.objects.create(name=name) for name in group_names]
+        for group in groups:
+            assign_perm('auth.change_group', self.user, group)
+        assign_perm('auth.delete_group', self.user, groups[1])
+
+        objects = get_objects_for_user(self.user, ['auth.change_group',
+            'auth.delete_group'], use_groups=False)
         self.assertEqual(len(objects), 1)
         self.assertTrue(isinstance(objects, QuerySet))
         self.assertEqual(

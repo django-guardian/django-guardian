@@ -60,6 +60,8 @@ class ObjectPermissionChecker(object):
         :param obj: Django model instance for which permission should be checked
 
         """
+        if self.user and not self.user.is_active:
+            return []
         User = get_user_model()
         ctype = ContentType.objects.get_for_model(obj)
         key = self.get_local_cache_key(obj)
@@ -83,9 +85,7 @@ class ObjectPermissionChecker(object):
             else:
                 group_filters['%s__content_object' % group_rel_name] = obj
 
-            if self.user and not self.user.is_active:
-                return []
-            elif self.user and self.user.is_superuser:
+            if self.user and self.user.is_superuser:
                 perms = list(chain(*Permission.objects
                     .filter(content_type=ctype)
                     .values_list("codename")))
