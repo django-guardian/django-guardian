@@ -1,3 +1,10 @@
+Release 1.2 (TBA)
+=================
+
+* Ensured support for Django 1.6
+* Dropped support for Django 1.2 (actually, we are not testing against Django
+  1.2 anymore and we've done that at feature freeze - app should still work)
+
 Release 1.1 (May 26, 2013)
 ==========================
 

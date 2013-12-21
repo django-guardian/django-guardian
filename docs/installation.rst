@@ -3,7 +3,7 @@
 Installation
 ============
 
-This application requires Django_ 1.2 or higher and it is only prerequisite
+This application requires Django_ 1.3 or higher and it is only prerequisite
 before ``django-guardian`` may be used. 
 
 In order to install ``django-guardian`` simply use ``pip``::

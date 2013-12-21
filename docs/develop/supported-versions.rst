@@ -3,7 +3,7 @@
 Supported versions
 ==================
 
-``django-guardian`` supports Python 2.6+/3.3+ and Django 1.2+. Also, we support
+``django-guardian`` supports Python 2.6+/3.3+ and Django 1.3+. Also, we support
 ``django-grappelli`` 2.3.5.
 
 .. note::
@@ -17,6 +17,8 @@ Rules
 
 * We would support Python 2.7 and Python 2.6 (until Django drops support for
   2.6). Since Django 1.5 we also support Python 3.3+.
-* We support Django 1.2+, however next big ``guardian`` release (v2.0) we would
-  support Django 1.6+. This is due to many simplifications in code we could do.
+* We support Django 1.3+, however next big ``guardian`` release (v2.0) we would
+  support Django 1.6+ (or higher, depending on the date guardian v2.0 would be
+  released). This is due to many simplifications in code we could do. There is
+  also a chance that v2.0 would drop support for Python 2.X.
 

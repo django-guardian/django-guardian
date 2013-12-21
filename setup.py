@@ -31,7 +31,7 @@ setup(
     include_package_data = True,
     license = 'BSD',
     install_requires = [
-        'Django>=1.2',
+        'Django>=1.3',
     ],
     tests_require = [
         'mock',
