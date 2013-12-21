@@ -18,6 +18,7 @@ from guardian.shortcuts import get_perms_for_model
 from guardian.tests.conf import TEST_SETTINGS
 from guardian.tests.conf import override_settings
 from guardian.models import Group
+from guardian.tests.conf import skipUnlessTestApp
 from guardian.tests.testapp.models import LogEntryWithGroup as LogEntry
 
 User = get_user_model()
@@ -287,6 +288,7 @@ if 'django.contrib.admin' not in settings.INSTALLED_APPS:
     AdminTests = type('AdminTests', (TestCase,), {}) # pyflakes:ignore
 
 
+@skipUnlessTestApp
 class GuardedModelAdminTests(TestCase):
 
     def _get_gma(self, attrs=None, name=None, model=None):

@@ -5,6 +5,7 @@ from django.contrib.auth.models import Group, AnonymousUser
 from django.db import models
 
 from guardian.compat import get_user_model
+from guardian.tests.conf import skipUnlessTestApp
 from guardian.tests.core_test import ObjectPermissionTestCase
 from guardian.tests.testapp.models import Project
 from guardian.tests.testapp.models import ProjectUserObjectPermission
@@ -51,6 +52,7 @@ class GetIdentityTest(ObjectPermissionTestCase):
         self.assertRaises(NotUserNorGroup, get_identity, User)
 
 
+@skipUnlessTestApp
 class GetUserObjPermsModelTest(TestCase):
 
     def test_for_instance(self):
@@ -73,6 +75,7 @@ class GetUserObjPermsModelTest(TestCase):
             UserObjectPermission)
 
 
+@skipUnlessTestApp
 class GetGroupObjPermsModelTest(TestCase):
 
     def test_for_instance(self):

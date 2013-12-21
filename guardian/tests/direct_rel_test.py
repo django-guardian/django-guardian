@@ -12,11 +12,13 @@ from guardian.shortcuts import get_objects_for_group
 from guardian.shortcuts import get_objects_for_user
 from guardian.shortcuts import get_users_with_perms
 from guardian.shortcuts import remove_perm
+from guardian.tests.conf import skipUnlessTestApp
 
 
 User = get_user_model()
 
 
+@skipUnlessTestApp
 class TestDirectUserPermissions(TestCase):
 
     def setUp(self):
@@ -100,6 +102,7 @@ class TestDirectUserPermissions(TestCase):
         self.assertEqual(sorted(p.pk for p in result), sorted([foo.pk, bar.pk]))
 
 
+@skipUnlessTestApp
 class TestDirectGroupPermissions(TestCase):
 
     def setUp(self):
@@ -171,6 +174,7 @@ class TestDirectGroupPermissions(TestCase):
         self.assertEqual(sorted(p.pk for p in result), sorted([foo.pk, bar.pk]))
 
 
+@skipUnlessTestApp
 class TestMixedDirectAndGenericObjectPermission(TestCase):
 
     def setUp(self):

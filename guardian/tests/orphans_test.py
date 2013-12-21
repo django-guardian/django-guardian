@@ -9,12 +9,14 @@ from guardian.compat import get_user_model
 from guardian.utils import clean_orphan_obj_perms
 from guardian.shortcuts import assign_perm
 from guardian.models import Group
+from guardian.tests.conf import skipUnlessTestApp
 
 
 User = get_user_model()
 user_module_name = User._meta.module_name
 
 
+@skipUnlessTestApp
 class OrphanedObjectPermissionsTest(TestCase):
 
     def setUp(self):

@@ -4,6 +4,7 @@ from guardian.utils import abspath
 from django.conf import settings
 from django.conf import UserSettingsHolder
 from django.utils.functional import wraps
+from django.utils.unittest import skipUnless
 
 
 THIS = abspath(os.path.dirname(__file__))
@@ -13,6 +14,13 @@ TEST_TEMPLATES_DIR = abspath(THIS, 'templates')
 TEST_SETTINGS = dict(
     TEMPLATE_DIRS=[TEST_TEMPLATES_DIR],
 )
+
+
+def skipUnlessTestApp(obj):
+    app = 'guardian.tests.testapp' 
+    return skipUnless(app in settings.INSTALLED_APPS,
+                      'app %r must be installed to run this test' % app)
+
 
 class TestDataMixin(object):
     def setUp(self):

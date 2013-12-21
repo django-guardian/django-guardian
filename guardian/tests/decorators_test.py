@@ -22,12 +22,14 @@ from guardian.shortcuts import assign_perm
 from guardian.tests.conf import TEST_SETTINGS
 from guardian.tests.conf import TestDataMixin
 from guardian.tests.conf import override_settings
+from guardian.tests.conf import skipUnlessTestApp
 
 User = get_user_model()
 user_model_path = get_user_model_path()
 
 
 @override_settings(**TEST_SETTINGS)
+@skipUnlessTestApp
 class PermissionRequiredTest(TestDataMixin, TestCase):
 
     def setUp(self):
