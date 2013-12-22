@@ -43,7 +43,7 @@ class UserObjectPermissionManager(BaseObjectPermissionManager):
 
     def assign(self, perm, user, obj):
         """ Depreciated function name left in for compatibility"""
-        warnings.warn("UserObjectPermissionManager method 'assign' is being renamed to 'assign_perm'. Update your code accordingly as old name will be depreciated in 1.0.5 version.", DeprecationWarning)
+        warnings.warn("UserObjectPermissionManager method 'assign' is being renamed to 'assign_perm'. Update your code accordingly as old name will be depreciated in 2.0 version.", DeprecationWarning)
         return self.assign_perm(perm, user, obj)
 
     def remove_perm(self, perm, user, obj):
@@ -104,7 +104,7 @@ class GroupObjectPermissionManager(BaseObjectPermissionManager):
 
     def assign(self, perm, user, obj):
         """ Depreciated function name left in for compatibility"""
-        warnings.warn("UserObjectPermissionManager method 'assign' is being renamed to 'assign_perm'. Update your code accordingly as old name will be depreciated in 1.0.5 version.", DeprecationWarning)
+        warnings.warn("UserObjectPermissionManager method 'assign' is being renamed to 'assign_perm'. Update your code accordingly as old name will be depreciated in 2.0 version.", DeprecationWarning)
         return self.assign_perm(perm, user, obj)
 
     def remove_perm(self, perm, group, obj):

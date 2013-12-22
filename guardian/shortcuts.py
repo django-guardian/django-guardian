@@ -95,7 +95,7 @@ def assign_perm(perm, user_or_group, obj=None):
 
 def assign(perm, user_or_group, obj=None):
     """ Depreciated function name left in for compatibility"""
-    warnings.warn("Shortcut function 'assign' is being renamed to 'assign_perm'. Update your code accordingly as old name will be depreciated in 1.0.5 version.", DeprecationWarning)
+    warnings.warn("Shortcut function 'assign' is being renamed to 'assign_perm'. Update your code accordingly as old name will be depreciated in 2.0 version.", DeprecationWarning)
     return assign_perm(perm, user_or_group, obj)
 
 def remove_perm(perm, user_or_group=None, obj=None):
