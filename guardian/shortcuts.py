@@ -20,7 +20,7 @@ from guardian.utils import get_anonymous_user
 from guardian.utils import get_identity
 from guardian.utils import get_user_obj_perms_model
 from guardian.utils import get_group_obj_perms_model
-
+import warnings
 
 def assign_perm(perm, user_or_group, obj=None):
     """
@@ -92,6 +92,11 @@ def assign_perm(perm, user_or_group, obj=None):
     if group:
         model = get_group_obj_perms_model(obj)
         return model.objects.assign_perm(perm, group, obj)
+
+def assign(perm, user_or_group, obj=None):
+    """ Depreciated function name left in for compatibility"""
+    warnings.warn("Shortcut function 'assign' is being renamed to 'assign_perm'. Update your code accordingly as old name will be depreciated in 1.0.5 version.", DeprecationWarning)
+    return assign_perm(perm, user_or_group, obj)
 
 def remove_perm(perm, user_or_group=None, obj=None):
     """
