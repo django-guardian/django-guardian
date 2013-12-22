@@ -12,10 +12,13 @@ except IOError as err:
         "``long_description`` (%s)\n" % readme_file)
     sys.exit(1)
 
+tests_require = ['mock']
+
+extra_kwargs = {}
 if sys.version_info >= (3,):
     extra_kwargs = {'use_2to3': True}
-else:
-    extra_kwargs = {}
+elif sys.version_info < (2, 7):
+    tests_require.append('unittest2')
 
 setup(
     name = 'django-guardian',
@@ -31,11 +34,9 @@ setup(
     include_package_data = True,
     license = 'BSD',
     install_requires = [
-        'Django>=1.3',
+        'Django',
     ],
-    tests_require = [
-        'mock',
-    ],
+    tests_require=tests_require,
     classifiers = ['Development Status :: 5 - Production/Stable',
                    'Environment :: Web Environment',
                    'Framework :: Django',

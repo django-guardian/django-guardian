@@ -1,10 +1,10 @@
 from __future__ import unicode_literals
 import os
+from guardian.compat import unittest
 from guardian.utils import abspath
 from django.conf import settings
 from django.conf import UserSettingsHolder
 from django.utils.functional import wraps
-from django.utils.unittest import skipUnless
 
 
 THIS = abspath(os.path.dirname(__file__))
@@ -18,8 +18,8 @@ TEST_SETTINGS = dict(
 
 def skipUnlessTestApp(obj):
     app = 'guardian.tests.testapp' 
-    return skipUnless(app in settings.INSTALLED_APPS,
-                      'app %r must be installed to run this test' % app)
+    return unittest.skipUnless(app in settings.INSTALLED_APPS,
+                      'app %r must be installed to run this test' % app)(obj)
 
 
 class TestDataMixin(object):
