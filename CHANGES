@@ -1,9 +1,17 @@
 Release 1.2 (TBA)
 =================
 
+* Improved speed of get_objects_for_user shortcut
+* Extended documentation
+* Support for custom User model with not default username field
+* Added ``accept_global_perms`` to ``PermissionRequiredMixin``
+* Added ``wheel`` support
+* Removed deprecated ``assign`` shortcuts
+* Fixed wrong anonymous user checks
 * Ensured support for Django 1.6
 * Dropped support for Django 1.2 (actually, we are not testing against Django
   1.2 anymore and we've done that at feature freeze - app should still work)
+
 
 Release 1.1 (May 26, 2013)
 ==========================

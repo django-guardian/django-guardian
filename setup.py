@@ -35,6 +35,12 @@ setup(
     license = 'BSD',
     install_requires = [
         'Django',
+<<<<<<< HEAD
+=======
+    ],
+    tests_require = [
+        'mock',
+>>>>>>> release-v1.2
     ],
     tests_require=tests_require,
     classifiers = ['Development Status :: 5 - Production/Stable',
