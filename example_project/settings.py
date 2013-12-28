@@ -39,6 +39,7 @@ INSTALLED_APPS = (
     'posts',
     'core',
     'integration_tests',
+    'rosetta',
 )
 if django.VERSION < (1, 3):
     INSTALLED_APPS += ('staticfiles',)

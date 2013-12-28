@@ -19,3 +19,7 @@ if 'grappelli' in settings.INSTALLED_APPS:
         (r'^grappelli/', include('grappelli.urls')),
     )
 
+if 'rosetta' in settings.INSTALLED_APPS:
+    urlpatterns = patterns('',
+        url(r'^rosetta/', include('rosetta.urls')),
+    ) + urlpatterns
