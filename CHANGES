@@ -4,6 +4,7 @@ Release 1.2 (TBA)
 * Improved speed of get_objects_for_user shortcut
 * Extended documentation
 * Support for custom User model with not default username field
+* GuardedModelAdmin has been splitted into mixins
 * Added ``accept_global_perms`` to ``PermissionRequiredMixin``
 * Added ``wheel`` support
 * Added brazilian portuguese translations
