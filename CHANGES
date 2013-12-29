@@ -6,6 +6,8 @@ Release 1.2 (TBA)
 * Support for custom User model with not default username field
 * Added ``accept_global_perms`` to ``PermissionRequiredMixin``
 * Added ``wheel`` support
+* Added brazilian portuguese translations
+* Added polish translations
 * Fixed wrong anonymous user checks
 * Ensured support for Django 1.6
 
