@@ -72,11 +72,18 @@ class UserObjectPermissionManager(BaseObjectPermissionManager):
         if getattr(obj, 'pk', None) is None:
             raise ObjectNotPersisted("Object %s needs to be persisted first"
                 % obj)
-        ctype = ContentType.objects.get_for_model(obj)
-        perms = self.filter(
-            content_type = ctype,
-            user = user,
-        )
+        if self.is_generic():
+            ctype = ContentType.objects.get_for_model(obj)
+            perms = self.filter(
+                content_type = ctype,
+                user = user,
+                object_pk = obj.pk
+            )
+        else:
+            perms = self.filter(
+                content_object=obj,
+                user = user
+            )
         return perms
 
 
@@ -130,10 +137,17 @@ class GroupObjectPermissionManager(BaseObjectPermissionManager):
         if getattr(obj, 'pk', None) is None:
             raise ObjectNotPersisted("Object %s needs to be persisted first"
                 % obj)
-        ctype = ContentType.objects.get_for_model(obj)
-        perms = self.filter(
-            content_type = ctype,
-            group = group,
-        )
+        if self.is_generic():
+            ctype = ContentType.objects.get_for_model(obj)
+            perms = self.filter(
+                content_type = ctype,
+                group = group,
+                object_pk = obj.pk
+            )
+        else:
+            perms = self.filter(
+                content_object=obj,
+                group = group
+            )
         return perms
 
