@@ -148,15 +148,10 @@ def get_obj_perms_model(obj, base_cls, generic_cls):
     if isinstance(obj, Model):
         obj = obj.__class__
     ctype = ContentType.objects.get_for_model(obj)
-    for name in dir(obj):
-        try:
-            attr = getattr(obj, name)
-        except AttributeError:
-            # this might be thrown if field is a FileField
-            continue
-        if hasattr(attr, 'related'):
-            related = attr.related
-            model = getattr(related, 'model', None)
+    for name in obj._meta.get_all_field_names():
+        attr, _m, direct, _m = obj._meta.get_field_by_name(name)
+        if not direct:
+            model = getattr(attr, 'model', None)
             if (model and issubclass(model, base_cls) and
                     model is not generic_cls):
                 # if model is generic one it would be returned anyway
