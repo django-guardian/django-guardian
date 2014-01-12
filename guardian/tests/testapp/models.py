@@ -5,6 +5,14 @@ from django.contrib.admin.models import LogEntry
 from guardian.models import UserObjectPermissionBase, GroupObjectPermissionBase
 
 
+class DynamicAccessor(object):
+    def __init__(self):
+        pass
+
+    def __getattr__(self, key):
+        return DynamicAccessor()
+
+
 class ProjectUserObjectPermission(UserObjectPermissionBase):
     content_object = models.ForeignKey('Project')
 
@@ -22,6 +30,8 @@ class Project(models.Model):
 
     def __unicode__(self):
         return self.name
+
+Project.not_a_relation_descriptor = DynamicAccessor()
 
 
 class MixedGroupObjectPermission(GroupObjectPermissionBase):
