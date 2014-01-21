@@ -1,4 +1,4 @@
-from guardian.compat import unittest
+__all__ = ["mock"]
 
 try:
     from unittest import mock  # Since Python 3.3 mock is is in stdlib
