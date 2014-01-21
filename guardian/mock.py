@@ -1,4 +1,4 @@
-from gaurdian.compat import unittest
+from guardian.compat import unittest
 
 try:
     from unittest import mock  # Since Python 3.3 mock is is in stdlib
