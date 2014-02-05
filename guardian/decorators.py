@@ -73,6 +73,7 @@ def permission_required(perm, lookup_variables=None, **kwargs):
     redirect_field_name = kwargs.pop('redirect_field_name', REDIRECT_FIELD_NAME)
     return_403 = kwargs.pop('return_403', False)
     accept_global_perms = kwargs.pop('accept_global_perms', False)
+    user_specific = kwargs.pop('user_specific', False)
 
     # Check if perm is given as string in order not to decorate
     # view function itself which makes debugging harder
@@ -91,8 +92,8 @@ def permission_required(perm, lookup_variables=None, **kwargs):
                 if isinstance(model, basestring):
                     splitted = model.split('.')
                     if len(splitted) != 2:
-                        raise GuardianError("If model should be looked up from "
-                            "string it needs format: 'app_label.ModelClass'")
+                        raise GuardianError("If model should be looked up from"
+                            " string it needs format: 'app_label.ModelClass'")
                     model = get_model(*splitted)
                 elif issubclass(model.__class__, (Model, ModelBase, QuerySet)):
                     pass
@@ -112,9 +113,13 @@ def permission_required(perm, lookup_variables=None, **kwargs):
                     lookup_dict[lookup] = kwargs[view_arg]
                 obj = get_object_or_404(model, **lookup_dict)
 
+            _return_403 = return_403
+            if user_specific:
+                _return_403 = True if request.user.is_authenticated() else False
+
             response = get_403_or_None(request, perms=[perm], obj=obj,
                 login_url=login_url, redirect_field_name=redirect_field_name,
-                return_403=return_403, accept_global_perms=accept_global_perms)
+                return_403=_return_403, accept_global_perms=accept_global_perms)
             if response:
                 return response
             return view_func(request, *args, **kwargs)
@@ -126,8 +131,8 @@ def permission_required_or_403(perm, *args, **kwargs):
     """
     Simple wrapper for permission_required decorator.
 
-    Standard Django's permission_required decorator redirects user to login page
-    in case permission check failed. This decorator may be used to return
+    Standard Django's permission_required decorator redirects user to login
+    page in case permission check failed. This decorator may be used to return
     HttpResponseForbidden (status 403) instead of redirection.
 
     The only difference between ``permission_required`` decorator is that this
@@ -136,3 +141,17 @@ def permission_required_or_403(perm, *args, **kwargs):
     kwargs['return_403'] = True
     return permission_required(perm, *args, **kwargs)
 
+
+def permission_required_user_specific(perm, *args, **kwargs):
+    """
+    Simple wrapper for permission_required decorator.
+
+    First it will check permissions and if check failed, than returns
+    HttpResponseForbidden if user is already logged in, or redirects if user
+    isn't logged.
+
+    The only difference between ``permission_required`` decorator is that this
+    one always set ``user_specific`` parameter to ``True``.
+    """
+    kwargs['user_specific'] = True
+    return permission_required(perm, *args, **kwargs)
