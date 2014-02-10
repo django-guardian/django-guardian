@@ -8,6 +8,7 @@ instructions how to interpret ``test`` command when we run::
 """
 import os
 import sys
+import django
 
 os.environ["DJANGO_SETTINGS_MODULE"] = 'guardian.testsettings'
 from guardian import testsettings as settings
@@ -31,6 +32,10 @@ def run_tests(settings):
     from utils import show_settings
 
     show_settings(settings, 'tests')
+
+    import django
+    if hasattr(django, 'setup'):
+        django.setup()
 
     TestRunner = get_runner(settings)
     test_runner = TestRunner(interactive=False)
