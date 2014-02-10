@@ -8,10 +8,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericForeignKey
 from django.utils.translation import ugettext_lazy as _
 
-from guardian.compat import get_user_model
 from guardian.compat import user_model_label
 from guardian.compat import unicode
-from guardian.utils import get_anonymous_user
 from guardian.managers import GroupObjectPermissionManager
 from guardian.managers import UserObjectPermissionManager
 
