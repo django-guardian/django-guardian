@@ -32,7 +32,7 @@ DATABASES = {
     },
 }
 
-ROOT_URLCONF = 'guardian.tests.urls'
+ROOT_URLCONF = 'guardian.testapp.tests.urls'
 SITE_ID = 1
 
 TEMPLATE_DIRS = (
