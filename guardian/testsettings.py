@@ -14,7 +14,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.messages',
     'guardian',
-    'guardian.tests.testapp',
+    'guardian.testapp',
 )
 
 AUTHENTICATION_BACKENDS = (

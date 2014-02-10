@@ -19,7 +19,7 @@ settings.INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.sites',
     'guardian',
-    'guardian.tests.testapp',
+    'guardian.testapp',
 )
 settings.PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.MD5PasswordHasher',
@@ -34,7 +34,7 @@ def run_tests(settings):
 
     TestRunner = get_runner(settings)
     test_runner = TestRunner(interactive=False)
-    failures = test_runner.run_tests(['auth', 'guardian'])
+    failures = test_runner.run_tests(['auth', 'guardian', 'testapp'])
     return failures
 
 def main():
