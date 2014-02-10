@@ -20,7 +20,7 @@ from guardian.shortcuts import get_objects_for_group
 from guardian.exceptions import MixedContentTypeError
 from guardian.exceptions import NotUserNorGroup
 from guardian.exceptions import WrongAppError
-from guardian.tests.core_test import ObjectPermissionTestCase
+from guardian.testapp.tests.core_test import ObjectPermissionTestCase
 from guardian.models import Group, Permission
 
 import warnings
@@ -559,36 +559,36 @@ class GetObjectsForUser(TestCase):
             self.user.groups.add(group)
 
         # Objects to operate on
-        ctypes = dict(((ct.id, ct) for ct in ContentType.objects.all()))
+        ctypes = list(ContentType.objects.all().order_by('id'))
 
+        assign_perm('change_contenttype', self.user, ctypes[0])
         assign_perm('change_contenttype', self.user, ctypes[1])
-        assign_perm('change_contenttype', self.user, ctypes[2])
+        assign_perm('delete_contenttype', self.user, ctypes[1])
         assign_perm('delete_contenttype', self.user, ctypes[2])
-        assign_perm('delete_contenttype', self.user, ctypes[3])
 
-        assign_perm('change_contenttype', groups[0], ctypes[4])
-        assign_perm('change_contenttype', groups[1], ctypes[4])
-        assign_perm('change_contenttype', groups[2], ctypes[5])
-        assign_perm('delete_contenttype', groups[0], ctypes[1])
+        assign_perm('change_contenttype', groups[0], ctypes[3])
+        assign_perm('change_contenttype', groups[1], ctypes[3])
+        assign_perm('change_contenttype', groups[2], ctypes[4])
+        assign_perm('delete_contenttype', groups[0], ctypes[0])
 
         objects = get_objects_for_user(self.user,
             ['contenttypes.change_contenttype'])
         self.assertEqual(
             set(objects.values_list('id', flat=True)),
-            set([1, 2, 4, 5]))
+            set(ctypes[i].id for i in [0, 1, 3, 4]))
 
         objects = get_objects_for_user(self.user,
             ['contenttypes.change_contenttype',
             'contenttypes.delete_contenttype'])
         self.assertEqual(
             set(objects.values_list('id', flat=True)),
-            set([1, 2]))
+            set(ctypes[i].id for i in [0, 1]))
 
         objects = get_objects_for_user(self.user,
             ['contenttypes.change_contenttype'])
         self.assertEqual(
             set(objects.values_list('id', flat=True)),
-            set([1, 2, 4, 5]))
+            set(ctypes[i].id for i in [0, 1, 3, 4]))
 
 class GetObjectsForGroup(TestCase):
     """

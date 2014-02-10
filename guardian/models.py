@@ -8,10 +8,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.generic import GenericForeignKey
 from django.utils.translation import ugettext_lazy as _
 
-from guardian.compat import get_user_model
 from guardian.compat import user_model_label
 from guardian.compat import unicode
-from guardian.utils import get_anonymous_user
 from guardian.managers import GroupObjectPermissionManager
 from guardian.managers import UserObjectPermissionManager
 
@@ -86,13 +84,12 @@ class GroupObjectPermission(GroupObjectPermissionBase, BaseGenericObjectPermissi
         unique_together = ['group', 'permission', 'object_pk']
 
 
-User = get_user_model()
-# Prototype User and Group methods
-setattr(User, 'get_anonymous', staticmethod(lambda: get_anonymous_user()))
-setattr(User, 'add_obj_perm',
-    lambda self, perm, obj: UserObjectPermission.objects.assign_perm(perm, self, obj))
-setattr(User, 'del_obj_perm',
-    lambda self, perm, obj: UserObjectPermission.objects.remove_perm(perm, self, obj))
+# As with Django 1.7, you can't use the get_user_model at this point
+# because the app registry isn't ready yet (we're inside a model file).
+import django
+if django.VERSION < (1, 7):
+    from . import monkey_patch_user
+    monkey_patch_user()
 
 setattr(Group, 'add_obj_perm',
     lambda self, perm, obj: GroupObjectPermission.objects.assign_perm(perm, self, obj))

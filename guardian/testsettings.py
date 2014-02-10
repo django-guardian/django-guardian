@@ -14,7 +14,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.messages',
     'guardian',
-    'guardian.tests.testapp',
+    'guardian.testapp',
 )
 
 AUTHENTICATION_BACKENDS = (
@@ -32,7 +32,7 @@ DATABASES = {
     },
 }
 
-ROOT_URLCONF = 'guardian.tests.urls'
+ROOT_URLCONF = 'guardian.testapp.tests.urls'
 SITE_ID = 1
 
 TEMPLATE_DIRS = (

@@ -19,6 +19,7 @@ if sys.version_info >= (3,):
     extra_kwargs = {'use_2to3': True}
 elif sys.version_info < (2, 7):
     tests_require.append('unittest2')
+tests_require.append('pillow')
 
 setup(
     name = 'django-guardian',

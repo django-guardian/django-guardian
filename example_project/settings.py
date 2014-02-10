@@ -35,7 +35,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'guardian',
-    'guardian.tests.testapp',
+    'guardian.testapp',
     'posts',
     'core',
     'integration_tests',
@@ -48,7 +48,7 @@ else:
 
 if 'GUARDIAN_NO_TESTS_APP' in os.environ:
     _apps = list(INSTALLED_APPS)
-    _apps.remove('guardian.tests.testapp')
+    _apps.remove('guardian.testapp')
     INSTALLED_APPS = tuple(_apps)
 
 if TEST_SOUTH:

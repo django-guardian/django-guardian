@@ -21,7 +21,7 @@ from guardian.exceptions import ObjectNotPersisted
 from guardian.exceptions import WrongAppError
 from guardian.models import GroupObjectPermission
 from guardian.models import UserObjectPermission
-from guardian.tests.conf import TestDataMixin
+from guardian.testapp.tests.conf import TestDataMixin
 
 User = get_user_model()
 user_model_path = get_user_model_path()

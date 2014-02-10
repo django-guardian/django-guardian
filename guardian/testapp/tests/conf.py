@@ -17,7 +17,7 @@ TEST_SETTINGS = dict(
 
 
 def skipUnlessTestApp(obj):
-    app = 'guardian.tests.testapp' 
+    app = 'guardian.testapp' 
     return unittest.skipUnless(app in settings.INSTALLED_APPS,
                       'app %r must be installed to run this test' % app)(obj)
 

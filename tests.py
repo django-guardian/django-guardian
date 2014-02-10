@@ -8,6 +8,7 @@ instructions how to interpret ``test`` command when we run::
 """
 import os
 import sys
+import django
 
 os.environ["DJANGO_SETTINGS_MODULE"] = 'guardian.testsettings'
 from guardian import testsettings as settings
@@ -19,7 +20,7 @@ settings.INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.sites',
     'guardian',
-    'guardian.tests.testapp',
+    'guardian.testapp',
 )
 settings.PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.MD5PasswordHasher',
@@ -32,9 +33,13 @@ def run_tests(settings):
 
     show_settings(settings, 'tests')
 
+    import django
+    if hasattr(django, 'setup'):
+        django.setup()
+
     TestRunner = get_runner(settings)
     test_runner = TestRunner(interactive=False)
-    failures = test_runner.run_tests(['auth', 'guardian'])
+    failures = test_runner.run_tests(['auth', 'guardian', 'testapp'])
     return failures
 
 def main():
