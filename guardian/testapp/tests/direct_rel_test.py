@@ -1,8 +1,8 @@
 from __future__ import unicode_literals
-from .testapp.models import Mixed
-from .testapp.models import Project
-from .testapp.models import ProjectGroupObjectPermission
-from .testapp.models import ProjectUserObjectPermission
+from guardian.testapp.models import Mixed
+from guardian.testapp.models import Project
+from guardian.testapp.models import ProjectGroupObjectPermission
+from guardian.testapp.models import ProjectUserObjectPermission
 from django.contrib.auth.models import Group, Permission
 from django.test import TestCase
 from guardian.compat import get_user_model
@@ -12,7 +12,7 @@ from guardian.shortcuts import get_objects_for_group
 from guardian.shortcuts import get_objects_for_user
 from guardian.shortcuts import get_users_with_perms
 from guardian.shortcuts import remove_perm
-from guardian.tests.conf import skipUnlessTestApp
+from guardian.testapp.tests.conf import skipUnlessTestApp
 
 
 User = get_user_model()

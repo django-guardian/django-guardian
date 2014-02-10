@@ -19,10 +19,10 @@ from guardian.decorators import permission_required, permission_required_or_403
 from guardian.exceptions import GuardianError
 from guardian.exceptions import WrongAppError
 from guardian.shortcuts import assign_perm
-from guardian.tests.conf import TEST_SETTINGS
-from guardian.tests.conf import TestDataMixin
-from guardian.tests.conf import override_settings
-from guardian.tests.conf import skipUnlessTestApp
+from guardian.testapp.tests.conf import TEST_SETTINGS
+from guardian.testapp.tests.conf import TestDataMixin
+from guardian.testapp.tests.conf import override_settings
+from guardian.testapp.tests.conf import skipUnlessTestApp
 
 User = get_user_model()
 user_model_path = get_user_model_path()
@@ -323,7 +323,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
             self.assertEqual(response.content, b'hello')
 
     def test_redirection_raises_wrong_app_error(self):
-        from .testapp.models import Project
+        from guardian.testapp.models import Project
         request = self._get_request(self.user)
 
         User.objects.create(username='foo')
@@ -339,7 +339,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
         self.assertRaises(WrongAppError, dummy_view, request, group_name='foobar')
 
     def test_redirection(self):
-        from .testapp.models import Project
+        from guardian.testapp.models import Project
 
         request = self._get_request(self.user)
 

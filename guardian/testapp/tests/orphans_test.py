@@ -1,20 +1,24 @@
 from __future__ import unicode_literals
-from django.contrib.auth import models as auth_app
-from django.contrib.auth.management import create_permissions
+
+# Try the new app settings (Django 1.7) and fall back to the old system
+try:
+    from django.apps import apps as django_apps
+    auth_app = django_apps.get_app_config("auth")
+except ImportError:
+    from django.contrib.auth import models as auth_app
 from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.test import TestCase
 
-from guardian.compat import get_user_model
+from guardian.compat import get_user_model, create_permissions
 from guardian.utils import clean_orphan_obj_perms
 from guardian.shortcuts import assign_perm
 from guardian.models import Group
-from guardian.tests.conf import skipUnlessTestApp
+from guardian.testapp.tests.conf import skipUnlessTestApp
 
 
 User = get_user_model()
 user_module_name = User._meta.module_name
-
 
 @skipUnlessTestApp
 class OrphanedObjectPermissionsTest(TestCase):

@@ -15,11 +15,11 @@ from guardian.compat import get_user_model
 from guardian.compat import str
 from guardian.shortcuts import get_perms
 from guardian.shortcuts import get_perms_for_model
-from guardian.tests.conf import TEST_SETTINGS
-from guardian.tests.conf import override_settings
+from guardian.testapp.tests.conf import TEST_SETTINGS
+from guardian.testapp.tests.conf import override_settings
 from guardian.models import Group
-from guardian.tests.conf import skipUnlessTestApp
-from guardian.tests.testapp.models import LogEntryWithGroup as LogEntry
+from guardian.testapp.tests.conf import skipUnlessTestApp
+from guardian.testapp.models import LogEntryWithGroup as LogEntry
 
 User = get_user_model()
 
