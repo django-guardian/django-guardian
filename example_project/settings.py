@@ -39,7 +39,6 @@ INSTALLED_APPS = (
     'posts',
     'core',
     'integration_tests',
-    'rosetta',
 )
 if django.VERSION < (1, 3):
     INSTALLED_APPS += ('staticfiles',)
@@ -59,6 +58,12 @@ if 'GRAPPELLI' in os.environ:
         INSTALLED_APPS = ('grappelli',) + INSTALLED_APPS
     except ImportError:
         print("django-grappelli not installed")
+
+try:
+    import rosetta
+    INSTALLED_APPS += ('rosetta',)
+except ImportError:
+    pass
 
 #MIDDLEWARE_CLASSES = (
     #'django.middleware.common.CommonMiddleware',
