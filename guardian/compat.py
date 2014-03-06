@@ -33,7 +33,13 @@ except ImportError:
 try:
     from unittest import mock  # Since Python 3.3 mock is is in stdlib
 except ImportError:
-    import mock # pyflakes:ignore
+    try:
+        import mock # pyflakes:ignore
+    except ImportError:
+        # mock is used for tests only however it is hard to check if user is
+        # running tests or production code so we fail silently here; mock is
+        # still required for tests at setup.py (See PR #193)
+        pass
 
 # Django 1.5 compatibility utilities, providing support for custom User models.
 # Since get_user_model() causes a circular import if called when app models are
