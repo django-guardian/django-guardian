@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-from itertools import chain
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
