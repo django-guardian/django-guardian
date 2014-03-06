@@ -77,23 +77,6 @@ class UserPermissionTests(TestDataMixin, TestCase):
         self.assertFalse(self.user.has_perm('change_contenttype', self.obj2))
         self.assertFalse(self.user.has_perm('change_contenttype', self.obj1))
 
-    def test_get_for_object(self):
-        perms = UserObjectPermission.objects.get_for_object(self.user, self.ctype)
-        self.assertEqual(perms.count(), 0)
-
-        to_assign = sorted([
-            'delete_contenttype',
-            'change_contenttype',
-        ])
-
-        for perm in to_assign:
-            UserObjectPermission.objects.assign_perm(perm, self.user, self.ctype)
-
-        perms = UserObjectPermission.objects.get_for_object(self.user, self.ctype)
-        codenames = sorted(chain(*perms.values_list('permission__codename')))
-
-        self.assertEqual(to_assign, codenames)
-
     def test_assign_perm_validation(self):
         self.assertRaises(Permission.DoesNotExist,
             UserObjectPermission.objects.assign_perm, 'change_group', self.user,
@@ -128,9 +111,7 @@ class UserPermissionTests(TestDataMixin, TestCase):
         self.assertRaises(ObjectNotPersisted,
             UserObjectPermission.objects.remove_perm,
                 codename, self.user, not_saved_user)
-        self.assertRaises(ObjectNotPersisted,
-            UserObjectPermission.objects.get_for_object,
-            codename, not_saved_user)
+
 
 class GroupPermissionTests(TestDataMixin, TestCase):
 
@@ -193,26 +174,6 @@ class GroupPermissionTests(TestDataMixin, TestCase):
         self.assertFalse(self.user.has_perm('change_contenttype', self.obj2))
         self.assertFalse(self.user.has_perm('change_contenttype', self.obj1))
 
-    def test_get_for_object(self):
-        group = Group.objects.create(name='get_group_perms_for_object')
-        self.user.groups.add(group)
-
-        perms = GroupObjectPermission.objects.get_for_object(group, self.ctype)
-        self.assertEqual(perms.count(), 0)
-
-        to_assign = sorted([
-            'delete_contenttype',
-            'change_contenttype',
-        ])
-
-        for perm in to_assign:
-            GroupObjectPermission.objects.assign_perm(perm, group, self.ctype)
-
-        perms = GroupObjectPermission.objects.get_for_object(group, self.ctype)
-        codenames = sorted(chain(*perms.values_list('permission__codename')))
-
-        self.assertEqual(to_assign, codenames)
-
     def test_assign_perm_validation(self):
         self.assertRaises(Permission.DoesNotExist,
             GroupObjectPermission.objects.assign_perm, 'change_user', self.group,
@@ -244,9 +205,7 @@ class GroupPermissionTests(TestDataMixin, TestCase):
         self.assertRaises(ObjectNotPersisted,
             GroupObjectPermission.objects.remove_perm,
             "change_group", self.group, not_saved_group)
-        self.assertRaises(ObjectNotPersisted,
-            GroupObjectPermission.objects.get_for_object,
-            "change_group", not_saved_group)
+
 
 class ObjectPermissionBackendTests(TestCase):
 
