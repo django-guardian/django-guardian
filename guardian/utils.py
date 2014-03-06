@@ -148,24 +148,17 @@ def get_obj_perms_model(obj, base_cls, generic_cls):
     if isinstance(obj, Model):
         obj = obj.__class__
     ctype = ContentType.objects.get_for_model(obj)
-    for name in dir(obj):
-        try:
-            attr = getattr(obj, name)
-        except AttributeError:
-            # this might be thrown if field is a FileField
-            continue
-        if hasattr(attr, 'related'):
-            related = attr.related
-            model = getattr(related, 'model', None)
-            if (model and issubclass(model, base_cls) and
-                    model is not generic_cls):
-                # if model is generic one it would be returned anyway
-                if not model.objects.is_generic():
-                    # make sure that content_object's content_type is same as
-                    # the one of given obj
-                    fk = model._meta.get_field_by_name('content_object')[0]
-                    if ctype == ContentType.objects.get_for_model(fk.rel.to):
-                        return model
+    for attr in obj._meta.get_all_related_objects():
+        model = getattr(attr, 'model', None)
+        if (model and issubclass(model, base_cls) and
+                model is not generic_cls):
+            # if model is generic one it would be returned anyway
+            if not model.objects.is_generic():
+                # make sure that content_object's content_type is same as
+                # the one of given obj
+                fk = model._meta.get_field_by_name('content_object')[0]
+                if ctype == ContentType.objects.get_for_model(fk.rel.to):
+                    return model
     return generic_cls
 
 
