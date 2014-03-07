@@ -1,5 +1,5 @@
-Release 1.2 (TBA)
-=================
+Release 1.2 (Mar 7, 2014)
+=========================
 
 * Added GUARDIAN_GET_INIT_ANONYMOUS_USER setting (#179)
 * Improved speed of get_objects_for_user shortcut
