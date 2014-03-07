@@ -17,6 +17,16 @@ Release 1.2 (Mar 7, 2014)
 * Faster queries in get_objects_for_user when use_groups=False or any_perm=True
   (#148)
 
+.. important::
+    In this release we have removed undocumented ``get_for_object`` method
+    from both ``UserObjectPermissionManager`` and
+    ``GroupObjectPermissionManager``. Not deprecated, removed. Those methods
+    were not used within ``django-guardian`` and their odd names could lead to
+    issues if user would believe they would return object level permissions
+    associated with user/group and object passed as the input. If you depend
+    on those methods, you'd need to stick with version 1.1 and make sure you
+    do not misuse them.
+
 
 Release 1.1 (May 26, 2013)
 ==========================
