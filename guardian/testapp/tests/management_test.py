@@ -1,17 +1,19 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
 
-from django.test import SimpleTestCase
 from guardian.compat import get_user_model
 from guardian.compat import mock
+from guardian.compat import unittest
 from guardian.management import create_anonymous_user
+import django
 
 
 mocked_get_init_anon = mock.Mock()
 
 
-class TestGetAnonymousUser(SimpleTestCase):
+class TestGetAnonymousUser(unittest.TestCase):
 
+    @unittest.skipUnless(django.VERSION >= (1, 5), "Django >= 1.5 only")
     @mock.patch('guardian.management.guardian_settings')
     def test_uses_custom_function(self, guardian_settings):
         path = 'guardian.testapp.tests.management_test.mocked_get_init_anon'
