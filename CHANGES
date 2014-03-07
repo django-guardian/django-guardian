@@ -1,21 +1,21 @@
 Release 1.2 (Mar 7, 2014)
 =========================
 
-* Added GUARDIAN_GET_INIT_ANONYMOUS_USER setting (#179)
-* Improved speed of get_objects_for_user shortcut
-* Extended documentation
-* Support for custom User model with not default username field
-* GuardedModelAdmin has been splitted into mixins
-* Added ``accept_global_perms`` to ``PermissionRequiredMixin``
-* Added ``wheel`` support
-* Added brazilian portuguese translations
-* Added polish translations
-* Fixed wrong anonymous user checks
-* Ensured support for Django 1.6
-* Support for Django 1.7 alpha
 * Removed ``get_for_object`` methods from managers (#188)
+* Extended documentation
+* GuardedModelAdmin has been splitted into mixins
 * Faster queries in get_objects_for_user when use_groups=False or any_perm=True
   (#148)
+* Improved speed of get_objects_for_user shortcut
+* Support for custom User model with not default username field
+* Added GUARDIAN_GET_INIT_ANONYMOUS_USER setting (#179)
+* Added ``accept_global_perms`` to ``PermissionRequiredMixin``
+* Added brazilian portuguese translations
+* Added polish translations
+* Added ``wheel`` support
+* Fixed wrong anonymous user checks
+* Support for Django 1.6
+* Support for Django 1.7 alpha
 
 .. important::
     In this release we have removed undocumented ``get_for_object`` method
