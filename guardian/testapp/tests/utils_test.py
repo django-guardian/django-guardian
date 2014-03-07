@@ -102,7 +102,7 @@ class GetObjPermsModelTest(TestCase):
     def test_image_field(self):
 
         class SomeModel(models.Model):
-            image = models.ImageField(upload_to='images/')
+            image = models.FileField(upload_to='images/')
 
         obj = SomeModel()
         perm_model = get_obj_perms_model(obj, UserObjectPermissionBase,
