@@ -108,3 +108,22 @@ value at ``username`` field.
 
 .. seealso:: https://docs.djangoproject.com/en/1.5/topics/auth/customizing/#substituting-a-custom-user-model
 
+
+.. setting:: GUARDIAN_GET_INIT_ANONYMOUS_USER
+
+GUARDIAN_GET_INIT_ANONYMOUS_USER
+--------------------------------
+
+.. versionadded:: 1.2
+
+Guardian supports object level permissions for anonymous users, however when
+in our project we use custom User model, default function might fail. This can
+lead to issues as ``guardian`` tries to create anonymous user after each
+``syncdb`` call. Object that is going to be created is retrieved using function
+pointed by this setting. Once retrieved, ``save`` method would be called on
+that instance.
+
+Defaults to ``"guardian.management.get_init_anonymous_user"``.
+
+
+.. seealso:: :ref:`custom-user-model-anonymous`

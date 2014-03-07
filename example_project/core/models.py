@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+import datetime
 
 
 class CustomUser(AbstractUser):
@@ -13,3 +14,9 @@ class CustomUser(AbstractUser):
             self.real_username = self.username
         return super(CustomUser, self).save(*args, **kwargs)
 
+
+def get_custom_anon_user(User):
+    return User(
+        real_username='AnonymousUser',
+        birth_date=datetime.date(1410, 7, 15),
+    )

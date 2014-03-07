@@ -36,6 +36,7 @@ setup(
     license = 'BSD',
     install_requires = [
         'Django',
+        'six',
     ],
     tests_require=tests_require,
     classifiers = ['Development Status :: 5 - Production/Stable',

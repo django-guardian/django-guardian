@@ -15,6 +15,8 @@ except AttributeError:
 RENDER_403 = getattr(settings, 'GUARDIAN_RENDER_403', False)
 TEMPLATE_403 = getattr(settings, 'GUARDIAN_TEMPLATE_403', '403.html')
 RAISE_403 = getattr(settings, 'GUARDIAN_RAISE_403', False)
+GET_INIT_ANONYMOUS_USER = getattr(settings, 'GUARDIAN_GET_INIT_ANONYMOUS_USER',
+    'guardian.management.get_init_anonymous_user')
 
 def check_configuration():
     if RENDER_403 and RAISE_403:

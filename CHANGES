@@ -1,6 +1,7 @@
 Release 1.2 (TBA)
 =================
 
+* Added GUARDIAN_GET_INIT_ANONYMOUS_USER setting (#179)
 * Improved speed of get_objects_for_user shortcut
 * Extended documentation
 * Support for custom User model with not default username field
