@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
 from django.contrib.auth.models import AnonymousUser
-from importlib import import_module
+from django.utils.importlib import import_module
 import six
 import sys
 
