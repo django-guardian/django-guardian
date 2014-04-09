@@ -420,6 +420,23 @@ class GetObjectsForUser(TestCase):
             ['contenttypes.change_contenttype'], ctypes)
         self.assertEqual(set(ctypes), set(objects))
 
+    def test_with_superuser_true(self):
+        self.user.is_superuser = True
+        ctypes = ContentType.objects.all()
+        objects = get_objects_for_user(self.user,
+            ['contenttypes.change_contenttype'], ctypes, with_superuser=True)
+        self.assertEqual(set(ctypes), set(objects))
+
+    def test_with_superuser_false(self):
+        self.user.is_superuser = True
+        ctypes = ContentType.objects.all()
+        obj1 = ContentType.objects.create(name='ct1', model='foo',
+            app_label='guardian-tests')
+        assign_perm('change_contenttype', self.user, obj1)
+        objects = get_objects_for_user(self.user,
+            ['contenttypes.change_contenttype'], ctypes, with_superuser=False)
+        self.assertEqual(set([obj1]), set(objects))
+
     def test_anonymous(self):
         self.user = AnonymousUser()
         ctypes = ContentType.objects.all()
