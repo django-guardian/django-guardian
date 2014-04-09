@@ -283,7 +283,8 @@ def get_groups_with_perms(obj, attach_perms=False):
                 groups[group] = sorted(get_perms(group, obj))
         return groups
 
-def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=False):
+def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=False,
+        with_superuser=True):
     """
     Returns queryset of objects for which a given ``user`` has *all*
     permissions present at ``perms``.
@@ -301,7 +302,9 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
     :param use_groups: if ``False``, wouldn't check user's groups object
       permissions. Default is ``True``.
     :param any_perm: if True, any of permission in sequence is accepted
-
+    :param with_superuser: if ``True`` returns the entire queryset if not it will
+    only return objects the user has explicit permissions.
+    
     :raises MixedContentTypeError: when computed content type for ``perms``
       and/or ``klass`` clashes.
     :raises WrongAppError: if cannot compute app label for given ``perms``/
@@ -377,7 +380,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
     # we should also have ``codenames`` list
 
     # First check if user is superuser and if so, return queryset immediately
-    if user.is_superuser:
+    if with_superuser and user.is_superuser:
         return queryset
 
     # Check if the user is anonymous. The
