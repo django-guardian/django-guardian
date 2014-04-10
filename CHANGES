@@ -1,3 +1,10 @@
+Release 1.3 (in development)
+============================
+
+* Added ``with_superuser`` flag to ``guardian.shortcuts.get_objects_for_user``
+  (Thanks Bruno Ribeiro da Silva)
+
+
 Release 1.2 (Mar 7, 2014)
 =========================
 
