@@ -94,7 +94,7 @@ class Benchmark(object):
         self.objects_with_perms_count = objects_with_perms_count
 
         self.Model = model
-        self.perm = 'auth.change_%s' % model._meta.module_name
+        self.perm = 'auth.change_%s' % model._meta.model_name
 
     def info(self, msg):
         print(colorize(msg + '\n', fg='green'))

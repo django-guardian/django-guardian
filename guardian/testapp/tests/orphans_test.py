@@ -18,7 +18,7 @@ from guardian.testapp.tests.conf import skipUnlessTestApp
 
 
 User = get_user_model()
-user_module_name = User._meta.module_name
+user_model_name = User._meta.model_name
 
 @skipUnlessTestApp
 class OrphanedObjectPermissionsTest(TestCase):
@@ -42,7 +42,7 @@ class OrphanedObjectPermissionsTest(TestCase):
 
         # assign obj perms
         target_perms = {
-            self.target_user1: ["change_%s" % user_module_name],
+            self.target_user1: ["change_%s" % user_model_name],
             self.target_group1: ["delete_group"],
             self.target_obj1: ["change_contenttype", "delete_contenttype"],
             self.target_obj2: ["change_contenttype"],
@@ -76,7 +76,7 @@ class OrphanedObjectPermissionsTest(TestCase):
 
         # assign obj perms
         target_perms = {
-            self.target_user1: ["change_%s" % user_module_name],
+            self.target_user1: ["change_%s" % user_model_name],
             self.target_group1: ["delete_group"],
             self.target_obj1: ["change_contenttype", "delete_contenttype"],
             self.target_obj2: ["change_contenttype"],

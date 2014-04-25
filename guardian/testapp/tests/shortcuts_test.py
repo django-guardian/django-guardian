@@ -28,7 +28,7 @@ import warnings
 
 User = get_user_model()
 user_app_label = User._meta.app_label
-user_module_name = User._meta.module_name
+user_model_name = User._meta.model_name
 
 class ShortcutsTests(ObjectPermissionTestCase):
 
@@ -268,7 +268,7 @@ class GetUsersWithPermsTest(TestCase):
         assign_perm("delete_contenttype", self.user2, self.obj1)
         assign_perm("delete_contenttype", self.user2, self.obj2)
         assign_perm("change_contenttype", self.user3, self.obj2)
-        assign_perm("change_%s" % user_module_name, self.user3, self.user1)
+        assign_perm("change_%s" % user_model_name, self.user3, self.user1)
 
         result = get_users_with_perms(self.obj1)
         self.assertEqual(
@@ -377,11 +377,11 @@ class GetGroupsWithPerms(TestCase):
     def test_mixed(self):
         assign_perm("change_contenttype", self.group1, self.obj1)
         assign_perm("change_contenttype", self.group1, self.obj2)
-        assign_perm("change_%s" % user_module_name, self.group1, self.user3)
+        assign_perm("change_%s" % user_model_name, self.group1, self.user3)
         assign_perm("change_contenttype", self.group2, self.obj2)
         assign_perm("change_contenttype", self.group2, self.obj1)
         assign_perm("delete_contenttype", self.group2, self.obj1)
-        assign_perm("change_%s" % user_module_name, self.group3, self.user1)
+        assign_perm("change_%s" % user_model_name, self.group3, self.user1)
 
         result = get_groups_with_perms(self.obj1)
         self.assertEqual(set(result), set([self.group1, self.group2]))
