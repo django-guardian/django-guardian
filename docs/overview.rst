@@ -4,7 +4,7 @@ Overview
 ========
 
 ``django-guardian`` is an implementation of object permissions for Django_
-providing extra *authentication backend*.
+providing an extra *authentication backend*.
 
 Features
 --------
