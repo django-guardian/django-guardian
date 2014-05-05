@@ -19,7 +19,7 @@ class BaseObjectPermission(models.Model):
     Abstract ObjectPermission class. Actual class should additionally define
     a ``content_object`` field and either ``user`` or ``group`` field.
     """
-    permission = models.ForeignKey(Permission)
+    permission = models.ForeignKey(Permission, related_name='+')
 
     class Meta:
         abstract = True
@@ -52,7 +52,7 @@ class UserObjectPermissionBase(BaseObjectPermission):
     """
     **Manager**: :manager:`UserObjectPermissionManager`
     """
-    user = models.ForeignKey(user_model_label)
+    user = models.ForeignKey(user_model_label, related_name='+')
 
     objects = UserObjectPermissionManager()
 
@@ -70,7 +70,7 @@ class GroupObjectPermissionBase(BaseObjectPermission):
     """
     **Manager**: :manager:`GroupObjectPermissionManager`
     """
-    group = models.ForeignKey(Group)
+    group = models.ForeignKey(Group, related_name='+')
 
     objects = GroupObjectPermissionManager()
 
