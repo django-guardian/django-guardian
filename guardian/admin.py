@@ -60,8 +60,21 @@ class GuardedModelAdminMixin(object):
     group_owned_objects_field = 'group'
     include_object_permissions_urls = True
 
+    def queryset(self, request):
+        """
+        This method has been renamed to get_queryset in Django 1.6.
+        """
+        return self.get_queryset(request)
+
     def get_queryset(self, request):
-        qs = super(GuardedModelAdminMixin, self).get_queryset(request)
+        super_class = super(GuardedModelAdminMixin, self)
+        if hasattr(super_class, 'get_queryset'):
+            # Django 1.6 or later.
+            qs = super_class.get_queryset(request)
+        else:
+            # Django 1.5 or earlier.
+            qs = super_class.queryset(request)
+
         if request.user.is_superuser:
             return qs
 
