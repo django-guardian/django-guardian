@@ -7,6 +7,7 @@ from django.test import TestCase
 
 from guardian.shortcuts import get_perms_for_model
 from guardian.core import ObjectPermissionChecker
+from guardian.compat import get_model_name
 from guardian.compat import get_user_model
 from guardian.compat import get_user_permission_full_codename
 from guardian.shortcuts import assign
@@ -28,7 +29,7 @@ import warnings
 
 User = get_user_model()
 user_app_label = User._meta.app_label
-user_model_name = User._meta.model_name
+user_model_name = get_model_name(User)
 
 class ShortcutsTests(ObjectPermissionTestCase):
 

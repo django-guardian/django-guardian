@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from django import forms
 from django.conf import settings
-from guardian.compat import url, patterns
+from guardian.compat import get_model_name, url, patterns
 from django.contrib import admin
 from django.contrib import messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
@@ -92,7 +92,7 @@ class GuardedModelAdminMixin(object):
         """
         urls = super(GuardedModelAdminMixin, self).get_urls()
         if self.include_object_permissions_urls:
-            info = self.model._meta.app_label, self.model._meta.model_name
+            info = self.model._meta.app_label, get_model_name(self.model)
             myurls = patterns('',
                 url(r'^(?P<object_pk>.+)/permissions/$',
                     view=self.admin_site.admin_view(self.obj_perms_manage_view),
@@ -153,7 +153,7 @@ class GuardedModelAdminMixin(object):
             info = (
                 self.admin_site.name,
                 self.model._meta.app_label,
-                self.model._meta.model_name
+                get_model_name(self.model)
             )
             if user_form.is_valid():
                 user_id = user_form.cleaned_data['user'].id
@@ -168,7 +168,7 @@ class GuardedModelAdminMixin(object):
             info = (
                 self.admin_site.name,
                 self.model._meta.app_label,
-                self.model._meta.model_name
+                get_model_name(self.model)
             )
             if group_form.is_valid():
                 group_id = group_form.cleaned_data['group'].id
@@ -220,7 +220,7 @@ class GuardedModelAdminMixin(object):
             info = (
                 self.admin_site.name,
                 self.model._meta.app_label,
-                self.model._meta.model_name
+                get_model_name(self.model)
             )
             url = reverse(
                 '%s:%s_%s_permissions_manage_user' % info,
@@ -273,7 +273,7 @@ class GuardedModelAdminMixin(object):
             info = (
                 self.admin_site.name,
                 self.model._meta.app_label,
-                self.model._meta.model_name
+                get_model_name(self.model)
             )
             url = reverse(
                 '%s:%s_%s_permissions_manage_group' % info,

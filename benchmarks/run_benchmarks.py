@@ -93,8 +93,9 @@ class Benchmark(object):
         self.objects_count = objects_count
         self.objects_with_perms_count = objects_with_perms_count
 
+        from guardian.compat import get_model_name
         self.Model = model
-        self.perm = 'auth.change_%s' % model._meta.model_name
+        self.perm = 'auth.change_%s' % get_model_name(model)
 
     def info(self, msg):
         print(colorize(msg + '\n', fg='green'))

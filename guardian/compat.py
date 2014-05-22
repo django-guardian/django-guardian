@@ -18,6 +18,7 @@ __all__ = [
     'Group',
     'Permission',
     'AnonymousUser',
+    'get_model_name',
     'get_user_model',
     'import_string',
     'user_model_label',
@@ -73,7 +74,7 @@ def get_user_permission_full_codename(perm):
     ``myapp.CustomUser`` is used it would return ``myapp.change_customuser``.
     """
     User = get_user_model()
-    return '%s.%s_%s' % (User._meta.app_label, perm, User._meta.model_name)
+    return '%s.%s_%s' % (User._meta.app_label, perm, get_model_name(User))
 
 def get_user_permission_codename(perm):
     """
@@ -129,3 +130,14 @@ def create_permissions(*args, **kwargs):
     return original_create_permissions(*args, **kwargs)
 
 __all__ = ['User', 'Group', 'Permission', 'AnonymousUser']
+
+
+def get_model_name(model):
+    """
+    Returns model._meta.model_name on Django >=1.6 or model._meta.module_name
+    on earlier versions.
+    """
+    if hasattr(model._meta, 'model_name'):
+        return model._meta.model_name
+    else:
+        return model._meta.module_name
