@@ -39,7 +39,7 @@ version of Django_. For instance, there are great `django-authority`_ or
 .. _django-authority: http://bitbucket.org/jezdez/django-authority/
 .. _django-permissions: http://bitbucket.org/diefenbach/django-permissions/
 .. _issue-tracker: http://github.com/lukaszb/django-guardian
-.. _grappelli: http://code.google.com/p/django-grappelli/
+.. _grappelli: https://github.com/sehmaschine/django-grappelli
 
 .. [1] See http://docs.djangoproject.com/en/1.2/topics/auth/#handling-object-permissions
    for more detail.
