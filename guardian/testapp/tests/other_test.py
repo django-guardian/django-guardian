@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
-from unittest import skipIf
+
 import django
+from django.utils.unittest.case import skipIf
 
 import mock
 
