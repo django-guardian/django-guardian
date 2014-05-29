@@ -15,12 +15,12 @@ By default django-guardian monkey patches the user model to add some needed
 functionality. This can result in errors if guardian is imported into the models.py
 of the same app where the custom user model lives.
 
-To fix this, it is recommended to add the setting ``GUARDIAN_MONKEY_PATCH = FALSE``
+To fix this, it is recommended to add the setting ``GUARDIAN_MONKEY_PATCH = False``
 in your settings.py and add the ``GuardianUserMixin`` to your custom user model.
 
 .. important::
     ``django-guardian`` relies **heavily** on the ``auth.User`` model.
-    Specifically it was build from the ground-up with relation beteen
+    Specifically it was build from the ground-up with relation between
     ``auth.User`` and ``auth.Group`` models. Retaining this relation is crucial
     for ``guardian`` - **without many to many User (custom or default) and
     auth.Group relation django-guardian will BREAK**.
