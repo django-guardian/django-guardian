@@ -1,7 +1,9 @@
 from __future__ import unicode_literals
 from datetime import datetime
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.contrib.admin.models import LogEntry
+from guardian.mixins import GuardianUserMixin
 from guardian.models import UserObjectPermissionBase, GroupObjectPermissionBase
 
 
@@ -52,3 +54,6 @@ class Mixed(models.Model):
 class LogEntryWithGroup(LogEntry):
     group = models.ForeignKey('auth.Group', null=True, blank=True)
 
+
+class CustomUser(AbstractUser, GuardianUserMixin):
+    pass

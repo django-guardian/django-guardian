@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
 
-from django.contrib.auth.models import AnonymousUser
+import mock
+
+from django.contrib.auth.models import AnonymousUser, AbstractUser
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
@@ -274,3 +276,22 @@ class TestExceptions(TestCase):
         for err in guardian_errors:
             self._test_error_class(err())
 
+
+class TestMonkeyPatch(TestCase):
+    def test_monkey_patch(self):
+        class CustomUserTestClass(AbstractUser):
+            pass
+
+        with mock.patch('guardian.compat.get_user_model') as mocked_get_user_model:
+            mocked_get_user_model.return_value = CustomUserTestClass
+
+            self.assertFalse(getattr(CustomUserTestClass, 'get_anonymous', False))
+            self.assertFalse(getattr(CustomUserTestClass, 'add_obj_perm', False))
+            self.assertFalse(getattr(CustomUserTestClass, 'del_obj_perm', False))
+
+            # Monkey Patch
+            guardian.monkey_patch_user()
+
+            self.assertTrue(getattr(CustomUserTestClass, 'get_anonymous', False))
+            self.assertTrue(getattr(CustomUserTestClass, 'add_obj_perm', False))
+            self.assertTrue(getattr(CustomUserTestClass, 'del_obj_perm', False))
