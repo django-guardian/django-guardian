@@ -11,6 +11,13 @@ very powerful, it must be done with caution, though. Basically, if we subclass
 ``AbstractUser`` or define many-to-many relation with ``auth.Group`` (and give
 reverse relate name **groups**) we should be fine.
 
+By default django-guardian monkey patches the user model to add some needed
+functionality. This can result in errors if guardian is imported into the models.py
+of the same app where the custom user model lives.
+
+To fix this, it is recommended to add the setting ``GUARDIAN_MONKEY_PATCH = FALSE``
+in your settings.py and add the ``GuardianUserMixin`` to your custom user model.
+
 .. important::
     ``django-guardian`` relies **heavily** on the ``auth.User`` model.
     Specifically it was build from the ground-up with relation beteen
