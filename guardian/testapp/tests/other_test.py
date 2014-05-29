@@ -1,8 +1,5 @@
 from __future__ import unicode_literals
 
-import django
-from django.utils.unittest.case import skipIf
-
 import mock
 
 from django.contrib.auth.models import AnonymousUser
@@ -25,7 +22,7 @@ from guardian.exceptions import ObjectNotPersisted
 from guardian.exceptions import WrongAppError
 from guardian.models import GroupObjectPermission
 from guardian.models import UserObjectPermission
-from guardian.testapp.tests.conf import TestDataMixin
+from guardian.testapp.tests.conf import TestDataMixin, skipUnlessSupportsCustomUser
 
 User = get_user_model()
 user_model_path = get_user_model_path()
@@ -280,7 +277,7 @@ class TestExceptions(TestCase):
         for err in guardian_errors:
             self._test_error_class(err())
 
-@skipIf(django.VERSION < (1, 5), "Test not supported with django < 1.5")
+@skipUnlessSupportsCustomUser
 class TestMonkeyPatch(TestCase):
     def test_monkey_patch(self):
         from django.contrib.auth.models import AbstractUser
