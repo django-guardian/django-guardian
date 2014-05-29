@@ -24,7 +24,7 @@ def skipUnlessTestApp(obj):
 
 
 def skipUnlessSupportsCustomUser(obj):
-    return unittest.skipUnless(django.VERSION >= (1, 5))(obj)
+    return unittest.skipUnless(django.VERSION >= (1, 5), 'Must have Django 1.5 or greater')(obj)
 
 
 class TestDataMixin(object):
