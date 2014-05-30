@@ -6,8 +6,8 @@ from django.db import models
 from django.contrib.admin.models import LogEntry
 
 from guardian.mixins import GuardianUserMixin
-from guardian.models import UserObjectPermissionBase, GroupObjectPermissionBase
-
+from guardian.models import UserObjectPermissionBase
+from guardian.models import GroupObjectPermissionBase
 
 class DynamicAccessor(object):
     def __init__(self):

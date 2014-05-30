@@ -8,7 +8,8 @@ from django.core.exceptions import ImproperlyConfigured
 from django.core.exceptions import PermissionDenied
 from guardian.compat import basestring
 from guardian.models import UserObjectPermission
-from guardian.utils import get_403_or_None, get_anonymous_user
+from guardian.utils import get_403_or_None
+from guardian.utils import get_anonymous_user
 
 
 class LoginRequiredMixin(object):
