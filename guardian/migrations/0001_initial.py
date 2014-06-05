@@ -2,7 +2,8 @@
 from south.db import db
 from south.v2 import SchemaMigration
 
-from guardian.compat import user_model_label, get_user_model
+from guardian.compat import user_model_label
+from guardian.compat import get_user_model
 
 User = get_user_model()
 
