@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+import mock
+
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
@@ -20,8 +22,8 @@ from guardian.exceptions import ObjectNotPersisted
 from guardian.exceptions import WrongAppError
 from guardian.models import GroupObjectPermission
 from guardian.models import UserObjectPermission
+from guardian.testapp.tests.conf import skipUnlessSupportsCustomUser
 from guardian.testapp.tests.conf import TestDataMixin
-
 User = get_user_model()
 user_model_path = get_user_model_path()
 
@@ -83,8 +85,9 @@ class UserPermissionTests(TestDataMixin, TestCase):
 
         group = Group.objects.create(name='test_group_assign_perm_validation')
         ctype = ContentType.objects.get_for_model(group)
-        codename = codename=get_user_permission_codename('change')
-        perm = Permission.objects.get(codename=codename)
+        user_ctype = ContentType.objects.get_for_model(self.user)
+        codename = get_user_permission_codename('change')
+        perm = Permission.objects.get(codename=codename, content_type=user_ctype)
 
         create_info = dict(
             permission = perm,
@@ -274,3 +277,25 @@ class TestExceptions(TestCase):
         for err in guardian_errors:
             self._test_error_class(err())
 
+@skipUnlessSupportsCustomUser
+class TestMonkeyPatch(TestCase):
+    @mock.patch('guardian.compat.get_user_model')
+    def test_monkey_patch(self, mocked_get_user_model):
+        # Import AbstractUser here as it is only available since Django 1.5
+        from django.contrib.auth.models import AbstractUser
+
+        class CustomUserTestClass(AbstractUser):
+            pass
+
+        mocked_get_user_model.return_value = CustomUserTestClass
+
+        self.assertFalse(getattr(CustomUserTestClass, 'get_anonymous', False))
+        self.assertFalse(getattr(CustomUserTestClass, 'add_obj_perm', False))
+        self.assertFalse(getattr(CustomUserTestClass, 'del_obj_perm', False))
+
+        # Monkey Patch
+        guardian.monkey_patch_user()
+
+        self.assertTrue(getattr(CustomUserTestClass, 'get_anonymous', False))
+        self.assertTrue(getattr(CustomUserTestClass, 'add_obj_perm', False))
+        self.assertTrue(getattr(CustomUserTestClass, 'del_obj_perm', False))

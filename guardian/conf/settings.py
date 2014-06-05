@@ -18,6 +18,8 @@ RAISE_403 = getattr(settings, 'GUARDIAN_RAISE_403', False)
 GET_INIT_ANONYMOUS_USER = getattr(settings, 'GUARDIAN_GET_INIT_ANONYMOUS_USER',
     'guardian.management.get_init_anonymous_user')
 
+MONKEY_PATCH = getattr(settings, 'GUARDIAN_MONKEY_PATCH', True)
+
 def check_configuration():
     if RENDER_403 and RAISE_403:
         raise ImproperlyConfigured("Cannot use both GUARDIAN_RENDER_403 AND "

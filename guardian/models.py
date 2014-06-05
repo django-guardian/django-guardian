@@ -10,6 +10,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from guardian.compat import user_model_label
 from guardian.compat import unicode
+from guardian.conf import settings
 from guardian.managers import GroupObjectPermissionManager
 from guardian.managers import UserObjectPermissionManager
 
@@ -87,7 +88,7 @@ class GroupObjectPermission(GroupObjectPermissionBase, BaseGenericObjectPermissi
 # As with Django 1.7, you can't use the get_user_model at this point
 # because the app registry isn't ready yet (we're inside a model file).
 import django
-if django.VERSION < (1, 7):
+if django.VERSION < (1, 7) and settings.MONKEY_PATCH:
     from . import monkey_patch_user
     monkey_patch_user()
 

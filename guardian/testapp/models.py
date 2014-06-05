@@ -1,9 +1,13 @@
 from __future__ import unicode_literals
 from datetime import datetime
+
+import django
 from django.db import models
 from django.contrib.admin.models import LogEntry
-from guardian.models import UserObjectPermissionBase, GroupObjectPermissionBase
 
+from guardian.mixins import GuardianUserMixin
+from guardian.models import UserObjectPermissionBase
+from guardian.models import GroupObjectPermissionBase
 
 class DynamicAccessor(object):
     def __init__(self):
@@ -52,3 +56,7 @@ class Mixed(models.Model):
 class LogEntryWithGroup(LogEntry):
     group = models.ForeignKey('auth.Group', null=True, blank=True)
 
+if django.VERSION > (1, 5):
+    from django.contrib.auth.models import AbstractUser
+    class CustomUser(AbstractUser, GuardianUserMixin):
+        pass

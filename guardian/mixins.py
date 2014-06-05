@@ -7,7 +7,9 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ImproperlyConfigured
 from django.core.exceptions import PermissionDenied
 from guardian.compat import basestring
+from guardian.models import UserObjectPermission
 from guardian.utils import get_403_or_None
+from guardian.utils import get_anonymous_user
 
 
 class LoginRequiredMixin(object):
@@ -188,3 +190,15 @@ class PermissionRequiredMixin(object):
             return response
         return super(PermissionRequiredMixin, self).dispatch(request, *args,
             **kwargs)
+
+
+class GuardianUserMixin(object):
+    @staticmethod
+    def get_anonymous():
+        return get_anonymous_user()
+
+    def add_obj_perm(self, perm, obj):
+        return UserObjectPermission.objects.assign_perm(perm, self, obj)
+
+    def del_obj_perm(self, perm, obj):
+        return UserObjectPermission.objects.remove_perm(perm, self, obj)
