@@ -62,7 +62,7 @@ Something similar to:
 
 As there are no real foreing keys pointing at the target model this solution
 might not be enough for all cases. In example if we try to build an issues
-tracking service and we'd like to be able to support thousends of users and
+tracking service and we'd like to be able to support thousands of users and
 their project/tickets, object level permission checks can be slow with this
 generic solution.
 
