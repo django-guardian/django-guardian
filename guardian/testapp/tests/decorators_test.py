@@ -358,6 +358,12 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
             '/foobar/'))
     
     def test_redirection_class(self):
+        import django
+
+        if django.get_version() < "1.5":
+            # skip this test for django versions < 1.5
+            return
+
         from guardian.testapp.models import Project
         settings.LOGIN_URL = 'django.contrib.auth.views.login'
         request = self._get_request(self.user)
