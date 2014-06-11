@@ -23,6 +23,7 @@ from guardian.testapp.tests.conf import TEST_SETTINGS
 from guardian.testapp.tests.conf import TestDataMixin
 from guardian.testapp.tests.conf import override_settings
 from guardian.testapp.tests.conf import skipUnlessTestApp
+from django.core.urlresolvers import reverse
 
 User = get_user_model()
 user_model_path = get_user_model_path()
@@ -355,4 +356,22 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
         self.assertTrue(isinstance(response, HttpResponseRedirect))
         self.assertTrue(response._headers['location'][1].startswith(
             '/foobar/'))
+    
+    def test_redirection_class(self):
+        from guardian.testapp.models import Project
+        settings.LOGIN_URL = 'django.contrib.auth.views.login'
+        request = self._get_request(self.user)
+
+        User.objects.create(username='foo')
+        Project.objects.create(name='foobar')
+
+        @permission_required('testapp.change_project',
+            (Project, 'name', 'project_name'),
+            login_url=settings.LOGIN_URL)
+        def dummy_view(request, project_name):
+            pass
+        response = dummy_view(request, project_name='foobar')
+        self.assertTrue(isinstance(response, HttpResponseRedirect))
+        self.assertTrue(response._headers['location'][1].startswith(
+            reverse(settings.LOGIN_URL)))
 
