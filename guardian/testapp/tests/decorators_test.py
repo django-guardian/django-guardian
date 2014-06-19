@@ -357,6 +357,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
         self.assertTrue(response._headers['location'][1].startswith(
             '/foobar/'))
     
+    @override_settings(LOGIN_URL='django.contrib.auth.views.login')
     def test_redirection_class(self):
         import django
 
@@ -365,7 +366,6 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
             return
 
         from guardian.testapp.models import Project
-        settings.LOGIN_URL = 'django.contrib.auth.views.login'
         request = self._get_request(self.user)
 
         User.objects.create(username='foo')
