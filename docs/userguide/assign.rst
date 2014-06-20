@@ -19,9 +19,9 @@ Let's assume we have following model:
         reported_by = models.ForeignKey(User)
         created_at = models.DateTimeField(auto_now_add=True)
 
-... and we want to be able to set custom permission *view_task*. We let know
-Django to do so by adding ``permissions`` tuple to ``Meta`` class and our final
-model could look like:
+... and we want to be able to set custom permission *view_task*. We let Django 
+know to do so by adding a ``permissions`` tuple to a ``Meta`` class and our final
+model could look like this:
 
 .. code-block:: python
 
@@ -36,8 +36,8 @@ model could look like:
                 ('view_task', 'View task'),
             )
 
-After we call ``syncdb`` management command our *view_task* permission would be
-added to default set of permissions.
+After we call the ``syncdb`` management command our *view_task* permission will be
+added to the default set of permissions.
 
 .. note::
    By default, Django adds 3 permissions for each registered model:
@@ -50,7 +50,7 @@ added to default set of permissions.
    http://docs.djangoproject.com/en/1.2/topics/auth/#default-permissions for
    more detail.
 
-There is nothing new here since creation of permissions is 
+There is nothing new here since the creation of permissions is 
 `handled by django <http://docs.djangoproject.com/en/1.2/topics/auth/#id1>`_.
 Now we can move to :ref:`assigning object permissions <assign-obj-perms>`.
 
@@ -59,13 +59,13 @@ Now we can move to :ref:`assigning object permissions <assign-obj-perms>`.
 Assign object permissions
 -------------------------
 
-We can assign permissions for any user/group and object pairs using same,
+We can assign permissions for any pair of user/group and object (model instance) using the same
 convenient function: :func:`guardian.shortcuts.assign_perm`.
 
-For user
-~~~~~~~~
+For a user
+~~~~~~~~~~
 
-Continuing our example we now can allow Joe user to view some task:
+Continuing with our example above, we now can allow our User Joe to view some task:
 
 .. code-block:: python
 
@@ -76,7 +76,7 @@ Continuing our example we now can allow Joe user to view some task:
     >>> joe.has_perm('view_task', task)
     False
 
-Well, not so fast Joe, let us create an object permission finally:
+Well, not so fast Joe! Let's create an object permission finally:
 
 .. code-block:: python
 
@@ -86,11 +86,11 @@ Well, not so fast Joe, let us create an object permission finally:
     True
 
 
-For group
-~~~~~~~~~
+For a group
+~~~~~~~~~~~
 
-This case doesn't really differ from user permissions assignment. The only
-difference is we have to pass ``Group`` instance rather than ``User``.
+This case doesn't really differ from our user permissions assignment we just completed. The only
+difference is we have to pass a ``Group`` instance rather than a ``User``.
 
 .. code-block:: python
 
