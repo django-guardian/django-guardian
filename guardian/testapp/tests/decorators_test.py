@@ -23,6 +23,8 @@ from guardian.testapp.tests.conf import TEST_SETTINGS
 from guardian.testapp.tests.conf import TestDataMixin
 from guardian.testapp.tests.conf import override_settings
 from guardian.testapp.tests.conf import skipUnlessTestApp
+from django.core.urlresolvers import reverse
+from django import get_version as django_get_version
 
 User = get_user_model()
 user_model_path = get_user_model_path()
@@ -355,4 +357,15 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
         self.assertTrue(isinstance(response, HttpResponseRedirect))
         self.assertTrue(response._headers['location'][1].startswith(
             '/foobar/'))
+    
+    @override_settings(LOGIN_URL='django.contrib.auth.views.login')
+    def test_redirection_class(self):
+        view_url = '/permission_required/'
+
+        if django_get_version() < "1.5":
+            # skip this test for django versions < 1.5
+            return
+
+        response = self.client.get(view_url)
+        self.assertRedirects(response, reverse(settings.LOGIN_URL) + "?next=" + view_url)
 
