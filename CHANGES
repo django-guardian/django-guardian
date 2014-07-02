@@ -1,5 +1,5 @@
-Release 1.3 (in development)
-============================
+Release 1.2.2 (Jul 2, 2014)
+===========================
 
 * Fixed issue with custom primary keys at admin extensions (Thanks Omer Katz)
 * ``get_403_or_None`` now accepts Python path to the view function, for example
