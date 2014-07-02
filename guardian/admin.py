@@ -208,7 +208,7 @@ class GuardedModelAdminMixin(object):
         """
         Manages selected users' permissions for current object.
         """
-        user = get_object_or_404(get_user_model(), id=user_id)
+        user = get_object_or_404(get_user_model(), pk=user_id)
         obj = get_object_or_404(self.queryset(request), pk=object_pk)
         form_class = self.get_obj_perms_manage_user_form()
         form = form_class(user, obj, request.POST or None)
