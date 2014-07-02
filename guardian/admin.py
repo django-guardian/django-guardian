@@ -156,7 +156,7 @@ class GuardedModelAdminMixin(object):
                 self.model._meta.module_name
             )
             if user_form.is_valid():
-                user_id = user_form.cleaned_data['user'].id
+                user_id = user_form.cleaned_data['user'].pk
                 url = reverse(
                     '%s:%s_%s_permissions_manage_user' % info,
                     args=[obj.pk, user_id]
