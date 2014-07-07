@@ -207,22 +207,22 @@ class GetUsersWithPermsTest(TestCase):
         assign_perm("change_contenttype", self.group2, self.obj1)
         assign_perm("delete_contenttype", self.group3, self.obj2)
 
-        result = get_users_with_perms(self.obj1).values_list('id',
+        result = get_users_with_perms(self.obj1).values_list('pk',
             flat=True)
         self.assertEqual(
             set(result),
-            set([u.id for u in (self.user1, self.user2)])
+            set([u.pk for u in (self.user1, self.user2)])
         )
 
     def test_users_groups_after_removal(self):
         self.test_users_groups_perms()
         remove_perm("change_contenttype", self.group1, self.obj1)
 
-        result = get_users_with_perms(self.obj1).values_list('id',
+        result = get_users_with_perms(self.obj1).values_list('pk',
             flat=True)
         self.assertEqual(
             set(result),
-            set([self.user2.id]),
+            set([self.user2.pk]),
         )
 
     def test_attach_perms(self):
