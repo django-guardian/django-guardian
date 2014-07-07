@@ -19,8 +19,8 @@ Let's assume we have following model:
         reported_by = models.ForeignKey(User)
         created_at = models.DateTimeField(auto_now_add=True)
 
-... and we want to be able to set custom permission *view_task*. We let know
-Django to do so by adding ``permissions`` tuple to ``Meta`` class and our final
+... and we want to be able to set custom permission *view_task*. We let Django
+know to do so by adding ``permissions`` tuple to ``Meta`` class and our final
 model could look like:
 
 .. code-block:: python
