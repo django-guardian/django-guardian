@@ -54,7 +54,7 @@ class AdminTests(TestCase):
     def test_view_manage_wrong_obj(self):
         self._login_superuser()
         url = reverse('admin:%s_%s_permissions_manage_user' % self.obj_info,
-                kwargs={'object_pk': -10, 'user_id': self.user.id})
+                kwargs={'object_pk': -10, 'user_id': self.user.pk})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 404)
 
@@ -83,20 +83,20 @@ class AdminTests(TestCase):
         self.assertEqual(response.redirect_chain[0][1], 302)
         redirect_url = reverse('admin:%s_%s_permissions_manage_user' %
             self.obj_info, kwargs={'object_pk': self.obj.pk,
-                'user_id': self.user.id})
+                'user_id': self.user.pk})
         self.assertEqual(response.request['PATH_INFO'], redirect_url)
 
     def test_view_manage_negative_user_form(self):
         self._login_superuser()
         url = reverse('admin:%s_%s_permissions' % self.obj_info,
             args=[self.obj.pk])
-        self.user = User.objects.create(username='negative_id_user', id=-2010)
+        self.user = User.objects.create(username='negative_id_user', pk=-2010)
         data = {'user': self.user.username, 'submit_manage_user': 'submit'}
         response = self.client.post(url, data, follow=True)
         self.assertEqual(len(response.redirect_chain), 1)
         self.assertEqual(response.redirect_chain[0][1], 302)
         redirect_url = reverse('admin:%s_%s_permissions_manage_user' %
-            self.obj_info, args=[self.obj.pk, self.user.id])
+            self.obj_info, args=[self.obj.pk, self.user.pk])
         self.assertEqual(response.request['PATH_INFO'], redirect_url)
 
     def test_view_manage_user_form_wrong_user(self):
@@ -132,7 +132,7 @@ class AdminTests(TestCase):
     def test_view_manage_user_wrong_perms(self):
         self._login_superuser()
         url = reverse('admin:%s_%s_permissions_manage_user' % self.obj_info,
-            args=[self.obj.pk, self.user.id])
+            args=[self.obj.pk, self.user.pk])
         perms = ['change_user'] # This is not self.obj related permission
         data = {'permissions': perms}
         response = self.client.post(url, data, follow=True)
@@ -142,7 +142,7 @@ class AdminTests(TestCase):
     def test_view_manage_user(self):
         self._login_superuser()
         url = reverse('admin:%s_%s_permissions_manage_user' % self.obj_info,
-            args=[self.obj.pk, self.user.id])
+            args=[self.obj.pk, self.user.pk])
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
@@ -338,9 +338,9 @@ class GuardedModelAdminTests(TestCase):
         jane = User.objects.create_user('jane', 'jane@example.com', 'jane')
         ctype = ContentType.objects.get_for_model(User)
         joe_entry = LogEntry.objects.create(user=joe, content_type=ctype,
-            object_id=joe.id, action_flag=1, change_message='foo')
+            object_id=joe.pk, action_flag=1, change_message='foo')
         LogEntry.objects.create(user=jane, content_type=ctype,
-            object_id=jane.id, action_flag=1, change_message='bar')
+            object_id=jane.pk, action_flag=1, change_message='bar')
         request = HttpRequest()
         request.user = joe
         qs = gma.queryset(request)
@@ -356,9 +356,9 @@ class GuardedModelAdminTests(TestCase):
         jane = User.objects.create_user('jane', 'jane@example.com', 'jane')
         ctype = ContentType.objects.get_for_model(User)
         joe_entry = LogEntry.objects.create(user=joe, content_type=ctype,
-            object_id=joe.id, action_flag=1, change_message='foo')
+            object_id=joe.pk, action_flag=1, change_message='foo')
         jane_entry = LogEntry.objects.create(user=jane, content_type=ctype,
-            object_id=jane.id, action_flag=1, change_message='bar')
+            object_id=jane.pk, action_flag=1, change_message='bar')
         request = HttpRequest()
         request.user = joe
         qs = gma.queryset(request)
@@ -379,11 +379,11 @@ class GuardedModelAdminTests(TestCase):
         jane.groups.add(jane_group)
         ctype = ContentType.objects.get_for_model(User)
         LogEntry.objects.create(user=joe, content_type=ctype,
-            object_id=joe.id, action_flag=1, change_message='foo')
+            object_id=joe.pk, action_flag=1, change_message='foo')
         LogEntry.objects.create(user=jane, content_type=ctype,
-            object_id=jane.id, action_flag=1, change_message='bar')
+            object_id=jane.pk, action_flag=1, change_message='bar')
         joe_entry_group = LogEntry.objects.create(user=jane, content_type=ctype,
-            object_id=joe.id, action_flag=1, change_message='foo',
+            object_id=joe.pk, action_flag=1, change_message='foo',
             group=joe_group)
         request = HttpRequest()
         request.user = joe
@@ -404,14 +404,14 @@ class GuardedModelAdminTests(TestCase):
         jane.groups.add(jane_group)
         ctype = ContentType.objects.get_for_model(User)
         LogEntry.objects.create(user=joe, content_type=ctype,
-            object_id=joe.id, action_flag=1, change_message='foo')
+            object_id=joe.pk, action_flag=1, change_message='foo')
         LogEntry.objects.create(user=jane, content_type=ctype,
-            object_id=jane.id, action_flag=1, change_message='bar')
+            object_id=jane.pk, action_flag=1, change_message='bar')
         LogEntry.objects.create(user=jane, content_type=ctype,
-            object_id=joe.id, action_flag=1, change_message='foo',
+            object_id=joe.pk, action_flag=1, change_message='foo',
             group=joe_group)
         LogEntry.objects.create(user=joe, content_type=ctype,
-            object_id=joe.id, action_flag=1, change_message='foo',
+            object_id=joe.pk, action_flag=1, change_message='foo',
             group=jane_group)
         request = HttpRequest()
         request.user = joe
