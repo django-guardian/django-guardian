@@ -29,7 +29,7 @@ class ObjectPermissionTestCase(TestCase):
         self.ctype = ContentType.objects.create(name='foo', model='bar',
             app_label='fake-for-guardian-tests')
         try:
-            self.anonymous_user = User.objects.get(id=settings.ANONYMOUS_USER_ID)
+            self.anonymous_user = User.objects.get(pk=settings.ANONYMOUS_USER_ID)
         except User.DoesNotExist:
             self.anonymous_user = User(
                 id=settings.ANONYMOUS_USER_ID,

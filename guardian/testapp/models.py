@@ -9,6 +9,7 @@ from guardian.mixins import GuardianUserMixin
 from guardian.models import UserObjectPermissionBase
 from guardian.models import GroupObjectPermissionBase
 
+
 class DynamicAccessor(object):
     def __init__(self):
         pass
@@ -35,6 +36,7 @@ class Project(models.Model):
     def __unicode__(self):
         return self.name
 
+
 Project.not_a_relation_descriptor = DynamicAccessor()
 
 
@@ -59,4 +61,4 @@ class LogEntryWithGroup(LogEntry):
 if django.VERSION > (1, 5):
     from django.contrib.auth.models import AbstractUser
     class CustomUser(AbstractUser, GuardianUserMixin):
-        pass
+        custom_id = models.AutoField(primary_key=True)

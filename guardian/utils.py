@@ -35,7 +35,7 @@ def get_anonymous_user():
     Returns ``User`` instance (not ``AnonymousUser``) depending on
     ``ANONYMOUS_USER_ID`` configuration.
     """
-    return get_user_model().objects.get(id=guardian_settings.ANONYMOUS_USER_ID)
+    return get_user_model().objects.get(pk=guardian_settings.ANONYMOUS_USER_ID)
 
 
 def get_identity(identity):

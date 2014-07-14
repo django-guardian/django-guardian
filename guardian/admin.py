@@ -224,7 +224,7 @@ class GuardedModelAdminMixin(object):
             )
             url = reverse(
                 '%s:%s_%s_permissions_manage_user' % info,
-                args=[obj.pk, user.id]
+                args=[obj.pk, user.pk]
             )
             return redirect(url)
 
