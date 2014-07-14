@@ -1,8 +1,14 @@
-Release 1.2.3 (Jul 14, 2014)
+Release 1.2.4 (Jul 14, 2014)
 ===========================
 
 * Fixed another issue with custom primary keys at admin extensions (Thanks Omer
   Katz)
+
+
+Release 1.2.3 (Jul 14, 2014)
+===========================
+
+Unfortunately this was broken release not including any important changes.
 
 
 Release 1.2.2 (Jul 2, 2014)
