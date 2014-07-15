@@ -54,7 +54,7 @@ class ObjectPermissionBackend(object):
         if not user_obj.is_active:
             return False
 
-        if len(perm.split('.')) > 1:
+        if '.' in perm:
             app_label, perm = perm.split('.')
             if app_label != obj._meta.app_label:
                 raise WrongAppError("Passed perm has app label of '%s' and "
