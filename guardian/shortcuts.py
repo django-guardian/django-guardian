@@ -431,13 +431,9 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
         user_obj_perms_queryset = counts.filter(object_pk_count__gte=len(codenames))
 
     values = user_obj_perms_queryset.values_list(fields[0], flat=True)
-    if user_model.objects.is_generic():
-        values = [int(v) for v in values]
     objects = queryset.filter(pk__in=values)
     if use_groups:
         values = groups_obj_perms_queryset.values_list(fields[0], flat=True)
-        if group_model.objects.is_generic():
-            values = [int(v) for v in values]
         objects |= queryset.filter(pk__in=values)
 
     return objects
