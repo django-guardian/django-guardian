@@ -46,6 +46,38 @@ class UserObjectPermissionManager(BaseObjectPermissionManager):
         warnings.warn("UserObjectPermissionManager method 'assign' is being renamed to 'assign_perm'. Update your code accordingly as old name will be depreciated in 2.0 version.", DeprecationWarning)
         return self.assign_perm(perm, user, obj)
 
+    def bulk_assign_perm(self, perm, users, objs):
+        """
+        Assigns permission with given ``perm`` for bulk instances ``objs`` and
+
+        given ``users``.
+        """
+        for obj in objs:
+            if getattr(obj, 'pk', None) is None:
+                raise ObjectNotPersisted(
+                    "Objects needs to be persisted first")
+
+        ctype = ContentType.objects.get_for_model(objs[0])
+        permission = Permission.objects.get(content_type=ctype, codename=perm)
+
+        if self.is_generic():
+            kwargs_list = [{'permission': permission,
+                            'user': user,
+                            'content_type': ctype,
+                            'object_pk': obj.pk}
+                           for obj in objs
+                           for user in users]
+        else:
+            kwargs_list = [{'permission': permission,
+                            'user': user,
+                            'content_object': obj}
+                           for obj in objs
+                           for user in users]
+
+        return self.bulk_create([
+            self.model(**kwargs) for kwargs in kwargs_list
+        ])
+
     def remove_perm(self, perm, user, obj):
         """
         Removes permission ``perm`` for an instance ``obj`` and given ``user``.

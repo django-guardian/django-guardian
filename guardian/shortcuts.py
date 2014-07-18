@@ -98,6 +98,75 @@ def assign(perm, user_or_group, obj=None):
     warnings.warn("Shortcut function 'assign' is being renamed to 'assign_perm'. Update your code accordingly as old name will be depreciated in 2.0 version.", DeprecationWarning)
     return assign_perm(perm, user_or_group, obj)
 
+def bulk_assign_perm(perm, users_or_groups, objs=None):
+    """
+    Bulk assign permission to users/groups and objects pair.
+
+    :param perm: proper permission for given ``objs``, as string (in format:
+      ``app_label.codename`` or ``codename``). If ``objs`` is not given, must
+      be in format ``app_label.codename``.
+
+    :param users_or_groups: instances of ``User``, ``AnonymousUser`` or ``Group``;
+      passing any other objects would raise
+      ``guardian.exceptions.NotUserNorGroup`` exception
+
+    :param objs: persisted Django's ``Model`` instances or ``None`` if assigning
+      global permission. Default is ``None``.
+
+    We can assign permission for ``Model`` instances for specific users:
+
+    >>> from django.contrib.sites.models import Site
+    >>> from guardian.compat import get_user_model
+    >>> from guardian.shortcuts import bulk_assign_perm
+    >>> User = get_user_model
+    >>> Site.objects.bulk_create([
+    ... Site(domain='d_vitan', name='vitan.com'),
+    ... Site(domain='d_elain', name='elain.com')])
+    >>> User.objects.bulk_create([
+    ... User(username='vitan'),
+    ... User(username='elain')])
+    >>> site_qs = Site.objects.all()
+    >>> user_qs = User.objects.all()
+    >>> bulk_assign_perm("change_site", user_qs, site_qs)
+    [<UserObjectPermission: vitan.com | vitan | change_site>, ...]
+    >>> for user in user_qs:
+    ...     for site in site_qs:
+    ...         user.has_perm("change_site", site)
+    True
+    True
+    True
+    True
+
+    **Global permissions**
+
+    This function may also be used to assign standard, *global* permissions if
+    ``objs`` parameter is omitted. Added Permission would be returned in that
+    case:
+
+    >>> bulk_assign_perm("sites.change_site", user_qs)
+    <Permission: sites | site | Can change site>
+
+    """
+
+    user, group = get_identity(users_or_groups[0])
+    # If objs is None we try to operate on global permissions
+    if objs is None:
+        try:
+            app_label, codename = perm.split('.', 1)
+        except ValueError:
+            raise ValueError("For global permissions, first argument must be in"
+                " format: 'app_label.codename' (is %r)" % perm)
+        perm = Permission.objects.get(content_type__app_label=app_label,
+            codename=codename)
+        if user:
+            perm.user_set.add(*users_or_groups)
+            return perm
+
+    perm = perm.split('.')[-1]
+    if user:
+        model = get_user_obj_perms_model(objs[0])
+        return model.objects.bulk_assign_perm(perm, users_or_groups, objs)
+
 def remove_perm(perm, user_or_group=None, obj=None):
     """
     Removes permission from user/group and object pair.

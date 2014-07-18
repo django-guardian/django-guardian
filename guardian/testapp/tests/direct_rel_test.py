@@ -7,6 +7,7 @@ from django.contrib.auth.models import Group, Permission
 from django.test import TestCase
 from guardian.compat import get_user_model
 from guardian.shortcuts import assign_perm
+from guardian.shortcuts import bulk_assign_perm
 from guardian.shortcuts import get_groups_with_perms
 from guardian.shortcuts import get_objects_for_group
 from guardian.shortcuts import get_objects_for_user
@@ -24,6 +25,14 @@ class TestDirectUserPermissions(TestCase):
     def setUp(self):
         self.joe = User.objects.create_user('joe', 'joe@example.com', 'foobar')
         self.project = Project.objects.create(name='Foobar')
+        sample = [str(i) for i in range(5)]
+        User.objects.bulk_create([User(username=item)
+                                  for item in sample])
+        Project.objects.bulk_create([
+            Project(name=item)
+            for item in sample])
+        self.user_set = User.objects.filter(username__in=sample)
+        self.project_set = Project.objects.filter(name__in=sample)
 
     def get_perm(self, codename):
         filters = {'content_type__app_label': 'testapp', 'codename': codename}
@@ -50,6 +59,16 @@ class TestDirectUserPermissions(TestCase):
         }
         result = ProjectUserObjectPermission.objects.filter(**filters).count()
         self.assertEqual(result, 1)
+
+    def test_bulk_assign_perm(self):
+        bulk_assign_perm('add_project', self.user_set, self.project_set)
+        filters = {
+            'content_object__in': self.project_set,
+            'permission__codename': 'add_project',
+            'user__in': self.user_set,
+        }
+        result = ProjectUserObjectPermission.objects.filter(**filters).count()
+        self.assertEqual(result, 25)
 
     def test_remove_perm(self):
         assign_perm('add_project', self.joe, self.project)

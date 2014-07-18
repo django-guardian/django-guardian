@@ -106,10 +106,15 @@ class UserPermissionTests(TestDataMixin, TestCase):
 
     def test_errors(self):
         not_saved_user = User(username='not_saved_user')
+        not_saved_user_list = [User(username='not_saved_user_vitan'),
+                               User(username='not_saved_user_elain')]
         codename = get_user_permission_codename('change')
         self.assertRaises(ObjectNotPersisted,
             UserObjectPermission.objects.assign_perm,
             codename, self.user, not_saved_user)
+        self.assertRaises(ObjectNotPersisted,
+            UserObjectPermission.objects.bulk_assign_perm,
+            codename, [self.user], not_saved_user_list)
         self.assertRaises(ObjectNotPersisted,
             UserObjectPermission.objects.remove_perm,
                 codename, self.user, not_saved_user)

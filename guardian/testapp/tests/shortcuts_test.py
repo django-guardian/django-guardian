@@ -11,6 +11,7 @@ from guardian.compat import get_user_model
 from guardian.compat import get_user_permission_full_codename
 from guardian.shortcuts import assign
 from guardian.shortcuts import assign_perm
+from guardian.shortcuts import bulk_assign_perm
 from guardian.shortcuts import remove_perm
 from guardian.shortcuts import get_perms
 from guardian.shortcuts import get_users_with_perms
@@ -62,10 +63,21 @@ class AssignPermTest(ObjectPermissionTestCase):
             perm="change_site", # for global permissions must provide app_label
             user_or_group=self.user)
 
+    def test_global_wrong_perm_bulk(self):
+        self.assertRaises(ValueError, bulk_assign_perm,
+            perm="change_site", # for global permissions must provide app_label
+            users_or_groups=self.user_set)
+
     def test_user_assign_perm(self):
         assign_perm("change_contenttype", self.user, self.ctype)
         assign_perm("change_contenttype", self.group, self.ctype)
         self.assertTrue(self.user.has_perm("change_contenttype", self.ctype))
+
+    def test_user_bulk_assign_perm(self):
+        bulk_assign_perm("change_contenttype", self.user_set, self.ctype_set)
+        for user in self.user_set:
+            for ctype in self.ctype_set:
+                self.assertTrue(user.has_perm("change_contenttype", ctype))
 
     def test_group_assign_perm(self):
         assign_perm("change_contenttype", self.group, self.ctype)
@@ -78,6 +90,12 @@ class AssignPermTest(ObjectPermissionTestCase):
     def test_user_assign_perm_global(self):
         perm = assign_perm("contenttypes.change_contenttype", self.user)
         self.assertTrue(self.user.has_perm("contenttypes.change_contenttype"))
+        self.assertTrue(isinstance(perm, Permission))
+
+    def test_user_bulk_assign_perm_global(self):
+        perm = bulk_assign_perm("contenttypes.change_contenttype", self.user_set)
+        for user in self.user_set:
+            self.assertTrue(user.has_perm("contenttypes.change_contenttype"))
         self.assertTrue(isinstance(perm, Permission))
 
     def test_group_assign_perm_global(self):
