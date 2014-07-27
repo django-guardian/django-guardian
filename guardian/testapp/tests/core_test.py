@@ -37,6 +37,14 @@ class ObjectPermissionTestCase(TestCase):
             for item in sample])
         self.user_set = User.objects.filter(username__in=sample)
         self.ctype_set = ContentType.objects.filter(name__in=sample)
+        Group.objects.bulk_create([Group(name='vitanGroup'),
+                                   Group(name='elainGroup')])
+        self.group_set = Group.objects.filter(name__in=['vitanGroup',
+                                                        'elainGroup'])
+        for user in self.user_set[:2]:
+            user.groups.add(self.group_set[0])
+        for user in self.user_set[2:]:
+            user.groups.add(self.group_set[1])
 
         try:
             self.anonymous_user = User.objects.get(pk=settings.ANONYMOUS_USER_ID)

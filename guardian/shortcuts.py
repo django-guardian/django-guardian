@@ -137,6 +137,21 @@ def bulk_assign_perm(perm, users_or_groups, objs=None):
     True
     True
 
+    ... or we can assign permission for groups:
+
+    >>> group = Group.objects.create(name='joe-group')
+    >>> for user in user_qs:
+    ...     user.groups.add(group)
+    >>> bulk_assign_perm("delete_site", [group], site_qs)
+    [<GroupObjectPermission: vitan.com | joe-group | delete_site>, ...]
+    >>> for user in user_qs:
+    ...     for site in site_qs:
+    ...         user.has_perm("delete_site", site)
+    True
+    True
+    True
+    True
+
     **Global permissions**
 
     This function may also be used to assign standard, *global* permissions if
@@ -161,10 +176,16 @@ def bulk_assign_perm(perm, users_or_groups, objs=None):
         if user:
             perm.user_set.add(*users_or_groups)
             return perm
+        if group:
+            perm.group_set.add(*users_or_groups)
+            return perm
 
     perm = perm.split('.')[-1]
     if user:
         model = get_user_obj_perms_model(objs[0])
+        return model.objects.bulk_assign_perm(perm, users_or_groups, objs)
+    if group:
+        model = get_group_obj_perms_model(objs[0])
         return model.objects.bulk_assign_perm(perm, users_or_groups, objs)
 
 def remove_perm(perm, user_or_group=None, obj=None):

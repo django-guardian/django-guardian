@@ -87,6 +87,17 @@ class AssignPermTest(ObjectPermissionTestCase):
         self.assertTrue(check.has_perm("change_contenttype", self.ctype))
         self.assertTrue(check.has_perm("delete_contenttype", self.ctype))
 
+    def test_group_bulk_assign_perm(self):
+        bulk_assign_perm("change_contenttype", self.group_set, self.ctype_set)
+        bulk_assign_perm("delete_contenttype", self.group_set, self.ctype_set)
+
+        for group in self.group_set:
+            for ctype in self.ctype_set:
+                check = ObjectPermissionChecker(group)
+                self.assertTrue(check.has_perm("change_contenttype", ctype))
+                self.assertTrue(check.has_perm("delete_contenttype", ctype))
+
+
     def test_user_assign_perm_global(self):
         perm = assign_perm("contenttypes.change_contenttype", self.user)
         self.assertTrue(self.user.has_perm("contenttypes.change_contenttype"))
@@ -102,6 +113,14 @@ class AssignPermTest(ObjectPermissionTestCase):
         perm = assign_perm("contenttypes.change_contenttype", self.group)
 
         self.assertTrue(self.user.has_perm("contenttypes.change_contenttype"))
+        self.assertTrue(isinstance(perm, Permission))
+
+    def test_group_bulk_assign_perm_global(self):
+        perm = bulk_assign_perm("contenttypes.change_contenttype",
+                                self.group_set)
+
+        for user in self.user_set:
+            self.assertTrue(user.has_perm("contenttypes.change_contenttype"))
         self.assertTrue(isinstance(perm, Permission))
 
     def test_deprecation_warning(self):

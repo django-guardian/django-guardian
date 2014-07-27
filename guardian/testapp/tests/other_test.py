@@ -206,9 +206,14 @@ class GroupPermissionTests(TestDataMixin, TestCase):
 
     def test_errors(self):
         not_saved_group = Group(name='not_saved_group')
+        not_saved_group_list = [Group(name='not_saved_group_vitan'),
+                               Group(name='not_saved_group_elain')]
         self.assertRaises(ObjectNotPersisted,
             GroupObjectPermission.objects.assign_perm,
             "change_group", self.group, not_saved_group)
+        self.assertRaises(ObjectNotPersisted,
+            GroupObjectPermission.objects.bulk_assign_perm,
+            "change_group", [self.group], not_saved_group_list)
         self.assertRaises(ObjectNotPersisted,
             GroupObjectPermission.objects.remove_perm,
             "change_group", self.group, not_saved_group)

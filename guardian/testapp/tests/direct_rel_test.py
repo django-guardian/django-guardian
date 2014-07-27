@@ -129,6 +129,13 @@ class TestDirectGroupPermissions(TestCase):
         self.group = Group.objects.create(name='admins')
         self.joe.groups.add(self.group)
         self.project = Project.objects.create(name='Foobar')
+        sample = [str(i) for i in range(5)]
+        Group.objects.bulk_create([Group(name=item) for item in sample])
+        Project.objects.bulk_create([
+            Project(name=item)
+            for item in sample])
+        self.group_set = Group.objects.filter(name__in=sample)
+        self.project_set = Project.objects.filter(name__in=sample)
 
     def get_perm(self, codename):
         filters = {'content_type__app_label': 'testapp', 'codename': codename}
@@ -155,6 +162,16 @@ class TestDirectGroupPermissions(TestCase):
         }
         result = ProjectGroupObjectPermission.objects.filter(**filters).count()
         self.assertEqual(result, 1)
+
+    def test_bulk_assign_perm(self):
+        bulk_assign_perm('add_project', self.group_set, self.project_set)
+        filters = {
+            'content_object__in': self.project_set,
+            'permission__codename': 'add_project',
+            'group__in': self.group_set,
+        }
+        result = ProjectGroupObjectPermission.objects.filter(**filters).count()
+        self.assertEqual(result, 25)
 
     def test_remove_perm(self):
         assign_perm('add_project', self.group, self.project)

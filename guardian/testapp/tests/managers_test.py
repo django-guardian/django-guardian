@@ -26,3 +26,10 @@ class TestManagers(TestCase):
         manager.assign('perm', 'group', 'object')
         manager.assign_perm.assert_called_once_with('perm', 'group', 'object')
 
+    def test_group_manager_bulk_assign(self):
+        manager = GroupObjectPermissionManager()
+        manager.bulk_assign_perm = mock.Mock()
+        manager.bulk_assign_perm('perm', 'groups', 'objects')
+        manager.bulk_assign_perm.assert_called_once_with('perm', 'groups',
+                                                         'objects')
+
