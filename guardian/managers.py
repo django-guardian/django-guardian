@@ -123,10 +123,10 @@ class GroupObjectPermissionManager(BaseObjectPermissionManager):
         obj_perm, created = self.get_or_create(**kwargs)
         return obj_perm
 
-    def assign(self, perm, user, obj):
+    def assign(self, perm, group, obj):
         """ Depreciated function name left in for compatibility"""
-        warnings.warn("UserObjectPermissionManager method 'assign' is being renamed to 'assign_perm'. Update your code accordingly as old name will be depreciated in 2.0 version.", DeprecationWarning)
-        return self.assign_perm(perm, user, obj)
+        warnings.warn("GroupObjectPermissionManager method 'assign' is being renamed to 'assign_perm'. Update your code accordingly as old name will be depreciated in 2.0 version.", DeprecationWarning)
+        return self.assign_perm(perm, group, obj)
 
     def remove_perm(self, perm, group, obj):
         """
