@@ -28,6 +28,24 @@ class ObjectPermissionTestCase(TestCase):
         self.user.groups.add(self.group)
         self.ctype = ContentType.objects.create(name='foo', model='bar',
             app_label='fake-for-guardian-tests')
+        sample = [str(i) for i in range(5)]
+        User.objects.bulk_create([User(username=item)
+                                  for item in sample])
+        ContentType.objects.bulk_create([
+            ContentType(name=item, model=item,
+                        app_label='fake-for-guardian-tests')
+            for item in sample])
+        self.user_set = User.objects.filter(username__in=sample)
+        self.ctype_set = ContentType.objects.filter(name__in=sample)
+        Group.objects.bulk_create([Group(name='vitanGroup'),
+                                   Group(name='elainGroup')])
+        self.group_set = Group.objects.filter(name__in=['vitanGroup',
+                                                        'elainGroup'])
+        for user in self.user_set[:2]:
+            user.groups.add(self.group_set[0])
+        for user in self.user_set[2:]:
+            user.groups.add(self.group_set[1])
+
         try:
             self.anonymous_user = User.objects.get(pk=settings.ANONYMOUS_USER_ID)
         except User.DoesNotExist:

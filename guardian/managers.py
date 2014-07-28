@@ -46,6 +46,38 @@ class UserObjectPermissionManager(BaseObjectPermissionManager):
         warnings.warn("UserObjectPermissionManager method 'assign' is being renamed to 'assign_perm'. Update your code accordingly as old name will be depreciated in 2.0 version.", DeprecationWarning)
         return self.assign_perm(perm, user, obj)
 
+    def bulk_assign_perm(self, perm, users, objs):
+        """
+        Assigns permission with given ``perm`` for bulk instances ``objs`` and
+
+        given ``users``.
+        """
+        for obj in objs:
+            if getattr(obj, 'pk', None) is None:
+                raise ObjectNotPersisted(
+                    "Objects needs to be persisted first")
+
+        ctype = ContentType.objects.get_for_model(objs[0])
+        permission = Permission.objects.get(content_type=ctype, codename=perm)
+
+        if self.is_generic():
+            kwargs_list = [{'permission': permission,
+                            'user': user,
+                            'content_type': ctype,
+                            'object_pk': obj.pk}
+                           for obj in objs
+                           for user in users]
+        else:
+            kwargs_list = [{'permission': permission,
+                            'user': user,
+                            'content_object': obj}
+                           for obj in objs
+                           for user in users]
+
+        return self.bulk_create([
+            self.model(**kwargs) for kwargs in kwargs_list
+        ])
+
     def remove_perm(self, perm, user, obj):
         """
         Removes permission ``perm`` for an instance ``obj`` and given ``user``.
@@ -66,6 +98,31 @@ class UserObjectPermissionManager(BaseObjectPermissionManager):
             filters['object_pk'] = obj.pk
         else:
             filters['content_object__pk'] = obj.pk
+        self.filter(**filters).delete()
+
+    def bulk_remove_perm(self, perm, users, objs):
+        """
+        Removes permission ``perm`` for instances ``objs`` and given ``users``.
+
+        Please note that we do NOT fetch objects permission from database - we
+        use ``Queryset.delete`` method for removing them. Main implication of this
+        is that ``post_delete`` signals would NOT be fired.
+        """
+        for obj in objs:
+            if getattr(obj, 'pk', None) is None:
+                raise ObjectNotPersisted(
+                    "Objects needs to be persisted first")
+
+        filters = {
+            'permission__codename': perm,
+            'permission__content_type': ContentType.objects.get_for_model(objs[0]),
+            'user__in': users,
+        }
+        pk_list = [obj.pk for obj in objs]
+        if self.is_generic():
+            filters['object_pk__in'] = pk_list
+        else:
+            filters['content_object__pk__in'] = pk_list
         self.filter(**filters).delete()
 
 
@@ -91,10 +148,42 @@ class GroupObjectPermissionManager(BaseObjectPermissionManager):
         obj_perm, created = self.get_or_create(**kwargs)
         return obj_perm
 
-    def assign(self, perm, user, obj):
+    def assign(self, perm, group, obj):
         """ Depreciated function name left in for compatibility"""
-        warnings.warn("UserObjectPermissionManager method 'assign' is being renamed to 'assign_perm'. Update your code accordingly as old name will be depreciated in 2.0 version.", DeprecationWarning)
-        return self.assign_perm(perm, user, obj)
+        warnings.warn("GroupObjectPermissionManager method 'assign' is being renamed to 'assign_perm'. Update your code accordingly as old name will be depreciated in 2.0 version.", DeprecationWarning)
+        return self.assign_perm(perm, group, obj)
+
+    def bulk_assign_perm(self, perm, groups, objs):
+        """
+        Assigns permission with given ``perm`` for bulk instances ``objs`` and
+
+        given ``groups``.
+        """
+        for obj in objs:
+            if getattr(obj, 'pk', None) is None:
+                raise ObjectNotPersisted(
+                    "Objects needs to be persisted first")
+
+        ctype = ContentType.objects.get_for_model(objs[0])
+        permission = Permission.objects.get(content_type=ctype, codename=perm)
+
+        if self.is_generic():
+            kwargs_list = [{'permission': permission,
+                            'group': group,
+                            'content_type': ctype,
+                            'object_pk': obj.pk}
+                           for obj in objs
+                           for group in groups]
+        else:
+            kwargs_list = [{'permission': permission,
+                            'group': group,
+                            'content_object': obj}
+                           for obj in objs
+                           for group in groups]
+
+        return self.bulk_create([
+            self.model(**kwargs) for kwargs in kwargs_list
+        ])
 
     def remove_perm(self, perm, group, obj):
         """
@@ -112,5 +201,27 @@ class GroupObjectPermissionManager(BaseObjectPermissionManager):
             filters['object_pk'] = obj.pk
         else:
             filters['content_object__pk'] = obj.pk
+
+        self.filter(**filters).delete()
+
+    def bulk_remove_perm(self, perm, groups, objs):
+        """
+        Removes permission ``perm`` for instances ``objs`` and given ``groups``.
+        """
+        for obj in objs:
+            if getattr(obj, 'pk', None) is None:
+                raise ObjectNotPersisted(
+                    "Objects needs to be persisted first")
+
+        filters = {
+            'permission__codename': perm,
+            'permission__content_type': ContentType.objects.get_for_model(objs[0]),
+            'group__in': groups,
+        }
+        pk_list = [obj.pk for obj in objs]
+        if self.is_generic():
+            filters['object_pk__in'] = pk_list
+        else:
+            filters['content_object__pk__in'] = pk_list
 
         self.filter(**filters).delete()
