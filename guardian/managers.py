@@ -100,6 +100,31 @@ class UserObjectPermissionManager(BaseObjectPermissionManager):
             filters['content_object__pk'] = obj.pk
         self.filter(**filters).delete()
 
+    def bulk_remove_perm(self, perm, users, objs):
+        """
+        Removes permission ``perm`` for instances ``objs`` and given ``users``.
+
+        Please note that we do NOT fetch objects permission from database - we
+        use ``Queryset.delete`` method for removing them. Main implication of this
+        is that ``post_delete`` signals would NOT be fired.
+        """
+        for obj in objs:
+            if getattr(obj, 'pk', None) is None:
+                raise ObjectNotPersisted(
+                    "Objects needs to be persisted first")
+
+        filters = {
+            'permission__codename': perm,
+            'permission__content_type': ContentType.objects.get_for_model(objs[0]),
+            'user__in': users,
+        }
+        pk_list = [obj.pk for obj in objs]
+        if self.is_generic():
+            filters['object_pk__in'] = pk_list
+        else:
+            filters['content_object__pk__in'] = pk_list
+        self.filter(**filters).delete()
+
 
 class GroupObjectPermissionManager(BaseObjectPermissionManager):
 
@@ -176,5 +201,27 @@ class GroupObjectPermissionManager(BaseObjectPermissionManager):
             filters['object_pk'] = obj.pk
         else:
             filters['content_object__pk'] = obj.pk
+
+        self.filter(**filters).delete()
+
+    def bulk_remove_perm(self, perm, groups, objs):
+        """
+        Removes permission ``perm`` for instances ``objs`` and given ``groups``.
+        """
+        for obj in objs:
+            if getattr(obj, 'pk', None) is None:
+                raise ObjectNotPersisted(
+                    "Objects needs to be persisted first")
+
+        filters = {
+            'permission__codename': perm,
+            'permission__content_type': ContentType.objects.get_for_model(objs[0]),
+            'group__in': groups,
+        }
+        pk_list = [obj.pk for obj in objs]
+        if self.is_generic():
+            filters['object_pk__in'] = pk_list
+        else:
+            filters['content_object__pk__in'] = pk_list
 
         self.filter(**filters).delete()

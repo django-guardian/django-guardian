@@ -13,6 +13,7 @@ from guardian.shortcuts import get_objects_for_group
 from guardian.shortcuts import get_objects_for_user
 from guardian.shortcuts import get_users_with_perms
 from guardian.shortcuts import remove_perm
+from guardian.shortcuts import bulk_remove_perm
 from guardian.testapp.tests.conf import skipUnlessTestApp
 
 
@@ -81,6 +82,20 @@ class TestDirectUserPermissions(TestCase):
         self.assertEqual(result, 1)
 
         remove_perm('add_project', self.joe, self.project)
+        result = ProjectUserObjectPermission.objects.filter(**filters).count()
+        self.assertEqual(result, 0)
+
+    def test_bulk_remove_perm(self):
+        bulk_assign_perm('add_project', self.user_set, self.project_set)
+        filters = {
+            'content_object__in': self.project_set,
+            'permission__codename': 'add_project',
+            'user__in': self.user_set,
+        }
+        result = ProjectUserObjectPermission.objects.filter(**filters).count()
+        self.assertEqual(result, 25)
+
+        bulk_remove_perm('add_project', self.user_set, self.project_set)
         result = ProjectUserObjectPermission.objects.filter(**filters).count()
         self.assertEqual(result, 0)
 
@@ -184,6 +199,20 @@ class TestDirectGroupPermissions(TestCase):
         self.assertEqual(result, 1)
 
         remove_perm('add_project', self.group, self.project)
+        result = ProjectGroupObjectPermission.objects.filter(**filters).count()
+        self.assertEqual(result, 0)
+
+    def test_bulk_remove_perm(self):
+        bulk_assign_perm('add_project', self.group_set, self.project_set)
+        filters = {
+            'content_object__in': self.project_set,
+            'permission__codename': 'add_project',
+            'group__in': self.group_set,
+        }
+        result = ProjectGroupObjectPermission.objects.filter(**filters).count()
+        self.assertEqual(result, 25)
+
+        bulk_remove_perm('add_project', self.group_set, self.project_set)
         result = ProjectGroupObjectPermission.objects.filter(**filters).count()
         self.assertEqual(result, 0)
 

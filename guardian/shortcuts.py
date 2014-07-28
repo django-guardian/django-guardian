@@ -183,10 +183,9 @@ def bulk_assign_perm(perm, users_or_groups, objs=None):
     perm = perm.split('.')[-1]
     if user:
         model = get_user_obj_perms_model(objs[0])
-        return model.objects.bulk_assign_perm(perm, users_or_groups, objs)
     if group:
         model = get_group_obj_perms_model(objs[0])
-        return model.objects.bulk_assign_perm(perm, users_or_groups, objs)
+    return model.objects.bulk_assign_perm(perm, users_or_groups, objs)
 
 def remove_perm(perm, user_or_group=None, obj=None):
     """
@@ -226,6 +225,44 @@ def remove_perm(perm, user_or_group=None, obj=None):
     if group:
         model = get_group_obj_perms_model(obj)
         model.objects.remove_perm(perm, group, obj)
+
+def bulk_remove_perm(perm, users_or_groups=None, objs=None):
+    """
+    Removes permission from users/groups and objects pair.
+
+    :param perm: proper permission for given ``objs``, as string (in format:
+      ``app_label.codename`` or ``codename``). If ``objs`` is not given, must
+      be in format ``app_label.codename``.
+
+    :param users_or_groups: instances of ``User``, ``AnonymousUser`` or ``Group``;
+      passing any other object would raise
+      ``guardian.exceptions.NotUserNorGroup`` exception
+
+    :param objs: persisted Django's ``Model`` instances or ``None`` if assigning
+      global permission. Default is ``None``.
+
+    """
+    user, group = get_identity(users_or_groups[0])
+    if objs is None:
+        try:
+            app_label, codename = perm.split('.', 1)
+        except ValueError:
+            raise ValueError("For global permissions, first argument must be in"
+                " format: 'app_label.codename' (is %r)" % perm)
+        perm = Permission.objects.get(content_type__app_label=app_label,
+            codename=codename)
+        if user:
+            perm.user_set.remove(*users_or_groups)
+            return
+        elif group:
+            perm.group_set.remove(*users_or_groups)
+            return
+    perm = perm.split('.')[-1]
+    if user:
+        model = get_user_obj_perms_model(objs[0])
+    if group:
+        model = get_group_obj_perms_model(objs[0])
+    model.objects.bulk_remove_perm(perm, users_or_groups, objs)
 
 def get_perms(user_or_group, obj):
     """

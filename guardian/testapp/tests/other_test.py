@@ -118,6 +118,9 @@ class UserPermissionTests(TestDataMixin, TestCase):
         self.assertRaises(ObjectNotPersisted,
             UserObjectPermission.objects.remove_perm,
                 codename, self.user, not_saved_user)
+        self.assertRaises(ObjectNotPersisted,
+            UserObjectPermission.objects.bulk_remove_perm,
+                codename, [self.user], not_saved_user_list)
 
 
 class GroupPermissionTests(TestDataMixin, TestCase):
@@ -217,6 +220,9 @@ class GroupPermissionTests(TestDataMixin, TestCase):
         self.assertRaises(ObjectNotPersisted,
             GroupObjectPermission.objects.remove_perm,
             "change_group", self.group, not_saved_group)
+        self.assertRaises(ObjectNotPersisted,
+            GroupObjectPermission.objects.bulk_remove_perm,
+            "change_group", [self.group], not_saved_group_list)
 
 
 class ObjectPermissionBackendTests(TestCase):

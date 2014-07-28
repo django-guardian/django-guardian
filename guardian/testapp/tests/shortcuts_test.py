@@ -13,6 +13,7 @@ from guardian.shortcuts import assign
 from guardian.shortcuts import assign_perm
 from guardian.shortcuts import bulk_assign_perm
 from guardian.shortcuts import remove_perm
+from guardian.shortcuts import bulk_remove_perm
 from guardian.shortcuts import get_perms
 from guardian.shortcuts import get_users_with_perms
 from guardian.shortcuts import get_groups_with_perms
@@ -146,11 +147,24 @@ class RemovePermTest(ObjectPermissionTestCase):
             perm="change_site", # for global permissions must provide app_label
             user_or_group=self.user)
 
+    def test_global_wrong_perm_bulk(self):
+        self.assertRaises(ValueError, bulk_remove_perm,
+            perm="change_site", # for global permissions must provide app_label
+            users_or_groups=self.user_set)
+
     def test_user_remove_perm(self):
         # assign perm first
         assign_perm("change_contenttype", self.user, self.ctype)
         remove_perm("change_contenttype", self.user, self.ctype)
         self.assertFalse(self.user.has_perm("change_contenttype", self.ctype))
+
+    def test_user_bulk_remove_perm(self):
+        # assign perm first
+        bulk_assign_perm("change_contenttype", self.user_set, self.ctype_set)
+        bulk_remove_perm("change_contenttype", self.user_set, self.ctype_set)
+        for user in self.user_set:
+            for ctype in self.ctype_set:
+                self.assertFalse(user.has_perm("change_contenttype", ctype))
 
     def test_group_remove_perm(self):
         # assign perm first
@@ -160,12 +174,30 @@ class RemovePermTest(ObjectPermissionTestCase):
         check = ObjectPermissionChecker(self.group)
         self.assertFalse(check.has_perm("change_contenttype", self.ctype))
 
+    def test_group_bulk_remove_perm(self):
+        # assign perm first
+        bulk_assign_perm("change_contenttype", self.group_set, self.ctype_set)
+        bulk_remove_perm("change_contenttype", self.group_set, self.ctype_set)
+
+        for group in self.group_set:
+            for ctype in self.ctype_set:
+                check = ObjectPermissionChecker(group)
+                self.assertFalse(check.has_perm("change_contenttype", ctype))
+
     def test_user_remove_perm_global(self):
         # assign perm first
         perm = "contenttypes.change_contenttype"
         assign_perm(perm, self.user)
         remove_perm(perm, self.user)
         self.assertFalse(self.user.has_perm(perm))
+
+    def test_user_bulk_remove_perm_global(self):
+        # assign perm first
+        perm = "contenttypes.change_contenttype"
+        bulk_assign_perm(perm, self.user_set)
+        bulk_remove_perm(perm, self.user_set)
+        for user in self.user_set:
+            self.assertFalse(user.has_perm(perm))
 
     def test_group_remove_perm_global(self):
         # assign perm first
@@ -176,6 +208,17 @@ class RemovePermTest(ObjectPermissionTestCase):
         perm_obj = Permission.objects.get(codename=codename,
             content_type__app_label=app_label)
         self.assertFalse(perm_obj in self.group.permissions.all())
+
+    def test_group_bulk_remove_perm_global(self):
+        # assign perm first
+        perm = "contenttypes.change_contenttype"
+        bulk_assign_perm(perm, self.group_set)
+        bulk_remove_perm(perm, self.group_set)
+        app_label, codename = perm.split('.')
+        perm_obj = Permission.objects.get(codename=codename,
+            content_type__app_label=app_label)
+        for group in self.group_set:
+            self.assertFalse(perm_obj in group.permissions.all())
 
 
 class GetPermsTest(ObjectPermissionTestCase):
