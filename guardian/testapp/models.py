@@ -58,6 +58,14 @@ class Mixed(models.Model):
 class LogEntryWithGroup(LogEntry):
     group = models.ForeignKey('auth.Group', null=True, blank=True)
 
+
+class NonIntPKModel(models.Model):
+    """Model for testing whether get_objects_for_user will work when the objects
+    to be returned have non-integer primary keys.
+    """
+    char_pk = models.CharField(primary_key=True, max_length=128)
+
+
 if django.VERSION > (1, 5):
     from django.contrib.auth.models import AbstractUser
     class CustomUser(AbstractUser, GuardianUserMixin):

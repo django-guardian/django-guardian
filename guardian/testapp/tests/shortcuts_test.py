@@ -20,6 +20,7 @@ from guardian.shortcuts import get_objects_for_group
 from guardian.exceptions import MixedContentTypeError
 from guardian.exceptions import NotUserNorGroup
 from guardian.exceptions import WrongAppError
+from guardian.testapp.models import NonIntPKModel
 from guardian.testapp.tests.core_test import ObjectPermissionTestCase
 from guardian.models import Group, Permission
 
@@ -606,6 +607,57 @@ class GetObjectsForUser(TestCase):
         self.assertEqual(
             set(objects.values_list('id', flat=True)),
             set(ctypes[i].id for i in [0, 1, 3, 4]))
+
+    def test_non_integer_primary_key(self):
+        """Verify that the function works when the objects that should be
+        returned have non-integer primary keys.
+        """
+        obj_with_char_pk = NonIntPKModel.objects.create(char_pk='testprimarykey')
+        assign_perm('add_nonintpkmodel', self.user, obj_with_char_pk)
+
+        objects = get_objects_for_user(self.user, 'testapp.add_nonintpkmodel')
+        self.assertEqual(len(objects), 1)
+        self.assertTrue(isinstance(objects, QuerySet))
+        self.assertEqual(
+            set(objects.values_list('pk', flat=True)),
+            set([obj_with_char_pk.pk]))
+
+    def test_non_integer_primary_key_with_any_perm(self):
+        """Verify that the function works with any_perm set to True when the
+        objects that should be returned have non-integer primary keys.
+        """
+        obj_with_char_pk = NonIntPKModel.objects.create(char_pk='testprimarykey')
+        assign_perm('add_nonintpkmodel', self.user, obj_with_char_pk)
+
+        objects = get_objects_for_user(
+            self.user,
+            ['testapp.add_nonintpkmodel', 'testapp.change_nonintpkmodel'],
+            any_perm=True)
+        self.assertEqual(len(objects), 1)
+        self.assertTrue(isinstance(objects, QuerySet))
+        self.assertEqual(
+            set(objects.values_list('pk', flat=True)),
+            set([obj_with_char_pk.pk]))
+
+    def test_non_integer_primary_key_with_group_values(self):
+        """Verify that the function works when the objects that should be
+        returned have non-integer primary keys, and those objects are due to the
+        user's groups.
+        """
+        obj_with_char_pk = NonIntPKModel.objects.create(char_pk='testprimarykey')
+        assign_perm('add_nonintpkmodel', self.group, obj_with_char_pk)
+        self.user.groups.add(self.group)
+
+        objects = get_objects_for_user(
+            self.user,
+            ['testapp.add_nonintpkmodel', 'testapp.change_nonintpkmodel'],
+            any_perm=True)
+        self.assertEqual(len(objects), 1)
+        self.assertTrue(isinstance(objects, QuerySet))
+        self.assertEqual(
+            set(objects.values_list('pk', flat=True)),
+            set([obj_with_char_pk.pk]))
+
 
 class GetObjectsForGroup(TestCase):
     """
