@@ -283,6 +283,7 @@ def get_groups_with_perms(obj, attach_perms=False):
                 groups[group] = sorted(get_perms(group, obj))
         return groups
 
+
 def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=False,
         with_superuser=True):
     """
@@ -304,7 +305,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
     :param any_perm: if True, any of permission in sequence is accepted
     :param with_superuser: if ``True`` returns the entire queryset if not it will
     only return objects the user has explicit permissions.
-    
+
     :raises MixedContentTypeError: when computed content type for ``perms``
       and/or ``klass`` clashes.
     :raises WrongAppError: if cannot compute app label for given ``perms``/
@@ -432,15 +433,16 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
 
     values = user_obj_perms_queryset.values_list(fields[0], flat=True)
     if user_model.objects.is_generic():
-        values = [int(v) for v in values]
+        values = list(values)
     objects = queryset.filter(pk__in=values)
     if use_groups:
         values = groups_obj_perms_queryset.values_list(fields[0], flat=True)
         if group_model.objects.is_generic():
-            values = [int(v) for v in values]
+            values = list(values)
         objects |= queryset.filter(pk__in=values)
 
     return objects
+
 
 def get_objects_for_group(group, perms, klass=None, any_perm=False):
     """
