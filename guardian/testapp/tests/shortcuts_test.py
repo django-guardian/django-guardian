@@ -609,8 +609,9 @@ class GetObjectsForUser(TestCase):
             set(ctypes[i].id for i in [0, 1, 3, 4]))
 
     def test_non_integer_primary_key(self):
-        """Verify that the function works when the objects that should be
-        returned have non-integer primary keys.
+        """
+        Verify that the function works when the objects that should be returned
+        have non-integer primary keys.
         """
         obj_with_char_pk = NonIntPKModel.objects.create(char_pk='testprimarykey')
         assign_perm('add_nonintpkmodel', self.user, obj_with_char_pk)
@@ -623,7 +624,8 @@ class GetObjectsForUser(TestCase):
             set([obj_with_char_pk.pk]))
 
     def test_non_integer_primary_key_with_any_perm(self):
-        """Verify that the function works with any_perm set to True when the
+        """
+        Verify that the function works with any_perm set to True when the
         objects that should be returned have non-integer primary keys.
         """
         obj_with_char_pk = NonIntPKModel.objects.create(char_pk='testprimarykey')
@@ -640,9 +642,10 @@ class GetObjectsForUser(TestCase):
             set([obj_with_char_pk.pk]))
 
     def test_non_integer_primary_key_with_group_values(self):
-        """Verify that the function works when the objects that should be
-        returned have non-integer primary keys, and those objects are due to the
-        user's groups.
+        """
+        Verify that the function works when the objects that should be returned
+        have non-integer primary keys, and those objects are due to the user's
+        groups.
         """
         obj_with_char_pk = NonIntPKModel.objects.create(char_pk='testprimarykey')
         assign_perm('add_nonintpkmodel', self.group, obj_with_char_pk)

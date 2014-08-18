@@ -60,8 +60,9 @@ class LogEntryWithGroup(LogEntry):
 
 
 class NonIntPKModel(models.Model):
-    """Model for testing whether get_objects_for_user will work when the objects
-    to be returned have non-integer primary keys.
+    """
+    Model for testing whether get_objects_for_user will work when the objects to
+    be returned have non-integer primary keys.
     """
     char_pk = models.CharField(primary_key=True, max_length=128)
 
