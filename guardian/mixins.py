@@ -58,7 +58,7 @@ class PermissionRequiredMixin(object):
 
     If a `get_object()` method is defined either manually or by including
     another mixin (for example ``SingleObjectMixin``) or ``self.object`` is
-    defiend then the permission will be tested against that specific instance.
+    defined then the permission will be tested against that specific instance.
 
     .. note:
        Testing of a permission against a specific object instance requires an
