@@ -60,8 +60,8 @@ class GuardedModelAdminMixin(object):
     group_owned_objects_field = 'group'
     include_object_permissions_urls = True
 
-    def queryset(self, request):
-        qs = super(GuardedModelAdminMixin, self).queryset(request)
+    def get_queryset(self, request):
+        qs = super(GuardedModelAdminMixin, self).get_queryset(request)
         if request.user.is_superuser:
             return qs
 
@@ -136,7 +136,7 @@ class GuardedModelAdminMixin(object):
         shown. In order to add or manage user or group one should use links or
         forms presented within the page.
         """
-        obj = get_object_or_404(self.queryset(request), pk=object_pk)
+        obj = get_object_or_404(self.get_queryset(request), pk=object_pk)
         users_perms = SortedDict(
             get_users_with_perms(obj, attach_perms=True,
                 with_group_users=False))
@@ -209,7 +209,7 @@ class GuardedModelAdminMixin(object):
         Manages selected users' permissions for current object.
         """
         user = get_object_or_404(get_user_model(), pk=user_id)
-        obj = get_object_or_404(self.queryset(request), pk=object_pk)
+        obj = get_object_or_404(self.get_queryset(request), pk=object_pk)
         form_class = self.get_obj_perms_manage_user_form()
         form = form_class(user, obj, request.POST or None)
 
@@ -262,7 +262,7 @@ class GuardedModelAdminMixin(object):
         Manages selected groups' permissions for current object.
         """
         group = get_object_or_404(Group, id=group_id)
-        obj = get_object_or_404(self.queryset(request), pk=object_pk)
+        obj = get_object_or_404(self.get_queryset(request), pk=object_pk)
         form_class = self.get_obj_perms_manage_group_form()
         form = form_class(group, obj, request.POST or None)
 
