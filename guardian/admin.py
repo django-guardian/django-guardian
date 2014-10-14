@@ -60,8 +60,14 @@ class GuardedModelAdminMixin(object):
     group_owned_objects_field = 'group'
     include_object_permissions_urls = True
 
-    def queryset(self, request):
-        qs = super(GuardedModelAdminMixin, self).queryset(request)
+    def get_queryset(self, request):
+        # Prefer the Django >= 1.6 interface but maintain
+        # backward compatibility
+        method = getattr(
+            super(GuardedModelAdminMixin, self), 'get_queryset',
+            super(GuardedModelAdminMixin, self).queryset)
+        qs = method(request)
+
         if request.user.is_superuser:
             return qs
 
@@ -76,6 +82,12 @@ class GuardedModelAdminMixin(object):
             qs = qs.filter(**filters)
         return qs
 
+    # Allow queryset method as fallback for Django versions < 1.6
+    # for versions >= 1.6 this is taken care of by Django itself
+    # and triggers a warning message automatically.
+    import django
+    if django.VERSION < (1, 6):
+        queryset = get_queryset
 
     def get_urls(self):
         """
