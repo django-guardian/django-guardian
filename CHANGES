@@ -1,3 +1,11 @@
+Release DEV
+===========
+
+* Allow to override ``PermissionRequiredMixin.get_permission_object``, part
+  of ``PermissionRequiredMixin.check_permissions`` method, responsible for
+  retrieving single object (Thanks zauddelig)
+
+
 Release 1.2.4 (Jul 14, 2014)
 ===========================
 
