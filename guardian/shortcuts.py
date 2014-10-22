@@ -16,7 +16,6 @@ from guardian.compat import get_user_model
 from guardian.core import ObjectPermissionChecker
 from guardian.exceptions import MixedContentTypeError
 from guardian.exceptions import WrongAppError
-from guardian.models import UserObjectPermission
 from guardian.utils import get_anonymous_user
 from guardian.utils import get_group_obj_perms_model
 from guardian.utils import get_identity
@@ -225,38 +224,13 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
         if with_superusers:
             qset = qset | Q(is_superuser=True)
         return get_user_model().objects.filter(qset).distinct()
-
-    user_model = get_user_model()
-    users = {}
-
-    # get all users with permissions to this object
-    users_with_perms = get_users_with_perms(
-        obj,
-        with_group_users=with_group_users
-    )
-    # TODO: do paging on queryset here. This would likely
-    # be from additional params passed in (page, page_size)
-
-    user_ids = users_with_perms.values_list(user_model._meta.pk.name,
-                                            flat=True)
-
-    # then get all permissions for these users
-    permissions_for_users = UserObjectPermission.objects.filter(
-        user_id__in=user_ids,
-        content_type_id=ContentType.objects.get_for_model(obj),
-        object_pk=obj.id
-    )
-
-    # add the user keys for users who have access
-    for user in users_with_perms:
-        users[user] = []
-
-    # sort through all the permissions for users
-    for perm in permissions_for_users:
-        user_model_kwargs = {user_model._meta.pk.name: perm.user_id}
-        users[user_model(**user_model_kwargs)].append(perm.permission.codename)
-
-    return users
+    else:
+        # TODO: Do not hit db for each user!
+        users = {}
+        for user in get_users_with_perms(obj,
+                with_group_users=with_group_users):
+            users[user] = sorted(get_perms(user, obj))
+        return users
 
 def get_groups_with_perms(obj, attach_perms=False):
     """
