@@ -237,7 +237,8 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
     # TODO: do paging on queryset here. This would likely
     # be from additional params passed in (page, page_size)
 
-    user_ids = users_with_perms.values_list('id', flat=True)
+    user_ids = users_with_perms.values_list(user_model._meta.pk.name,
+                                            flat=True)
 
     # then get all permissions for these users
     permissions_for_users = UserObjectPermission.objects.filter(
@@ -252,7 +253,8 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
 
     # sort through all the permissions for users
     for perm in permissions_for_users:
-        users[user_model(perm.user_id)].append(perm.permission.codename)
+        user_model_kwargs = {user_model._meta.pk.name: perm.user_id}
+        users[user_model(**user_model_kwargs)].append(perm.permission.codename)
 
     return users
 
