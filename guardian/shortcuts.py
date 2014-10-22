@@ -11,15 +11,16 @@ from django.db.models import Count, Q
 from django.shortcuts import _get_queryset
 from itertools import groupby
 
-from guardian.compat import get_user_model
 from guardian.compat import basestring
+from guardian.compat import get_user_model
 from guardian.core import ObjectPermissionChecker
 from guardian.exceptions import MixedContentTypeError
 from guardian.exceptions import WrongAppError
+from guardian.models import UserObjectPermission
 from guardian.utils import get_anonymous_user
+from guardian.utils import get_group_obj_perms_model
 from guardian.utils import get_identity
 from guardian.utils import get_user_obj_perms_model
-from guardian.utils import get_group_obj_perms_model
 import warnings
 
 def assign_perm(perm, user_or_group, obj=None):
@@ -224,13 +225,36 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
         if with_superusers:
             qset = qset | Q(is_superuser=True)
         return get_user_model().objects.filter(qset).distinct()
-    else:
-        # TODO: Do not hit db for each user!
-        users = {}
-        for user in get_users_with_perms(obj,
-                with_group_users=with_group_users):
-            users[user] = sorted(get_perms(user, obj))
-        return users
+
+    user_model = get_user_model()
+    users = {}
+
+    # get all users with permissions to this object
+    users_with_perms = get_users_with_perms(
+        obj,
+        with_group_users=with_group_users
+    )
+    # TODO: do paging on queryset here. This would likely
+    # be from additional params passed in (page, page_size)
+
+    user_ids = users_with_perms.values_list('id', flat=True)
+
+    # then get all permissions for these users
+    permissions_for_users = UserObjectPermission.objects.filter(
+        user_id__in=user_ids,
+        content_type_id=ContentType.objects.get_for_model(obj),
+        object_pk=obj.id
+    )
+
+    # add the user keys for users who have access
+    for user in users_with_perms:
+        users[user] = []
+
+    # sort through all the permissions for users
+    for perm in permissions_for_users:
+        users[user_model(perm.user_id)].append(perm.permission.codename)
+
+    return users
 
 def get_groups_with_perms(obj, attach_perms=False):
     """
