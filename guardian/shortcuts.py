@@ -11,15 +11,15 @@ from django.db.models import Count, Q
 from django.shortcuts import _get_queryset
 from itertools import groupby
 
-from guardian.compat import get_user_model
 from guardian.compat import basestring
+from guardian.compat import get_user_model
 from guardian.core import ObjectPermissionChecker
 from guardian.exceptions import MixedContentTypeError
 from guardian.exceptions import WrongAppError
 from guardian.utils import get_anonymous_user
+from guardian.utils import get_group_obj_perms_model
 from guardian.utils import get_identity
 from guardian.utils import get_user_obj_perms_model
-from guardian.utils import get_group_obj_perms_model
 import warnings
 
 def assign_perm(perm, user_or_group, obj=None):

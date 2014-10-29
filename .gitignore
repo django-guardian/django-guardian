@@ -21,3 +21,5 @@ example_project/conf/*.py
 
 # WebDAV remote filesystem
 .DAV
+.project
+.pydevproject
