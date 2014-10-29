@@ -1,6 +1,7 @@
 Release DEV
 ===========
 
+* Official Django 1.7 support (thanks Troy Grosfield and Brian May)
 * Allow to override ``PermissionRequiredMixin.get_permission_object``, part
   of ``PermissionRequiredMixin.check_permissions`` method, responsible for
   retrieving single object (Thanks zauddelig)
