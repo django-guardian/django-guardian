@@ -26,7 +26,7 @@ class BaseObjectPermission(models.Model):
         abstract = True
 
     def __unicode__(self):
-        return u'%s | %s | %s' % (
+        return '%s | %s | %s' % (
             unicode(self.content_object),
             unicode(getattr(self, 'user', False) or self.group),
             unicode(self.permission.codename))
