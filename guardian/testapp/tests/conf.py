@@ -18,12 +18,17 @@ TEST_SETTINGS = dict(
 
 
 def skipUnlessTestApp(obj):
-    app = 'guardian.testapp' 
+    app = 'guardian.testapp'
     return unittest.skipUnless(app in settings.INSTALLED_APPS,
                       'app %r must be installed to run this test' % app)(obj)
 
 
 def skipUnlessSupportsCustomUser(obj):
+    # XXX: Following fixes problem with Python 2.6 and Django 1.2
+    gte15 = django.VERSION >= (1, 5)
+    if not gte15:
+        return lambda *args, **kwargs: None
+    # XXX: End of the workaround
     return unittest.skipUnless(django.VERSION >= (1, 5), 'Must have Django 1.5 or greater')(obj)
 
 
