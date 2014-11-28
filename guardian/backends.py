@@ -63,7 +63,7 @@ class ObjectPermissionBackend(object):
         check = ObjectPermissionChecker(user_obj)
         return check.has_perm(perm, obj)
 
-    def get_all_permissions(self, user, obj):
+    def get_all_permissions(self, user, obj=None):
         """
         Returns a set of permission strings that this user has for an object
         """
