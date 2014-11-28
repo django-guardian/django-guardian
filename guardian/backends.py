@@ -7,6 +7,50 @@ from guardian.conf import settings
 from guardian.exceptions import WrongAppError
 from guardian.core import ObjectPermissionChecker
 
+
+def check_object_support(obj):
+    """
+    Returns ``True`` if given ``obj`` is supported
+    """
+    # Backend checks only object permissions
+    if obj is None:
+        return False
+
+    # Backend checks only permissions for Django models
+    if not isinstance(obj, models.Model):
+        return False
+
+    return True
+
+
+def check_user_support(user_obj):
+    """
+    Returns a tuple of checkresult and ``user_obj`` which should be used for
+    permission checks
+
+    Checks if the given user is supported. Anonymous users need explicit
+    activation via ANONYMOUS_USER_ID
+    """
+    # This is how we support anonymous users - simply try to retrieve User
+    # instance and perform checks for that predefined user
+    if not user_obj.is_authenticated():
+        # If anonymous user permission is disabled then they are always unauthorized
+        if settings.ANONYMOUS_USER_ID is None:
+            return False, user_obj
+        user_obj = get_user_model().objects.get(pk=settings.ANONYMOUS_USER_ID)
+
+    return True, user_obj
+
+
+def check_support(user_obj, obj):
+    """
+    Combination of ``check_object_support`` and ``check_user_support``
+    """
+    obj_support = check_object_support(obj)
+    user_support, user_obj = check_user_support(user_obj)
+    return obj_support and user_support, user_obj
+
+
 class ObjectPermissionBackend(object):
     supports_object_permissions = True
     supports_anonymous_user = True
@@ -34,24 +78,10 @@ class ObjectPermissionBackend(object):
         If user is authenticated but inactive at the same time, all checks
         always returns ``False``.
         """
-        # Backend checks only object permissions
-        if obj is None:
-            return False
 
-        # Backend checks only permissions for Django models
-        if not isinstance(obj, models.Model):
-            return False
-
-        # This is how we support anonymous users - simply try to retrieve User
-        # instance and perform checks for that predefined user
-        if not user_obj.is_authenticated():
-            # If anonymous user permission is disabled then they are always unauthorized
-            if settings.ANONYMOUS_USER_ID is None:
-                return False
-            user_obj = get_user_model().objects.get(pk=settings.ANONYMOUS_USER_ID)
-
-        # Do not check any further if user is not active
-        if not user_obj.is_active:
+        # check if user_obj and object are supported
+        support, user_obj = check_support(user_obj, obj)
+        if not support:
             return False
 
         if '.' in perm:
@@ -63,13 +93,14 @@ class ObjectPermissionBackend(object):
         check = ObjectPermissionChecker(user_obj)
         return check.has_perm(perm, obj)
 
-    def get_all_permissions(self, user, obj=None):
+    def get_all_permissions(self, user_obj, obj=None):
         """
-        Returns a set of permission strings that this user has for an object
+        Returns a set of permission strings that the given ``user_obj`` has for ``obj``
         """
-
-        if obj is None:
+        # check if user_obj and object are supported
+        support, user_obj = check_support(user_obj, obj)
+        if not support:
             return set()
 
-        checker = ObjectPermissionChecker(user)
-        return checker.get_perms(obj)
+        check = ObjectPermissionChecker(user_obj)
+        return check.get_perms(obj)
