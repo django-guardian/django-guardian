@@ -98,12 +98,6 @@ class UserPermissionTests(TestDataMixin, TestCase):
         self.assertRaises(ValidationError, UserObjectPermission.objects.create,
             **create_info)
 
-    def test_unicode(self):
-        codename = get_user_permission_codename('change')
-        obj_perm = UserObjectPermission.objects.assign_perm(codename,
-            self.user, self.user)
-        self.assertTrue(isinstance(obj_perm.__unicode__(), unicode))
-
     def test_errors(self):
         not_saved_user = User(username='not_saved_user')
         codename = get_user_permission_codename('change')
@@ -193,11 +187,6 @@ class GroupPermissionTests(TestDataMixin, TestCase):
         )
         self.assertRaises(ValidationError, GroupObjectPermission.objects.create,
             **create_info)
-
-    def test_unicode(self):
-        obj_perm = GroupObjectPermission.objects.assign_perm("change_group",
-            self.group, self.group)
-        self.assertTrue(isinstance(obj_perm.__unicode__(), unicode))
 
     def test_errors(self):
         not_saved_group = Group(name='not_saved_group')
