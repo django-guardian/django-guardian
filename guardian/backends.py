@@ -12,15 +12,10 @@ def check_object_support(obj):
     """
     Returns ``True`` if given ``obj`` is supported
     """
-    # Backend checks only object permissions
-    if obj is None:
-        return False
-
+    # Backend checks only object permissions (isinstance implies that obj
+    # is not None)
     # Backend checks only permissions for Django models
-    if not isinstance(obj, models.Model):
-        return False
-
-    return True
+    return isinstance(obj, models.Model)
 
 
 def check_user_support(user_obj):
