@@ -6,6 +6,7 @@ Release DEV
   of ``PermissionRequiredMixin.check_permissions`` method, responsible for
   retrieving single object (Thanks zauddelig)
 * French translations (Thanks Morgan Aubert)
+* Added support for ``User.get_all_permissions`` (thanks Michael Drescher)
 
 Release 1.2.4 (Jul 14, 2014)
 ============================
