@@ -1,5 +1,5 @@
-Release DEV
-===========
+Release 1.2.5 (Dec 28, 2014)
+============================
 
 * Official Django 1.7 support (thanks Troy Grosfield and Brian May)
 * Allow to override ``PermissionRequiredMixin.get_permission_object``, part
