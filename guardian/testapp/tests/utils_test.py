@@ -1,8 +1,10 @@
 from __future__ import unicode_literals
+
 from django.test import TestCase
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import Group, AnonymousUser
 from django.db import models
+import mock
 
 from guardian.compat import get_user_model
 from guardian.testapp.tests.conf import skipUnlessTestApp
@@ -10,15 +12,16 @@ from guardian.testapp.tests.core_test import ObjectPermissionTestCase
 from guardian.testapp.models import Project
 from guardian.testapp.models import ProjectUserObjectPermission
 from guardian.testapp.models import ProjectGroupObjectPermission
-from guardian.models import UserObjectPermission
+from guardian.models import UserObjectPermission, GroupObjectPermissionBase
 from guardian.models import UserObjectPermissionBase
 from guardian.models import GroupObjectPermission
-from guardian.utils import get_anonymous_user
+from guardian.utils import get_anonymous_user, _related_object_permission_models_cache
 from guardian.utils import get_identity
 from guardian.utils import get_user_obj_perms_model
 from guardian.utils import get_group_obj_perms_model
 from guardian.utils import get_obj_perms_model
 from guardian.exceptions import NotUserNorGroup
+
 
 User = get_user_model()
 
@@ -74,6 +77,23 @@ class GetUserObjPermsModelTest(TestCase):
         self.assertEqual(get_user_obj_perms_model(User),
             UserObjectPermission)
 
+    def test_user_obj_perms_models_cache_with_model(self):
+        model = get_user_obj_perms_model(User)
+        self.assertEqual(model, _related_object_permission_models_cache.user_obj_perms_models_cache[User.__name__])
+
+    def test_user_obj_perms_models_cache_with_model_instance(self):
+        project = Project(name='Foobar')
+        model = get_user_obj_perms_model(project)
+        self.assertEqual(model, _related_object_permission_models_cache.user_obj_perms_models_cache[Project.__name__])
+
+    def test_permissions_model_is_fetched_from_cache_on_second_invocation(self):
+        _related_object_permission_models_cache.user_obj_perms_models_cache = {}
+        with mock.patch('guardian.utils.get_obj_perms_model') as mocked_get_obj_perms_model:
+            get_user_obj_perms_model(User)
+            get_user_obj_perms_model(User)
+
+        mocked_get_obj_perms_model.assert_called_once_with(User, UserObjectPermissionBase, UserObjectPermission)
+
 
 @skipUnlessTestApp
 class GetGroupObjPermsModelTest(TestCase):
@@ -96,6 +116,24 @@ class GetGroupObjPermsModelTest(TestCase):
         # model defined (i.e. while testing guardian app in some custom project)
         self.assertEqual(get_group_obj_perms_model(Group),
             GroupObjectPermission)
+
+    def test_group_obj_perms_models_cache_with_model(self):
+        model = get_group_obj_perms_model(User)
+        self.assertEqual(model, _related_object_permission_models_cache.group_obj_perms_models_cache[User.__name__])
+
+    def test_group_obj_perms_models_cache_with_model_instance(self):
+        project = Project(name='Foobar')
+        model = get_group_obj_perms_model(project)
+        self.assertEqual(model, _related_object_permission_models_cache.group_obj_perms_models_cache[Project.__name__])
+
+    def test_permissions_model_is_fetched_from_cache_on_second_invocation(self):
+        _related_object_permission_models_cache.group_obj_perms_models_cache = {}
+        with mock.patch('guardian.utils.get_obj_perms_model') as mocked_get_obj_perms_model:
+            get_group_obj_perms_model(User)
+            get_group_obj_perms_model(User)
+
+        mocked_get_obj_perms_model.assert_called_once_with(User, GroupObjectPermissionBase, GroupObjectPermission)
+
 
 class GetObjPermsModelTest(TestCase):
 
