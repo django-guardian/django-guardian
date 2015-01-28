@@ -56,7 +56,7 @@ class GetIdentityTest(ObjectPermissionTestCase):
 
 
 @skipUnlessTestApp
-class GetUserObjPermsModelTest(TestCase):
+class GetUserObjPermsModelTest(ObjectPermissionTestCase):
 
     def test_for_instance(self):
         project = Project(name='Foobar')
@@ -96,7 +96,7 @@ class GetUserObjPermsModelTest(TestCase):
 
 
 @skipUnlessTestApp
-class GetGroupObjPermsModelTest(TestCase):
+class GetGroupObjPermsModelTest(ObjectPermissionTestCase):
 
     def test_for_instance(self):
         project = Project(name='Foobar')
