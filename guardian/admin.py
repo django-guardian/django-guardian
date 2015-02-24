@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import django
 from django import forms
 from django.conf import settings
 from guardian.compat import url, patterns
@@ -85,7 +86,6 @@ class GuardedModelAdminMixin(object):
     # Allow queryset method as fallback for Django versions < 1.6
     # for versions >= 1.6 this is taken care of by Django itself
     # and triggers a warning message automatically.
-    import django
     if django.VERSION < (1, 6):
         queryset = get_queryset
 
@@ -104,7 +104,12 @@ class GuardedModelAdminMixin(object):
         """
         urls = super(GuardedModelAdminMixin, self).get_urls()
         if self.include_object_permissions_urls:
-            info = self.model._meta.app_label, self.model._meta.module_name
+            # model._meta.module_name is deprecated in django version 1.7 and removed in django version 1.8.
+            # It is replaced by model._meta.model_name
+            if django.VERSION < (1, 7):
+                info = self.model._meta.app_label, self.model._meta.module_name
+            else:
+                info = self.model._meta.app_label, self.model._meta.model_name
             myurls = patterns('',
                 url(r'^(?P<object_pk>.+)/permissions/$',
                     view=self.admin_site.admin_view(self.obj_perms_manage_view),
