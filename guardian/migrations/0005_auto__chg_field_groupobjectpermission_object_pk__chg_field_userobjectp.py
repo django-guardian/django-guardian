@@ -3,6 +3,16 @@ from south.db import db
 from south.v2 import SchemaMigration
 
 from guardian.compat import user_model_label
+from guardian.compat import get_user_model
+
+User = get_user_model()
+
+def get_user_pk_field_fully_qualified_name():
+    pk_field = User._meta.pk
+    module = pk_field.__class__.__module__
+    if module is None:
+        return pk_field.__class__.__name__
+    return module + '.' + pk_field.__class__.__name__
 
 
 class Migration(SchemaMigration):
