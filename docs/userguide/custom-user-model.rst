@@ -13,7 +13,7 @@ reverse relate name **groups**) we should be fine.
 
 .. important::
     ``django-guardian`` relies **heavily** on the ``auth.User`` model.
-    Specifically it was build from the ground-up with relation beteen
+    Specifically it was build from the ground-up with relation between
     ``auth.User`` and ``auth.Group`` models. Retaining this relation is crucial
     for ``guardian`` - **without many to many User (custom or default) and
     auth.Group relation django-guardian will BREAK**.
