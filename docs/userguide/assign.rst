@@ -36,7 +36,7 @@ model could look like:
                 ('view_task', 'View task'),
             )
 
-After we call ``syncdb`` management command our *view_task* permission would be
+After we call ``syncdb --all`` management command our *view_task* permission would be
 added to default set of permissions.
 
 .. note::
