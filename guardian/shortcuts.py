@@ -159,7 +159,7 @@ def get_perms_for_model(cls):
     return Permission.objects.filter(content_type=ctype)
 
 def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
-        with_group_users=True):
+        with_group_users=True, permission_name=None):
     """
     Returns queryset of all ``User`` objects with *any* object permissions for
     the given ``obj``.
@@ -176,6 +176,10 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
     :param with_group_users: Default: ``True``. If set to ``False`` result would
       **not** contain those users who have only group permissions for given
       ``obj``.
+
+    :param permission_name: Default: ``None``. Limit to ``permission_name``
+      permission instead of *any*. Only available when ``attach_perms`` is
+      ``False``.
 
     Example::
 
@@ -200,13 +204,24 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
         # the case
         user_model = get_user_obj_perms_model(obj)
         related_name = user_model.user.field.related_query_name()
+        permission = None
+        if permission_name:
+            permission = auth_models.objects.get(content_type=content_type, codename=permission_name)
         if user_model.objects.is_generic():
             user_filters = {
                 '%s__content_type' % related_name: ctype,
                 '%s__object_pk' % related_name: obj.pk,
             }
+            if permission:
+                user_filters.update({
+                    '%s__permission' % related_name: permission,
+                })
         else:
             user_filters = {'%s__content_object' % related_name: obj}
+            if permission:
+                user_filters.update({
+                    '%s__permission' % related_name: permission,
+                })
         qset = Q(**user_filters)
         if with_group_users:
             group_model = get_group_obj_perms_model(obj)
@@ -216,10 +231,18 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
                     'groups__%s__content_type' % group_rel_name: ctype,
                     'groups__%s__object_pk' % group_rel_name: obj.pk,
                 }
+                if permission:
+                    group_filters.update({
+                        'groups__%s__permission' % group_rel_name: permission,
+                    })
             else:
                 group_filters = {
                     'groups__%s__content_object' % group_rel_name: obj,
                 }
+                if permission:
+                    group_filters.update({
+                        'groups__%s__permission' % group_rel_name: permission,
+                    })
             qset = qset | Q(**group_filters)
         if with_superusers:
             qset = qset | Q(is_superuser=True)
