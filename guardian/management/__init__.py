@@ -31,9 +31,9 @@ def create_anonymous_user(sender, **kwargs):
         User.objects.get(pk=guardian_settings.ANONYMOUS_USER_ID)
     except User.DoesNotExist:
         if django.VERSION >= (1, 5):
-            retrieve_anonymous_functon = import_string(
+            retrieve_anonymous_function = import_string(
                 guardian_settings.GET_INIT_ANONYMOUS_USER)
-            user = retrieve_anonymous_functon(User)
+            user = retrieve_anonymous_function(User)
             # Always set pk to the one pointed at settings
             user.pk = guardian_settings.ANONYMOUS_USER_ID
             user.save()
@@ -45,4 +45,3 @@ def create_anonymous_user(sender, **kwargs):
 if guardian_settings.ANONYMOUS_USER_ID is not None:
     signals.post_syncdb.connect(create_anonymous_user, sender=guardian_app,
         dispatch_uid="guardian.management.create_anonymous_user")
-
