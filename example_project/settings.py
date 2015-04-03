@@ -104,7 +104,10 @@ USE_L10N = True
 
 LOGIN_REDIRECT_URL = '/'
 
-TEST_RUNNER = 'django.test.simple.DjangoTestSuiteRunner'
+if django.VERSION < (1, 8):
+    TEST_RUNNER = 'django.test.simple.DjangoTestSuiteRunner'
+else:
+    TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
