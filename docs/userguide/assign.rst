@@ -36,8 +36,9 @@ model could look like:
                 ('view_task', 'View task'),
             )
 
-After we call ``syncdb`` management command our *view_task* permission would be
-added to default set of permissions.
+After we call ``syncdb`` (with a ``--all`` switch if you are using south)
+management command our *view_task* permission would be added to default set of
+permissions.
 
 .. note::
    By default, Django adds 3 permissions for each registered model:
