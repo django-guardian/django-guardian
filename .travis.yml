@@ -13,6 +13,7 @@ env:
  - DJANGO_VERSION=1.5.12
  - DJANGO_VERSION=1.6.10
  - DJANGO_VERSION=1.7.4
+ - DJANGO_VERSION=1.8
 
 install:
   - travis_retry pip install -q mock==1.0.1 Django==$DJANGO_VERSION coverage coveralls

@@ -34,6 +34,7 @@ settings.INSTALLED_APPS = (
 )
 
 from utils import show_settings
+import django
 from django.contrib.auth.models import User, Group
 from django.utils.termcolors import colorize
 from benchmarks.models import TestModel
@@ -45,6 +46,17 @@ OBJECTS_WIHT_PERMS_COUNT = 1000
 
 def random_string(length=25, chars=string.ascii_letters+string.digits):
     return ''.join(random.choice(chars) for i in range(length))
+
+
+def get_model_name(model):
+    """
+    Returns the name of the model
+    """
+    # model._meta.module_name is deprecated in django version 1.7 and removed in django version 1.8.
+    # It is replaced by model._meta.model_name
+    if django.VERSION < (1, 7):
+        return model._meta.module_name
+    return model._meta.model_name
 
 
 class Call(object):
@@ -94,7 +106,7 @@ class Benchmark(object):
         self.objects_with_perms_count = objects_with_perms_count
 
         self.Model = model
-        self.perm = 'auth.change_%s' % model._meta.module_name
+        self.perm = 'auth.change_%s' % get_model_name(model)
 
     def info(self, msg):
         print(colorize(msg + '\n', fg='green'))

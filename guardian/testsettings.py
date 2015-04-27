@@ -35,7 +35,10 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
 )
 
-TEST_RUNNER = 'django.test.simple.DjangoTestSuiteRunner'
+if django.VERSION < (1, 8):
+    TEST_RUNNER = 'django.test.simple.DjangoTestSuiteRunner'
+else:
+    TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
 DATABASES = {
     'default': {

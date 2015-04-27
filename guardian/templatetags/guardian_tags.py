@@ -8,8 +8,14 @@
 from __future__ import unicode_literals
 from django import template
 from django.contrib.auth.models import Group, AnonymousUser
-from django.template import get_library
-from django.template import InvalidTemplateLibrary
+try:
+    # Django < 1.8
+    from django.template import get_library
+    from django.template import InvalidTemplateLibrary
+except ImportError:
+    # Django >= 1.8
+    from django.template.base import get_library
+    from django.template.base import InvalidTemplateLibrary
 from django.template.defaulttags import LoadNode
 
 from guardian.compat import get_user_model
