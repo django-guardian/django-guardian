@@ -5,9 +5,13 @@ from django.conf import settings
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
 from django.contrib.auth.models import AnonymousUser
-from django.utils.importlib import import_module
 import six
 import sys
+
+try:
+    from importlib import import_module
+except ImportError:
+    from django.utils.importlib import import_module
 
 try:
     from django.conf.urls import url, patterns, include, handler404, handler500
