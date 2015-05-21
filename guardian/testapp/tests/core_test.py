@@ -60,11 +60,11 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
             query_count = len(connection.queries)
             res = checker.has_perm("change_group", self.group)
             if 'guardian.testapp' in settings.INSTALLED_APPS:
-                expected = 5
+                expected = 7
             else:
                 # TODO: This is strange, need to investigate; totally not sure
                 # why there are more queries if testapp is not included
-                expected = 11
+                expected = 13
             self.assertEqual(len(connection.queries), query_count + expected)
 
             # Checking again shouldn't spawn any queries

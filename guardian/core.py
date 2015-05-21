@@ -46,12 +46,25 @@ class ObjectPermissionChecker(object):
         :param obj: Django model instance for which permission should be checked
 
         """
+        if '.' in perm:
+            qualified_perm = perm
+        else:
+            qualified_perm = '%s.%s' % (obj._meta.app_label, perm)
+
         perm = perm.split('.')[-1]
         if self.user and not self.user.is_active:
             return False
         elif self.user and self.user.is_superuser:
             return True
-        return perm in self.get_perms(obj)
+        return (
+                perm in self.get_perms(obj)
+                or 
+                (
+                    self.user
+                    and
+                    self.user.has_perm(qualified_perm)
+                )
+        )
 
     def get_perms(self, obj):
         """

@@ -285,7 +285,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
         def dummy_view(request, username):
             return HttpResponse('dummy_view')
         response = dummy_view(request, username='joe')
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 200)
 
     def test_user_has_global_perm_access(self):
 
