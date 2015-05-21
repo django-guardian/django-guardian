@@ -9,6 +9,8 @@ from guardian.conf import settings
 from guardian.utils import get_identity
 from guardian.utils import get_user_obj_perms_model
 from guardian.utils import get_group_obj_perms_model
+from guardian.utils import group_has_perm
+from guardian.utils import get_qualified_perm
 from guardian.compat import get_user_model
 
 
@@ -47,11 +49,7 @@ class ObjectPermissionChecker(object):
         :param obj: Django model instance for which permission should be checked
 
         """
-        if '.' in perm:
-            qualified_perm = perm
-        else:
-            qualified_perm = '%s.%s' % (obj._meta.app_label, perm)
-
+        qualified_perm = get_qualified_perm(perm, obj)
         perm = perm.split('.')[-1]
         if self.user and not self.user.is_active:
             return False
@@ -64,6 +62,10 @@ class ObjectPermissionChecker(object):
                 self.user
                 and
                 self.user.has_perm(qualified_perm)
+            ) or (
+                self.group
+                and
+                group_has_perm(self.group, qualified_perm)
             )
 
         return has_perm

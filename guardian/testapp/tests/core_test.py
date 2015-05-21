@@ -180,6 +180,12 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
 
         assign_perm('auth.change_group', self.user)
         self.assertTrue(self.user.has_perm('change_group', self.group))
-        settings.GLOBAL_PERMISSIONS_CARRY_OVER = False
-
         remove_perm('auth.change_group', self.user)
+
+        assign_perm('auth.delete_group', self.group)
+        checker = ObjectPermissionChecker(self.group)
+        self.assertTrue(checker.has_perm('delete_group', self.group))
+        remove_perm('auth.delete_group', self.group)
+
+        settings.GLOBAL_PERMISSIONS_CARRY_OVER = False
+ 

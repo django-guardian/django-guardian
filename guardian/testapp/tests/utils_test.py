@@ -4,6 +4,9 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import Group, AnonymousUser
 from django.db import models
 
+import mock
+
+from guardian.shortcuts import assign_perm
 from guardian.compat import get_user_model
 from guardian.testapp.tests.conf import skipUnlessTestApp
 from guardian.testapp.tests.core_test import ObjectPermissionTestCase
@@ -18,6 +21,8 @@ from guardian.utils import get_identity
 from guardian.utils import get_user_obj_perms_model
 from guardian.utils import get_group_obj_perms_model
 from guardian.utils import get_obj_perms_model
+from guardian.utils import group_has_perm
+from guardian.utils import get_qualified_perm
 from guardian.exceptions import NotUserNorGroup
 
 User = get_user_model()
@@ -119,3 +124,20 @@ class GetObjPermsModelTest(TestCase):
             UserObjectPermission)
         self.assertEqual(perm_model, UserObjectPermission)
 
+
+class GroupHasPermTest(TestCase):
+    def test(self):
+        group, _ = Group.objects.get_or_create(name='testgroup')
+        assign_perm('auth.change_group', group)
+        self.assertTrue(group_has_perm(group, 'auth.change_group'))
+
+
+class PermQualifiedNameTest(TestCase):
+    def test(self):
+        qp = get_qualified_perm('auth.change_group', None)
+        self.assertEqual(qp, 'auth.change_group')
+
+        obj = mock.Mock()
+        obj._meta.app_label = 'auth'
+        qp = get_qualified_perm('change_group', obj)
+        self.assertEqual(qp, 'auth.change_group')
