@@ -5,6 +5,7 @@ from itertools import chain
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 
+from guardian.conf import settings
 from guardian.utils import get_identity
 from guardian.utils import get_user_obj_perms_model
 from guardian.utils import get_group_obj_perms_model
@@ -56,15 +57,16 @@ class ObjectPermissionChecker(object):
             return False
         elif self.user and self.user.is_superuser:
             return True
-        return (
-                perm in self.get_perms(obj)
-                or 
-                (
-                    self.user
-                    and
-                    self.user.has_perm(qualified_perm)
-                )
-        )
+
+        has_perm = perm in self.get_perms(obj)
+        if not has_perm and settings.GLOBAL_PERMISSIONS_CARRY_OVER:
+            has_perm = (
+                self.user
+                and
+                self.user.has_perm(qualified_perm)
+            )
+
+        return has_perm
 
     def get_perms(self, obj):
         """

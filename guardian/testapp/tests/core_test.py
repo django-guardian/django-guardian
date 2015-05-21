@@ -16,7 +16,7 @@ from guardian.core import ObjectPermissionChecker
 from guardian.compat import get_user_model, create_permissions
 from guardian.exceptions import NotUserNorGroup
 from guardian.models import UserObjectPermission, GroupObjectPermission
-from guardian.shortcuts import assign_perm
+from guardian.shortcuts import assign_perm, remove_perm
 
 User = get_user_model()
 
@@ -174,3 +174,12 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
                 GroupObjectPermission.objects.assign_perm(perm, self.group, obj)
             self.assertEqual(sorted(perms), sorted(check.get_perms(obj)))
 
+    def test_global_perm_carry_over(self):
+        from guardian.conf import settings
+        settings.GLOBAL_PERMISSIONS_CARRY_OVER = True
+
+        assign_perm('auth.change_group', self.user)
+        self.assertTrue(self.user.has_perm('change_group', self.group))
+        settings.GLOBAL_PERMISSIONS_CARRY_OVER = False
+
+        remove_perm('auth.change_group', self.user)
