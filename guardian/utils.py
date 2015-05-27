@@ -26,6 +26,8 @@ from guardian.exceptions import NotUserNorGroup
 
 from django.contrib.auth.views import redirect_to_login
 
+import django
+
 logger = logging.getLogger(__name__)
 abspath = lambda *p: os.path.abspath(os.path.join(*p))
 
@@ -150,7 +152,10 @@ def get_obj_perms_model(obj, base_cls, generic_cls):
         obj = obj.__class__
     ctype = ContentType.objects.get_for_model(obj)
     for attr in obj._meta.get_all_related_objects():
-        model = getattr(attr, 'model', None)
+        if django.VERSION < (1, 8):
+            model = getattr(attr, 'model', None)
+        else:
+            model = getattr(attr, 'related_model', None)
         if (model and issubclass(model, base_cls) and
                 model is not generic_cls):
             # if model is generic one it would be returned anyway
