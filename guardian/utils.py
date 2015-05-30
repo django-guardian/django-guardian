@@ -150,7 +150,7 @@ def get_obj_perms_model(obj, base_cls, generic_cls):
         obj = obj.__class__
     ctype = ContentType.objects.get_for_model(obj)
     for attr in obj._meta.get_all_related_objects():
-        model = getattr(attr, 'model', None)
+        model = getattr(attr, 'related_model', None)
         if (model and issubclass(model, base_cls) and
                 model is not generic_cls):
             # if model is generic one it would be returned anyway
