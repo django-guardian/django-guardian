@@ -1,12 +1,17 @@
 from __future__ import unicode_literals
 
+import django
 from django.conf import settings
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
 from django.contrib.auth.models import AnonymousUser
-from django.utils.importlib import import_module
 import six
 import sys
+
+try:
+    from importlib import import_module
+except ImportError:
+    from django.utils.importlib import import_module
 
 try:
     from django.conf.urls import url, patterns, include, handler404, handler500
@@ -129,3 +134,14 @@ def create_permissions(*args, **kwargs):
     return original_create_permissions(*args, **kwargs)
 
 __all__ = ['User', 'Group', 'Permission', 'AnonymousUser']
+
+
+def get_model_name(model):
+    """
+    Returns the name of the model
+    """
+    # model._meta.module_name is deprecated in django version 1.7 and removed in django version 1.8.
+    # It is replaced by model._meta.model_name
+    if django.VERSION < (1, 7):
+        return model._meta.module_name
+    return model._meta.model_name
