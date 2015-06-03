@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
             name='CustomUser',
             fields=[
                 ('password', models.CharField(max_length=128, verbose_name='password')),
-                ('last_login', models.DateTimeField(default=django.utils.timezone.now, verbose_name='last login')),
+                ('last_login', models.DateTimeField(default=django.utils.timezone.now, verbose_name='last login', null=True)),
                 ('is_superuser', models.BooleanField(default=False, help_text='Designates that this user has all permissions without explicitly assigning them.', verbose_name='superuser status')),
                 ('username', models.CharField(help_text='Required. 30 characters or fewer. Letters, digits and @/./+/-/_ only.', unique=True, max_length=30, verbose_name='username', validators=[django.core.validators.RegexValidator('^[\\w.@-]+$', 'Enter a valid username.', 'invalid')])),
                 ('first_name', models.CharField(max_length=30, verbose_name='first name', blank=True)),

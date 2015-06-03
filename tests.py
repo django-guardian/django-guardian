@@ -39,7 +39,13 @@ def run_tests(settings):
 
     TestRunner = get_runner(settings)
     test_runner = TestRunner(interactive=False)
-    failures = test_runner.run_tests(['auth', 'guardian', 'testapp'])
+    # As we use different TestRunners for django < 1.8 and >= 1.8
+    # the arguments run_tests differs
+    if django.VERSION < (1, 8):
+        failures = test_runner.run_tests(['auth', 'guardian', 'testapp'])
+    else:
+        failures = test_runner.run_tests([
+            'django.contrib.auth', 'guardian', 'guardian.testapp'])
     return failures
 
 def main():
@@ -48,4 +54,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
