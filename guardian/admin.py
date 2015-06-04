@@ -151,14 +151,18 @@ class GuardedModelAdminMixin(object):
         """
         obj = get_object_or_404(self.get_queryset(request), pk=object_pk)
         users_perms = OrderedDict(
-            get_users_with_perms(obj, attach_perms=True,
-                with_group_users=False))
+            sorted(
+                get_users_with_perms(obj, attach_perms=True, with_group_users=False).items(),
+                key=lambda user: getattr(user[0], get_user_model().USERNAME_FIELD)
+            )
+        )
 
-        users_perms.keyOrder.sort(key=lambda user:
-                                  getattr(user, get_user_model().USERNAME_FIELD))
         groups_perms = OrderedDict(
-            get_groups_with_perms(obj, attach_perms=True))
-        groups_perms.keyOrder.sort(key=lambda group: group.name)
+            sorted(
+                get_groups_with_perms(obj, attach_perms=True).items(),
+                key=lambda group: group[0].name
+            )
+        )
 
         if request.method == 'POST' and 'submit_manage_user' in request.POST:
             user_form = UserManage(request.POST)
