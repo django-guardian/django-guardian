@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+from collections import OrderedDict
+
 import django
 from django import forms
 from django.conf import settings
@@ -10,7 +12,6 @@ from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
-from django.utils.datastructures import SortedDict
 from django.utils.translation import ugettext, ugettext_lazy as _
 
 from guardian.compat import get_user_model, get_model_name
@@ -149,13 +150,13 @@ class GuardedModelAdminMixin(object):
         forms presented within the page.
         """
         obj = get_object_or_404(self.get_queryset(request), pk=object_pk)
-        users_perms = SortedDict(
+        users_perms = OrderedDict(
             get_users_with_perms(obj, attach_perms=True,
                 with_group_users=False))
 
         users_perms.keyOrder.sort(key=lambda user:
                                   getattr(user, get_user_model().USERNAME_FIELD))
-        groups_perms = SortedDict(
+        groups_perms = OrderedDict(
             get_groups_with_perms(obj, attach_perms=True))
         groups_perms.keyOrder.sort(key=lambda group: group.name)
 
