@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 
 import django
 from django import forms
@@ -66,7 +65,7 @@ class GuardedModelAdminMixin(object):
         # backward compatibility
         method = getattr(
             super(GuardedModelAdminMixin, self), 'get_queryset',
-            getattr(super(GuardedModelAdminMixin, self), 'queryset', None))
+            super(GuardedModelAdminMixin, self).get_queryset)
         qs = method(request)
 
         if request.user.is_superuser:
@@ -81,13 +80,7 @@ class GuardedModelAdminMixin(object):
             qs_key = '%s__%s' % (self.group_owned_objects_field, user_rel_name)
             filters = {qs_key: request.user}
             qs = qs.filter(**filters)
-        return qs
-
-    # Allow queryset method as fallback for Django versions < 1.6
-    # for versions >= 1.6 this is taken care of by Django itself
-    # and triggers a warning message automatically.
-    if django.VERSION < (1, 6):
-        queryset = get_queryset
+        return qs    
 
     def get_urls(self):
         """
@@ -148,7 +141,7 @@ class GuardedModelAdminMixin(object):
         shown. In order to add or manage user or group one should use links or
         forms presented within the page.
         """
-        obj = get_object_or_404(self.queryset(request), pk=object_pk)
+        obj = get_object_or_404(self.get_queryset(request), pk=object_pk)
         users_perms = SortedDict(
             get_users_with_perms(obj, attach_perms=True,
                 with_group_users=False))
@@ -221,7 +214,7 @@ class GuardedModelAdminMixin(object):
         Manages selected users' permissions for current object.
         """
         user = get_object_or_404(get_user_model(), pk=user_id)
-        obj = get_object_or_404(self.queryset(request), pk=object_pk)
+        obj = get_object_or_404(self.get_queryset(request), pk=object_pk)
         form_class = self.get_obj_perms_manage_user_form()
         form = form_class(user, obj, request.POST or None)
 
@@ -274,7 +267,7 @@ class GuardedModelAdminMixin(object):
         Manages selected groups' permissions for current object.
         """
         group = get_object_or_404(Group, id=group_id)
-        obj = get_object_or_404(self.queryset(request), pk=object_pk)
+        obj = get_object_or_404(self.get_queryset(request), pk=object_pk)
         form_class = self.get_obj_perms_manage_group_form()
         form = form_class(group, obj, request.POST or None)
 
