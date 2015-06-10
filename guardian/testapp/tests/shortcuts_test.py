@@ -302,6 +302,7 @@ class GetUsersWithPermsTest(TestCase):
         self.user2.groups.add(self.group2)
         assign_perm("change_contenttype", self.group1, self.obj1)
         assign_perm("change_contenttype", self.user2, self.obj1)
+        assign_perm("change_contenttype", self.group2, self.obj1)
         result = get_users_with_perms(self.obj1, with_group_users=False,
             attach_perms=True)
         expected = {self.user2: ["change_contenttype"]}
