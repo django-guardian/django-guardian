@@ -137,12 +137,23 @@ def remove_perm(perm, user_or_group=None, obj=None):
         model = get_group_obj_perms_model(obj)
         model.objects.remove_perm(perm, group, obj)
 
-def get_perms(user_or_group, obj):
+def get_perms(user_or_group, obj, direct_perms_only=False):
     """
     Returns permissions for given user/group and object pair, as list of
     strings.
+
+    :param user_or_group: instance of ``User``, ``AnonymousUser`` or ``Group``;
+      passing any other object would raise
+      ``guardian.exceptions.NotUserNorGroup`` exception
+
+    :param obj: persisted Django's ``Model`` instance
+
+    :param direct_perms_only: If set to ``True`` and ``user_or_group`` is a
+       ``User`` instance, result would contain only permissions assigned
+       directly to the user for the given ``obj``, not those coming via user's
+       superuser status or group memberships.
     """
-    check = ObjectPermissionChecker(user_or_group)
+    check = ObjectPermissionChecker(user_or_group, direct_perms_only)
     return check.get_perms(obj)
 
 def get_perms_for_model(cls):
@@ -159,7 +170,7 @@ def get_perms_for_model(cls):
     return Permission.objects.filter(content_type=ctype)
 
 def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
-        with_group_users=True):
+        with_group_users=True, direct_perms_only=False):
     """
     Returns queryset of all ``User`` objects with *any* object permissions for
     the given ``obj``.
@@ -176,6 +187,11 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
     :param with_group_users: Default: ``True``. If set to ``False`` result would
       **not** contain those users who have only group permissions for given
       ``obj``.
+
+    :param direct_perms_only: If set to ``True`` and ``user_or_group`` is a
+       ``User`` instance, result would contain only permissions assigned
+       directly to the user for the given ``obj``, not those coming via user's
+       superuser status or group memberships.
 
     Example::
 
@@ -194,6 +210,9 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
         {<User: joe>: [u'change_flatpage']}
 
     """
+    if direct_perms_only:
+        with_group_users = False
+        with_superusers = False
     ctype = ContentType.objects.get_for_model(obj)
     if not attach_perms:
         # It's much easier without attached perms so we do it first if that is
@@ -229,7 +248,7 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
         users = {}
         for user in get_users_with_perms(obj,
                 with_group_users=with_group_users):
-            users[user] = sorted(get_perms(user, obj))
+            users[user] = sorted(get_perms(user, obj, direct_perms_only))
         return users
 
 def get_groups_with_perms(obj, attach_perms=False):
@@ -279,7 +298,7 @@ def get_groups_with_perms(obj, attach_perms=False):
         # TODO: Do not hit db for each group!
         groups = {}
         for group in get_groups_with_perms(obj):
-            if not group in groups:
+            if group not in groups:
                 groups[group] = sorted(get_perms(group, obj))
         return groups
 

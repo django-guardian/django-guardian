@@ -29,13 +29,19 @@ class ObjectPermissionChecker(object):
        difference as permissions are already fetched and stored within cache
        dictionary.
     """
-    def __init__(self, user_or_group=None):
+    def __init__(self, user_or_group=None, direct_perms_only=False):
         """
         :param user_or_group: should be an ``User``, ``AnonymousUser`` or
           ``Group`` instance
+
+        :param direct_perms_only: If set to ``True`` and ``user_or_group`` is a
+          ``User`` instance, only consider permissions assigned directly to the
+          user, not those coming via user's superuser status or group
+          memberships.
         """
         self.user, self.group = get_identity(user_or_group)
         self._obj_perms_cache = {}
+        self._direct_perms_only = direct_perms_only if self.user else False
 
     def has_perm(self, perm, obj):
         """
@@ -49,7 +55,8 @@ class ObjectPermissionChecker(object):
         perm = perm.split('.')[-1]
         if self.user and not self.user.is_active:
             return False
-        elif self.user and self.user.is_superuser:
+        elif (self.user and self.user.is_superuser and
+              not self._direct_perms_only):
             return True
         return perm in self.get_perms(obj)
 
@@ -65,27 +72,30 @@ class ObjectPermissionChecker(object):
         User = get_user_model()
         ctype = ContentType.objects.get_for_model(obj)
         key = self.get_local_cache_key(obj)
-        if not key in self._obj_perms_cache:
+        if key not in self._obj_perms_cache:
 
-            group_model = get_group_obj_perms_model(obj)
-            group_rel_name = group_model.permission.field.related_query_name()
-            if self.user:
-                fieldname = '%s__group__%s' % (
-                    group_rel_name,
-                    User.groups.field.related_query_name(),
-                )
-                group_filters = {fieldname: self.user}
-            else:
-                group_filters = {'%s__group' % group_rel_name: self.group}
-            if group_model.objects.is_generic():
-                group_filters.update({
-                    '%s__content_type' % group_rel_name: ctype,
-                    '%s__object_pk' % group_rel_name: obj.pk,
-                })
-            else:
-                group_filters['%s__content_object' % group_rel_name] = obj
+            if not self._direct_perms_only:
+                group_model = get_group_obj_perms_model(obj)
+                group_rel_name = (
+                    group_model.permission.field.related_query_name())
+                if self.user:
+                    fieldname = '%s__group__%s' % (
+                        group_rel_name,
+                        User.groups.field.related_query_name(),
+                    )
+                    group_filters = {fieldname: self.user}
+                else:
+                    group_filters = {'%s__group' % group_rel_name: self.group}
+                if group_model.objects.is_generic():
+                    group_filters.update({
+                        '%s__content_type' % group_rel_name: ctype,
+                        '%s__object_pk' % group_rel_name: obj.pk,
+                    })
+                else:
+                    group_filters['%s__content_object' % group_rel_name] = obj
 
-            if self.user and self.user.is_superuser:
+            if (self.user and self.user.is_superuser and
+                    not self._direct_perms_only):
                 perms = list(chain(*Permission.objects
                     .filter(content_type=ctype)
                     .values_list("codename")))
@@ -105,9 +115,12 @@ class ObjectPermissionChecker(object):
                 # the results to avoid a slow query
                 user_perms_qs = perms_qs.filter(**user_filters)
                 user_perms = user_perms_qs.values_list("codename", flat=True)
-                group_perms_qs = perms_qs.filter(**group_filters)
-                group_perms = group_perms_qs.values_list("codename", flat=True)
-                perms = list(set(chain(user_perms, group_perms)))
+                if self._direct_perms_only:
+                    perms = list(user_perms)
+                else:
+                    group_perms_qs = perms_qs.filter(**group_filters)
+                    group_perms = group_perms_qs.values_list("codename", flat=True)
+                    perms = list(set(chain(user_perms, group_perms)))
             else:
                 perms = list(set(chain(*Permission.objects
                     .filter(content_type=ctype)
@@ -122,4 +135,3 @@ class ObjectPermissionChecker(object):
         """
         ctype = ContentType.objects.get_for_model(obj)
         return (ctype.id, obj.pk)
-
