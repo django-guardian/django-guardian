@@ -787,6 +787,13 @@ class GetObjectsForUser(TestCase):
             set(objects),
             set(groups))
 
+    def test_short_codenames_with_klass(self):
+        assign_perm('contenttypes.change_contenttype', self.user, self.ctype)
+
+        objects = get_objects_for_user(self.user,
+            ['change_contenttype'], ContentType)
+        self.assertEqual([obj.name for obj in objects], [self.ctype.name])
+
 
 class GetObjectsForGroup(TestCase):
     """
