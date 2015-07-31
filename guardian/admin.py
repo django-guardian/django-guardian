@@ -1,7 +1,5 @@
 from __future__ import unicode_literals
 
-from collections import OrderedDict
-
 import django
 from django import forms
 from django.conf import settings
@@ -14,7 +12,7 @@ from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
 from django.utils.translation import ugettext, ugettext_lazy as _
 
-from guardian.compat import get_user_model, get_model_name
+from guardian.compat import OrderedDict, get_user_model, get_model_name
 from guardian.forms import UserObjectPermissionsForm
 from guardian.forms import GroupObjectPermissionsForm
 from guardian.shortcuts import get_perms
