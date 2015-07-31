@@ -121,12 +121,13 @@ except NameError:
     basestring = unicode = str = str
 
 
-# Django 1.8 compatibility
+# OrderedDict only available in Python 2.7.
+# This will always be the case in Django 1.7 and above, as these versions
+# no longer support Python 2.6.
+# For Django <= 1.6 and Python 2.6 fall back to SortedDict.
 try:
-    # This only exists on python 2.7 +
     from collections import OrderedDict
 except ImportError:
-    # If they're on python < 2.7, this will exist in django
     from django.utils.datastructures import SortedDict as OrderedDict
 
 
