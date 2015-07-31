@@ -36,8 +36,9 @@ model could look like:
                 ('view_task', 'View task'),
             )
 
-After we call ``syncdb`` management command our *view_task* permission would be
-added to default set of permissions.
+After we call ``syncdb`` (with a ``--all`` switch if you are using south)
+management command our *view_task* permission would be added to default set of
+permissions.
 
 .. note::
    By default, Django adds 3 permissions for each registered model:
@@ -47,7 +48,7 @@ added to default set of permissions.
    - *delete_modelname*
 
    (where *modelname* is a simplified name of our model's class). See
-   http://docs.djangoproject.com/en/1.2/topics/auth/#default-permissions for
+   https://docs.djangoproject.com/en/dev/topics/auth/default/#default-permissions for
    more detail.
 
 There is nothing new here since creation of permissions is 

@@ -33,7 +33,6 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.admin',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
     'guardian',
     'guardian.testapp',
     'posts',
