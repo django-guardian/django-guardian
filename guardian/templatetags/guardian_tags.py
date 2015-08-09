@@ -6,16 +6,22 @@
 
 """
 from __future__ import unicode_literals
+import django
 from django import template
 from django.contrib.auth.models import Group, AnonymousUser
-try:
+
+if django.VERSION >= (1, 9):
+    # Django 1.9
+    from django.template.defaulttags import find_library
+elif django.VERSION >= (1, 8):
+    # Django 1.8
+    from django.template.base import get_library
+    from django.template.base import InvalidTemplateLibrary
+else:
     # Django < 1.8
     from django.template import get_library
     from django.template import InvalidTemplateLibrary
-except ImportError:
-    # Django >= 1.8
-    from django.template.base import get_library
-    from django.template.base import InvalidTemplateLibrary
+
 from django.template.defaulttags import LoadNode
 
 from guardian.compat import get_user_model
@@ -49,12 +55,17 @@ def friendly_load(parser, token):
         {% endif_has_tag %}
     '''
     bits = token.contents.split()
-    for taglib in bits[1:]:
-        try:
-            lib = get_library(taglib)
+    if django.VERSION >= (1, 9):
+        for name in bits[1:]:
+            lib = find_library(parser, name)
             parser.add_library(lib)
-        except InvalidTemplateLibrary:
-            pass
+    else:
+        for taglib in bits[1:]:
+            try:
+                lib = get_library(taglib)
+                parser.add_library(lib)
+            except InvalidTemplateLibrary:
+                pass
     return LoadNode()
 
 
