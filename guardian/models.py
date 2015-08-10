@@ -19,7 +19,21 @@ from guardian.conf import settings
 from guardian.managers import GroupObjectPermissionManager
 from guardian.managers import UserObjectPermissionManager
 
-
+class GuardianGroup(Group):
+	"""
+	Subclass of django Group class. Defines has_perm function to enable 
+	GroupObjectPermission checking.
+	"""
+	def has_perm(self,perm,obj=None):
+    	ct = ContentType.objects.get_for_model(obj)
+    	perm = Permission.objects.filter(content_type=ct,codename=perm).first()
+    	if not perm:
+    		return False
+    	if not GroupObjectPermission.objects.filter(group=self,content_type=ct,object_pk=obj.pk,permission=perm).first() :
+    		return False
+    	else:
+    		return True
+    		
 class BaseObjectPermission(models.Model):
     """
     Abstract ObjectPermission class. Actual class should additionally define
