@@ -10,10 +10,8 @@ from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
-from django.utils.datastructures import SortedDict
 from django.utils.translation import ugettext, ugettext_lazy as _
-
-from guardian.compat import get_user_model, get_model_name
+from guardian.compat import get_user_model, get_model_name, sorted_dict
 from guardian.forms import UserObjectPermissionsForm
 from guardian.forms import GroupObjectPermissionsForm
 from guardian.shortcuts import get_perms
@@ -149,15 +147,12 @@ class GuardedModelAdminMixin(object):
         forms presented within the page.
         """
         obj = get_object_or_404(self.queryset(request), pk=object_pk)
-        users_perms = SortedDict(
-            get_users_with_perms(obj, attach_perms=True,
-                with_group_users=False))
-
-        users_perms.keyOrder.sort(key=lambda user:
-                                  getattr(user, get_user_model().USERNAME_FIELD))
-        groups_perms = SortedDict(
-            get_groups_with_perms(obj, attach_perms=True))
-        groups_perms.keyOrder.sort(key=lambda group: group.name)
+        users_perms = sorted_dict(
+            items=get_users_with_perms(obj, attach_perms=True, with_group_users=False),
+            key=lambda user: getattr(user, get_user_model().USERNAME_FIELD))
+        groups_perms = sorted_dict(
+            items=get_groups_with_perms(obj, attach_perms=True),
+            key=lambda group: group.name)
 
         if request.method == 'POST' and 'submit_manage_user' in request.POST:
             user_form = UserManage(request.POST)
