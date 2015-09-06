@@ -33,6 +33,7 @@ __all__ = [
     'handler500',
     'mock',
     'unittest',
+    'sorted_dict'
 ]
 
 try:
@@ -145,3 +146,17 @@ def get_model_name(model):
     if django.VERSION < (1, 7):
         return model._meta.module_name
     return model._meta.model_name
+
+try:
+    from collections import OrderedDict
+
+    def sorted_dict(items, key=lambda x: x):
+        return OrderedDict(sorted(items.items(), key=lambda k, v: key(v)))
+
+except ImportError:
+    from django.utils.datastructures import SortedDict
+
+    def sorted_dict(items, key=lambda x: x):
+        data = SortedDict(items)
+        data.keyOrder.sort(key=key)
+        return data
