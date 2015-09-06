@@ -14,10 +14,13 @@ env:
  - DJANGO_VERSION=1.6.10
  - DJANGO_VERSION=1.7.4
  - DJANGO_VERSION=1.8
+ - DJANGO_VERSION=nightly
 
 install:
-  - travis_retry pip install -q mock==1.0.1 Django==$DJANGO_VERSION coverage coveralls
-  - travis_retry pip install --use-mirrors
+  - travis_retry pip install -q -U pip wheel
+  - travis_retry sh -c 'if [ "$DJANGO_VERSION" != "nightly" ]; then pip install -q Django==$DJANGO_VERSION; fi;'
+  - travis_retry sh -c 'if [ "$DJANGO_VERSION" = "nightly" ]; then pip install "https://github.com/django/django/archive/master.tar.gz"; fi;'
+  - travis_retry pip install -q mock==1.0.1 coverage coveralls
 
 script:
   - coverage run --source=guardian setup.py test
@@ -46,3 +49,5 @@ matrix:
           env: DJANGO_VERSION=1.4.19
         - python: 2.6
         - env: DJANGO_VERSION=1.7.4
+    allow_failures:
+        - env: DJANGO_VERSION=nightly
