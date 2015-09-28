@@ -18,6 +18,11 @@ try:
 except ImportError:
     from django.conf.urls.defaults import url, patterns, include, handler404, handler500 # pyflakes:ignore
 
+try:
+    from collections import OrderedDict
+except ImportError:
+    from django.utils.datastructures import SortedDict as OrderedDict
+
 __all__ = [
     'User',
     'Group',
