@@ -120,6 +120,17 @@ try:
 except NameError:
     basestring = unicode = str = str
 
+
+# OrderedDict only available in Python 2.7.
+# This will always be the case in Django 1.7 and above, as these versions
+# no longer support Python 2.6.
+# For Django <= 1.6 and Python 2.6 fall back to SortedDict.
+try:
+    from collections import OrderedDict
+except ImportError:
+    from django.utils.datastructures import SortedDict as OrderedDict
+
+
 # Django 1.7 compatibility
 # create_permission API changed: skip the create_models (second
 # positional argument) if we have django 1.7+ and 2+ positional

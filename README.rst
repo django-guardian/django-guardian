@@ -43,18 +43,21 @@ We need to hook ``django-guardian`` into our project.
          'guardian',
       )
    
-2. Add extra authorization backend::
+2. Add extra authorization backend to your `settings.py`::
 
       AUTHENTICATION_BACKENDS = (
           'django.contrib.auth.backends.ModelBackend', # default
           'guardian.backends.ObjectPermissionBackend',
       )
 
-3. Configure anonymous user ID ::
+3. Configure anonymous user ID in your `settings.py`::
 
      ANONYMOUS_USER_ID = -1
 
-         
+4. Create ``guardian`` database tables by running::
+
+     python manage.py migrate
+
 Usage
 -----
 
@@ -63,10 +66,12 @@ with Django_.
 
 Lets start really quickly::
 
+    >>> from django.contrib.auth.models import User, Group
     >>> jack = User.objects.create_user('jack', 'jack@example.com', 'topsecretagentjack')
     >>> admins = Group.objects.create(name='admins')
     >>> jack.has_perm('change_group', admins)
     False
+    >>> from guardian.models import UserObjectPermission
     >>> UserObjectPermission.objects.assign_perm('change_group', user=jack, obj=admins)
     <UserObjectPermission: admins | jack | change_group>
     >>> jack.has_perm('change_group', admins)
