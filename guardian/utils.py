@@ -179,3 +179,30 @@ def get_group_obj_perms_model(obj):
     from guardian.models import GroupObjectPermissionBase
     from guardian.models import GroupObjectPermission
     return get_obj_perms_model(obj, GroupObjectPermissionBase, GroupObjectPermission)
+
+
+def group_has_perm(group, perm):
+    """
+    Returns True if ``group`` has the permission ``perm``
+    """
+    app_label, codename = perm.split('.')
+    perms = group.permissions.filter(
+        codename=codename,
+        content_type__app_label=app_label
+    )
+    
+    return perms.count() > 0
+
+
+def get_qualified_perm(perm, obj):
+    """
+    Returns the fully qualified name of the permission: ``app_label.codename``
+
+    :param perm: can be a ``codename`` or an already fully qualified name
+    """
+    if '.' in perm:
+        qualified_perm = perm
+    else:
+        qualified_perm = '%s.%s' % (obj._meta.app_label, perm)
+
+    return qualified_perm

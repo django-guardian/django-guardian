@@ -17,6 +17,8 @@ TEMPLATE_403 = getattr(settings, 'GUARDIAN_TEMPLATE_403', '403.html')
 RAISE_403 = getattr(settings, 'GUARDIAN_RAISE_403', False)
 GET_INIT_ANONYMOUS_USER = getattr(settings, 'GUARDIAN_GET_INIT_ANONYMOUS_USER',
     'guardian.management.get_init_anonymous_user')
+GLOBAL_PERMISSIONS_CARRY_OVER = getattr(settings, 'GUARDIAN_GLOBAL_PERMISSIONS_CARRY_OVER',
+    False)
 
 MONKEY_PATCH = getattr(settings, 'GUARDIAN_MONKEY_PATCH', True)
 
