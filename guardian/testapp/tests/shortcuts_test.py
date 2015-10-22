@@ -308,6 +308,46 @@ class GetUsersWithPermsTest(TestCase):
         expected = {self.user2: ["change_contenttype"]}
         self.assertEqual(result, expected)
 
+    def test_direct_perms_only(self):
+        admin = User.objects.create(username='admin', is_superuser=True)
+        self.user1.groups.add(self.group1)
+        self.user2.groups.add(self.group1)
+        assign_perm("change_contenttype", self.user1, self.obj1)
+        assign_perm("delete_contenttype", admin, self.obj1)
+        assign_perm("delete_contenttype", self.group1, self.obj1)
+        # With direct_perms_only=False (default)
+        expected = set([self.user1, self.user2, admin])
+        result = get_users_with_perms(self.obj1)
+        self.assertEqual(set(result), expected)
+        # With direct_perms_only=True
+        result = get_users_with_perms(self.obj1, direct_perms_only=True)
+        expected = set([self.user1, admin])
+        self.assertEqual(set(result), expected)
+
+    def test_direct_perms_only_perms_attached(self):
+        admin = User.objects.create(username='admin', is_superuser=True)
+        self.user1.groups.add(self.group1)
+        self.user2.groups.add(self.group1)
+        assign_perm("change_contenttype", self.user1, self.obj1)
+        assign_perm("delete_contenttype", admin, self.obj1)
+        assign_perm("delete_contenttype", self.group1, self.obj1)
+        # With direct_perms_only=False (default)
+        expected = {
+            self.user1: ["change_contenttype", "delete_contenttype"],
+            admin: ["add_contenttype", "change_contenttype", "delete_contenttype"],
+            self.user2: ["delete_contenttype"]
+        }
+        result = get_users_with_perms(self.obj1, attach_perms=True)
+        self.assertEqual(result.keys(), expected.keys())
+        for key, perms in result.items():
+            self.assertEqual(set(perms), set(expected[key]))
+        # With direct_perms_only=True
+        result = get_users_with_perms(self.obj1, attach_perms=True,
+            direct_perms_only=True)
+        expected = {self.user1: ["change_contenttype"],
+                    admin: ["delete_contenttype"]}
+        self.assertEqual(result, expected)
+
     def test_without_group_users_no_result(self):
         self.user1.groups.add(self.group1)
         assign_perm("change_contenttype", self.group1, self.obj1)
