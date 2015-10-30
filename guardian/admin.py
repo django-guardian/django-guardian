@@ -147,7 +147,8 @@ class GuardedModelAdminMixin(object):
         shown. In order to add or manage user or group one should use links or
         forms presented within the page.
         """
-        obj = get_object_or_404(self.get_queryset(request), pk=object_pk)
+        from django.contrib.admin.util import unquote
+        obj = get_object_or_404(self.get_queryset(request), pk=unquote(object_pk))
         users_perms = OrderedDict(
             sorted(
                 get_users_with_perms(obj, attach_perms=True, with_group_users=False).items(),
