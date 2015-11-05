@@ -21,7 +21,7 @@ from guardian.exceptions import MixedContentTypeError
 from guardian.exceptions import NotUserNorGroup
 from guardian.exceptions import WrongAppError
 from guardian.testapp.models import NonIntPKModel
-from guardian.testapp.tests.core_test import ObjectPermissionTestCase
+from guardian.testapp.tests.test_core import ObjectPermissionTestCase
 from guardian.models import Group, Permission
 
 import warnings

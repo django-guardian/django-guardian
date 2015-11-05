@@ -16,7 +16,7 @@ class TestGetAnonymousUser(unittest.TestCase):
     @unittest.skipUnless(django.VERSION >= (1, 5), "Django >= 1.5 only")
     @mock.patch('guardian.management.guardian_settings')
     def test_uses_custom_function(self, guardian_settings):
-        path = 'guardian.testapp.tests.management_test.mocked_get_init_anon'
+        path = 'guardian.testapp.tests.test_management.mocked_get_init_anon'
         guardian_settings.GET_INIT_ANONYMOUS_USER = path
         guardian_settings.ANONYMOUS_USER_ID = 219
         User = get_user_model()
