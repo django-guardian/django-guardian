@@ -44,8 +44,7 @@ def run_tests(settings):
     if django.VERSION < (1, 7):
         failures = test_runner.run_tests(['auth', 'guardian', 'testapp'])
     else:
-        failures = test_runner.run_tests([
-            'guardian', 'guardian.testapp'])
+        failures = test_runner.run_tests(['guardian'])
     return failures
 
 def main():
