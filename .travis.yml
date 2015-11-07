@@ -4,6 +4,7 @@ python:
  - 2.7
  - 3.3
  - 3.4
+ - 3.5
 
 env:
  - DJANGO_VERSION=1.2.7
@@ -16,7 +17,6 @@ env:
 
 install:
   - travis_retry pip install -q mock==1.0.1 Django==$DJANGO_VERSION coverage coveralls
-  - travis_retry pip install --use-mirrors
 
 script:
   - coverage run --source=guardian setup.py test
@@ -43,3 +43,15 @@ matrix:
           env: DJANGO_VERSION=1.3.7
         - python: 3.4
           env: DJANGO_VERSION=1.4.22
+        - python: 3.5
+          env: DJANGO_VERSION=1.2.7
+        - python: 3.5
+          env: DJANGO_VERSION=1.3.7
+        - python: 3.5
+          env: DJANGO_VERSION=1.4.22
+        - python: 3.5
+          env: DJANGO_VERSION=1.5.12
+        - python: 3.5
+          env: DJANGO_VERSION=1.6.11
+        - python: 3.5
+          env: DJANGO_VERSION=1.7.10
