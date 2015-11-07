@@ -9,6 +9,7 @@ from __future__ import unicode_literals
 import os
 import logging
 from itertools import chain
+import django
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.contrib.auth.models import AnonymousUser, Group
@@ -150,7 +151,10 @@ def get_obj_perms_model(obj, base_cls, generic_cls):
         obj = obj.__class__
     ctype = ContentType.objects.get_for_model(obj)
     for attr in obj._meta.get_all_related_objects():
-        model = getattr(attr, 'model', None)
+        if django.VERSION < (1, 8):
+            model = getattr(attr, 'model', None)
+        else:
+            model = getattr(attr, 'related_model', None)
         if (model and issubclass(model, base_cls) and
                 model is not generic_cls):
             # if model is generic one it would be returned anyway

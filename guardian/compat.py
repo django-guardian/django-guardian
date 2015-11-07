@@ -78,7 +78,11 @@ def get_user_permission_full_codename(perm):
     ``myapp.CustomUser`` is used it would return ``myapp.change_customuser``.
     """
     User = get_user_model()
-    return '%s.%s_%s' % (User._meta.app_label, perm, User._meta.module_name)
+    if django.VERSION < (1, 7):
+        model_name = User._meta.module_name
+    else:
+        model_name = User._meta.model_name
+    return '%s.%s_%s' % (User._meta.app_label, perm, model_name)
 
 def get_user_permission_codename(perm):
     """
