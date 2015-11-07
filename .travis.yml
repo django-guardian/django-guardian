@@ -1,7 +1,6 @@
 language: python
 sudo: false
 python:
- - 2.6
  - 2.7
  - 3.3
  - 3.4
@@ -44,5 +43,4 @@ matrix:
           env: DJANGO_VERSION=1.3.7
         - python: 3.4
           env: DJANGO_VERSION=1.4.19
-        - python: 2.6
         - env: DJANGO_VERSION=1.7.4
