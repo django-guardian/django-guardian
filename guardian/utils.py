@@ -27,6 +27,8 @@ from guardian.exceptions import NotUserNorGroup
 
 from django.contrib.auth.views import redirect_to_login
 
+import django
+
 logger = logging.getLogger(__name__)
 abspath = lambda *p: os.path.abspath(os.path.join(*p))
 
