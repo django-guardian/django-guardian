@@ -43,5 +43,11 @@ def create_anonymous_user(sender, **kwargs):
 
 # Only create an anonymous user if support is enabled.
 if guardian_settings.ANONYMOUS_USER_ID is not None:
-    signals.post_syncdb.connect(create_anonymous_user, sender=guardian_app,
-        dispatch_uid="guardian.management.create_anonymous_user")
+    try:
+        # Django 1.7+ uses post_migrate signal
+        signals.post_migrate.connect(create_anonymous_user, sender=guardian_app,
+            dispatch_uid="guardian.management.create_anonymous_user")
+    except AttributeError:
+        # Django 1.6 and earlier uses post_syncdb signal
+        signals.post_syncdb.connect(create_anonymous_user, sender=guardian_app,
+            dispatch_uid="guardian.management.create_anonymous_user")
