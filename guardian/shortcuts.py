@@ -413,7 +413,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
     # a superuser has by default assigned global perms for any
     if accept_global_perms and with_superuser:
         for code in codenames:
-            if user.has_perm(app_label + '.' + code):
+            if app_label is not None and user.has_perm(app_label + '.' + code):
                 global_perms.add(code)
         for code in global_perms:
             codenames.remove(code)
