@@ -774,6 +774,19 @@ class GetObjectsForUser(TestCase):
          self.assertRaises(MixedContentTypeError, get_objects_for_user,
             self.user, ['auth.change_permission', 'auth.change_group'])
 
+    def test_has_any_permissions(self):
+        group_names = ['group1', 'group2', 'group3']
+        groups = [Group.objects.create(name=name) for name in group_names]
+        for group in groups:
+            assign_perm('change_group', self.user, group)
+
+        objects = get_objects_for_user(self.user, [], Group)
+        self.assertEqual(len(objects), len(groups))
+        self.assertTrue(isinstance(objects, QuerySet))
+        self.assertEqual(
+            set(objects),
+            set(groups))
+
 
 class GetObjectsForGroup(TestCase):
     """
