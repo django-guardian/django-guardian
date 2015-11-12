@@ -290,8 +290,8 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
     Returns queryset of objects for which a given ``user`` has *all*
     permissions present at ``perms``.
 
-    If ``perms`` is an empty list, then it returns a given ``user`` has
-    *any* object permission.
+    If ``perms`` is an empty list, then it returns objects for which
+    a given ``user`` has *any* object permission.
 
     :param user: ``User`` or ``AnonymousUser`` instance for which objects would
       be returned.
