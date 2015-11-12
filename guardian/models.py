@@ -5,7 +5,12 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.contenttypes.generic import GenericForeignKey
+
+try:
+    from django.contrib.contenttypes.fields import GenericForeignKey
+except ImportError:
+    from django.contrib.contenttypes.generic import GenericForeignKey
+
 from django.utils.translation import ugettext_lazy as _
 
 from guardian.compat import user_model_label
@@ -26,7 +31,7 @@ class BaseObjectPermission(models.Model):
         abstract = True
 
     def __unicode__(self):
-        return u'%s | %s | %s' % (
+        return '%s | %s | %s' % (
             unicode(self.content_object),
             unicode(getattr(self, 'user', False) or self.group),
             unicode(self.permission.codename))

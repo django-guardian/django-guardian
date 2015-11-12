@@ -6,7 +6,7 @@ from django.db import models
 
 from guardian.compat import get_user_model
 from guardian.testapp.tests.conf import skipUnlessTestApp
-from guardian.testapp.tests.core_test import ObjectPermissionTestCase
+from guardian.testapp.tests.test_core import ObjectPermissionTestCase
 from guardian.testapp.models import Project
 from guardian.testapp.models import ProjectUserObjectPermission
 from guardian.testapp.models import ProjectGroupObjectPermission

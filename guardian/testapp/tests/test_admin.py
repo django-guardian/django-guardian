@@ -11,7 +11,7 @@ from django.test import TestCase
 from django.test.client import Client
 
 from guardian.admin import GuardedModelAdmin
-from guardian.compat import get_user_model
+from guardian.compat import get_user_model, get_model_name
 from guardian.compat import str
 from guardian.shortcuts import get_perms
 from guardian.shortcuts import get_perms_for_model
@@ -43,7 +43,7 @@ class AdminTests(TestCase):
         self.client = Client()
         self.obj = ContentType.objects.create(name='foo', model='bar',
             app_label='fake-for-guardian-tests')
-        self.obj_info = self.obj._meta.app_label, self.obj._meta.module_name
+        self.obj_info = self.obj._meta.app_label, get_model_name(self.obj)
 
     def tearDown(self):
         self.client.logout()
@@ -343,7 +343,7 @@ class GuardedModelAdminTests(TestCase):
             object_id=jane.pk, action_flag=1, change_message='bar')
         request = HttpRequest()
         request.user = joe
-        qs = gma.queryset(request)
+        qs = gma.get_queryset(request)
         self.assertEqual([e.pk for e in qs], [joe_entry.pk])
 
     def test_user_can_acces_owned_objects_only_unless_superuser(self):
@@ -361,7 +361,7 @@ class GuardedModelAdminTests(TestCase):
             object_id=jane.pk, action_flag=1, change_message='bar')
         request = HttpRequest()
         request.user = joe
-        qs = gma.queryset(request)
+        qs = gma.get_queryset(request)
         self.assertEqual(sorted([e.pk for e in qs]),
             sorted([joe_entry.pk, jane_entry.pk]))
 
@@ -387,7 +387,7 @@ class GuardedModelAdminTests(TestCase):
             group=joe_group)
         request = HttpRequest()
         request.user = joe
-        qs = gma.queryset(request)
+        qs = gma.get_queryset(request)
         self.assertEqual([e.pk for e in qs], [joe_entry_group.pk])
 
     def test_user_can_access_owned_by_group_objects_only_unless_superuser(self):
@@ -415,7 +415,7 @@ class GuardedModelAdminTests(TestCase):
             group=jane_group)
         request = HttpRequest()
         request.user = joe
-        qs = gma.queryset(request)
+        qs = gma.get_queryset(request)
         self.assertEqual(sorted(e.pk for e in qs),
             sorted(LogEntry.objects.values_list('pk', flat=True)))
 

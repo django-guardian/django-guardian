@@ -10,7 +10,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.test import TestCase
 
-from guardian.compat import get_user_model, create_permissions
+from guardian.compat import get_user_model, create_permissions, get_model_name
 from guardian.utils import clean_orphan_obj_perms
 from guardian.shortcuts import assign_perm
 from guardian.models import Group
@@ -18,7 +18,7 @@ from guardian.testapp.tests.conf import skipUnlessTestApp
 
 
 User = get_user_model()
-user_module_name = User._meta.module_name
+user_module_name = get_model_name(User)
 
 @skipUnlessTestApp
 class OrphanedObjectPermissionsTest(TestCase):
@@ -99,4 +99,3 @@ class OrphanedObjectPermissionsTest(TestCase):
             target.save()
             for perm in perms:
                 self.assertFalse(self.user.has_perm(perm, target))
-

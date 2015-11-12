@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import django
 from django import forms
 from django.conf import settings
 from guardian.compat import url, patterns
@@ -9,10 +10,9 @@ from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.core.urlresolvers import reverse
 from django.shortcuts import render_to_response, get_object_or_404, redirect
 from django.template import RequestContext
-from django.utils.datastructures import SortedDict
 from django.utils.translation import ugettext, ugettext_lazy as _
 
-from guardian.compat import get_user_model
+from guardian.compat import OrderedDict, get_user_model, get_model_name
 from guardian.forms import UserObjectPermissionsForm
 from guardian.forms import GroupObjectPermissionsForm
 from guardian.shortcuts import get_perms
@@ -60,8 +60,14 @@ class GuardedModelAdminMixin(object):
     group_owned_objects_field = 'group'
     include_object_permissions_urls = True
 
-    def queryset(self, request):
-        qs = super(GuardedModelAdminMixin, self).queryset(request)
+    def get_queryset(self, request):
+        # Prefer the Django >= 1.6 interface but maintain
+        # backward compatibility
+        method = getattr(
+            super(GuardedModelAdminMixin, self), 'get_queryset',
+            getattr(super(GuardedModelAdminMixin, self), 'queryset', None))
+        qs = method(request)
+
         if request.user.is_superuser:
             return qs
 
@@ -76,6 +82,11 @@ class GuardedModelAdminMixin(object):
             qs = qs.filter(**filters)
         return qs
 
+    # Allow queryset method as fallback for Django versions < 1.6
+    # for versions >= 1.6 this is taken care of by Django itself
+    # and triggers a warning message automatically.
+    if django.VERSION < (1, 6):
+        queryset = get_queryset
 
     def get_urls(self):
         """
@@ -92,7 +103,7 @@ class GuardedModelAdminMixin(object):
         """
         urls = super(GuardedModelAdminMixin, self).get_urls()
         if self.include_object_permissions_urls:
-            info = self.model._meta.app_label, self.model._meta.module_name
+            info = self.model._meta.app_label, get_model_name(self.model)
             myurls = patterns('',
                 url(r'^(?P<object_pk>.+)/permissions/$',
                     view=self.admin_site.admin_view(self.obj_perms_manage_view),
@@ -136,16 +147,20 @@ class GuardedModelAdminMixin(object):
         shown. In order to add or manage user or group one should use links or
         forms presented within the page.
         """
-        obj = get_object_or_404(self.queryset(request), pk=object_pk)
-        users_perms = SortedDict(
-            get_users_with_perms(obj, attach_perms=True,
-                with_group_users=False))
+        obj = get_object_or_404(self.get_queryset(request), pk=object_pk)
+        users_perms = OrderedDict(
+            sorted(
+                get_users_with_perms(obj, attach_perms=True, with_group_users=False).items(),
+                key=lambda user: getattr(user[0], get_user_model().USERNAME_FIELD)
+            )
+        )
 
-        users_perms.keyOrder.sort(key=lambda user:
-                                  getattr(user, get_user_model().USERNAME_FIELD))
-        groups_perms = SortedDict(
-            get_groups_with_perms(obj, attach_perms=True))
-        groups_perms.keyOrder.sort(key=lambda group: group.name)
+        groups_perms = OrderedDict(
+            sorted(
+                get_groups_with_perms(obj, attach_perms=True).items(),
+                key=lambda group: group[0].name
+            )
+        )
 
         if request.method == 'POST' and 'submit_manage_user' in request.POST:
             user_form = UserManage(request.POST)
@@ -153,7 +168,7 @@ class GuardedModelAdminMixin(object):
             info = (
                 self.admin_site.name,
                 self.model._meta.app_label,
-                self.model._meta.module_name
+                get_model_name(self.model)
             )
             if user_form.is_valid():
                 user_id = user_form.cleaned_data['user'].pk
@@ -168,7 +183,7 @@ class GuardedModelAdminMixin(object):
             info = (
                 self.admin_site.name,
                 self.model._meta.app_label,
-                self.model._meta.module_name
+                get_model_name(self.model)
             )
             if group_form.is_valid():
                 group_id = group_form.cleaned_data['group'].id
@@ -209,7 +224,7 @@ class GuardedModelAdminMixin(object):
         Manages selected users' permissions for current object.
         """
         user = get_object_or_404(get_user_model(), pk=user_id)
-        obj = get_object_or_404(self.queryset(request), pk=object_pk)
+        obj = get_object_or_404(self.get_queryset(request), pk=object_pk)
         form_class = self.get_obj_perms_manage_user_form()
         form = form_class(user, obj, request.POST or None)
 
@@ -220,7 +235,7 @@ class GuardedModelAdminMixin(object):
             info = (
                 self.admin_site.name,
                 self.model._meta.app_label,
-                self.model._meta.module_name
+                get_model_name(self.model)
             )
             url = reverse(
                 '%s:%s_%s_permissions_manage_user' % info,
@@ -262,7 +277,7 @@ class GuardedModelAdminMixin(object):
         Manages selected groups' permissions for current object.
         """
         group = get_object_or_404(Group, id=group_id)
-        obj = get_object_or_404(self.queryset(request), pk=object_pk)
+        obj = get_object_or_404(self.get_queryset(request), pk=object_pk)
         form_class = self.get_obj_perms_manage_group_form()
         form = form_class(group, obj, request.POST or None)
 
@@ -273,7 +288,7 @@ class GuardedModelAdminMixin(object):
             info = (
                 self.admin_site.name,
                 self.model._meta.app_label,
-                self.model._meta.module_name
+                get_model_name(self.model)
             )
             url = reverse(
                 '%s:%s_%s_permissions_manage_group' % info,

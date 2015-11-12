@@ -2,18 +2,8 @@
 django-guardian
 ===============
 
-.. image:: https://secure.travis-ci.org/lukaszb/django-guardian.png?branch=master
-  :target: http://travis-ci.org/lukaszb/django-guardian
-
-.. image:: https://coveralls.io/repos/lukaszb/django-guardian/badge.png?branch=master
-   :target: https://coveralls.io/r/lukaszb/django-guardian/
-
-.. image:: https://pypip.in/v/django-guardian/badge.png
-  :target: https://crate.io/packages/django-guardian/
-
-.. image:: https://pypip.in/d/django-guardian/badge.png
-  :target: https://crate.io/packages/django-guardian/
-
+.. image:: https://travis-ci.org/django-guardian/django-guardian.svg?branch=devel
+  :target: https://travis-ci.org/django-guardian/django-guardian
 
 ``django-guardian`` is implementation of per object permissions [1]_ as 
 authorization backend which is supported since Django_ 1.2. It won't
@@ -43,18 +33,21 @@ We need to hook ``django-guardian`` into our project.
          'guardian',
       )
    
-2. Add extra authorization backend::
+2. Add extra authorization backend to your `settings.py`::
 
       AUTHENTICATION_BACKENDS = (
           'django.contrib.auth.backends.ModelBackend', # default
           'guardian.backends.ObjectPermissionBackend',
       )
 
-3. Configure anonymous user ID ::
+3. Configure anonymous user ID in your `settings.py`::
 
      ANONYMOUS_USER_ID = -1
 
-         
+4. Create ``guardian`` database tables by running::
+
+     python manage.py migrate
+
 Usage
 -----
 
@@ -63,10 +56,12 @@ with Django_.
 
 Lets start really quickly::
 
+    >>> from django.contrib.auth.models import User, Group
     >>> jack = User.objects.create_user('jack', 'jack@example.com', 'topsecretagentjack')
     >>> admins = Group.objects.create(name='admins')
     >>> jack.has_perm('change_group', admins)
     False
+    >>> from guardian.models import UserObjectPermission
     >>> UserObjectPermission.objects.assign_perm('change_group', user=jack, obj=admins)
     <UserObjectPermission: admins | jack | change_group>
     >>> jack.has_perm('change_group', admins)

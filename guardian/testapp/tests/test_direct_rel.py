@@ -101,6 +101,22 @@ class TestDirectUserPermissions(TestCase):
         result = get_objects_for_user(self.joe, 'testapp.add_project')
         self.assertEqual(sorted(p.pk for p in result), sorted([foo.pk, bar.pk]))
 
+    def test_get_all_permissions(self):
+        foo = Project.objects.create(name='foo')
+        assign_perm('add_project', self.joe, foo)
+        assign_perm('change_project', self.joe, foo)
+
+        result = self.joe.get_all_permissions(foo)
+        self.assertEqual(result, set(('add_project', 'change_project')))
+
+    def test_get_all_permissions_no_object(self):
+        foo = Project.objects.create(name='foo')
+        assign_perm('add_project', self.joe, foo)
+        assign_perm('change_project', self.joe, foo)
+
+        result = self.joe.get_all_permissions()
+        self.assertEqual(result, set())
+
 
 @skipUnlessTestApp
 class TestDirectGroupPermissions(TestCase):

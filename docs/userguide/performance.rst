@@ -4,7 +4,7 @@ Performance tuning
 ===================
 
 It is important to remember that by default ``django-guardian`` uses generic
-foreign keys to retain relation with any Django model. For most cases it's
+foreign keys to retain relation with any Django model. For most cases, it's
 probably good enough, however if we have a lot of queries being spanned and
 our database seems to be choking it might be a good choice to use *direct*
 foreign keys. Let's start with quick overview of how generic solution work and
@@ -60,8 +60,8 @@ Something similar to:
 
 
 
-As there are no real foreing keys pointing at the target model this solution
-might not be enough for all cases. In example if we try to build an issues
+As there are no real foreign keys pointing at the target model, this solution
+might not be enough for all cases. For example, if we try to build an issues
 tracking service and we'd like to be able to support thousands of users and
 their project/tickets, object level permission checks can be slow with this
 generic solution.
@@ -99,13 +99,13 @@ models:
    ``content_object`` as underlying queries depends on it.
 
 
-from now on ``guardian`` will figure out that ``Project`` model has direct
+From now on, ``guardian`` will figure out that ``Project`` model has direct
 relation for user/group object permissions and will use those models. It is
-also possible to use only user or only group based direct relation, however it
+also possible to use only user or only group-based direct relation, however it
 is discouraged (it's not consistent and might be a quick road to hell from the
-mainteinence point of view, especially).
+maintainence point of view, especially).
 
 .. note::
    By defining direct relation models we can also tweak that object permission
-   model, i.e. by adding some fields
+   model, i.e. by adding some fields.
 
