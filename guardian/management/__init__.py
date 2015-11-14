@@ -18,7 +18,9 @@ def get_init_anonymous_user(User):
     kwargs = {
         User.USERNAME_FIELD: guardian_settings.ANONYMOUS_DEFAULT_USERNAME_VALUE
     }
-    return User(**kwargs)
+    user = User(**kwargs)
+    user.set_unusable_password()
+    return user
 
 
 def create_anonymous_user(sender, **kwargs):

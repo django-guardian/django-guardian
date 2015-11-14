@@ -5,6 +5,7 @@ from guardian.compat import get_user_model
 from guardian.compat import mock
 from guardian.compat import unittest
 from guardian.management import create_anonymous_user
+from guardian.utils import get_anonymous_user
 import django
 
 
@@ -31,3 +32,9 @@ class TestGetAnonymousUser(unittest.TestCase):
 
         self.assertEqual(anon.pk, 219)
         anon.save.assert_called_once_with()
+
+    def test_get_anonymous_user(self):
+        anon = get_anonymous_user()
+        self.assertFalse(anon.has_usable_password())
+        self.assertEqual(anon.username, "AnonymousUser")
+        self.assertEqual(anon.pk, -1)
