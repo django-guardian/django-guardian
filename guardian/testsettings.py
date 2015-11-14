@@ -7,9 +7,8 @@ DEBUG = False
 
 ANONYMOUS_USER_ID = -1
 
-if django.VERSION >= (1, 5):
-    AUTH_USER_MODEL = "testapp.CustomUser"
-    GUARDIAN_MONKEY_PATCH = False
+AUTH_USER_MODEL = "testapp.CustomUser"
+GUARDIAN_MONKEY_PATCH = False
 
 INSTALLED_APPS = (
     'django.contrib.auth',

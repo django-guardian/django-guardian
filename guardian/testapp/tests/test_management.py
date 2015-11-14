@@ -6,7 +6,6 @@ from guardian.compat import mock
 from guardian.compat import unittest
 from guardian.management import create_anonymous_user
 from guardian.utils import get_anonymous_user
-import django
 
 
 mocked_get_init_anon = mock.Mock()
@@ -14,7 +13,6 @@ mocked_get_init_anon = mock.Mock()
 
 class TestGetAnonymousUser(unittest.TestCase):
 
-    @unittest.skipUnless(django.VERSION >= (1, 5), "Django >= 1.5 only")
     @mock.patch('guardian.management.guardian_settings')
     def test_uses_custom_function(self, guardian_settings):
         mocked_get_init_anon.reset_mock()

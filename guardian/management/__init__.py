@@ -31,16 +31,12 @@ def create_anonymous_user(sender, **kwargs):
     try:
         User.objects.get(pk=guardian_settings.ANONYMOUS_USER_ID)
     except User.DoesNotExist:
-        if django.VERSION >= (1, 5):
-            retrieve_anonymous_function = import_string(
-                guardian_settings.GET_INIT_ANONYMOUS_USER)
-            user = retrieve_anonymous_function(User)
-            # Always set pk to the one pointed at settings
-            user.pk = guardian_settings.ANONYMOUS_USER_ID
-            user.save()
-        else:
-            User.objects.create(pk=guardian_settings.ANONYMOUS_USER_ID,
-                username=guardian_settings.ANONYMOUS_DEFAULT_USERNAME_VALUE)
+        retrieve_anonymous_function = import_string(
+            guardian_settings.GET_INIT_ANONYMOUS_USER)
+        user = retrieve_anonymous_function(User)
+        # Always set pk to the one pointed at settings
+        user.pk = guardian_settings.ANONYMOUS_USER_ID
+        user.save()
 
 # Only create an anonymous user if support is enabled.
 if guardian_settings.ANONYMOUS_USER_ID is not None:

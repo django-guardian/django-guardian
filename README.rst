@@ -6,7 +6,7 @@ django-guardian
   :target: https://travis-ci.org/django-guardian/django-guardian
 
 ``django-guardian`` is implementation of per object permissions [1]_ as 
-authorization backend which is supported since Django_ 1.2. It won't
+authorization backend which is supported since Django_ 1.5. It won't
 work with older Django_ releases.
 
 Documentation

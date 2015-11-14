@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 from datetime import datetime
 
-import django
 from django.db import models
 from django.contrib.admin.models import LogEntry
 
@@ -67,7 +66,6 @@ class NonIntPKModel(models.Model):
     char_pk = models.CharField(primary_key=True, max_length=128)
 
 
-if django.VERSION > (1, 5):
-    from django.contrib.auth.models import AbstractUser
-    class CustomUser(AbstractUser, GuardianUserMixin):
-        custom_id = models.AutoField(primary_key=True)
+from django.contrib.auth.models import AbstractUser
+class CustomUser(AbstractUser, GuardianUserMixin):
+    custom_id = models.AutoField(primary_key=True)

@@ -20,6 +20,5 @@ if django.VERSION < (1, 7):
 
     if 'django.contrib.admin' in settings.INSTALLED_APPS:
         from .test_admin import *
-    if django.VERSION >= (1, 3):
-        from .test_mixins import *
+    from .test_mixins import *
 
