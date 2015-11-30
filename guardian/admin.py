@@ -105,18 +105,16 @@ class GuardedModelAdminMixin(object):
         if self.include_object_permissions_urls:
             info = self.model._meta.app_label, get_model_name(self.model)
             myurls = patterns('',
-                url(r'^(?P<object_pk>.+)/permissions/$',
-                    view=self.admin_site.admin_view(self.obj_perms_manage_view),
-                    name='%s_%s_permissions' % info),
-                url(r'^(?P<object_pk>.+)/permissions/user-manage/(?P<user_id>\-?\d+)/$',
-                    view=self.admin_site.admin_view(
-                        self.obj_perms_manage_user_view),
-                    name='%s_%s_permissions_manage_user' % info),
-                url(r'^(?P<object_pk>.+)/permissions/group-manage/(?P<group_id>\-?\d+)/$',
-                    view=self.admin_site.admin_view(
-                        self.obj_perms_manage_group_view),
-                    name='%s_%s_permissions_manage_group' % info),
-            )
+                              url(r'^(?P<object_pk>.+)/permissions/$',
+                                  view=self.admin_site.admin_view(self.obj_perms_manage_view),
+                                  name='%s_%s_permissions' % info),
+                              url(r'^(?P<object_pk>.+)/permissions/user-manage/(?P<user_id>\-?\d+)/$',
+                                  view=self.admin_site.admin_view(self.obj_perms_manage_user_view),
+                                  name='%s_%s_permissions_manage_user' % info),
+                              url(r'^(?P<object_pk>.+)/permissions/group-manage/(?P<group_id>\-?\d+)/$',
+                                  view=self.admin_site.admin_view(self.obj_perms_manage_group_view),
+                                  name='%s_%s_permissions_manage_group' % info),
+                              )
             urls = myurls + urls
         return urls
 
@@ -131,8 +129,7 @@ class GuardedModelAdminMixin(object):
             'object': obj,
             'app_label': self.model._meta.app_label,
             'opts': self.model._meta,
-            'original': hasattr(obj, '__unicode__') and obj.__unicode__() or\
-                str(obj),
+            'original': hasattr(obj, '__unicode__') and obj.__unicode__() or str(obj),
             'has_change_permission': self.has_change_permission(request, obj),
             'model_perms': get_perms_for_model(obj),
             'title': _("Object permissions"),
@@ -209,7 +206,7 @@ class GuardedModelAdminMixin(object):
         context['group_form'] = group_form
 
         return render_to_response(self.get_obj_perms_manage_template(),
-            context, RequestContext(request, current_app=self.admin_site.name))
+                                  context, RequestContext(request, current_app=self.admin_site.name))
 
     def get_obj_perms_manage_template(self):
         """
@@ -255,7 +252,7 @@ class GuardedModelAdminMixin(object):
         context['form'] = form
 
         return render_to_response(self.get_obj_perms_manage_user_template(),
-            context, RequestContext(request, current_app=self.admin_site.name))
+                                  context, RequestContext(request, current_app=self.admin_site.name))
 
     def get_obj_perms_manage_user_template(self):
         """
@@ -308,7 +305,7 @@ class GuardedModelAdminMixin(object):
         context['form'] = form
 
         return render_to_response(self.get_obj_perms_manage_group_template(),
-            context, RequestContext(request, current_app=self.admin_site.name))
+                                  context, RequestContext(request, current_app=self.admin_site.name))
 
     def get_obj_perms_manage_group_template(self):
         """
@@ -414,10 +411,10 @@ class GuardedModelAdmin(GuardedModelAdminMixin, admin.ModelAdmin):
 
 class UserManage(forms.Form):
     user = forms.CharField(label=_("User identification"),
-                        max_length=200,
-                        error_messages = {'does_not_exist': _("This user does not exist")},
-                        help_text=_('Enter a value compatible with User.USERNAME_FIELD')
-                     )
+                           max_length=200,
+                           error_messages={'does_not_exist': _("This user does not exist")},
+                           help_text=_('Enter a value compatible with User.USERNAME_FIELD')
+                           )
 
     def clean_user(self):
         """
@@ -439,7 +436,7 @@ class UserManage(forms.Form):
 
 class GroupManage(forms.Form):
     group = forms.CharField(max_length=80, error_messages={'does_not_exist':
-        _("This group does not exist")})
+                            _("This group does not exist")})
 
     def clean_group(self):
         """
@@ -452,4 +449,3 @@ class GroupManage(forms.Form):
         except Group.DoesNotExist:
             raise forms.ValidationError(
                 self.fields['group'].error_messages['does_not_exist'])
-

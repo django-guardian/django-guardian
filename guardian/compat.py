@@ -16,7 +16,7 @@ except ImportError:
 try:
     from django.conf.urls import url, patterns, include, handler404, handler500
 except ImportError:
-    from django.conf.urls.defaults import url, patterns, include, handler404, handler500 # pyflakes:ignore
+    from django.conf.urls.defaults import url, patterns, include, handler404, handler500  # pyflakes:ignore
 
 __all__ = [
     'User',
@@ -43,7 +43,7 @@ try:
     from unittest import mock  # Since Python 3.3 mock is is in stdlib
 except ImportError:
     try:
-        import mock # pyflakes:ignore
+        import mock  # pyflakes:ignore
     except ImportError:
         # mock is used for tests only however it is hard to check if user is
         # running tests or production code so we fail silently here; mock is
@@ -63,6 +63,7 @@ except ImportError:
     from django.contrib.auth.models import User
     get_user_model = lambda: User
 
+
 def get_user_model_path():
     """
     Returns 'app_label.ModelName' for User model. Basically if
@@ -70,6 +71,7 @@ def get_user_model_path():
     ``auth.User`` is returned.
     """
     return getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
+
 
 def get_user_permission_full_codename(perm):
     """
@@ -83,6 +85,7 @@ def get_user_permission_full_codename(perm):
     else:
         model_name = User._meta.model_name
     return '%s.%s_%s' % (User._meta.app_label, perm, model_name)
+
 
 def get_user_permission_codename(perm):
     """
@@ -118,9 +121,9 @@ def import_string(dotted_path):
 
 # Python 3
 try:
-    unicode = unicode # pyflakes:ignore
-    basestring = basestring # pyflakes:ignore
-    str = str # pyflakes:ignore
+    unicode = unicode  # pyflakes:ignore
+    basestring = basestring  # pyflakes:ignore
+    str = str  # pyflakes:ignore
 except NameError:
     basestring = unicode = str = str
 
@@ -138,13 +141,13 @@ except ImportError:
 # Django 1.7 compatibility
 # create_permission API changed: skip the create_models (second
 # positional argument) if we have django 1.7+ and 2+ positional
-# arguments with the second one being a list/tuple 
+# arguments with the second one being a list/tuple
 def create_permissions(*args, **kwargs):
     from django.contrib.auth.management import create_permissions as original_create_permissions
     import django
 
-    if django.get_version().split('.')[:2] >= ['1','7'] and \
-        len(args) > 1 and isinstance(args[1], (list, tuple)):
+    if django.get_version().split('.')[:2] >= ['1', '7'] and \
+            len(args) > 1 and isinstance(args[1], (list, tuple)):
         args = args[:1] + args[2:]
     return original_create_permissions(*args, **kwargs)
 
