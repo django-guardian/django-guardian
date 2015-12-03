@@ -2,6 +2,7 @@
 Implementation of per object permissions for Django 1.2 or later.
 """
 from __future__ import unicode_literals
+from . import checks
 
 VERSION = (1, 3, 2)
 
