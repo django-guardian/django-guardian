@@ -6,15 +6,8 @@ from __future__ import unicode_literals
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
-from django.db import models
 from django.db.models import Count, Q
-try:
-    # django >= 1.7
-    from django.apps import apps
-    get_model = apps.get_model
-except ImportError:
-    # django < 1.7
-    from django.db.models import get_model
+from django.apps import apps
 from django.shortcuts import _get_queryset
 from itertools import groupby
 
@@ -159,7 +152,7 @@ def get_perms_for_model(cls):
     """
     if isinstance(cls, basestring):
         app_label, model_name = cls.split('.')
-        model = get_model(app_label, model_name)
+        model = apps.get_model(app_label, model_name)
     else:
         model = cls
     ctype = ContentType.objects.get_for_model(model)

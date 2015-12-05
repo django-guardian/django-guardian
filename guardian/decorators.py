@@ -4,13 +4,7 @@ from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.utils.functional import wraps
 from django.db.models import Model
-try:
-    # django >= 1.7
-    from django.apps import apps
-    get_model = apps.get_model
-except ImportError:
-    # django < 1.7
-    from django.db.models import get_model
+from django.apps import apps
 from django.db.models.base import ModelBase
 from django.db.models.query import QuerySet
 from django.shortcuts import get_object_or_404
@@ -100,7 +94,7 @@ def permission_required(perm, lookup_variables=None, **kwargs):
                     if len(splitted) != 2:
                         raise GuardianError("If model should be looked up from "
                             "string it needs format: 'app_label.ModelClass'")
-                    model = get_model(*splitted)
+                    model = apps.get_model(*splitted)
                 elif issubclass(model.__class__, (Model, ModelBase, QuerySet)):
                     pass
                 else:

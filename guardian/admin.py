@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-import django
 from django import forms
 from django.conf import settings
 from guardian.compat import url, patterns
@@ -81,12 +80,6 @@ class GuardedModelAdminMixin(object):
             filters = {qs_key: request.user}
             qs = qs.filter(**filters)
         return qs
-
-    # Allow queryset method as fallback for Django versions < 1.6
-    # for versions >= 1.6 this is taken care of by Django itself
-    # and triggers a warning message automatically.
-    if django.VERSION < (1, 6):
-        queryset = get_queryset
 
     def get_urls(self):
         """
