@@ -18,7 +18,7 @@ script:
   - coverage run --source=guardian setup.py test
 
 after_success:
-  - coverage report --omit "guardian/compat.py,guardian/testsettings.py" -m guardian/*.py
+  - coverage report --omit "guardian/compat.py,guardian/testapp/testsettings.py" -m guardian/*.py
   - coveralls
 
 notifications:

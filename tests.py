@@ -10,8 +10,8 @@ import os
 import sys
 import django
 
-os.environ["DJANGO_SETTINGS_MODULE"] = 'guardian.testsettings'
-from guardian import testsettings as settings
+os.environ["DJANGO_SETTINGS_MODULE"] = 'guardian.testapp.testsettings'
+from guardian.testapp import testsettings as settings
 
 settings.INSTALLED_APPS = (
     'django.contrib.auth',

@@ -18,7 +18,7 @@ import sys, os
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('..'))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__))))
-os.environ['DJANGO_SETTINGS_MODULE'] = 'guardian.testsettings'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'guardian.testapp.testsettings'
 ANONYMOUS_USER_ID = -1 # Required by guardian
 guardian = __import__('guardian')
 
