@@ -34,6 +34,9 @@ or inside a project with ``guardian`` set at ``INSTALLED_APPS``::
 
     $ python manage.py test guardian
 
+or using the bundled ``testapp`` project::
+
+    $ python guardian/testapp/manage.py test
 
 Coverage support
 ----------------
