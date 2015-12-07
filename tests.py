@@ -37,8 +37,6 @@ def run_tests(settings):
 
     TestRunner = get_runner(settings)
     test_runner = TestRunner(interactive=False)
-    # As we use different TestRunners for django < 1.8 and >= 1.8
-    # the arguments run_tests differs
     failures = test_runner.run_tests(['guardian'])
     return failures
 
