@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from django import forms
 from django.conf import settings
-from guardian.compat import url, patterns
+from guardian.compat import url
 from django.contrib import admin
 from django.contrib import messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
@@ -97,7 +97,7 @@ class GuardedModelAdminMixin(object):
         urls = super(GuardedModelAdminMixin, self).get_urls()
         if self.include_object_permissions_urls:
             info = self.model._meta.app_label, get_model_name(self.model)
-            myurls = patterns('',
+            myurls = [
                               url(r'^(?P<object_pk>.+)/permissions/$',
                                   view=self.admin_site.admin_view(self.obj_perms_manage_view),
                                   name='%s_%s_permissions' % info),
@@ -107,7 +107,7 @@ class GuardedModelAdminMixin(object):
                               url(r'^(?P<object_pk>.+)/permissions/group-manage/(?P<group_id>\-?\d+)/$',
                                   view=self.admin_site.admin_view(self.obj_perms_manage_group_view),
                                   name='%s_%s_permissions_manage_group' % info),
-                              )
+                              ]
             urls = myurls + urls
         return urls
 
