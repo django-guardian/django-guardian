@@ -307,7 +307,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
       permissions. Default is ``True``.
     :param any_perm: if True, any of permission in sequence is accepted. Default is ``False``.
     :param with_superuser: if ``True`` returns the entire queryset if not it will
-    only return objects the user has explicit permissions. Default is ``True``.
+      only return objects the user has explicit permissions. Default is ``True``.
     :param accept_global_perms: if ``True`` takes global permissions into account.
       Object based permissions are taken into account if more than one permission is handed in in perms and at least
       one of these perms is not globally set. If any_perm is set to false then the intersection of matching object
