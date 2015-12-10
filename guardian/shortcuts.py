@@ -6,15 +6,8 @@ from __future__ import unicode_literals
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
-from django.db import models
 from django.db.models import Count, Q
-try:
-    # django >= 1.7
-    from django.apps import apps
-    get_model = apps.get_model
-except ImportError:
-    # django < 1.7
-    from django.db.models import get_model
+from django.apps import apps
 from django.shortcuts import _get_queryset
 from itertools import groupby
 
@@ -159,7 +152,7 @@ def get_perms_for_model(cls):
     """
     if isinstance(cls, basestring):
         app_label, model_name = cls.split('.')
-        model = get_model(app_label, model_name)
+        model = apps.get_model(app_label, model_name)
     else:
         model = cls
     ctype = ContentType.objects.get_for_model(model)
@@ -314,7 +307,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
       permissions. Default is ``True``.
     :param any_perm: if True, any of permission in sequence is accepted. Default is ``False``.
     :param with_superuser: if ``True`` returns the entire queryset if not it will
-    only return objects the user has explicit permissions. Default is ``True``.
+      only return objects the user has explicit permissions. Default is ``True``.
     :param accept_global_perms: if ``True`` takes global permissions into account.
       Object based permissions are taken into account if more than one permission is handed in in perms and at least
       one of these perms is not globally set. If any_perm is set to false then the intersection of matching object

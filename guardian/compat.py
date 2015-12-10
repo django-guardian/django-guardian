@@ -8,15 +8,9 @@ from django.contrib.auth.models import AnonymousUser
 import six
 import sys
 
-try:
-    from importlib import import_module
-except ImportError:
-    from django.utils.importlib import import_module
+from importlib import import_module
 
-try:
-    from django.conf.urls import url, patterns, include, handler404, handler500
-except ImportError:
-    from django.conf.urls.defaults import url, patterns, include, handler404, handler500  # pyflakes:ignore
+from django.conf.urls import url, patterns, include, handler404, handler500
 
 __all__ = [
     'User',
@@ -80,10 +74,7 @@ def get_user_permission_full_codename(perm):
     ``myapp.CustomUser`` is used it would return ``myapp.change_customuser``.
     """
     User = get_user_model()
-    if django.VERSION < (1, 7):
-        model_name = User._meta.module_name
-    else:
-        model_name = User._meta.model_name
+    model_name = User._meta.model_name
     return '%s.%s_%s' % (User._meta.app_label, perm, model_name)
 
 
@@ -131,11 +122,7 @@ except NameError:
 # OrderedDict only available in Python 2.7.
 # This will always be the case in Django 1.7 and above, as these versions
 # no longer support Python 2.6.
-# For Django <= 1.6 and Python 2.6 fall back to SortedDict.
-try:
-    from collections import OrderedDict
-except ImportError:
-    from django.utils.datastructures import SortedDict as OrderedDict
+from collections import OrderedDict
 
 
 # Django 1.7 compatibility
@@ -144,10 +131,8 @@ except ImportError:
 # arguments with the second one being a list/tuple
 def create_permissions(*args, **kwargs):
     from django.contrib.auth.management import create_permissions as original_create_permissions
-    import django
 
-    if django.get_version().split('.')[:2] >= ['1', '7'] and \
-            len(args) > 1 and isinstance(args[1], (list, tuple)):
+    if len(args) > 1 and isinstance(args[1], (list, tuple)):
         args = args[:1] + args[2:]
     return original_create_permissions(*args, **kwargs)
 
@@ -160,6 +145,4 @@ def get_model_name(model):
     """
     # model._meta.module_name is deprecated in django version 1.7 and removed in django version 1.8.
     # It is replaced by model._meta.model_name
-    if django.VERSION < (1, 7):
-        return model._meta.module_name
     return model._meta.model_name

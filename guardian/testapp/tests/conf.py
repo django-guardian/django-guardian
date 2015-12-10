@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 import os
-import django
 from guardian.compat import unittest
 from guardian.utils import abspath
 from django.conf import settings

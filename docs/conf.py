@@ -22,6 +22,9 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'guardian.testsettings'
 ANONYMOUS_USER_ID = -1 # Required by guardian
 guardian = __import__('guardian')
 
+import django
+django.setup()
+
 # -- General configuration -----------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be extensions

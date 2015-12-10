@@ -161,7 +161,7 @@ def get_obj_perms_model(obj, base_cls, generic_cls):
             if not model.objects.is_generic():
                 # make sure that content_object's content_type is same as
                 # the one of given obj
-                fk = model._meta.get_field_by_name('content_object')[0]
+                fk = model._meta.get_field('content_object')
                 if ctype == ContentType.objects.get_for_model(fk.rel.to):
                     return model
     return generic_cls

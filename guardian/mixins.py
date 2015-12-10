@@ -118,6 +118,7 @@ class PermissionRequiredMixin(object):
         *Default*: ``False``,  If accept_global_perms would be set to True, then
          mixing would first check for global perms, if none found, then it will
          proceed to check object level permissions.
+
     ``PermissionRequiredMixin.permission_object``
          *Default*: ``None``, object against which test the permission; if None fallback
          to ``self.get_permission_object()`` which return ``self.get_object()`` 
