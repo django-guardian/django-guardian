@@ -8,6 +8,7 @@ Example project should be boundled with archive and be available at
 Those are easily installed using following command at example project's
 directory::
 
+    $ cd example_project
     $ pip install -r requirements.txt
 
 And last thing before we can run example project is to create sqlite database::
@@ -20,9 +21,3 @@ Finally we can run dev server::
 
 Project is really basic and shows almost nothing but eventually it should
 expose some ``django-guardian`` functionality.
-
-
-.. note::
-   Example project must be run with Django 1.5 or later. This is to ensure that
-   custom user model can be used.
-
