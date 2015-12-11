@@ -23,10 +23,10 @@ elif sys.version_info < (2, 7):
 setup(
     name = 'django-guardian',
     version = guardian.get_version(),
-    url = 'http://github.com/lukaszb/django-guardian',
+    url = 'http://github.com/django-guardian/django-guardian',
     author = 'Lukasz Balcerzak',
     author_email = 'lukaszbalcerzak@gmail.com',
-    download_url='https://github.com/lukaszb/django-guardian/tags',
+    download_url='https://github.com/django-guardian/django-guardian/tags',
     description = guardian.__doc__.strip(),
     long_description = long_description,
     zip_safe = False,
