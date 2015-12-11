@@ -37,7 +37,6 @@ INSTALLED_APPS = (
     'guardian.testapp',
     'posts',
     'core',
-    'integration_tests',
     'django.contrib.staticfiles',
 )
 
