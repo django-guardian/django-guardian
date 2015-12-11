@@ -24,7 +24,7 @@ might happen more frequently.
 How to file a ticket?
 ---------------------
 
-Just go to https://github.com/lukaszb/django-guardian/issues and create new
+Just go to https://github.com/django-guardian/django-guardian/issues and create new
 one.
 
 
@@ -33,13 +33,13 @@ How do I get involved?
 
 It's simple! If you want to fix a bug, extend documentation or whatever you
 think is appropriate for the project and involves changes, just fork the
-project at github (https://github.com/lukaszb/django-guardian), create a
+project at github (https://github.com/django-guardian/django-guardian), create a
 separate branch, hack on it, publish changes at your fork and create a pull
 request.
 
 Here is a quick how to:
 
-1. Fork a project: https://github.com/lukaszb/django-guardian/fork
+1. Fork a project: https://github.com/django-guardian/django-guardian/fork
 2. Checkout project to your local machine::
 
        $ git clone git@github.com:YOUR_NAME/django-guardian.git

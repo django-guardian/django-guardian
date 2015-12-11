@@ -17,8 +17,18 @@ from guardian.compat import get_user_model, create_permissions
 from guardian.exceptions import NotUserNorGroup
 from guardian.models import UserObjectPermission, GroupObjectPermission
 from guardian.shortcuts import assign_perm
+from guardian.management import create_anonymous_user
 
 User = get_user_model()
+
+
+class CustomUserTests(TestCase):
+    def test_create_anonymous_user(self):
+        create_anonymous_user(object())
+        self.assertEqual(1, User.objects.all().count())
+        anonymous = User.objects.all()[0]
+        self.assertEqual(anonymous.pk, settings.ANONYMOUS_USER_ID)
+
 
 class ObjectPermissionTestCase(TestCase):
 

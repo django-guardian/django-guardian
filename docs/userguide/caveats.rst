@@ -6,6 +6,9 @@ Caveats
 Orphaned object permissions
 ---------------------------
 
+Note the following does not apply if using direct foreign keys, as documented
+in :ref:`performance-direct-fk`.
+
 Permissions, including so called *per object permissions*, are sometimes tricky
 to manage. One case is how we can manage permissions that are no longer used.
 Normally, there should be no problems, however with some particular setup it is
@@ -77,3 +80,10 @@ described above).
 
 .. _celery: http://www.celeryproject.org/
 
+
+Using multiple databases
+------------------------
+This is not supported at present time due to a Django bug. See 288_ and 16281_.
+
+.. _288: https://github.com/django-guardian/django-guardian/issues/288
+.. _16281: https://code.djangoproject.com/ticket/16281

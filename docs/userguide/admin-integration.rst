@@ -49,7 +49,7 @@ do this as follows within ``admin.py`` file of our application:
 
     from django.contrib import admin
 
-    from example_project.posts.models import Post
+    from posts.models import Post
 
 
     class PostAdmin(admin.ModelAdmin):
@@ -70,7 +70,7 @@ Our code could look as follows:
 
     from django.contrib import admin
 
-    from example_project.posts.models import Post
+    from posts.models import Post
 
     from guardian.admin import GuardedModelAdmin
 

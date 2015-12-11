@@ -105,3 +105,31 @@ difference is we have to pass ``Group`` instance rather than ``User``.
     >>> joe.has_perm('change_task', task)
     True
     
+
+Assigning Permissions inside Signals
+------------------------------------
+Note that the Anonymous User is created before the Permissions are created.
+This may result in Django signals, e.g. ``post_save`` being sent before the
+Permissions are created. You will need to take this into an account when
+processing the signal.
+
+
+..  code-block:: python
+
+    @receiver(post_save, sender=User)
+    def user_post_save(sender, **kwargs):
+        """
+        Create a Profile instance for all newly created User instances. We only
+        run on user creation to avoid having to check for existence on each call
+        to User.save.
+        """
+        user, created = kwargs["instance"], kwargs["created"]
+        if created and user.pk != settings.ANONYMOUS_USER_ID:
+            from profiles.models import Profile
+            profile = Profile.objects.create(pk=user.pk, user=user, creator=user)
+            assign_perm("change_user", user, user)
+            assign_perm("change_profile", user, profile)
+
+The check for ``user.pk != settings.ANONYMOUS_USER_ID`` is required otherwise
+the ``assign_perm`` calls will occur when the Anonymous User is created,
+however before there are any permissions available.

@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from example_project.posts.models import Post
+from posts.models import Post
 
 from guardian.admin import GuardedModelAdmin
 
@@ -13,4 +13,3 @@ class PostAdmin(GuardedModelAdmin):
     date_hierarchy = 'created_at'
 
 admin.site.register(Post, PostAdmin)
-
