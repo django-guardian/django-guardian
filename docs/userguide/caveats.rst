@@ -6,6 +6,9 @@ Caveats
 Orphaned object permissions
 ---------------------------
 
+Note the following does not apply if using direct foreign keys, as documented
+in :ref:`performance-direct-fk`.
+
 Permissions, including so called *per object permissions*, are sometimes tricky
 to manage. One case is how we can manage permissions that are no longer used.
 Normally, there should be no problems, however with some particular setup it is
