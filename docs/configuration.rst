@@ -29,6 +29,20 @@ need to add following to our settings module::
    ``syncdb`` management command would create ``User`` instance for
    anonymous user support (with name of ``AnonymousUser``).
 
+.. note::
+
+   The Guardian anonymous user is different to the Django Anonymous user.  The
+   Django Anonymous user does not have an entry in the database, however the
+   Guardian anonymous user does. This means that the following code will return
+   an unexpected result:
+
+   .. code-block:: python
+
+      from guardian.compat import get_user_model
+      User = get_user_model()
+      anon = User.get_anonymous()
+      anon.is_anonymous()   # returns False
+
 If ``ANONYMOUS_USER_ID`` is set to ``None``, anonymous user object permissions
 are disabled. You may need to choose this option if creating a ``User`` object
 to represent anonymous users would be problematic in your environment.
