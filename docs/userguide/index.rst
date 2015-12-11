@@ -6,6 +6,7 @@ User Guide
 .. toctree::
     :maxdepth: 2
 
+    example_project
     assign
     check
     remove
