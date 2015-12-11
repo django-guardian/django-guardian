@@ -77,3 +77,10 @@ described above).
 
 .. _celery: http://www.celeryproject.org/
 
+
+Using multiple databases
+------------------------
+This is not supported at present time due to a Django bug. See 288_ and 16281_.
+
+.. _288: https://github.com/django-guardian/django-guardian/issues/288
+.. _16281: https://code.djangoproject.com/ticket/16281
