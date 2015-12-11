@@ -7,7 +7,8 @@ __all__ = ['handler404', 'handler500']
 
 admin.autodiscover()
 
-urlpatterns = patterns('',
+urlpatterns = patterns(
+    '',
     (r'^admin/', include(admin.site.urls)),
     url(r'^logout/$', 'django.contrib.auth.views.logout', {'next_page': '/'},
         name='logout'),
@@ -15,11 +16,13 @@ urlpatterns = patterns('',
 )
 
 if 'grappelli' in settings.INSTALLED_APPS:
-    urlpatterns += patterns('',
+    urlpatterns += patterns(
+        '',
         (r'^grappelli/', include('grappelli.urls')),
     )
 
 if 'rosetta' in settings.INSTALLED_APPS:
-    urlpatterns = patterns('',
+    urlpatterns = patterns(
+        '',
         url(r'^rosetta/', include('rosetta.urls')),
     ) + urlpatterns

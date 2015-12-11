@@ -24,6 +24,6 @@ def post_detail(request, slug, **kwargs):
         'users': User.objects.all(),
         'groups': Group.objects.all(),
     }
-    return render_to_response('posts/post_detail.html', data,
+    return render_to_response(
+        'posts/post_detail.html', data,
         RequestContext(request))
-

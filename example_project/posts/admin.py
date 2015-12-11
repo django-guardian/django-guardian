@@ -13,4 +13,3 @@ class PostAdmin(GuardedModelAdmin):
     date_hierarchy = 'created_at'
 
 admin.site.register(Post, PostAdmin)
-
