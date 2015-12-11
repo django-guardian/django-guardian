@@ -34,19 +34,11 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.messages',
     'guardian',
-    'guardian.testapp',
     'posts',
     'core',
     'django.contrib.staticfiles',
 )
 
-if 'GUARDIAN_NO_TESTS_APP' in os.environ:
-    _apps = list(INSTALLED_APPS)
-    _apps.remove('guardian.testapp')
-    INSTALLED_APPS = tuple(_apps)
-
-if TEST_SOUTH:
-    INSTALLED_APPS += ('south',)
 if 'GRAPPELLI' in os.environ:
     try:
         __import__('grappelli')
@@ -72,9 +64,6 @@ except ImportError:
 STATIC_ROOT = abspath(PROJECT_ROOT, '..', 'public', 'static')
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [abspath(PROJECT_ROOT, 'static')]
-MEDIA_ROOT = abspath(PROJECT_ROOT, 'media')
-MEDIA_URL = '/media/'
-ADMIN_MEDIA_PREFIX = STATIC_URL + 'grappelli/'
 
 ROOT_URLCONF = 'example_project.urls'
 
@@ -99,10 +88,7 @@ USE_L10N = True
 
 LOGIN_REDIRECT_URL = '/'
 
-if django.VERSION < (1, 8):
-    TEST_RUNNER = 'django.test.simple.DjangoTestSuiteRunner'
-else:
-    TEST_RUNNER = 'django.test.runner.DiscoverRunner'
+TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
@@ -117,14 +103,4 @@ PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.SHA1PasswordHasher',
 )
 
-# Neede as some models (located at guardian/tests/models.py)
-# are not migrated for tests
-SOUTH_TESTS_MIGRATE = TEST_SOUTH
-
 AUTH_USER_MODEL = 'core.CustomUser'
-
-try:
-    from conf.localsettings import *
-except ImportError:
-    pass
-
