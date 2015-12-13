@@ -1,8 +1,6 @@
 import os
 import sys
 
-from django.conf import global_settings
-
 abspath = lambda *p: os.path.abspath(os.path.join(*p))
 
 DEBUG = True
@@ -65,11 +63,16 @@ GUARDIAN_RAISE_403 = True
 
 ROOT_URLCONF = 'urls'
 
-TEMPLATE_CONTEXT_PROCESSORS = global_settings.TEMPLATE_CONTEXT_PROCESSORS + [
-    'django.core.context_processors.request',
+TEMPLATE_CONTEXT_PROCESSORS = (
     'context_processors.version',
-    'django.core.context_processors.static',
-]
+    "django.contrib.auth.context_processors.auth",
+    "django.template.context_processors.debug",
+    "django.template.context_processors.i18n",
+    "django.template.context_processors.media",
+    "django.template.context_processors.static",
+    "django.template.context_processors.tz",
+    "django.contrib.messages.context_processors.messages"
+)
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
