@@ -34,7 +34,7 @@ setup(
     include_package_data = True,
     license = 'BSD',
     install_requires = [
-        'Django',
+        'Django >= 1.7',
         'six',
     ],
     tests_require=tests_require,

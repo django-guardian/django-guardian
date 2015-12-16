@@ -150,7 +150,14 @@ def get_obj_perms_model(obj, base_cls, generic_cls):
     if isinstance(obj, Model):
         obj = obj.__class__
     ctype = ContentType.objects.get_for_model(obj)
-    for attr in obj._meta.get_all_related_objects():
+
+    if django.VERSION >= (1, 8):
+        fields = (f for f in obj._meta.get_fields()
+                  if (f.one_to_many or f.one_to_one) and f.auto_created)
+    else:
+        fields = obj._meta.get_all_related_objects()
+
+    for attr in fields:
         if django.VERSION < (1, 8):
             model = getattr(attr, 'model', None)
         else:
