@@ -104,7 +104,34 @@ difference is we have to pass ``Group`` instance rather than ``User``.
     >>> joe.groups.add(group)
     >>> joe.has_perm('change_task', task)
     True
-    
+
+Another example:
+
+.. code-block:: python
+
+    >>> from django.contrib.auth.models import User, Group
+    >>> from guardian.shortcuts import assign_perm
+    # fictional companies
+    >>> companyA = Company.objects.create(name="Company A")
+    >>> companyB = Company.objects.create(name="Company B")
+    # create groups
+    >>> companyUserGroupA = Group.objects.create(name="Company User Group A")
+    >>> companyUserGroupB = Group.objects.create(name="Company User Group B")
+    # assign object specific permissions to groups
+    >>> assign_perm('change_company', companyUserGroupA, companyA)
+    >>> assign_perm('change_company', companyUserGroupB, companyB)
+    # create user and add it to one group for testing
+    >>> userA = User.objects.create(username="User A")
+    >>> userA.groups.add(companyUserGroupA)
+    >>> userA.has_perm('change_company', companyA)
+    True
+    >>> userA.has_perm('change_company', companyB)
+    False
+    >>> userB = User.objects.create(username="User B")
+    >>> userB.has_perm('change_company', companyA)
+    False
+    >>> userA.has_perm('change_company', companyB)
+    True
 
 Assigning Permissions inside Signals
 ------------------------------------
