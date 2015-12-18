@@ -9,6 +9,10 @@ from guardian.models import UserObjectPermissionBase
 from guardian.models import GroupObjectPermissionBase
 
 
+class Post(models.Model):
+    title = models.CharField('title', max_length=64)
+
+
 class DynamicAccessor(object):
     def __init__(self):
         pass
