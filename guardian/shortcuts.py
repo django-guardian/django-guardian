@@ -346,6 +346,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
         [<Group some group>]
 
     Take global permissions into account:
+
         >>> jack = User.objects.get(username='jack')
         >>> assign_perm('auth.change_group', jack) # this will set a global permission
         >>> get_objects_for_user(jack, 'auth.change_group')

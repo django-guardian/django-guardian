@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ImproperlyConfigured
 from django.core.exceptions import PermissionDenied
@@ -14,6 +13,8 @@ from guardian.compat import mock
 from guardian.mixins import LoginRequiredMixin
 from guardian.mixins import PermissionRequiredMixin
 
+from ..models import Post
+
 class DatabaseRemovedError(Exception):
     pass
 
@@ -23,17 +24,16 @@ class RemoveDatabaseView(View):
         raise DatabaseRemovedError("You've just allowed db to be removed!")
 
 class TestView(PermissionRequiredMixin, RemoveDatabaseView):
-    permission_required = 'contenttypes.change_contenttype'
+    permission_required = 'testapp.change_post'
     object = None # should be set at each tests explicitly
 
 class NoObjectView(PermissionRequiredMixin, RemoveDatabaseView):
-    permission_required = 'contenttypes.change_contenttype'
+    permission_required = 'testapp.change_post'
 
 class TestViewMixins(TestCase):
 
     def setUp(self):
-        self.ctype = ContentType.objects.create(name='foo', model='bar',
-            app_label='fake-for-guardian-tests')
+        self.post = Post.objects.create(title='foo')
         self.factory = RequestFactory()
         self.user = get_user_model().objects.create_user(
             'joe', 'joe@doe.com', 'doe')
@@ -47,12 +47,12 @@ class TestViewMixins(TestCase):
         request = self.factory.get('/')
         request.user = self.user
         # View.object is set
-        view = TestView.as_view(object=self.ctype)
+        view = TestView.as_view(object=self.post)
         response = view(request)
         self.assertEqual(response.status_code, 302)
 
         # View.get_object returns object
-        TestView.get_object = lambda instance: self.ctype
+        TestView.get_object = lambda instance: self.post
         view = TestView.as_view()
         response = view(request)
         self.assertEqual(response.status_code, 302)
@@ -65,7 +65,7 @@ class TestViewMixins(TestCase):
         """
         request = self.factory.get('/')
         request.user = self.user
-        view = TestView.as_view(raise_exception=True, object=self.ctype)
+        view = TestView.as_view(raise_exception=True, object=self.post)
         with self.assertRaises(PermissionDenied):
             view(request)
 
@@ -76,8 +76,8 @@ class TestViewMixins(TestCase):
         """
         request = self.factory.get('/')
         request.user = self.user
-        request.user.add_obj_perm('change_contenttype', self.ctype)
-        view = TestView.as_view(permission_required=None, object=self.ctype)
+        request.user.add_obj_perm('change_post', self.post)
+        view = TestView.as_view(permission_required=None, object=self.post)
         with self.assertRaises(ImproperlyConfigured):
             view(request)
 
@@ -88,8 +88,8 @@ class TestViewMixins(TestCase):
         """
         request = self.factory.get('/')
         request.user = self.user
-        request.user.add_obj_perm('change_contenttype', self.ctype)
-        view = TestView.as_view(object=self.ctype)
+        request.user.add_obj_perm('change_post', self.post)
+        view = TestView.as_view(object=self.post)
         with self.assertRaises(DatabaseRemovedError):
             view(request)
 
@@ -101,7 +101,7 @@ class TestViewMixins(TestCase):
 
         request = self.factory.get('/')
         request.user = self.user
-        request.user.add_obj_perm('change_contenttype', self.ctype)
+        request.user.add_obj_perm('change_post', self.post)
         view = NoObjectView.as_view()
         response = view(request)
         self.assertEqual(response.status_code, 302)
@@ -118,16 +118,16 @@ class TestViewMixins(TestCase):
 
         request = self.factory.get('/')
         request.user = self.user
-        request.user.add_obj_perm('change_contenttype', self.ctype)
-        SecretView.permission_required = ['contenttypes.change_contenttype',
-            'contenttypes.add_contenttype']
-        view = SecretView.as_view(object=self.ctype)
+        request.user.add_obj_perm('change_post', self.post)
+        SecretView.permission_required = ['testapp.change_post',
+            'testapp.add_post']
+        view = SecretView.as_view(object=self.post)
         response = view(request)
         self.assertEqual(response.status_code, 302)
         SecretView.on_permission_check_fail.assert_called_once_with(request,
-            response, obj=self.ctype)
+            response, obj=self.post)
 
-        request.user.add_obj_perm('add_contenttype', self.ctype)
+        request.user.add_obj_perm('add_post', self.post)
         with self.assertRaises(DatabaseRemovedError):
             view(request)
 

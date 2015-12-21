@@ -137,6 +137,10 @@ class GuardedModelAdminMixin(object):
         shown. In order to add or manage user or group one should use links or
         forms presented within the page.
         """
+        if not self.has_change_permission(request, None):
+            post_url = reverse('admin:index', current_app=self.admin_site.name)
+            return redirect(post_url)
+
         try:
             # django >= 1.7
             from django.contrib.admin.utils import unquote
@@ -219,6 +223,10 @@ class GuardedModelAdminMixin(object):
         """
         Manages selected users' permissions for current object.
         """
+        if not self.has_change_permission(request, None):
+            post_url = reverse('admin:index', current_app=self.admin_site.name)
+            return redirect(post_url)
+
         user = get_object_or_404(get_user_model(), pk=user_id)
         obj = get_object_or_404(self.get_queryset(request), pk=object_pk)
         form_class = self.get_obj_perms_manage_user_form()
@@ -272,6 +280,10 @@ class GuardedModelAdminMixin(object):
         """
         Manages selected groups' permissions for current object.
         """
+        if not self.has_change_permission(request, None):
+            post_url = reverse('admin:index', current_app=self.admin_site.name)
+            return redirect(post_url)
+
         group = get_object_or_404(Group, id=group_id)
         obj = get_object_or_404(self.get_queryset(request), pk=object_pk)
         form_class = self.get_obj_perms_manage_group_form()

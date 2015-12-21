@@ -109,3 +109,9 @@ maintainence point of view, especially).
    By defining direct relation models we can also tweak that object permission
    model, i.e. by adding some fields.
 
+.. note::
+   The Direct Foreign keys will only work for one model. If you try to
+   implement if for multiple models the related names will clash. See bug 210_
+   for details.
+
+.. _210: https://github.com/django-guardian/django-guardian/issues/210
