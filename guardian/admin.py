@@ -202,8 +202,10 @@ class GuardedModelAdminMixin(object):
         context['user_form'] = user_form
         context['group_form'] = group_form
 
-        return render_to_response(self.get_obj_perms_manage_template(),
-                                  context, RequestContext(request, current_app=self.admin_site.name))
+        # https://github.com/django/django/commit/cf1f36bb6eb34fafe6c224003ad585a647f6117b
+        request.current_app = self.admin_site.name
+
+        return render_to_response(self.get_obj_perms_manage_template(), context, RequestContext(request))
 
     def get_obj_perms_manage_template(self):
         """
@@ -252,8 +254,9 @@ class GuardedModelAdminMixin(object):
         context['user_perms'] = get_perms(user, obj)
         context['form'] = form
 
-        return render_to_response(self.get_obj_perms_manage_user_template(),
-                                  context, RequestContext(request, current_app=self.admin_site.name))
+        request.current_app = self.admin_site.name
+
+        return render_to_response(self.get_obj_perms_manage_user_template(), context, RequestContext(request))
 
     def get_obj_perms_manage_user_template(self):
         """
@@ -309,8 +312,9 @@ class GuardedModelAdminMixin(object):
         context['group_perms'] = get_perms(group, obj)
         context['form'] = form
 
-        return render_to_response(self.get_obj_perms_manage_group_template(),
-                                  context, RequestContext(request, current_app=self.admin_site.name))
+        request.current_app = self.admin_site.name
+
+        return render_to_response(self.get_obj_perms_manage_group_template(), context, RequestContext(request))
 
     def get_obj_perms_manage_group_template(self):
         """
