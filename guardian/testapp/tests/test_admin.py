@@ -41,8 +41,7 @@ class AdminTests(TestCase):
         self.user = User.objects.create_user('joe', 'joe@example.com', 'joe')
         self.group = Group.objects.create(name='group')
         self.client = Client()
-        self.obj = ContentType.objects.create(name='foo', model='bar',
-            app_label='fake-for-guardian-tests')
+        self.obj = ContentType.objects.create(model='bar', app_label='fake-for-guardian-tests')
         self.obj_info = self.obj._meta.app_label, get_model_name(self.obj)
 
     def tearDown(self):
