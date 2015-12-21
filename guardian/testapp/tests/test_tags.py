@@ -22,8 +22,7 @@ def render(template, context):
 class GetObjPermsTagTest(TestCase):
 
     def setUp(self):
-        self.ctype = ContentType.objects.create(name='foo', model='bar',
-            app_label='fake-for-guardian-tests')
+        self.ctype = ContentType.objects.create(model='bar', app_label='fake-for-guardian-tests')
         self.group = Group.objects.create(name='jackGroup')
         self.user = User.objects.create(username='jack')
         self.user.groups.add(self.group)
