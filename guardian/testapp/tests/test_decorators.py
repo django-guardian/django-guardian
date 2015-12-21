@@ -1,5 +1,5 @@
 from __future__ import unicode_literals
-from django.conf import settings
+from django.conf import settings, global_settings
 from django.contrib.auth.models import Group, AnonymousUser
 from django.core.exceptions import PermissionDenied
 from django.db.models.base import ModelBase
@@ -23,7 +23,6 @@ from guardian.testapp.tests.conf import TEST_SETTINGS
 from guardian.testapp.tests.conf import TestDataMixin
 from guardian.testapp.tests.conf import override_settings
 from guardian.testapp.tests.conf import skipUnlessTestApp
-from django.core.urlresolvers import reverse
 from django import get_version as django_get_version
 
 User = get_user_model()
@@ -367,5 +366,6 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
             return
 
         response = self.client.get(view_url)
-        self.assertRedirects(response, reverse(settings.LOGIN_URL) + "?next=" + view_url)
+        # this should be '/account/login'
+        self.assertRedirects(response, global_settings.LOGIN_URL + "?next=" + view_url)
 
