@@ -24,10 +24,8 @@ class OrphanedObjectPermissionsTest(TestCase):
         # Create objects for which we would assing obj perms
         self.target_user1 = User.objects.create(username='user1')
         self.target_group1 = Group.objects.create(name='group1')
-        self.target_obj1 = ContentType.objects.create(name='ct1', model='foo',
-            app_label='fake-for-guardian-tests')
-        self.target_obj2 = ContentType.objects.create(name='ct2', model='bar',
-            app_label='fake-for-guardian-tests')
+        self.target_obj1 = ContentType.objects.create(model='foo', app_label='fake-for-guardian-tests')
+        self.target_obj2 = ContentType.objects.create(model='bar', app_label='fake-for-guardian-tests')
         # Required if MySQL backend is used :/
         create_permissions(auth_app, [], 1)
 

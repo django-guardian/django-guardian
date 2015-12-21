@@ -14,8 +14,7 @@ class CustomPKModelTest(TestCase):
 
     def setUp(self):
         self.user = get_user_model().objects.create(username='joe')
-        self.ctype = ContentType.objects.create(name='foo', model='bar',
-            app_label='fake-for-guardian-tests')
+        self.ctype = ContentType.objects.create(model='bar', app_label='fake-for-guardian-tests')
 
     def test_assign_perm(self):
         assign_perm('contenttypes.change_contenttype', self.user, self.ctype)

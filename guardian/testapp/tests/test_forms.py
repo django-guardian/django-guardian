@@ -10,8 +10,7 @@ class BaseObjectPermissionsFormTests(TestCase):
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             'joe', 'joe@example.com', 'joe')
-        self.obj = ContentType.objects.create(name='foo', model='bar',
-            app_label='fake-for-guardian-tests')
+        self.obj = ContentType.objects.create(model='bar', app_label='fake-for-guardian-tests')
 
     def test_not_implemented(self):
 

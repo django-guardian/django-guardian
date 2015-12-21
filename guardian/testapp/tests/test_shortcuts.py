@@ -167,10 +167,8 @@ class GetUsersWithPermsTest(TestCase):
     Tests get_users_with_perms function.
     """
     def setUp(self):
-        self.obj1 = ContentType.objects.create(name='ct1', model='foo',
-            app_label='guardian-tests')
-        self.obj2 = ContentType.objects.create(name='ct2', model='bar',
-            app_label='guardian-tests')
+        self.obj1 = ContentType.objects.create(model='foo', app_label='guardian-tests')
+        self.obj2 = ContentType.objects.create(model='bar', app_label='guardian-tests')
         self.user1 = User.objects.create(username='user1')
         self.user2 = User.objects.create(username='user2')
         self.user3 = User.objects.create(username='user3')
@@ -331,10 +329,8 @@ class GetGroupsWithPerms(TestCase):
     Tests get_groups_with_perms function.
     """
     def setUp(self):
-        self.obj1 = ContentType.objects.create(name='ct1', model='foo',
-            app_label='guardian-tests')
-        self.obj2 = ContentType.objects.create(name='ct2', model='bar',
-            app_label='guardian-tests')
+        self.obj1 = ContentType.objects.create(model='foo', app_label='guardian-tests')
+        self.obj2 = ContentType.objects.create(model='bar', app_label='guardian-tests')
         self.user1 = User.objects.create(username='user1')
         self.user2 = User.objects.create(username='user2')
         self.user3 = User.objects.create(username='user3')
@@ -411,8 +407,7 @@ class GetObjectsForUser(TestCase):
     def setUp(self):
         self.user = User.objects.create(username='joe')
         self.group = Group.objects.create(name='group')
-        self.ctype = ContentType.objects.create(name='foo', model='bar',
-            app_label='fake-for-guardian-tests')
+        self.ctype = ContentType.objects.create(model='bar', app_label='fake-for-guardian-tests')
 
     def test_superuser(self):
         self.user.is_superuser = True
@@ -431,8 +426,7 @@ class GetObjectsForUser(TestCase):
     def test_with_superuser_false(self):
         self.user.is_superuser = True
         ctypes = ContentType.objects.all()
-        obj1 = ContentType.objects.create(name='ct1', model='foo',
-            app_label='guardian-tests')
+        obj1 = ContentType.objects.create(model='foo', app_label='guardian-tests')
         assign_perm('change_contenttype', self.user, obj1)
         objects = get_objects_for_user(self.user,
             ['contenttypes.change_contenttype'], ctypes, with_superuser=False)
@@ -444,8 +438,7 @@ class GetObjectsForUser(TestCase):
         objects = get_objects_for_user(self.user,
             ['contenttypes.change_contenttype'], ctypes)
 
-        obj1 = ContentType.objects.create(name='ct1', model='foo',
-            app_label='guardian-tests')
+        obj1 = ContentType.objects.create(model='foo', app_label='guardian-tests')
         assign_perm('change_contenttype', self.user, obj1)
         objects = get_objects_for_user(self.user,
             ['contenttypes.change_contenttype'], ctypes)
@@ -800,12 +793,9 @@ class GetObjectsForGroup(TestCase):
     Tests get_objects_for_group function.
     """
     def setUp(self):
-        self.obj1 = ContentType.objects.create(name='ct1', model='foo',
-            app_label='guardian-tests')
-        self.obj2 = ContentType.objects.create(name='ct2', model='bar',
-            app_label='guardian-tests')
-        self.obj3 = ContentType.objects.create(name='ct3', model='baz',
-            app_label='guardian-tests')
+        self.obj1 = ContentType.objects.create(model='foo', app_label='guardian-tests')
+        self.obj2 = ContentType.objects.create(model='bar', app_label='guardian-tests')
+        self.obj3 = ContentType.objects.create(model='baz', app_label='guardian-tests')
         self.user1 = User.objects.create(username='user1')
         self.user2 = User.objects.create(username='user2')
         self.user3 = User.objects.create(username='user3')

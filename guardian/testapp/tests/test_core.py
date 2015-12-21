@@ -36,8 +36,7 @@ class ObjectPermissionTestCase(TestCase):
         self.group, created = Group.objects.get_or_create(name='jackGroup')
         self.user, created = User.objects.get_or_create(username='jack')
         self.user.groups.add(self.group)
-        self.ctype = ContentType.objects.create(name='foo', model='bar',
-            app_label='fake-for-guardian-tests')
+        self.ctype = ContentType.objects.create(model='bar', app_label='fake-for-guardian-tests')
         try:
             self.anonymous_user = User.objects.get(pk=settings.ANONYMOUS_USER_ID)
         except User.DoesNotExist:
@@ -159,10 +158,8 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
 
     def test_get_perms(self):
         group = Group.objects.create(name='group')
-        obj1 = ContentType.objects.create(name='ct1', model='foo',
-            app_label='guardian-tests')
-        obj2 = ContentType.objects.create(name='ct2', model='bar',
-            app_label='guardian-tests')
+        obj1 = ContentType.objects.create(model='foo', app_label='guardian-tests')
+        obj2 = ContentType.objects.create(model='bar', app_label='guardian-tests')
 
         assign_perms = {
             group: ('change_group', 'delete_group'),
