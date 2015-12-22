@@ -358,6 +358,35 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
         >>> get_objects_for_user(jack, ['auth.change_group', 'auth.delete_group'], any_perm) # this retrieves union
         [<Group some group>, <Group other group>]
 
+    If accept_global_perms is set to ``True``, then all assigned global
+    permissions will also be taken into account.
+
+    - Scenario 1: a user has view permissions generally defined on the model
+      'books' but no object based permission on a single book instance:
+
+        - If accept_global_perms is ``True``: List of all books will be
+          returned.
+        - If accept_global_perms is ``False``: list will be empty.
+
+    - Scenario 2: a user has view permissions generally defined on the model
+      'books' and also has an object based permission to view book 'Whatever':
+
+        - If accept_global_perms is ``True``: List of all books will be
+          returned.
+        - If accept_global_perms is ``False``: list will only contain book
+          'Whatever'.
+
+    - Scenario 3: a user only has object based permission on book 'Whatever':
+
+        - If accept_global_perms is ``True``: List will only contain book
+          'Whatever'.
+        - If accept_global_perms is ``False``: List will only contain book
+          'Whatever'.
+
+    - Scenario 4: a user does not have any permission:
+
+        - If accept_global_perms is ``True``: Empty list.
+        - If accept_global_perms is ``False``: Empty list.
     """
     if isinstance(perms, basestring):
         perms = [perms]
