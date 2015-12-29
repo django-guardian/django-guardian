@@ -4,11 +4,34 @@ from itertools import chain
 
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
+from django.db.models.query import QuerySet
+from django.utils.encoding import force_text
 
 from guardian.utils import get_identity
 from guardian.utils import get_user_obj_perms_model
 from guardian.utils import get_group_obj_perms_model
 from guardian.compat import get_user_model
+
+
+def _get_pks_model_and_ctype(objects):
+    """
+    Returns the primary keys, model and content type of an iterable of Django model objects.
+    Assumes that all objects are of the same content type.
+    """
+
+    if isinstance(objects, QuerySet):
+        model = objects.model
+        pks = [force_text(pk) for pk in objects.values_list('pk', flat=True)]
+        ctype = ContentType.objects.get_for_model(model)
+    else:
+        pks = []
+        for idx, obj in enumerate(objects):
+            if not idx:
+                model = type(obj)
+                ctype = ContentType.objects.get_for_model(model)
+            pks.append(force_text(obj.pk))
+
+    return pks, model, ctype
 
 
 class ObjectPermissionChecker(object):
@@ -154,4 +177,80 @@ class ObjectPermissionChecker(object):
         Returns cache key for ``_obj_perms_cache`` dict.
         """
         ctype = ContentType.objects.get_for_model(obj)
-        return (ctype.id, obj.pk)
+        return (ctype.id, force_text(obj.pk))
+
+    def prefetch_perms(self, objects):
+        """
+        Prefetches the permissions for objects in ``objects`` and puts them in the cache.
+
+        :param objects: Iterable of Django model objects
+
+        """
+        if self.user and not self.user.is_active:
+            return []
+
+        User = get_user_model()
+        pks, model, ctype = _get_pks_model_and_ctype(objects)
+
+        if self.user and self.user.is_superuser:
+            perms = list(chain(
+                *Permission.objects
+                .filter(content_type=ctype)
+                .values_list("codename")))
+
+            for pk in pks:
+                key = (ctype.id, force_text(pk))
+                self._obj_perms_cache[key] = perms
+
+            return True
+
+        group_model = get_group_obj_perms_model(model)
+
+        group_filters = {
+            'object_pk__in': pks
+        }
+
+        if self.user:
+            fieldname = 'group__%s' % (
+                User.groups.field.related_query_name(),
+            )
+            group_filters.update({fieldname: self.user})
+        else:
+            group_filters = {'group': self.group}
+
+        if group_model.objects.is_generic():
+            group_filters.update({
+                'content_type': ctype,
+            })
+
+        if self.user:
+            model = get_user_obj_perms_model(model)
+            user_filters = {
+                'user': self.user,
+                'object_pk__in': pks
+            }
+
+            if model.objects.is_generic():
+                user_filters.update({
+                    'content_type': ctype,
+                })
+
+            # Query user and group permissions separately and then combine
+            # the results to avoid a slow query
+            user_perms_qs = model.objects.filter(**user_filters).select_related('permission')
+            group_perms_qs = group_model.objects.filter(**group_filters).select_related('permission')
+            perms = chain(user_perms_qs, group_perms_qs)
+        else:
+            perms = chain(
+                *(group_model.objects.filter(**group_filters).select_related('permission'),)
+            )
+
+        for perm in perms:
+            key = (ctype.id, perm.object_pk)
+
+            if key in self._obj_perms_cache:
+                self._obj_perms_cache[key].append(perm.permission.codename)
+            else:
+                self._obj_perms_cache[key] = [perm.permission.codename]
+
+        return True

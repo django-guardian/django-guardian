@@ -109,3 +109,33 @@ maintainence point of view, especially).
    By defining direct relation models we can also tweak that object permission
    model, i.e. by adding some fields.
 
+
+.. _performance-prefetch:
+
+Prefetching permissions
+-------------------
+
+.. versionadded:: 1.4.3
+
+Naively looping through objects and checking permissions on each one using
+``has_perms`` results in a permissions lookup in the database for each object.
+Large numbers of objects therefore produce large numbers of database queries
+which can considerably slow down your app. To avoid this, create an
+``ObjectPermissionChecker`` and use its ``prefetch_perms`` method before
+looping through the objects. This will do a single lookup for all the objects
+and cache the results.
+
+.. code-block:: python
+
+    from guardian.core import ObjectPermissionChecker
+
+    joe = User.objects.get(username='joe')
+    projects = Project.objects.all()
+    checker = ObjectPermissionChecker(joe)
+
+    # Prefetch the permissions
+    checker.prefetch_perms(projects)
+
+    for project in projects:
+        # No additional lookups needed to check permissions
+        checker.has_perm('change_project', project)
