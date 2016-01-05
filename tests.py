@@ -13,19 +13,6 @@ import django
 os.environ["DJANGO_SETTINGS_MODULE"] = 'guardian.testapp.testsettings'
 from guardian.testapp import testsettings as settings
 
-settings.INSTALLED_APPS = (
-    'django.contrib.auth',
-    'django.contrib.sessions',
-    'django.contrib.contenttypes',
-    'django.contrib.admin',
-    'django.contrib.sites',
-    'guardian',
-    'guardian.testapp',
-)
-settings.PASSWORD_HASHERS = (
-    'django.contrib.auth.hashers.MD5PasswordHasher',
-    'django.contrib.auth.hashers.SHA1PasswordHasher',
-)
 
 def run_tests(settings):
     from django.test.utils import get_runner
