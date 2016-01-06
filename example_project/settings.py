@@ -7,9 +7,6 @@ env = environ.Env()
 
 abspath = lambda *p: os.path.abspath(os.path.join(*p))
 
-DATABASES = DATABASES = {
-    'default': env.db(default="sqlite:///")
-}
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -40,6 +37,12 @@ if 'GRAPPELLI' in os.environ:
         INSTALLED_APPS = ('grappelli',) + INSTALLED_APPS
     except ImportError:
         print("django-grappelli not installed")
+
+try:
+    import rosetta
+    INSTALLED_APPS += ('rosetta',)
+except ImportError:
+    pass
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
@@ -98,8 +101,3 @@ PASSWORD_HASHERS = (
 )
 
 AUTH_USER_MODEL = 'core.CustomUser'
-
-try:
-    from conf.localsettings import *
-except ImportError:
-    pass
