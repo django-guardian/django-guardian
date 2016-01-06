@@ -30,9 +30,8 @@ after_success:
   - coverage report --omit "guardian/compat.py,guardian/testapp/testsettings.py" -m guardian/*.py
   - coveralls
 
-# Uncomment before pull to django-guardian/django-guardian
-# notifications:
-#   irc: "irc.freenode.net#django-guardian"
+notifications:
+  irc: "irc.freenode.net#django-guardian"
 
 
 matrix:
