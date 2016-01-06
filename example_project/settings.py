@@ -8,6 +8,7 @@ env = environ.Env()
 abspath = lambda *p: os.path.abspath(os.path.join(*p))
 
 
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 SECRET_KEY = 'CHANGE_THIS_TO_SOMETHING_UNIQUE_AND_SECURE'
