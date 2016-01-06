@@ -12,7 +12,7 @@ except IOError as err:
         "``long_description`` (%s)\n" % readme_file)
     sys.exit(1)
 
-tests_require = ['mock']
+tests_require = ['mock', 'django-environ']
 
 extra_kwargs = {}
 if sys.version_info >= (3,):
