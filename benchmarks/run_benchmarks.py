@@ -19,30 +19,25 @@ ROOT_DIR = abspath(THIS_DIR, '..')
 sys.path.insert(0, ROOT_DIR)
 
 os.environ["DJANGO_SETTINGS_MODULE"] = 'benchmarks.settings'
+
+import django
+django.setup()
+
 from benchmarks import settings
 from guardian.shortcuts import assign_perm
-
-settings.DJALOG_LEVEL = 40
-settings.INSTALLED_APPS = (
-    'django.contrib.auth',
-    'django.contrib.sessions',
-    'django.contrib.contenttypes',
-    'django.contrib.admin',
-    'django.contrib.sites',
-    'guardian',
-    'benchmarks',
-)
-
+from django.core.exceptions import ImproperlyConfigured
 from utils import show_settings
-import django
 from django.contrib.auth.models import User, Group
 from django.utils.termcolors import colorize
 from benchmarks.models import TestModel
 from benchmarks.models import TestDirectModel
+from guardian.models import UserObjectPermission
+from django.contrib.contenttypes.models import ContentType
 
 USERS_COUNT = 50
-OBJECTS_COUNT = 1000
-OBJECTS_WIHT_PERMS_COUNT = 1000
+OBJECTS_COUNT = 100
+OBJECTS_WIHT_PERMS_COUNT = 100
+
 
 def random_string(length=25, chars=string.ascii_letters+string.digits):
     return ''.join(random.choice(chars) for i in range(length))
@@ -97,14 +92,14 @@ class Timed(object):
 class Benchmark(object):
 
     def __init__(self, name, users_count, objects_count,
-            objects_with_perms_count, model):
+            objects_with_perms_count, model, subquery):
         self.name = name
         self.users_count = users_count
         self.objects_count = objects_count
         self.objects_with_perms_count = objects_with_perms_count
-
+        self.subquery = subquery
         self.Model = model
-        self.perm = 'auth.change_%s' % get_model_name(model)
+        self.perm = 'add_%s' % get_model_name(model)
 
     def info(self, msg):
         print(colorize(msg + '\n', fg='green'))
@@ -146,6 +141,21 @@ class Benchmark(object):
                 obj = self.Model.objects.get(id=random.choice(ids))
                 self.check_perm(user, obj, self.perm)
 
+    @Timed("Get objects")
+    def get_objects(self):
+        ctype = ContentType.objects.get_for_model(self.Model)
+        ids = range(1, self.users_count)
+        for user in User.objects.iterator():
+            for x in xrange(self.objects_with_perms_count):
+                filters = {'user': random.choice(ids),
+                           'permission__codename__in': [self.perm],
+                           'content_type': ctype
+                           }
+                qs = UserObjectPermission.objects.filter(**filters).all()
+                if not self.subquery:
+                    qs = [v.object_pk for v in qs]
+                list(self.Model.objects.filter(id__in=qs))
+
     def check_perm(self, user, obj, perm):
         user.has_perm(perm, obj)
 
@@ -159,17 +169,21 @@ class Benchmark(object):
         self.create_objects()
         self.grant_perms()
         self.check_perms()
+        if not isinstance(self.Model, TestModel):
+            self.get_objects()
 
 
 def main():
     show_settings(settings, 'benchmarks')
-    benchmark = Benchmark('Direct relations benchmark',
-        USERS_COUNT, OBJECTS_COUNT, OBJECTS_WIHT_PERMS_COUNT, TestDirectModel)
-    benchmark.main()
+    glob = [USERS_COUNT, OBJECTS_COUNT, OBJECTS_WIHT_PERMS_COUNT]
+    Benchmark('Direct relations benchmark with subqueries', *glob,
+              model=TestDirectModel, subquery=True).main()
 
-    benchmark = Benchmark('Generic relations benchmark',
-        USERS_COUNT, OBJECTS_COUNT, OBJECTS_WIHT_PERMS_COUNT, TestModel)
-    benchmark.main()
+    Benchmark('Direct relations benchmark without subqueries', *glob,
+              model=TestDirectModel, subquery=False).main()
+
+    Benchmark('Generic relations benchmark without subqueries', *glob,
+              model=TestModel, subquery=False).main()
 
 if __name__ == '__main__':
     main()

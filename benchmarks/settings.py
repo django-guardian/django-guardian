@@ -1,5 +1,8 @@
 import os
 import sys
+import environ
+
+env = environ.Env()
 
 abspath = lambda *p: os.path.abspath(os.path.join(*p))
 
@@ -10,6 +13,7 @@ ROOT_DIR = abspath(THIS_DIR, '..')
 # not system-wide
 sys.path.insert(0, ROOT_DIR)
 
+SECRET_KEY = 'NO_NEED_SECRET'
 
 INSTALLED_APPS = (
     'django.contrib.auth',
@@ -21,15 +25,8 @@ INSTALLED_APPS = (
     'benchmarks',
 )
 
+DJALOG_LEVEL = 40
 
 ANONYMOUS_USER_ID = -1
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'guardian_benchmarks',
-        'USER': 'guardian_bench',
-        'PASSWORD': 'guardian_bench',
-    },
-}
-
+DATABASES = {'default': env.db(default="sqlite:///")}
