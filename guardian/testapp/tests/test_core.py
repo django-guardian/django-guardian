@@ -250,3 +250,37 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
 
         finally:
             settings.DEBUG = False
+
+    def test_prefetch_group_perms(self):
+        settings.DEBUG = True
+        try:
+            from django.db import connection
+
+            ContentType.objects.clear_cache()
+            new_group = Group.objects.create(name='new-group')
+            assign_perm("change_group", new_group, self.group)
+            assign_perm("change_group", new_group, new_group)
+            checker = ObjectPermissionChecker(new_group)
+
+            # Prefetch permissions
+            self.assertTrue(checker.prefetch_perms([self.group, new_group]))
+            query_count = len(connection.queries)
+
+            # Checking cache is filled
+            self.assertEqual(len(checker._obj_perms_cache), 2)
+
+            # Checking shouldn't spawn any queries
+            checker.has_perm("change_group", self.group)
+            self.assertEqual(len(connection.queries), query_count)
+
+            # Checking for other permission but for Group object again
+            # shouldn't spawn any query too
+            checker.has_perm("delete_group", self.group)
+            self.assertEqual(len(connection.queries), query_count)
+
+            # Checking for same model but other instance shouldn't spawn any queries
+            checker.has_perm("change_group", new_group)
+            self.assertEqual(len(connection.queries), query_count)
+
+        finally:
+            settings.DEBUG = False

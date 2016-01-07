@@ -209,7 +209,7 @@ class ObjectPermissionChecker(object):
             perms = chain(user_perms_qs, group_perms_qs)
         else:
             perms = chain(
-                *group_model.objects.filter(**group_filters).select_related('permission')
+                *(group_model.objects.filter(**group_filters).select_related('permission'),)
             )
 
         for perm in perms:
