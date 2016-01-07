@@ -5,6 +5,7 @@ from itertools import chain
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.query import QuerySet
+from django.utils.encoding import force_text
 
 from guardian.utils import get_identity
 from guardian.utils import get_user_obj_perms_model
@@ -143,7 +144,7 @@ class ObjectPermissionChecker(object):
         Returns cache key for ``_obj_perms_cache`` dict.
         """
         ctype = ContentType.objects.get_for_model(obj)
-        return (ctype.id, obj.pk)
+        return (ctype.id, force_text(obj.pk))
 
     def prefetch_perms(self, objects):
         """
@@ -165,7 +166,7 @@ class ObjectPermissionChecker(object):
                 .values_list("codename")))
 
             for pk in pks:
-                key = (ctype.id, pk)
+                key = (ctype.id, force_text(pk))
                 self._obj_perms_cache[key] = perms
 
             return True
@@ -213,10 +214,7 @@ class ObjectPermissionChecker(object):
             )
 
         for perm in perms:
-            if isinstance(pks[0], basestring):
                 key = (ctype.id, perm.object_pk)
-            else:
-                key = (ctype.id, int(perm.object_pk))
 
             if key in self._obj_perms_cache:
                 self._obj_perms_cache[key] += perm.permission.codename
