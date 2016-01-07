@@ -21,7 +21,7 @@ def _get_pks_model_and_ctype(objects):
 
     if isinstance(objects, QuerySet):
         model = objects.model
-        pks = list(objects.values_list('pk', flat=True))
+        pks = [force_text(pk) for pk in objects.values_list('pk', flat=True)]
         ctype = ContentType.objects.get_for_model(model)
     else:
         pks = []
@@ -29,7 +29,7 @@ def _get_pks_model_and_ctype(objects):
             if not idx:
                 model = type(obj)
                 ctype = ContentType.objects.get_for_model(model)
-            pks.append(obj.pk)
+            pks.append(force_text(obj.pk))
 
     return pks, model, ctype
 
@@ -202,7 +202,6 @@ class ObjectPermissionChecker(object):
                     'content_type': ctype,
                 })
 
-            perms_qs = Permission.objects.filter(content_type=ctype)
             # Query user and group permissions separately and then combine
             # the results to avoid a slow query
             user_perms_qs = model.objects.filter(**user_filters).select_related('permission')
@@ -210,7 +209,7 @@ class ObjectPermissionChecker(object):
             perms = chain(user_perms_qs, group_perms_qs)
         else:
             perms = chain(
-                *perms_qs.filter(**group_filters).select_related('permission')
+                *group_model.objects.filter(**group_filters).select_related('permission')
             )
 
         for perm in perms:

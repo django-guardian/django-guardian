@@ -181,3 +181,72 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
                 GroupObjectPermission.objects.assign_perm(perm, self.group, obj)
             self.assertEqual(sorted(perms), sorted(check.get_perms(obj)))
 
+    def test_prefetch_user_perms(self):
+        settings.DEBUG = True
+        try:
+            from django.db import connection
+
+            ContentType.objects.clear_cache()
+            new_group = Group.objects.create(name='new-group')
+            user = User.objects.create(username='active_user', is_active=True)
+            assign_perm("change_group", user, self.group)
+            assign_perm("change_group", user, new_group)
+            checker = ObjectPermissionChecker(user)
+
+            # Prefetch permissions
+            self.assertTrue(checker.prefetch_perms([self.group, new_group]))
+            query_count = len(connection.queries)
+
+            # Checking cache is filled
+            self.assertEqual(len(checker._obj_perms_cache), 2)
+
+            # Checking shouldn't spawn any queries
+            checker.has_perm("change_group", self.group)
+            self.assertEqual(len(connection.queries), query_count)
+
+            # Checking for other permission but for Group object again
+            # shouldn't spawn any query too
+            checker.has_perm("delete_group", self.group)
+            self.assertEqual(len(connection.queries), query_count)
+
+            # Checking for same model but other instance shouldn't spawn any queries
+            checker.has_perm("change_group", new_group)
+            self.assertEqual(len(connection.queries), query_count)
+
+        finally:
+            settings.DEBUG = False
+
+    def test_prefetch_superuser_perms(self):
+        settings.DEBUG = True
+        try:
+            from django.db import connection
+
+            ContentType.objects.clear_cache()
+            new_group = Group.objects.create(name='new-group')
+            user = User.objects.create(username='active_superuser',
+                                       is_superuser=True, is_active=True)
+            assign_perm("change_group", user, self.group)
+            checker = ObjectPermissionChecker(user)
+
+            # Prefetch permissions
+            self.assertTrue(checker.prefetch_perms([self.group, new_group]))
+            query_count = len(connection.queries)
+
+            # Checking cache is filled
+            self.assertEqual(len(checker._obj_perms_cache), 2)
+
+            # Checking shouldn't spawn any queries
+            checker.has_perm("change_group", self.group)
+            self.assertEqual(len(connection.queries), query_count)
+
+            # Checking for other permission but for Group object again
+            # shouldn't spawn any query too
+            checker.has_perm("delete_group", self.group)
+            self.assertEqual(len(connection.queries), query_count)
+
+            # Checking for same model but other instance shouldn't spawn any queries
+            checker.has_perm("change_group", new_group)
+            self.assertEqual(len(connection.queries), query_count)
+
+        finally:
+            settings.DEBUG = False
