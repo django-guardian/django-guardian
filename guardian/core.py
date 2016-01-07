@@ -29,7 +29,7 @@ def _get_pks_model_and_ctype(objects):
             if not idx:
                 model = type(obj)
                 ctype = ContentType.objects.get_for_model(model)
-            pks += obj.pk
+            pks.append(obj.pk)
 
     return pks, model, ctype
 
@@ -214,10 +214,10 @@ class ObjectPermissionChecker(object):
             )
 
         for perm in perms:
-                key = (ctype.id, perm.object_pk)
+            key = (ctype.id, perm.object_pk)
 
             if key in self._obj_perms_cache:
-                self._obj_perms_cache[key] += perm.permission.codename
+                self._obj_perms_cache[key].append(perm.permission.codename)
             else:
                 self._obj_perms_cache[key] = [perm.permission.codename]
 
