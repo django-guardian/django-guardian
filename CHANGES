@@ -1,3 +1,20 @@
+Release 1.4.0 (Jan 8, 2016)
+==========================
+
+* Drop support for Django < 1.7
+* Drop support for django south migrations.
+* Remove depreciated code.
+* Fix many Django depreciated warnings.
+* Fix tests and example_project.
+* Work around for postgresql specific Django bug (#366). This is a regression
+  that was introduced in version 1.3.2.
+* Updates to documentation.
+* Require can_change permission to change object perms in admin.
+* Fixes broke admin URLS (#376 and #381).
+* Tests now work with Mysql and Postgresql as well as sqlite.
+* Uses django-environ for tests.
+
+
 Release 1.3.2 (Nov 14, 2015)
 ============================
 
