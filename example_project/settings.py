@@ -1,7 +1,12 @@
 import os
 import sys
+from django.conf import global_settings
+import environ
+
+env = environ.Env()
 
 abspath = lambda *p: os.path.abspath(os.path.join(*p))
+
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -11,16 +16,7 @@ PROJECT_ROOT = abspath(os.path.dirname(__file__))
 GUARDIAN_MODULE_PATH = abspath(PROJECT_ROOT, '..')
 sys.path.insert(0, GUARDIAN_MODULE_PATH)
 
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': abspath(PROJECT_ROOT, '.hidden.db'),
-    },
-    'TEST': {
-        'NAME': ':memory:',
-    }
-}
+DATABASES = {'default': env.db(default="sqlite:///")}
 
 INSTALLED_APPS = (
     'django.contrib.auth',
