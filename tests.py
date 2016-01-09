@@ -8,6 +8,22 @@ instructions how to interpret ``test`` command when we run::
 """
 import os
 import sys
+import contextlib
+import tempfile
+import shutil
+
+
+@contextlib.contextmanager
+def tempdir():
+    dirpath = tempfile.mkdtemp()
+    prevdir = os.getcwd()
+
+    try:
+        os.chdir(dirpath)
+        yield dirpath
+    finally:
+        os.chdir(prevdir)
+        shutil.rmtree(dirpath)
 
 
 def main():
@@ -18,7 +34,8 @@ def main():
     from django.core.management import call_command
 
     django.setup()
-    call_command('test')
+    with tempdir():
+        call_command('test')
 
     sys.exit(0)
 
