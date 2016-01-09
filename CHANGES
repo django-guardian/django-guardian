@@ -1,5 +1,5 @@
 Release 1.4.0 (Jan 8, 2016)
-==========================
+===========================
 
 * Drop support for Django < 1.7
 * Drop support for django south migrations.
