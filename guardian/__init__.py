@@ -1,5 +1,5 @@
 """
-Implementation of per object permissions for Django 1.2 or later.
+Implementation of per object permissions for Django.
 """
 from __future__ import unicode_literals
 from . import checks
