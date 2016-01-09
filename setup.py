@@ -3,14 +3,13 @@ import sys
 from setuptools import setup, find_packages
 from extras import RunFlakesCommand
 
-guardian = __import__('guardian')
+version_file = os.path.join(os.path.dirname(__file__), 'VERSION.txt')
+with open(version_file, 'r') as f:
+    version = f.readline().strip()
+
 readme_file = os.path.join(os.path.dirname(__file__), 'README.rst')
-try:
-    long_description = open(readme_file).read()
-except IOError as err:
-    sys.stderr.write("[ERROR] Cannot find file specified as "
-        "``long_description`` (%s)\n" % readme_file)
-    sys.exit(1)
+with open(version_file, 'r') as f:
+    long_description = f.readline().strip()
 
 tests_require = ['mock', 'django-environ']
 
@@ -22,12 +21,12 @@ elif sys.version_info < (2, 7):
 
 setup(
     name = 'django-guardian',
-    version = guardian.get_version(),
+    version = version,
     url = 'http://github.com/django-guardian/django-guardian',
     author = 'Lukasz Balcerzak',
     author_email = 'lukaszbalcerzak@gmail.com',
     download_url='https://github.com/django-guardian/django-guardian/tags',
-    description = guardian.__doc__.strip(),
+    description ="Implementation of per object permissions for Django.",
     long_description = long_description,
     zip_safe = False,
     packages = find_packages(),
