@@ -42,6 +42,7 @@ notifications:
 
 
 matrix:
+    fast_finish: true
     exclude:
         # Drop python 3.3 and django 1.9
         - python: 3.3
