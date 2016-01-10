@@ -10,15 +10,22 @@ env:
  - DJANGO_VERSION=1.7.10 DATABASE_URL=postgres://postgres@/django_guardian
  - DJANGO_VERSION=1.8.7 DATABASE_URL=postgres://postgres@/django_guardian
  - DJANGO_VERSION=1.9.1 DATABASE_URL=postgres://postgres@/django_guardian
+ - DJANGO_VERSION=master DATABASE_URL=postgres://postgres@/django_guardian
+
  - DJANGO_VERSION=1.7.10 DATABASE_URL=mysql://root:@localhost/django_guardian
  - DJANGO_VERSION=1.8.7 DATABASE_URL=mysql://root:@localhost/django_guardian
  - DJANGO_VERSION=1.9.1 DATABASE_URL=mysql://root:@localhost/django_guardian
+ - DJANGO_VERSION=master DATABASE_URL=mysql://root:@localhost/django_guardian
+
  - DJANGO_VERSION=1.7.10 DATABASE_URL=sqlite://
  - DJANGO_VERSION=1.8.7 DATABASE_URL=sqlite://
  - DJANGO_VERSION=1.9.1 DATABASE_URL=sqlite://
+ - DJANGO_VERSION=master DATABASE_URL=sqlite://
 
 install:
-  - travis_retry pip install -q mock==1.0.1 Django==$DJANGO_VERSION coverage coveralls
+  - travis_retry pip install -q mock==1.0.1 coverage coveralls
+# Install django master or version
+  - bash -c "if [[ "$DJANGO_VERSION" == 'master' ]]; then pip install 'https://github.com/django/django/archive/master.tar.gz'; else pip install Django==$DJANGO_VERSION; fi; "
 # Install database drivers
   - bash -c "if [[ $DATABASE_URL = postgres* ]]; then pip install psycopg2==2.6.1; fi; "
   - bash -c "if [[ $DATABASE_URL = mysql* ]]; then pip install mysqlclient==1.3.7; fi; "
@@ -57,3 +64,7 @@ matrix:
           env: DJANGO_VERSION=1.8.7 DATABASE_URL=postgres://postgres@/django_guardian
         - python: 3.3
           env: DJANGO_VERSION=1.9.1 DATABASE_URL=postgres://postgres@/django_guardian
+    allow_failures:
+        - env: DJANGO_VERSION=master DATABASE_URL=postgres://postgres@/django_guardian
+        - env: DJANGO_VERSION=master DATABASE_URL=mysql://root:@localhost/django_guardian
+        - env: DJANGO_VERSION=master DATABASE_URL=sqlite://
