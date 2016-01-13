@@ -5,12 +5,14 @@ from django.test import TestCase
 from guardian.compat import get_user_model
 from guardian.forms import BaseObjectPermissionsForm
 
+
 class BaseObjectPermissionsFormTests(TestCase):
 
     def setUp(self):
         self.user = get_user_model().objects.create_user(
             'joe', 'joe@example.com', 'joe')
-        self.obj = ContentType.objects.create(model='bar', app_label='fake-for-guardian-tests')
+        self.obj = ContentType.objects.create(
+            model='bar', app_label='fake-for-guardian-tests')
 
     def test_not_implemented(self):
 
@@ -19,7 +21,7 @@ class BaseObjectPermissionsFormTests(TestCase):
             def __init__(formself, user, *args, **kwargs):
                 self.user = user
                 super(MyUserObjectPermissionsForm, formself).__init__(*args,
-                    **kwargs)
+                                                                      **kwargs)
 
         form = MyUserObjectPermissionsForm(self.user, self.obj, {})
         self.assertRaises(NotImplementedError, form.save_obj_perms)
@@ -27,4 +29,3 @@ class BaseObjectPermissionsFormTests(TestCase):
         field_name = form.get_obj_perms_field_name()
         self.assertTrue(form.is_valid())
         self.assertEqual(len(form.cleaned_data[field_name]), 0)
-

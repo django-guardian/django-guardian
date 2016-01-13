@@ -18,4 +18,3 @@ class TestManagers(TestCase):
         manager.assign_perm = mock.Mock()
         manager.assign('perm', 'group', 'object')
         manager.assign_perm.assert_called_once_with('perm', 'group', 'object')
-

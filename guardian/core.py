@@ -52,6 +52,7 @@ class ObjectPermissionChecker(object):
        difference as permissions are already fetched and stored within cache
        dictionary.
     """
+
     def __init__(self, user_or_group=None):
         """
         :param user_or_group: should be an ``User``, ``AnonymousUser`` or
@@ -88,7 +89,7 @@ class ObjectPermissionChecker(object):
         User = get_user_model()
         ctype = ContentType.objects.get_for_model(obj)
         key = self.get_local_cache_key(obj)
-        if not key in self._obj_perms_cache:
+        if key not in self._obj_perms_cache:
 
             group_model = get_group_obj_perms_model(obj)
             group_rel_name = group_model.permission.field.related_query_name()
@@ -110,8 +111,8 @@ class ObjectPermissionChecker(object):
 
             if self.user and self.user.is_superuser:
                 perms = list(chain(*Permission.objects
-                    .filter(content_type=ctype)
-                    .values_list("codename")))
+                                   .filter(content_type=ctype)
+                                   .values_list("codename")))
             elif self.user:
                 model = get_user_obj_perms_model(obj)
                 related_name = model.permission.field.related_query_name()
@@ -133,9 +134,9 @@ class ObjectPermissionChecker(object):
                 perms = list(set(chain(user_perms, group_perms)))
             else:
                 perms = list(set(chain(*Permission.objects
-                    .filter(content_type=ctype)
-                    .filter(**group_filters)
-                    .values_list("codename"))))
+                                       .filter(content_type=ctype)
+                                       .filter(**group_filters)
+                                       .values_list("codename"))))
             self._obj_perms_cache[key] = perms
         return self._obj_perms_cache[key]
 

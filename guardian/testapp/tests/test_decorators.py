@@ -56,7 +56,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
             pass
         else:
             self.fail("Trying to decorate using permission_required without "
-                "permission as first argument should raise exception")
+                      "permission as first argument should raise exception")
 
     def test_RENDER_403_is_false(self):
         request = self._get_request(self.anon)
@@ -90,7 +90,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
         def dummy_view(request):
             return HttpResponse('dummy_view')
         with mock.patch('guardian.conf.settings.TEMPLATE_403',
-            '_non-exisitng-403.html'):
+                        '_non-exisitng-403.html'):
             response = dummy_view(request)
             self.assertEqual(response.status_code, 403)
             self.assertEqual(response.content, b'')
@@ -105,7 +105,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
         def dummy_view(request):
             return HttpResponse('dummy_view')
         with mock.patch('guardian.conf.settings.TEMPLATE_403',
-            '_non-exisitng-403.html'):
+                        '_non-exisitng-403.html'):
             self.assertRaises(TemplateDoesNotExist, dummy_view, request)
         settings.DEBUG = org_DEBUG
 
@@ -160,9 +160,9 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
             pass
         else:
             self.fail("If lookup variables are passed they must be tuple of: "
-                "(ModelClass/app_label.ModelClass/queryset, "
-                "<pair of lookup_string and view_arg>)\n"
-                "Otherwise GuardianError should be raised")
+                      "(ModelClass/app_label.ModelClass/queryset, "
+                      "<pair of lookup_string and view_arg>)\n"
+                      "Otherwise GuardianError should be raised")
 
     def test_wrong_lookup_variables(self):
 
@@ -223,6 +223,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
             pass
 
         class ProxyUser(User):
+
             class Meta:
                 proxy = True
                 app_label = User._meta.app_label
@@ -331,13 +332,14 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
         Project.objects.create(name='foobar')
 
         @permission_required('auth.change_group',
-            (Project, 'name', 'group_name'),
-            login_url='/foobar/')
+                             (Project, 'name', 'group_name'),
+                             login_url='/foobar/')
         def dummy_view(request, project_name):
             pass
         # 'auth.change_group' is wrong permission codename (should be one
         # related with User
-        self.assertRaises(WrongAppError, dummy_view, request, group_name='foobar')
+        self.assertRaises(WrongAppError, dummy_view,
+                          request, group_name='foobar')
 
     def test_redirection(self):
         from guardian.testapp.models import Project
@@ -348,15 +350,15 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
         Project.objects.create(name='foobar')
 
         @permission_required('testapp.change_project',
-            (Project, 'name', 'project_name'),
-            login_url='/foobar/')
+                             (Project, 'name', 'project_name'),
+                             login_url='/foobar/')
         def dummy_view(request, project_name):
             pass
         response = dummy_view(request, project_name='foobar')
         self.assertTrue(isinstance(response, HttpResponseRedirect))
         self.assertTrue(response._headers['location'][1].startswith(
             '/foobar/'))
-    
+
     @override_settings(LOGIN_URL='django.contrib.auth.views.login')
     def test_redirection_class(self):
         view_url = '/permission_required/'
@@ -367,5 +369,5 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
 
         response = self.client.get(view_url)
         # this should be '/account/login'
-        self.assertRedirects(response, global_settings.LOGIN_URL + "?next=" + view_url)
-
+        self.assertRedirects(
+            response, global_settings.LOGIN_URL + "?next=" + view_url)

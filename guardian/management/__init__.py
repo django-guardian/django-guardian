@@ -44,4 +44,4 @@ if guardian_settings.ANONYMOUS_USER_ID is not None:
     from django.apps import apps
     guardian_app = apps.get_app_config('guardian')
     signals.post_migrate.connect(create_anonymous_user, sender=guardian_app,
-        dispatch_uid="guardian.management.create_anonymous_user")
+                                 dispatch_uid="guardian.management.create_anonymous_user")

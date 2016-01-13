@@ -23,6 +23,7 @@ User = get_user_model()
 
 
 class CustomUserTests(TestCase):
+
     def test_create_anonymous_user(self):
         create_anonymous_user(object())
         self.assertEqual(1, User.objects.all().count())
@@ -36,9 +37,11 @@ class ObjectPermissionTestCase(TestCase):
         self.group, created = Group.objects.get_or_create(name='jackGroup')
         self.user, created = User.objects.get_or_create(username='jack')
         self.user.groups.add(self.group)
-        self.ctype = ContentType.objects.create(model='bar', app_label='fake-for-guardian-tests')
+        self.ctype = ContentType.objects.create(
+            model='bar', app_label='fake-for-guardian-tests')
         try:
-            self.anonymous_user = User.objects.get(pk=settings.ANONYMOUS_USER_ID)
+            self.anonymous_user = User.objects.get(
+                pk=settings.ANONYMOUS_USER_ID)
         except User.DoesNotExist:
             self.anonymous_user = User(
                 id=settings.ANONYMOUS_USER_ID,
@@ -105,34 +108,34 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
 
     def test_init(self):
         self.assertRaises(NotUserNorGroup, ObjectPermissionChecker,
-            user_or_group=ContentType())
+                          user_or_group=ContentType())
         self.assertRaises(NotUserNorGroup, ObjectPermissionChecker)
 
     def test_anonymous_user(self):
         user = AnonymousUser()
         check = ObjectPermissionChecker(user)
         # assert anonymous user has no object permissions at all for obj
-        self.assertTrue( [] == list(check.get_perms(self.ctype)) )
+        self.assertTrue([] == list(check.get_perms(self.ctype)))
 
     def test_superuser(self):
         user = User.objects.create(username='superuser', is_superuser=True)
         check = ObjectPermissionChecker(user)
         ctype = ContentType.objects.get_for_model(self.ctype)
         perms = sorted(chain(*Permission.objects
-            .filter(content_type=ctype)
-            .values_list('codename')))
+                             .filter(content_type=ctype)
+                             .values_list('codename')))
         self.assertEqual(perms, check.get_perms(self.ctype))
         for perm in perms:
             self.assertTrue(check.has_perm(perm, self.ctype))
 
     def test_not_active_superuser(self):
         user = User.objects.create(username='not_active_superuser',
-            is_superuser=True, is_active=False)
+                                   is_superuser=True, is_active=False)
         check = ObjectPermissionChecker(user)
         ctype = ContentType.objects.get_for_model(self.ctype)
         perms = sorted(chain(*Permission.objects
-            .filter(content_type=ctype)
-            .values_list('codename')))
+                             .filter(content_type=ctype)
+                             .values_list('codename')))
         self.assertEqual(check.get_perms(self.ctype), [])
         for perm in perms:
             self.assertFalse(check.has_perm(perm, self.ctype))
@@ -158,8 +161,10 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
 
     def test_get_perms(self):
         group = Group.objects.create(name='group')
-        obj1 = ContentType.objects.create(model='foo', app_label='guardian-tests')
-        obj2 = ContentType.objects.create(model='bar', app_label='guardian-tests')
+        obj1 = ContentType.objects.create(
+            model='foo', app_label='guardian-tests')
+        obj2 = ContentType.objects.create(
+            model='bar', app_label='guardian-tests')
 
         assign_perms = {
             group: ('change_group', 'delete_group'),
@@ -178,7 +183,8 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
 
         for obj, perms in assign_perms.items():
             for perm in perms:
-                GroupObjectPermission.objects.assign_perm(perm, self.group, obj)
+                GroupObjectPermission.objects.assign_perm(
+                    perm, self.group, obj)
             self.assertEqual(sorted(perms), sorted(check.get_perms(obj)))
 
     def test_prefetch_user_perms(self):

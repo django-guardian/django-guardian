@@ -16,10 +16,9 @@ from django.contrib.auth.models import AnonymousUser, Group
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.db.models import Model
-from django.http import HttpResponseForbidden, HttpResponseRedirect
+from django.http import HttpResponseForbidden
 from django.shortcuts import render_to_response
 from django.template import RequestContext, TemplateDoesNotExist
-from django.utils.http import urlquote
 
 from guardian.compat import get_user_model
 from guardian.conf import settings as guardian_settings
@@ -79,11 +78,11 @@ def get_identity(identity):
         return None, identity
 
     raise NotUserNorGroup("User/AnonymousUser or Group instance is required "
-        "(got %s)" % identity)
+                          "(got %s)" % identity)
 
 
 def get_403_or_None(request, perms, obj=None, login_url=None,
-    redirect_field_name=None, return_403=False, accept_global_perms=False):
+                    redirect_field_name=None, return_403=False, accept_global_perms=False):
     login_url = login_url or settings.LOGIN_URL
     redirect_field_name = redirect_field_name or REDIRECT_FIELD_NAME
 
@@ -96,7 +95,8 @@ def get_403_or_None(request, perms, obj=None, login_url=None,
         has_permissions = all(request.user.has_perm(perm) for perm in perms)
     # if still no permission granted, try obj perms
     if not has_permissions:
-        has_permissions = all(request.user.has_perm(perm, obj) for perm in perms)
+        has_permissions = all(request.user.has_perm(perm, obj)
+                              for perm in perms)
 
     if not has_permissions:
         if return_403:
@@ -129,17 +129,16 @@ def clean_orphan_obj_perms():
     from guardian.models import UserObjectPermission
     from guardian.models import GroupObjectPermission
 
-
     deleted = 0
     # TODO: optimise
     for perm in chain(UserObjectPermission.objects.all(),
-        GroupObjectPermission.objects.all()):
+                      GroupObjectPermission.objects.all()):
         if perm.content_object is None:
             logger.debug("Removing %s (pk=%d)" % (perm, perm.pk))
             perm.delete()
             deleted += 1
     logger.info("Total removed orphan object permissions instances: %d" %
-        deleted)
+                deleted)
     return deleted
 
 

@@ -12,5 +12,4 @@ class TestConfiguration(TestCase):
         with mock.patch('guardian.conf.settings.RENDER_403', True):
             with mock.patch('guardian.conf.settings.RAISE_403', True):
                 self.assertRaises(ImproperlyConfigured,
-                    guardian_settings.check_configuration)
-
+                                  guardian_settings.check_configuration)

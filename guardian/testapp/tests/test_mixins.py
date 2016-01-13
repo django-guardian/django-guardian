@@ -15,20 +15,25 @@ from guardian.mixins import PermissionRequiredMixin
 
 from ..models import Post
 
+
 class DatabaseRemovedError(Exception):
     pass
 
 
 class RemoveDatabaseView(View):
+
     def get(self, request, *args, **kwargs):
         raise DatabaseRemovedError("You've just allowed db to be removed!")
 
+
 class TestView(PermissionRequiredMixin, RemoveDatabaseView):
     permission_required = 'testapp.change_post'
-    object = None # should be set at each tests explicitly
+    object = None  # should be set at each tests explicitly
+
 
 class NoObjectView(PermissionRequiredMixin, RemoveDatabaseView):
     permission_required = 'testapp.change_post'
+
 
 class TestViewMixins(TestCase):
 
@@ -113,6 +118,7 @@ class TestViewMixins(TestCase):
         """
 
         global TestView
+
         class SecretView(TestView):
             on_permission_check_fail = mock.Mock()
 
@@ -120,12 +126,12 @@ class TestViewMixins(TestCase):
         request.user = self.user
         request.user.add_obj_perm('change_post', self.post)
         SecretView.permission_required = ['testapp.change_post',
-            'testapp.add_post']
+                                          'testapp.add_post']
         view = SecretView.as_view(object=self.post)
         response = view(request)
         self.assertEqual(response.status_code, 302)
         SecretView.on_permission_check_fail.assert_called_once_with(request,
-            response, obj=self.post)
+                                                                    response, obj=self.post)
 
         request.user.add_obj_perm('add_post', self.post)
         with self.assertRaises(DatabaseRemovedError):
@@ -148,10 +154,9 @@ class TestViewMixins(TestCase):
         response = view(request)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(response['Location'],
-            '/let-me-in/?foobar=/some-secret-page/')
+                         '/let-me-in/?foobar=/some-secret-page/')
 
         request.user = self.user
         response = view(request)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b'secret-view')
-

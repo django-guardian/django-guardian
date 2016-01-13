@@ -19,9 +19,8 @@ def show_settings(settings, action):
         line = '    %s: "%s"' % (key, value)
         output.append(line)
     embracer = colorize('=' * len(max(output, key=lambda s: len(s))),
-        fg='green', opts=['bold'])
+                        fg='green', opts=['bold'])
     output = [colorize(line, fg='blue') for line in output]
     output.insert(0, embracer)
     output.append(embracer)
     print('\n'.join(output))
-

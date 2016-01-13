@@ -21,5 +21,4 @@ class Command(NoArgsCommand):
         removed = clean_orphan_obj_perms()
         if options['verbosity'] > 0:
             print("Removed %d object permission entries with no targets" %
-                removed)
-
+                  removed)

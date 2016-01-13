@@ -29,7 +29,8 @@ def check_user_support(user_obj):
     # This is how we support anonymous users - simply try to retrieve User
     # instance and perform checks for that predefined user
     if not user_obj.is_authenticated():
-        # If anonymous user permission is disabled then they are always unauthorized
+        # If anonymous user permission is disabled then they are always
+        # unauthorized
         if settings.ANONYMOUS_USER_ID is None:
             return False, user_obj
         user_obj = get_user_model().objects.get(pk=settings.ANONYMOUS_USER_ID)
@@ -83,7 +84,7 @@ class ObjectPermissionBackend(object):
             app_label, perm = perm.split('.')
             if app_label != obj._meta.app_label:
                 raise WrongAppError("Passed perm has app label of '%s' and "
-                    "given obj has '%s'" % (app_label, obj._meta.app_label))
+                                    "given obj has '%s'" % (app_label, obj._meta.app_label))
 
         check = ObjectPermissionChecker(user_obj)
         return check.has_perm(perm, obj)

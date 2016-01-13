@@ -7,7 +7,9 @@ from guardian.exceptions import ObjectNotPersisted
 from guardian.models import Permission
 import warnings
 
-# TODO: consolidate UserObjectPermissionManager and GroupObjectPermissionManager
+# TODO: consolidate UserObjectPermissionManager and
+# GroupObjectPermissionManager
+
 
 class BaseObjectPermissionManager(models.Manager):
 
@@ -28,7 +30,7 @@ class UserObjectPermissionManager(BaseObjectPermissionManager):
         """
         if getattr(obj, 'pk', None) is None:
             raise ObjectNotPersisted("Object %s needs to be persisted first"
-                % obj)
+                                     % obj)
         ctype = ContentType.objects.get_for_model(obj)
         permission = Permission.objects.get(content_type=ctype, codename=perm)
 
@@ -56,7 +58,7 @@ class UserObjectPermissionManager(BaseObjectPermissionManager):
         """
         if getattr(obj, 'pk', None) is None:
             raise ObjectNotPersisted("Object %s needs to be persisted first"
-                % obj)
+                                     % obj)
         filters = {
             'permission__codename': perm,
             'permission__content_type': ContentType.objects.get_for_model(obj),
@@ -78,7 +80,7 @@ class GroupObjectPermissionManager(BaseObjectPermissionManager):
         """
         if getattr(obj, 'pk', None) is None:
             raise ObjectNotPersisted("Object %s needs to be persisted first"
-                % obj)
+                                     % obj)
         ctype = ContentType.objects.get_for_model(obj)
         permission = Permission.objects.get(content_type=ctype, codename=perm)
 
@@ -102,7 +104,7 @@ class GroupObjectPermissionManager(BaseObjectPermissionManager):
         """
         if getattr(obj, 'pk', None) is None:
             raise ObjectNotPersisted("Object %s needs to be persisted first"
-                % obj)
+                                     % obj)
         filters = {
             'permission__codename': perm,
             'permission__content_type': ContentType.objects.get_for_model(obj),

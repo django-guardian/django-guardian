@@ -14,18 +14,18 @@ class CustomPKModelTest(TestCase):
 
     def setUp(self):
         self.user = get_user_model().objects.create(username='joe')
-        self.ctype = ContentType.objects.create(model='bar', app_label='fake-for-guardian-tests')
+        self.ctype = ContentType.objects.create(
+            model='bar', app_label='fake-for-guardian-tests')
 
     def test_assign_perm(self):
         assign_perm('contenttypes.change_contenttype', self.user, self.ctype)
         self.assertTrue(self.user.has_perm('contenttypes.change_contenttype',
-            self.ctype))
+                                           self.ctype))
 
     def test_remove_perm(self):
         assign_perm('contenttypes.change_contenttype', self.user, self.ctype)
         self.assertTrue(self.user.has_perm('contenttypes.change_contenttype',
-            self.ctype))
+                                           self.ctype))
         remove_perm('contenttypes.change_contenttype', self.user, self.ctype)
         self.assertFalse(self.user.has_perm('contenttypes.change_contenttype',
-            self.ctype))
-
+                                            self.ctype))
