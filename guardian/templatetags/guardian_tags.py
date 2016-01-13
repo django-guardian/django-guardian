@@ -17,6 +17,7 @@ register = template.Library()
 
 
 class ObjectPermissionsNode(template.Node):
+
     def __init__(self, for_whom, obj, context_var):
         self.for_whom = template.Variable(for_whom)
         self.obj = template.Variable(obj)
@@ -35,7 +36,7 @@ class ObjectPermissionsNode(template.Node):
             self.group = for_whom
         else:
             raise NotUserNorGroup("User or Group instance required (got %s)"
-                % for_whom.__class__)
+                                  % for_whom.__class__)
         obj = self.obj.resolve(context)
         if not obj:
             return ''
@@ -45,6 +46,7 @@ class ObjectPermissionsNode(template.Node):
 
         context[self.context_var] = perms
         return ''
+
 
 @register.tag
 def get_obj_perms(parser, token):
@@ -83,14 +85,13 @@ def get_obj_perms(parser, token):
     format = '{% get_obj_perms user/group for obj as "context_var" %}'
     if len(bits) != 6 or bits[2] != 'for' or bits[4] != 'as':
         raise template.TemplateSyntaxError("get_obj_perms tag should be in "
-            "format: %s" % format)
+                                           "format: %s" % format)
 
     for_whom = bits[1]
     obj = bits[3]
     context_var = bits[5]
     if context_var[0] != context_var[-1] or context_var[0] not in ('"', "'"):
         raise template.TemplateSyntaxError("get_obj_perms tag's context_var "
-            "argument should be in quotes")
+                                           "argument should be in quotes")
     context_var = context_var[1:-1]
     return ObjectPermissionsNode(for_whom, obj, context_var)
-

@@ -19,10 +19,11 @@ TEST_SETTINGS = dict(
 def skipUnlessTestApp(obj):
     app = 'guardian.testapp'
     return unittest.skipUnless(app in settings.INSTALLED_APPS,
-                      'app %r must be installed to run this test' % app)(obj)
+                               'app %r must be installed to run this test' % app)(obj)
 
 
 class TestDataMixin(object):
+
     def setUp(self):
         super(TestDataMixin, self).setUp()
         from django.contrib.auth.models import Group
@@ -35,7 +36,7 @@ class TestDataMixin(object):
         jack_group = Group.objects.create(pk=2, name='jackGroup')
         User.objects.get_or_create(pk=settings.ANONYMOUS_USER_ID)
         jack = User.objects.create(pk=1, username='jack', is_active=True,
-            is_superuser=False, is_staff=False)
+                                   is_superuser=False, is_staff=False)
         jack.groups.add(jack_group)
 
 
@@ -46,6 +47,7 @@ class override_settings(object):
     it's used with the ``with`` statement. In either event entering/exiting
     are called before and after, respectively, the function/block is executed.
     """
+
     def __init__(self, **kwargs):
         self.options = kwargs
         self.wrapped = settings._wrapped
@@ -61,9 +63,11 @@ class override_settings(object):
         if isinstance(test_func, type) and issubclass(test_func, TransactionTestCase):
             original_pre_setup = test_func._pre_setup
             original_post_teardown = test_func._post_teardown
+
             def _pre_setup(innerself):
                 self.enable()
                 original_pre_setup(innerself)
+
             def _post_teardown(innerself):
                 original_post_teardown(innerself)
                 self.disable()
@@ -85,4 +89,3 @@ class override_settings(object):
 
     def disable(self):
         settings._wrapped = self.wrapped
-

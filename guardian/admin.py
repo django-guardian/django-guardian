@@ -27,6 +27,7 @@ class AdminUserObjectPermissionsForm(UserObjectPermissionsForm):
     ``get_obj_perms_field_widget`` method so it return
     ``django.contrib.admin.widgets.FilteredSelectMultiple`` widget.
     """
+
     def get_obj_perms_field_widget(self):
         return FilteredSelectMultiple(_("Permissions"), False)
 
@@ -37,6 +38,7 @@ class AdminGroupObjectPermissionsForm(GroupObjectPermissionsForm):
     ``get_obj_perms_field_widget`` method so it return
     ``django.contrib.admin.widgets.FilteredSelectMultiple`` widget.
     """
+
     def get_obj_perms_field_widget(self):
         return FilteredSelectMultiple(_("Permissions"), False)
 
@@ -98,16 +100,19 @@ class GuardedModelAdminMixin(object):
         if self.include_object_permissions_urls:
             info = self.model._meta.app_label, get_model_name(self.model)
             myurls = [
-                              url(r'^(?P<object_pk>.+)/permissions/$',
-                                  view=self.admin_site.admin_view(self.obj_perms_manage_view),
-                                  name='%s_%s_permissions' % info),
-                              url(r'^(?P<object_pk>.+)/permissions/user-manage/(?P<user_id>\-?\d+)/$',
-                                  view=self.admin_site.admin_view(self.obj_perms_manage_user_view),
-                                  name='%s_%s_permissions_manage_user' % info),
-                              url(r'^(?P<object_pk>.+)/permissions/group-manage/(?P<group_id>\-?\d+)/$',
-                                  view=self.admin_site.admin_view(self.obj_perms_manage_group_view),
-                                  name='%s_%s_permissions_manage_group' % info),
-                              ]
+                url(r'^(?P<object_pk>.+)/permissions/$',
+                    view=self.admin_site.admin_view(
+                        self.obj_perms_manage_view),
+                    name='%s_%s_permissions' % info),
+                url(r'^(?P<object_pk>.+)/permissions/user-manage/(?P<user_id>\-?\d+)/$',
+                    view=self.admin_site.admin_view(
+                        self.obj_perms_manage_user_view),
+                    name='%s_%s_permissions_manage_user' % info),
+                url(r'^(?P<object_pk>.+)/permissions/group-manage/(?P<group_id>\-?\d+)/$',
+                    view=self.admin_site.admin_view(
+                        self.obj_perms_manage_group_view),
+                    name='%s_%s_permissions_manage_group' % info),
+            ]
             urls = myurls + urls
         return urls
 
@@ -147,11 +152,14 @@ class GuardedModelAdminMixin(object):
         except ImportError:
             # django < 1.7
             from django.contrib.admin.util import unquote
-        obj = get_object_or_404(self.get_queryset(request), pk=unquote(object_pk))
+        obj = get_object_or_404(self.get_queryset(
+            request), pk=unquote(object_pk))
         users_perms = OrderedDict(
             sorted(
-                get_users_with_perms(obj, attach_perms=True, with_group_users=False).items(),
-                key=lambda user: getattr(user[0], get_user_model().USERNAME_FIELD)
+                get_users_with_perms(obj, attach_perms=True,
+                                     with_group_users=False).items(),
+                key=lambda user: getattr(
+                    user[0], get_user_model().USERNAME_FIELD)
             )
         )
 
@@ -421,8 +429,10 @@ class GuardedModelAdmin(GuardedModelAdminMixin, admin.ModelAdmin):
 class UserManage(forms.Form):
     user = forms.CharField(label=_("User identification"),
                            max_length=200,
-                           error_messages={'does_not_exist': _("This user does not exist")},
-                           help_text=_('Enter a value compatible with User.USERNAME_FIELD')
+                           error_messages={'does_not_exist': _(
+                               "This user does not exist")},
+                           help_text=_(
+                               'Enter a value compatible with User.USERNAME_FIELD')
                            )
 
     def clean_user(self):
@@ -445,7 +455,7 @@ class UserManage(forms.Form):
 
 class GroupManage(forms.Form):
     group = forms.CharField(max_length=80, error_messages={'does_not_exist':
-                            _("This group does not exist")})
+                                                           _("This group does not exist")})
 
     def clean_group(self):
         """

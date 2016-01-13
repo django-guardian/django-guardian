@@ -17,6 +17,7 @@ from guardian.testapp.tests.conf import skipUnlessTestApp
 User = get_user_model()
 user_module_name = get_model_name(User)
 
+
 @skipUnlessTestApp
 class OrphanedObjectPermissionsTest(TestCase):
 
@@ -24,11 +25,12 @@ class OrphanedObjectPermissionsTest(TestCase):
         # Create objects for which we would assing obj perms
         self.target_user1 = User.objects.create(username='user1')
         self.target_group1 = Group.objects.create(name='group1')
-        self.target_obj1 = ContentType.objects.create(model='foo', app_label='fake-for-guardian-tests')
-        self.target_obj2 = ContentType.objects.create(model='bar', app_label='fake-for-guardian-tests')
+        self.target_obj1 = ContentType.objects.create(
+            model='foo', app_label='fake-for-guardian-tests')
+        self.target_obj2 = ContentType.objects.create(
+            model='bar', app_label='fake-for-guardian-tests')
         # Required if MySQL backend is used :/
         create_permissions(auth_app, [], 1)
-
 
         self.user = User.objects.create(username='user')
         self.group = Group.objects.create(name='group')
@@ -44,7 +46,7 @@ class OrphanedObjectPermissionsTest(TestCase):
         }
         obj_perms_count = sum([len(val) for key, val in target_perms.items()])
         for target, perms in target_perms.items():
-            target.__old_pk = target.pk # Store pkeys
+            target.__old_pk = target.pk  # Store pkeys
             for perm in perms:
                 assign_perm(perm, self.user, target)
 
@@ -77,7 +79,7 @@ class OrphanedObjectPermissionsTest(TestCase):
             self.target_obj2: ["change_contenttype"],
         }
         for target, perms in target_perms.items():
-            target.__old_pk = target.pk # Store pkeys
+            target.__old_pk = target.pk  # Store pkeys
             for perm in perms:
                 assign_perm(perm, self.user, target)
 

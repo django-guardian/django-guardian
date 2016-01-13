@@ -17,8 +17,10 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='GroupObjectPermission',
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False, auto_created=True, verbose_name='ID')),
-                ('object_pk', models.CharField(max_length=255, verbose_name='object ID')),
+                ('id', models.AutoField(primary_key=True,
+                                        serialize=False, auto_created=True, verbose_name='ID')),
+                ('object_pk', models.CharField(
+                    max_length=255, verbose_name='object ID')),
                 ('content_type', models.ForeignKey(to='contenttypes.ContentType')),
                 ('group', models.ForeignKey(to='auth.Group')),
                 ('permission', models.ForeignKey(to='auth.Permission')),
@@ -30,8 +32,10 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='UserObjectPermission',
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False, auto_created=True, verbose_name='ID')),
-                ('object_pk', models.CharField(max_length=255, verbose_name='object ID')),
+                ('id', models.AutoField(primary_key=True,
+                                        serialize=False, auto_created=True, verbose_name='ID')),
+                ('object_pk', models.CharField(
+                    max_length=255, verbose_name='object ID')),
                 ('content_type', models.ForeignKey(to='contenttypes.ContentType')),
                 ('permission', models.ForeignKey(to='auth.Permission')),
                 ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),

@@ -72,10 +72,10 @@ class TestDirectUserPermissions(TestCase):
         assign_perm('change_project', self.joe, self.project)
         assign_perm('change_project', jane, self.project)
         self.assertEqual(get_users_with_perms(self.project, attach_perms=True),
-            {
-                self.joe: ['add_project', 'change_project'],
-                jane: ['change_project'],
-            })
+                         {
+            self.joe: ['add_project', 'change_project'],
+            jane: ['change_project'],
+        })
 
     def test_get_users_with_perms_plus_groups(self):
         User.objects.create_user('john', 'john@foobar.com', 'john')
@@ -86,10 +86,10 @@ class TestDirectUserPermissions(TestCase):
         assign_perm('change_project', group, self.project)
         assign_perm('change_project', jane, self.project)
         self.assertEqual(get_users_with_perms(self.project, attach_perms=True),
-            {
-                self.joe: ['add_project', 'change_project'],
-                jane: ['change_project'],
-            })
+                         {
+            self.joe: ['add_project', 'change_project'],
+            jane: ['change_project'],
+        })
 
     def test_get_objects_for_user(self):
         foo = Project.objects.create(name='foo')
@@ -99,7 +99,8 @@ class TestDirectUserPermissions(TestCase):
         assign_perm('change_project', self.joe, bar)
 
         result = get_objects_for_user(self.joe, 'testapp.add_project')
-        self.assertEqual(sorted(p.pk for p in result), sorted([foo.pk, bar.pk]))
+        self.assertEqual(sorted(p.pk for p in result),
+                         sorted([foo.pk, bar.pk]))
 
     def test_get_all_permissions(self):
         foo = Project.objects.create(name='foo')
@@ -174,10 +175,10 @@ class TestDirectGroupPermissions(TestCase):
         assign_perm('change_project', self.group, self.project)
         assign_perm('change_project', devs, self.project)
         self.assertEqual(get_groups_with_perms(self.project, attach_perms=True),
-            {
-                self.group: ['add_project', 'change_project'],
-                devs: ['change_project'],
-            })
+                         {
+            self.group: ['add_project', 'change_project'],
+            devs: ['change_project'],
+        })
 
     def test_get_objects_for_group(self):
         foo = Project.objects.create(name='foo')
@@ -187,7 +188,8 @@ class TestDirectGroupPermissions(TestCase):
         assign_perm('change_project', self.group, bar)
 
         result = get_objects_for_group(self.group, 'testapp.add_project')
-        self.assertEqual(sorted(p.pk for p in result), sorted([foo.pk, bar.pk]))
+        self.assertEqual(sorted(p.pk for p in result),
+                         sorted([foo.pk, bar.pk]))
 
 
 @skipUnlessTestApp
@@ -208,8 +210,7 @@ class TestMixedDirectAndGenericObjectPermission(TestCase):
         assign_perm('change_mixed', group, self.mixed)
         assign_perm('change_mixed', jane, self.mixed)
         self.assertEqual(get_users_with_perms(self.mixed, attach_perms=True),
-            {
-                self.joe: ['add_mixed', 'change_mixed'],
-                jane: ['change_mixed'],
-            })
-
+                         {
+            self.joe: ['add_mixed', 'change_mixed'],
+            jane: ['change_mixed'],
+        })

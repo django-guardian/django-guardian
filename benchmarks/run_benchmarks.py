@@ -39,7 +39,7 @@ OBJECTS_COUNT = 100
 OBJECTS_WIHT_PERMS_COUNT = 100
 
 
-def random_string(length=25, chars=string.ascii_letters+string.digits):
+def random_string(length=25, chars=string.ascii_letters + string.digits):
     return ''.join(random.choice(chars) for i in range(length))
 
 
@@ -53,6 +53,7 @@ def get_model_name(model):
 
 
 class Call(object):
+
     def __init__(self, args, kwargs, start=None, finish=None):
         self.args = args
         self.kwargs = kwargs
@@ -85,14 +86,14 @@ class Timed(object):
                 func.calls.append(call)
                 if self.action:
                     print(" -> [%s] Done (Total time: %s)" % (self.action,
-                        call.delta()))
+                                                              call.delta()))
         return wrapper
 
 
 class Benchmark(object):
 
     def __init__(self, name, users_count, objects_count,
-            objects_with_perms_count, model, subquery):
+                 objects_with_perms_count, model, subquery):
         self.name = name
         self.users_count = users_count
         self.objects_count = objects_count
@@ -114,13 +115,13 @@ class Benchmark(object):
     @Timed("Creating users")
     def create_users(self):
         User.objects.bulk_create(User(id=x, username=random_string().capitalize())
-            for x in range(self.users_count))
+                                 for x in range(self.users_count))
 
     @Timed("Creating objects")
     def create_objects(self):
         Model = self.Model
         Model.objects.bulk_create(Model(id=x, name=random_string(20))
-            for x in range(self.objects_count))
+                                  for x in range(self.objects_count))
 
     @Timed("Grant permissions")
     def grant_perms(self):
@@ -187,6 +188,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-

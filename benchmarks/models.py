@@ -7,7 +7,6 @@ class TestModel(models.Model):
     name = models.CharField(max_length=128)
 
 
-
 class DirectUser(UserObjectPermissionBase):
     content_object = models.ForeignKey('TestDirectModel')
 
@@ -18,4 +17,3 @@ class DirectGroup(GroupObjectPermissionBase):
 
 class TestDirectModel(models.Model):
     name = models.CharField(max_length=128)
-

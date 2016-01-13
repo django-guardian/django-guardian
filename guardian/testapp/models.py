@@ -14,6 +14,7 @@ class Post(models.Model):
 
 
 class DynamicAccessor(object):
+
     def __init__(self):
         pass
 
@@ -71,5 +72,7 @@ class NonIntPKModel(models.Model):
 
 
 from django.contrib.auth.models import AbstractUser
+
+
 class CustomUser(AbstractUser, GuardianUserMixin):
     custom_id = models.AutoField(primary_key=True)

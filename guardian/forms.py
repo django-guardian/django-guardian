@@ -191,4 +191,3 @@ class GroupObjectPermissionsForm(BaseObjectPermissionsForm):
 
         for perm in perms:
             assign_perm(perm, self.group, self.obj)
-
