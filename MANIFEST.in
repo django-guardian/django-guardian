@@ -2,15 +2,33 @@ include CHANGES
 include LICENSE
 include README.rst
 include MANIFEST.in
-include extras.py
-include tests.py
+include *.py
 include run_test_and_report.sh
+include *.txt
+include AUTHORS
+include tox.ini
 recursive-include guardian *.py
 recursive-include guardian/locale *.po *.mo
 recursive-include guardian/fixtures *.json
 recursive-include guardian/templates *.html
 recursive-include guardian/tests/templates *.html
-recursive-include docs *
+recursive-include docs *.bat
+recursive-include docs *.conf
+recursive-include docs *.css
+recursive-include docs *.eot
+recursive-include docs *.html
+recursive-include docs *.js
+recursive-include docs *.py
+recursive-include docs *.rb
+recursive-include docs *.rst
+recursive-include docs *.sass
+recursive-include docs *.sh
+recursive-include docs *.svg
+recursive-include docs *.ttf
+recursive-include docs *.woff
+recursive-include docs Makefile
 recursive-exclude example_project *
 recursive-exclude docs/build *
 recursive-exclude benchmarks *
+recursive-include guardian *.html
+recursive-include guardian *.svg
