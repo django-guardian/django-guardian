@@ -27,8 +27,11 @@ recursive-include docs *.svg
 recursive-include docs *.ttf
 recursive-include docs *.woff
 recursive-include docs Makefile
-recursive-exclude example_project *
+recursive-include example_project *.css
+recursive-include example_project *.html
+recursive-include example_project *.js
+recursive-include example_project *.png
+recursive-include example_project *.txt
 recursive-exclude docs/build *
-recursive-exclude benchmarks *
 recursive-include guardian *.html
 recursive-include guardian *.svg
