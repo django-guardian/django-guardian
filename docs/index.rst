@@ -9,8 +9,8 @@
 
 **Documentation**:
 
-.. image:: https://secure.travis-ci.org/lukaszb/django-guardian.png?branch=master
-  :target: http://travis-ci.org/lukaszb/django-guardian
+.. image:: https://secure.travis-ci.org/django-guardian/django-guardian.png?branch=master
+  :target: http://travis-ci.org/django-guardian/django-guardian
 
 .. toctree::
     :maxdepth: 2
