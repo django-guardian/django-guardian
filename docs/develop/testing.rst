@@ -105,8 +105,8 @@ Travis CI
 
 .. versionadded:: 1.0.4
 
-.. image:: https://secure.travis-ci.org/lukaszb/django-guardian.png?branch=master
-  :target: http://travis-ci.org/lukaszb/django-guardian
+.. image:: https://secure.travis-ci.org/django-guardian/django-guardian.png?branch=master
+  :target: http://travis-ci.org/django-guardian/django-guardian
 
 Recently we have added support for Travis_, continuous integration server so it
 is even more easy to follow if test fails with new commits: http://travis-ci.org/#!/lukaszb/django-guardian.
