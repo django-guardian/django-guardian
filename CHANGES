@@ -1,5 +1,5 @@
 Release 1.4.1 (Jan 10, 2016)
-===========================
+============================
 
 * Fix broken documentation.
 * Fix setup.py errors (#387).
