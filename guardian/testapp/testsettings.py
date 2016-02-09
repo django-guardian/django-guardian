@@ -7,7 +7,7 @@ env = environ.Env()
 
 DEBUG = False
 
-ANONYMOUS_USER_ID = -1
+ANONYMOUS_USER_NAME = "AnonymousUser"
 
 AUTH_USER_MODEL = "testapp.CustomUser"
 GUARDIAN_MONKEY_PATCH = False

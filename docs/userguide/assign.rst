@@ -151,12 +151,12 @@ processing the signal.
         to User.save.
         """
         user, created = kwargs["instance"], kwargs["created"]
-        if created and user.pk != settings.ANONYMOUS_USER_ID:
+        if created and user.username != settings.ANONYMOUS_USER_NAME:
             from profiles.models import Profile
             profile = Profile.objects.create(pk=user.pk, user=user, creator=user)
             assign_perm("change_user", user, user)
             assign_perm("change_profile", user, profile)
 
-The check for ``user.pk != settings.ANONYMOUS_USER_ID`` is required otherwise
+The check for ``user.username != settings.ANONYMOUS_USER_NAME`` is required otherwise
 the ``assign_perm`` calls will occur when the Anonymous User is created,
 however before there are any permissions available.

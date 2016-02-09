@@ -14,6 +14,5 @@ class SystemCheckTestCase(TestCase):
         with self.settings(
                 AUTHENTICATION_BACKENDS=(
                     'django.contrib.auth.backends.ModelBackend',),
-                ANONYMOUS_USER_ID=None,
         ):
-            self.assertEqual(len(check_settings(None)), 2)
+            self.assertEqual(len(check_settings(None)), 1)

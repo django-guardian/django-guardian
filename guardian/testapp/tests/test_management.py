@@ -19,7 +19,7 @@ class TestGetAnonymousUser(TestCase):
 
         path = 'guardian.testapp.tests.test_management.mocked_get_init_anon'
         guardian_settings.GET_INIT_ANONYMOUS_USER = path
-        guardian_settings.ANONYMOUS_USER_ID = 219
+        guardian_settings.ANONYMOUS_USER_NAME = "anonymous"
         User = get_user_model()
 
         anon = mocked_get_init_anon.return_value = mock.Mock()
@@ -28,11 +28,9 @@ class TestGetAnonymousUser(TestCase):
 
         mocked_get_init_anon.assert_called_once_with(User)
 
-        self.assertEqual(anon.pk, 219)
         anon.save.assert_called_once_with()
 
     def test_get_anonymous_user(self):
         anon = get_anonymous_user()
         self.assertFalse(anon.has_usable_password())
         self.assertEqual(anon.username, "AnonymousUser")
-        self.assertEqual(anon.pk, -1)

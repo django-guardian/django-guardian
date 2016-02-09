@@ -27,6 +27,4 @@ INSTALLED_APPS = (
 
 DJALOG_LEVEL = 40
 
-ANONYMOUS_USER_ID = -1
-
 DATABASES = {'default': env.db(default="sqlite:///")}

@@ -16,7 +16,7 @@ def get_init_anonymous_user(User):
     :param User: User model - result of ``django.contrib.auth.get_user_model``.
     """
     kwargs = {
-        User.USERNAME_FIELD: guardian_settings.ANONYMOUS_DEFAULT_USERNAME_VALUE
+        User.USERNAME_FIELD: guardian_settings.ANONYMOUS_USER_NAME
     }
     user = User(**kwargs)
     user.set_unusable_password()
@@ -29,17 +29,15 @@ def create_anonymous_user(sender, **kwargs):
     """
     User = get_user_model()
     try:
-        User.objects.get(pk=guardian_settings.ANONYMOUS_USER_ID)
+        User.objects.get(username=guardian_settings.ANONYMOUS_USER_NAME)
     except User.DoesNotExist:
         retrieve_anonymous_function = import_string(
             guardian_settings.GET_INIT_ANONYMOUS_USER)
         user = retrieve_anonymous_function(User)
-        # Always set pk to the one pointed at settings
-        user.pk = guardian_settings.ANONYMOUS_USER_ID
         user.save()
 
 # Only create an anonymous user if support is enabled.
-if guardian_settings.ANONYMOUS_USER_ID is not None:
+if guardian_settings.ANONYMOUS_USER_NAME is not None:
     # Django 1.7+ uses post_migrate signal
     from django.apps import apps
     guardian_app = apps.get_app_config('guardian')

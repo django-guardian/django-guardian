@@ -17,8 +17,4 @@ def check_settings(app_configs, **kwargs):
                "`AUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend', "
                "'guardian.backends.ObjectPermissionBackend')`.")
         checks.append(Warning(msg, id='guardian.W001'))
-    if not settings.ANONYMOUS_USER_ID:
-        msg = ("No anonymous user ID is defined. Guardian supports anonymous user object permissions, therefore "
-               "this needs to be specified in settings: `ANONYMOUS_USER_ID = -1`.")
-        checks.append(Warning(msg, id='guardian.W002'))
     return checks

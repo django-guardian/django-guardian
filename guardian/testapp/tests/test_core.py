@@ -28,7 +28,7 @@ class CustomUserTests(TestCase):
         create_anonymous_user(object())
         self.assertEqual(1, User.objects.all().count())
         anonymous = User.objects.all()[0]
-        self.assertEqual(anonymous.pk, settings.ANONYMOUS_USER_ID)
+        self.assertEqual(anonymous.username, settings.ANONYMOUS_USER_NAME)
 
 
 class ObjectPermissionTestCase(TestCase):
@@ -39,15 +39,8 @@ class ObjectPermissionTestCase(TestCase):
         self.user.groups.add(self.group)
         self.ctype = ContentType.objects.create(
             model='bar', app_label='fake-for-guardian-tests')
-        try:
-            self.anonymous_user = User.objects.get(
-                pk=settings.ANONYMOUS_USER_ID)
-        except User.DoesNotExist:
-            self.anonymous_user = User(
-                id=settings.ANONYMOUS_USER_ID,
-                username='AnonymousUser',
-            )
-            self.anonymous_user.save()
+        self.anonymous_user = User.objects.get(
+            username=settings.ANONYMOUS_USER_NAME)
 
 
 class ObjectPermissionCheckerTest(ObjectPermissionTestCase):

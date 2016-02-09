@@ -40,10 +40,6 @@ We need to hook ``django-guardian`` into our project.
           'guardian.backends.ObjectPermissionBackend',
       )
 
-3. Configure anonymous user ID in your `settings.py`::
-
-     ANONYMOUS_USER_ID = -1
-
 4. Create ``guardian`` database tables by running::
 
      python manage.py migrate

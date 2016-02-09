@@ -33,9 +33,9 @@ abspath = lambda *p: os.path.abspath(os.path.join(*p))
 def get_anonymous_user():
     """
     Returns ``User`` instance (not ``AnonymousUser``) depending on
-    ``ANONYMOUS_USER_ID`` configuration.
+    ``ANONYMOUS_USER_NAME`` configuration.
     """
-    return get_user_model().objects.get(pk=guardian_settings.ANONYMOUS_USER_ID)
+    return get_user_model().objects.get(username=guardian_settings.ANONYMOUS_USER_NAME)
 
 
 def get_identity(identity):

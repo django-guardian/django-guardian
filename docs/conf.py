@@ -20,7 +20,6 @@ import os
 sys.path.insert(0, os.path.abspath('..'))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__))))
 os.environ['DJANGO_SETTINGS_MODULE'] = 'guardian.testapp.testsettings'
-ANONYMOUS_USER_ID = -1  # Required by guardian
 guardian = __import__('guardian')
 
 import django
