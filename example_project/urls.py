@@ -1,6 +1,7 @@
 from guardian.compat import include, url, handler404, handler500
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.auth.views import logout
 
 __all__ = ['handler404', 'handler500']
 
@@ -9,8 +10,7 @@ admin.autodiscover()
 
 urlpatterns = [
     (r'^admin/', include(admin.site.urls)),
-    url(r'^logout/$', 'django.contrib.auth.views.logout', {'next_page': '/'},
-        name='logout'),
+    url(r'^logout/$', logout, {'next_page': '/'}, name='logout'),
     (r'^', include('posts.urls')),
 ]
 
