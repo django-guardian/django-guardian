@@ -23,7 +23,7 @@ env:
  - DJANGO_VERSION=master DATABASE_URL=sqlite://
 
 install:
-  - travis_retry pip install -q mock==1.0.1 pytest pytest-django pytest-cov
+  - travis_retry pip install -q mock==1.0.1 pytest pytest-django pytest-cov django-environ
 # Install django master or version
   - bash -c "if [[ "$DJANGO_VERSION" == 'master' ]]; then pip install 'https://github.com/django/django/archive/master.tar.gz'; else pip install Django==$DJANGO_VERSION; fi; "
 # Install database drivers
