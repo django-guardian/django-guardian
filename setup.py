@@ -11,14 +11,6 @@ readme_file = os.path.join(os.path.dirname(__file__), 'README.rst')
 with open(version_file, 'r') as f:
     long_description = f.readline().strip()
 
-tests_require = ['mock', 'django-environ']
-
-extra_kwargs = {}
-if sys.version_info >= (3,):
-    extra_kwargs = {'use_2to3': True}
-elif sys.version_info < (2, 7):
-    tests_require.append('unittest2')
-
 setup(
     name='django-guardian',
     version=version,
@@ -32,11 +24,12 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     license='BSD',
+    setup_requires=['pytest-runner'],
     install_requires=[
         'Django >= 1.7',
         'six',
     ],
-    tests_require=tests_require,
+    tests_require=['mock', 'django-environ', 'pytest', 'pytest-django'],
     classifiers=['Development Status :: 5 - Production/Stable',
                  'Environment :: Web Environment',
                  'Framework :: Django',
@@ -52,5 +45,4 @@ setup(
                  ],
     test_suite='tests.main',
     cmdclass={'flakes': RunFlakesCommand},
-    **extra_kwargs
 )
