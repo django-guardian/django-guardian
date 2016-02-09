@@ -1,11 +1,11 @@
 from __future__ import unicode_literals
-from django.conf import settings
+
 from django.contrib.auth.models import Group, AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.template import Template, Context, TemplateSyntaxError
 from django.test import TestCase
 
-from guardian.compat import get_user_model
+from guardian.compat import get_user_model, template_debug_getter, template_debug_setter
 from guardian.exceptions import NotUserNorGroup
 from guardian.models import UserObjectPermission, GroupObjectPermission
 
@@ -82,10 +82,10 @@ class GetObjPermsTagTest(TestCase):
         context = {'some_obj': ContentType(), 'contenttype': self.ctype}
         # This test would raise TemplateSyntaxError instead of NotUserNorGroup
         # if TEMPLATE_DEBUG is set to True during tests
-        tmp = settings.TEMPLATE_DEBUG
-        settings.TEMPLATE_DEBUG = False
+        tmp = template_debug_getter()
+        template_debug_setter(False)
         self.assertRaises(NotUserNorGroup, render, template, context)
-        settings.TEMPLATE_DEBUG = tmp
+        template_debug_setter(tmp)
 
     def test_superuser(self):
         user = User.objects.create(username='superuser', is_superuser=True)

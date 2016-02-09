@@ -7,7 +7,6 @@ from django.contrib.auth.models import Permission
 from django.contrib.auth.models import AnonymousUser
 import six
 import sys
-
 from importlib import import_module
 
 from django.conf.urls import url, include, handler404, handler500
@@ -129,3 +128,15 @@ def get_model_name(model):
     # model._meta.module_name is deprecated in django version 1.7 and removed
     # in django version 1.8.  It is replaced by model._meta.model_name
     return model._meta.model_name
+
+
+def template_debug_setter(value):
+    if hasattr(settings, 'TEMPLATE_DEBUG'):
+        settings.TEMPLATE_DEBUG = value
+    settings.TEMPLATES[0]['OPTIONS']['DEBUG'] = value
+
+
+def template_debug_getter():
+    if hasattr(settings, 'TEMPLATE_DEBUG'):
+        return settings.TEMPLATE_DEBUG
+    return settings.TEMPLATES[0]['OPTIONS'].get('DEBUG', False)
