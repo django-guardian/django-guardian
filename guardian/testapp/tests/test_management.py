@@ -1,9 +1,9 @@
 from __future__ import absolute_import
 from __future__ import unicode_literals
+from django.test import TestCase
 
 from guardian.compat import get_user_model
-from guardian.compat import mock
-from guardian.compat import unittest
+import mock
 from guardian.management import create_anonymous_user
 from guardian.utils import get_anonymous_user
 
@@ -11,7 +11,7 @@ from guardian.utils import get_anonymous_user
 mocked_get_init_anon = mock.Mock()
 
 
-class TestGetAnonymousUser(unittest.TestCase):
+class TestGetAnonymousUser(TestCase):
 
     @mock.patch('guardian.management.guardian_settings')
     def test_uses_custom_function(self, guardian_settings):

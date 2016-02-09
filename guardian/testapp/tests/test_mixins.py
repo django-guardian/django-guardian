@@ -9,7 +9,7 @@ from django.test.client import RequestFactory
 from django.views.generic import View
 
 from guardian.compat import get_user_model
-from guardian.compat import mock
+import mock
 from guardian.mixins import LoginRequiredMixin
 from guardian.mixins import PermissionRequiredMixin
 
