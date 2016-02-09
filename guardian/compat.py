@@ -10,7 +10,7 @@ import sys
 
 from importlib import import_module
 
-from django.conf.urls import url, patterns, include, handler404, handler500
+from django.conf.urls import url, include, handler404, handler500
 
 __all__ = [
     'User',
