@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 from datetime import datetime
 
+from django.contrib.auth.base_user import AbstractBaseUser
 from django.db import models
 from django.contrib.admin.models import LogEntry
 
@@ -76,3 +77,14 @@ from django.contrib.auth.models import AbstractUser
 
 class CustomUser(AbstractUser, GuardianUserMixin):
     custom_id = models.AutoField(primary_key=True)
+
+
+class CustomUsernameUser(AbstractBaseUser, GuardianUserMixin):
+    email = models.EmailField(max_length=100, unique=True)
+    USERNAME_FIELD = 'email'
+
+    def get_full_name(self):
+        return self.email
+
+    def get_short_name(self):
+        return self.email
