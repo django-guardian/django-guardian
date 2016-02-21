@@ -1,9 +1,9 @@
 from __future__ import unicode_literals
 from datetime import datetime
 
-from django.contrib.auth.base_user import AbstractBaseUser
 from django.db import models
 from django.contrib.admin.models import LogEntry
+from django.contrib.auth.models import AbstractUser, AbstractBaseUser
 
 from guardian.mixins import GuardianUserMixin
 from guardian.models import UserObjectPermissionBase
@@ -70,9 +70,6 @@ class NonIntPKModel(models.Model):
     be returned have non-integer primary keys.
     """
     char_pk = models.CharField(primary_key=True, max_length=128)
-
-
-from django.contrib.auth.models import AbstractUser
 
 
 class CustomUser(AbstractUser, GuardianUserMixin):
