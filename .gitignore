@@ -18,6 +18,7 @@ dist
 example_project/media
 example_project/conf/*.py
 .idea/
+.eggs/
 
 # WebDAV remote filesystem
 .DAV
