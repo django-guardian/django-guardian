@@ -17,6 +17,8 @@ class BaseObjectPermissionsForm(forms.Form):
 
     def __init__(self, obj, *args, **kwargs):
         """
+        Constructor for BaseObjectPermissionsForm.
+
         :param obj: Any instance which form would use to manage object
           permissions"
         """

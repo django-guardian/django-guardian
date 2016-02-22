@@ -32,6 +32,8 @@ class ObjectPermissionChecker(object):
 
     def __init__(self, user_or_group=None):
         """
+        Constructor for ObjectPermissionChecker.
+
         :param user_or_group: should be an ``User``, ``AnonymousUser`` or
           ``Group`` instance
         """
