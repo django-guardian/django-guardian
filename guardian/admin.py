@@ -119,9 +119,11 @@ class GuardedModelAdminMixin(object):
     def get_obj_perms_base_context(self, request, obj):
         """
         Returns context dictionary with common admin and object permissions
-        related content.
+        related content. It uses AdminSite.each_context (available in Django >= 1.7,
+        making sure all required template vars are in the context.
         """
-        context = {
+        context = self.admin_site.each_context(request) if hasattr(self.admin_site, 'each_context') else {}
+        context.update( {
             'adminform': {'model_admin': self},
             'media': self.media,
             'object': obj,
@@ -131,7 +133,7 @@ class GuardedModelAdminMixin(object):
             'has_change_permission': self.has_change_permission(request, obj),
             'model_perms': get_perms_for_model(obj),
             'title': _("Object permissions"),
-        }
+        })
         return context
 
     def obj_perms_manage_view(self, request, object_pk):
