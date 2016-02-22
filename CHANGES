@@ -1,3 +1,17 @@
+Release 1.4.2 (UNRELEASED)
+==========================
+
+* Test against django-master (Django 1.10 - not released).
+* Django 1.10 fixes.
+* Fixes for documentation.
+* PEP8 fixes.
+* Fix distributed files in MANIFEST.in
+* Use pytest for tests.
+* Add dependancy on django-environ.
+* Don't use ANONYMOUS_USER_ID. Uses ANONYMOUS_DEFAULT_USERNAME
+  and USERNAME_FIELD instead.
+
+
 Release 1.4.1 (Jan 10, 2016)
 ============================
 
