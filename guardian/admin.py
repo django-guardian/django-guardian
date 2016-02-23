@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import django
 from django import forms
 from django.conf import settings
 from guardian.compat import url
@@ -119,10 +120,13 @@ class GuardedModelAdminMixin(object):
     def get_obj_perms_base_context(self, request, obj):
         """
         Returns context dictionary with common admin and object permissions
-        related content. It uses AdminSite.each_context (available in Django >= 1.7,
+        related content. It uses AdminSite.each_context (available in Django >= 1.8,
         making sure all required template vars are in the context.
         """
-        context = self.admin_site.each_context(request) if hasattr(self.admin_site, 'each_context') else {}
+        if django.VERSION >= (1, 8):
+            context = self.admin_site.each_context(request)
+        else:
+            context = {}
         context.update( {
             'adminform': {'model_admin': self},
             'media': self.media,
