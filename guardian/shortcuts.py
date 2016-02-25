@@ -149,6 +149,7 @@ def get_perms(user_or_group, obj):
     check = ObjectPermissionChecker(user_or_group)
     return check.get_perms(obj)
 
+
 def get_user_perms(user, obj):
     """
     Returns permissions for given user and object pair, as list of
@@ -157,6 +158,7 @@ def get_user_perms(user, obj):
     check = ObjectPermissionChecker(user)
     return check.get_user_perms(obj)
 
+
 def get_group_perms(user_or_group, obj):
     """
     Returns permissions for given user/group and object pair, as list of
@@ -164,6 +166,7 @@ def get_group_perms(user_or_group, obj):
     """
     check = ObjectPermissionChecker(user_or_group)
     return check.get_group_perms(obj)
+
 
 def get_perms_for_model(cls):
     """
