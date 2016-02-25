@@ -150,6 +150,24 @@ def get_perms(user_or_group, obj):
     return check.get_perms(obj)
 
 
+def get_user_perms(user, obj):
+    """
+    Returns permissions for given user and object pair, as list of
+    strings, only those assigned directly for the user.
+    """
+    check = ObjectPermissionChecker(user)
+    return check.get_user_perms(obj)
+
+
+def get_group_perms(user_or_group, obj):
+    """
+    Returns permissions for given user/group and object pair, as list of
+    strings. It returns only those which are inferred through groups.
+    """
+    check = ObjectPermissionChecker(user_or_group)
+    return check.get_group_perms(obj)
+
+
 def get_perms_for_model(cls):
     """
     Returns queryset of all Permission objects for the given class. It is
@@ -236,7 +254,11 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
         for user in get_users_with_perms(obj,
                                          with_group_users=with_group_users,
                                          with_superusers=with_superusers):
-            users[user] = sorted(get_perms(user, obj))
+            # TODO: Support the case of set with_group_users but not with_superusers.
+            if with_group_users or with_superusers:
+                users[user] = sorted(get_perms(user, obj))
+            else:
+                users[user] = sorted(get_user_perms(user, obj))
         return users
 
 
@@ -288,7 +310,7 @@ def get_groups_with_perms(obj, attach_perms=False):
         groups = {}
         for group in get_groups_with_perms(obj):
             if group not in groups:
-                groups[group] = sorted(get_perms(group, obj))
+                groups[group] = sorted(get_group_perms(group, obj))
         return groups
 
 
