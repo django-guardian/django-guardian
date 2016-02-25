@@ -1,3 +1,4 @@
+guardian/version.py
 *.pyc
 *.log
 *.egg

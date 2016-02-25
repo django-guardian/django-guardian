@@ -10,6 +10,7 @@ Release 1.4.2 (UNRELEASED)
 * Add dependancy on django-environ.
 * Don't use ANONYMOUS_USER_ID. Uses ANONYMOUS_DEFAULT_USERNAME
   and USERNAME_FIELD instead.
+* Use setuptools_scm for versioning.
 
 
 Release 1.4.1 (Jan 10, 2016)

@@ -3,17 +3,23 @@ import sys
 from setuptools import setup, find_packages
 from extras import RunFlakesCommand
 
-version_file = os.path.join(os.path.dirname(__file__), 'VERSION.txt')
-with open(version_file, 'r') as f:
-    version = f.readline().strip()
+
+def version_scheme(version):
+    from setuptools_scm.version import guess_next_dev_version
+    version = guess_next_dev_version(version)
+    return version.lstrip("v")
 
 readme_file = os.path.join(os.path.dirname(__file__), 'README.rst')
-with open(version_file, 'r') as f:
+with open(readme_file, 'r') as f:
     long_description = f.readline().strip()
 
 setup(
     name='django-guardian',
-    version=version,
+    use_scm_version={
+        'write_to': "guardian/version.py",
+        'version_scheme': version_scheme,
+    },
+    setup_requires=['setuptools_scm', 'pytest-runner'],
     url='http://github.com/django-guardian/django-guardian',
     author='Lukasz Balcerzak',
     author_email='lukaszbalcerzak@gmail.com',
@@ -24,7 +30,6 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     license='BSD',
-    setup_requires=['pytest-runner'],
     install_requires=[
         'Django >= 1.7',
         'six',
