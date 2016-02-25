@@ -15,7 +15,8 @@ from django.utils.translation import ugettext, ugettext_lazy as _
 from guardian.compat import OrderedDict, get_user_model, get_model_name
 from guardian.forms import UserObjectPermissionsForm
 from guardian.forms import GroupObjectPermissionsForm
-from guardian.shortcuts import get_perms
+from guardian.shortcuts import get_user_perms
+from guardian.shortcuts import get_group_perms
 from guardian.shortcuts import get_users_with_perms
 from guardian.shortcuts import get_groups_with_perms
 from guardian.shortcuts import get_perms_for_model
@@ -265,7 +266,7 @@ class GuardedModelAdminMixin(object):
 
         context = self.get_obj_perms_base_context(request, obj)
         context['user_obj'] = user
-        context['user_perms'] = get_perms(user, obj)
+        context['user_perms'] = get_user_perms(user, obj)
         context['form'] = form
 
         request.current_app = self.admin_site.name
@@ -323,7 +324,7 @@ class GuardedModelAdminMixin(object):
 
         context = self.get_obj_perms_base_context(request, obj)
         context['group_obj'] = group
-        context['group_perms'] = get_perms(group, obj)
+        context['group_perms'] = get_group_perms(group, obj)
         context['form'] = form
 
         request.current_app = self.admin_site.name
