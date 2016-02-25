@@ -234,7 +234,8 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
         # TODO: Do not hit db for each user!
         users = {}
         for user in get_users_with_perms(obj,
-                                         with_group_users=with_group_users):
+                                         with_group_users=with_group_users,
+                                         with_superusers=with_superusers):
             users[user] = sorted(get_perms(user, obj))
         return users
 
