@@ -2,6 +2,7 @@ from guardian.compat import include, url, handler404, handler500
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth.views import logout
+from django.conf.urls import url
 
 __all__ = ['handler404', 'handler500']
 
@@ -9,13 +10,13 @@ __all__ = ['handler404', 'handler500']
 admin.autodiscover()
 
 urlpatterns = [
-    (r'^admin/', include(admin.site.urls)),
+    url(r'^admin/', include(admin.site.urls)),
     url(r'^logout/$', logout, {'next_page': '/'}, name='logout'),
-    (r'^', include('posts.urls')),
+    url(r'^', include('posts.urls')),
 ]
 
 if 'grappelli' in settings.INSTALLED_APPS:
-    urlpatterns += [(r'^grappelli/', include('grappelli.urls')), ]
+    urlpatterns += [url(r'^grappelli/', include('grappelli.urls')), ]
 
 if 'rosetta' in settings.INSTALLED_APPS:
-    urlpatterns += [(r'^rosetta/', include('rosetta.urls')), ]
+    urlpatterns += [url(r'^rosetta/', include('rosetta.urls')), ]
