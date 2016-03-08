@@ -13,6 +13,8 @@ from guardian.shortcuts import assign
 from guardian.shortcuts import assign_perm
 from guardian.shortcuts import remove_perm
 from guardian.shortcuts import get_perms
+from guardian.shortcuts import get_user_perms
+from guardian.shortcuts import get_group_perms
 from guardian.shortcuts import get_users_with_perms
 from guardian.shortcuts import get_groups_with_perms
 from guardian.shortcuts import get_objects_for_user
@@ -325,9 +327,17 @@ class GetUsersWithPermsTest(TestCase):
         expected = set([self.user1, self.user2, admin])
         result = get_users_with_perms(self.obj1, with_superusers=False, with_group_users=True)
         self.assertEqual(set(result), expected)
+        self.assertEqual(set(get_user_perms(self.user1, self.obj1)), set(['change_contenttype']))
+        self.assertEqual(set(get_user_perms(self.user2, self.obj1)), set([]))
+        self.assertEqual(set(get_user_perms(admin, self.obj1)), set(['delete_contenttype']))
         result = get_users_with_perms(self.obj1, with_superusers=False, with_group_users=False)
         expected = set([self.user1, admin])
         self.assertEqual(set(result), expected)
+        self.assertEqual(set(get_group_perms(self.user1, self.obj1)), set(['delete_contenttype']))
+        self.assertEqual(set(get_group_perms(self.user2, self.obj1)), set(['delete_contenttype']))
+        self.assertEqual(set(get_group_perms(self.group1, self.obj1)), set(['delete_contenttype']))
+        self.assertEqual(set(get_group_perms(self.group2, self.obj1)), set([]))
+        self.assertEqual(set(get_group_perms(admin, self.obj1)), set([]))
 
     def test_direct_perms_only_perms_attached(self):
         admin = User.objects.create(username='admin', is_superuser=True)
