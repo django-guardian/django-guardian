@@ -22,5 +22,9 @@ Finally we can run dev server::
 
     $ ./manage.py runserver
 
+You should also create a user who can login to the admin site::
+
+    $ ./manage.py createsuperuser
+
 Project is really basic and shows almost nothing but eventually it should
 expose some ``django-guardian`` functionality.
