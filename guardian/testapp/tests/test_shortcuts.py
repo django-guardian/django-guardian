@@ -338,6 +338,11 @@ class GetUsersWithPermsTest(TestCase):
         self.assertEqual(set(get_group_perms(self.group1, self.obj1)), set(['delete_contenttype']))
         self.assertEqual(set(get_group_perms(self.group2, self.obj1)), set([]))
         self.assertEqual(set(get_group_perms(admin, self.obj1)), set([]))
+        self.assertEqual(set(get_perms(admin, self.obj1)), set(['add_contenttype', 'change_contenttype', 'delete_contenttype']))
+        self.assertEqual(set(get_perms(self.user1, self.obj1)), set(['change_contenttype', 'delete_contenttype']))
+        self.assertEqual(set(get_perms(self.user2, self.obj1)), set(['delete_contenttype']))
+        self.assertEqual(set(get_perms(self.group1, self.obj1)), set(['delete_contenttype']))
+        self.assertEqual(set(get_perms(self.group2, self.obj1)), set([]))
 
     def test_direct_perms_only_perms_attached(self):
         admin = User.objects.create(username='admin', is_superuser=True)
