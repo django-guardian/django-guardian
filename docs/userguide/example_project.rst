@@ -3,7 +3,7 @@
 Example project
 ===============
 
-Example project should be boundled with archive and be available at
+Example project should be bundled with archive and be available at
 ``example_project``. Before you can run it, some requirements have to be met.
 Those are easily installed using following command at example project's
 directory::
@@ -11,13 +11,16 @@ directory::
     $ cd example_project
     $ pip install -r requirements.txt
 
+``django-guardian`` from a directory above the ``example_project`` is automatically
+added to Python path at runtime.
+
 And last thing before we can run example project is to create sqlite database::
 
-    $ python manage.py syncdb
+    $ ./manage.py migrate
 
 Finally we can run dev server::
 
-    $ python manage.py runserver
+    $ ./manage.py runserver
 
 Project is really basic and shows almost nothing but eventually it should
 expose some ``django-guardian`` functionality.
