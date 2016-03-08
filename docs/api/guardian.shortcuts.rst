@@ -28,6 +28,22 @@ get_perms
 .. autofunction:: guardian.shortcuts.get_perms
 
 
+.. _api-shortcuts-get_user_perms:
+
+get_user_perms
+--------------
+
+.. autofunction:: guardian.shortcuts.get_user_perms
+
+
+.. _api-shortcuts-get_group_perms:
+
+get_group_perms
+---------------
+
+.. autofunction:: guardian.shortcuts.get_group_perms
+
+
 .. _api-shortcuts-get_perms_for_model:
 
 get_perms_for_model
