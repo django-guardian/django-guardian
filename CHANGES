@@ -11,6 +11,11 @@ Release 1.4.2 (UNRELEASED)
 * Don't use ANONYMOUS_USER_ID. Uses ANONYMOUS_DEFAULT_USERNAME
   and USERNAME_FIELD instead.
 * Use setuptools_scm for versioning.
+* Initialise admin context using each_context for Django >= 1.8.
+* Add missing with_superusers parameter to get_users_with_perms().
+* Use setuptools scm for versioning.
+* Fixes for example_project.
+* Only display permissions if permission actually assigned.
 
 
 Release 1.4.1 (Jan 10, 2016)
