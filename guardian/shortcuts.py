@@ -508,10 +508,12 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
     if len(codenames):
         user_obj_perms_queryset = user_obj_perms_queryset.filter(
             permission__codename__in=codenames)
+    direct_fields = ['content_object__pk', 'permission__codename']
+    generic_fields = ['object_pk', 'permission__codename']
     if user_model.objects.is_generic():
-        fields = ['object_pk', 'permission__codename']
+        user_fields = generic_fields
     else:
-        fields = ['content_object__pk', 'permission__codename']
+        user_fields = direct_fields
 
     if use_groups:
         group_model = get_group_obj_perms_model(queryset.model)
@@ -525,12 +527,12 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
             })
         groups_obj_perms_queryset = group_model.objects.filter(**group_filters)
         if group_model.objects.is_generic():
-            fields = ['object_pk', 'permission__codename']
+            group_fields = generic_fields
         else:
-            fields = ['content_object__pk', 'permission__codename']
+            group_fields = direct_fields
         if not any_perm and len(codenames) and not has_global_perms:
-            user_obj_perms = user_obj_perms_queryset.values_list(*fields)
-            groups_obj_perms = groups_obj_perms_queryset.values_list(*fields)
+            user_obj_perms = user_obj_perms_queryset.values_list(*user_fields)
+            groups_obj_perms = groups_obj_perms_queryset.values_list(*group_fields)
             data = list(user_obj_perms) + list(groups_obj_perms)
             # sorting/grouping by pk (first in result tuple)
             keyfunc = lambda t: t[0]
@@ -545,16 +547,16 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
 
     if not any_perm and len(codenames) > 1:
         counts = user_obj_perms_queryset.values(
-            fields[0]).annotate(object_pk_count=Count(fields[0]))
+            user_fields[0]).annotate(object_pk_count=Count(user_fields[0]))
         user_obj_perms_queryset = counts.filter(
             object_pk_count__gte=len(codenames))
 
-    values = user_obj_perms_queryset.values_list(fields[0], flat=True)
+    values = user_obj_perms_queryset.values_list(user_fields[0], flat=True)
     if user_model.objects.is_generic():
         values = list(values)
     objects = queryset.filter(pk__in=values)
     if use_groups:
-        values = groups_obj_perms_queryset.values_list(fields[0], flat=True)
+        values = groups_obj_perms_queryset.values_list(group_fields[0], flat=True)
         if group_model.objects.is_generic():
             values = list(values)
         objects |= queryset.filter(pk__in=values)

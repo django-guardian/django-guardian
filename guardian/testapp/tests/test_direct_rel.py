@@ -1,5 +1,5 @@
 from __future__ import unicode_literals
-from guardian.testapp.models import Mixed
+from guardian.testapp.models import Mixed, ReverseMixed
 from guardian.testapp.models import Project
 from guardian.testapp.models import ProjectGroupObjectPermission
 from guardian.testapp.models import ProjectUserObjectPermission
@@ -200,6 +200,7 @@ class TestMixedDirectAndGenericObjectPermission(TestCase):
         self.group = Group.objects.create(name='admins')
         self.joe.groups.add(self.group)
         self.mixed = Mixed.objects.create(name='Foobar')
+        self.reverse_mixed = ReverseMixed.objects.create(name='Foobar')
 
     def test_get_users_with_perms_plus_groups(self):
         User.objects.create_user('john', 'john@foobar.com', 'john')
@@ -214,3 +215,23 @@ class TestMixedDirectAndGenericObjectPermission(TestCase):
             self.joe: ['add_mixed', 'change_mixed'],
             jane: ['change_mixed'],
         })
+        result = get_objects_for_user(self.joe, 'testapp.add_mixed')
+        self.assertEqual(sorted(p.pk for p in result),
+                         sorted([self.mixed.pk]))
+
+    def test_get_users_with_perms_plus_groups_reverse_mixed(self):
+        User.objects.create_user('john', 'john@foobar.com', 'john')
+        jane = User.objects.create_user('jane', 'jane@foobar.com', 'jane')
+        group = Group.objects.create(name='devs')
+        self.joe.groups.add(group)
+        assign_perm('add_reversemixed', self.joe, self.reverse_mixed)
+        assign_perm('change_reversemixed', group, self.reverse_mixed)
+        assign_perm('change_reversemixed', jane, self.reverse_mixed)
+        self.assertEqual(get_users_with_perms(self.reverse_mixed, attach_perms=True),
+                         {
+            self.joe: ['add_reversemixed', 'change_reversemixed'],
+            jane: ['change_reversemixed'],
+        })
+        result = get_objects_for_user(self.joe, 'testapp.add_reversemixed')
+        self.assertEqual(sorted(p.pk for p in result),
+                         sorted([self.reverse_mixed.pk]))
