@@ -12,7 +12,6 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('auth', '0007_alter_validators_add_error_messages'),
         ('testapp', '0006_auto_20160221_1054'),
     ]
 
