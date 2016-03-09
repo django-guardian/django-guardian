@@ -35,22 +35,6 @@ class Migration(migrations.Migration):
                 'abstract': False,
             },
         ),
-        migrations.AlterModelManagers(
-            name='customuser',
-            managers=[
-                ('objects', django.contrib.auth.models.UserManager()),
-            ],
-        ),
-        migrations.AlterField(
-            model_name='customuser',
-            name='username',
-            field=models.CharField(error_messages={'unique': 'A user with that username already exists.'}, help_text='Required. 30 characters or fewer. Letters, digits and @/./+/-/_ only.', max_length=30, unique=True, validators=[django.core.validators.RegexValidator('^[\\w.@+-]+$', 'Enter a valid username. This value may contain only letters, numbers and @/./+/-/_ characters.')], verbose_name='username'),
-        ),
-        migrations.AlterField(
-            model_name='customusernameuser',
-            name='last_login',
-            field=models.DateTimeField(blank=True, null=True, verbose_name='last login'),
-        ),
         migrations.AddField(
             model_name='reversemixeduserobjectpermission',
             name='user',

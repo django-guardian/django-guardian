@@ -128,8 +128,6 @@ class ObjectPermissionChecker(object):
         ctype = ContentType.objects.get_for_model(obj)
         key = self.get_local_cache_key(obj)
         if key not in self._obj_perms_cache:
-
-
             if self.user and self.user.is_superuser:
                 perms = list(chain(*Permission.objects
                                    .filter(content_type=ctype)
