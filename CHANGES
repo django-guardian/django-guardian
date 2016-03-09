@@ -16,7 +16,9 @@ Release 1.4.2 (Mar 09, 2016)
 * Use setuptools scm for versioning.
 * Fixes for example_project.
 * Only display permissions if permission actually assigned.
-
+* When using `attach_perms` with `get_users_with_perms`, and `with_group_users`
+  and `with_superusers` set to `False`, only directly assigned permissions are
+  now returned, and not effective (infered) permissions.
 
 Release 1.4.1 (Jan 10, 2016)
 ============================
