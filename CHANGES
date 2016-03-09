@@ -1,5 +1,5 @@
-Release 1.4.2 (UNRELEASED)
-==========================
+Release 1.4.2 (Mar 09, 2016)
+============================
 
 * Test against django-master (Django 1.10 - not released).
 * Django 1.10 fixes.
