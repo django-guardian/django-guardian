@@ -60,6 +60,21 @@ class Mixed(models.Model):
         return self.name
 
 
+class ReverseMixedUserObjectPermission(UserObjectPermissionBase):
+    content_object = models.ForeignKey('ReverseMixed')
+
+
+class ReverseMixed(models.Model):
+    """
+    Model for tests obj perms checks with generic group object permissions model
+    and generic group object permissions model.
+    """
+    name = models.CharField(max_length=128, unique=True)
+
+    def __unicode__(self):
+        return self.name
+
+
 class LogEntryWithGroup(LogEntry):
     group = models.ForeignKey('auth.Group', null=True, blank=True)
 
