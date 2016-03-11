@@ -647,13 +647,13 @@ def get_objects_for_group(group, perms, klass=None, any_perm=False, accept_globa
                 ctype = new_ctype
 
     # Compute queryset and ctype if still missing
-    if ctype is None and klass is None:
-        raise WrongAppError("Cannot determine content type")
-    elif ctype is None and klass is not None:
+    if ctype is None and klass is not None:
         queryset = _get_queryset(klass)
         ctype = ContentType.objects.get_for_model(queryset.model)
     elif ctype is not None and klass is None:
         queryset = _get_queryset(ctype.model_class())
+    elif klass is None:
+        raise WrongAppError("Cannot determine content type")
     else:
         queryset = _get_queryset(klass)
         if ctype.model_class() != queryset.model:
@@ -680,21 +680,29 @@ def get_objects_for_group(group, perms, klass=None, any_perm=False, accept_globa
     group_model = get_group_obj_perms_model(queryset.model)
     groups_obj_perms_queryset = (group_model.objects
                                  .filter(group=group)
-                                 .filter(permission__content_type=ctype)
-                                 .filter(permission__codename__in=codenames))
+                                 .filter(permission__content_type=ctype))
+    if len(codenames):
+        groups_obj_perms_queryset = groups_obj_perms_queryset.filter(
+            permission__codename__in=codenames)
     if group_model.objects.is_generic():
         fields = ['object_pk', 'permission__codename']
     else:
         fields = ['content_object__pk', 'permission__codename']
-    groups_obj_perms = groups_obj_perms_queryset.values_list(*fields)
-    data = list(groups_obj_perms)
+    if not any_perm and len(codenames):
+        groups_obj_perms = groups_obj_perms_queryset.values_list(*fields)
+        data = list(groups_obj_perms)
 
-    keyfunc = lambda t: t[0]  # sorting/grouping by pk (first in result tuple)
-    data = sorted(data, key=keyfunc)
-    pk_list = []
-    for pk, group in groupby(data, keyfunc):
-        obj_codenames = set((e[1] for e in group))
-        if any_perm or codenames.issubset(obj_codenames):
-            pk_list.append(pk)
-    objects = queryset.filter(pk__in=pk_list)
-    return objects
+        keyfunc = lambda t: t[0]  # sorting/grouping by pk (first in result tuple)
+        data = sorted(data, key=keyfunc)
+        pk_list = []
+        for pk, group in groupby(data, keyfunc):
+            obj_codenames = set((e[1] for e in group))
+            if any_perm or codenames.issubset(obj_codenames):
+                pk_list.append(pk)
+        objects = queryset.filter(pk__in=pk_list)
+        return objects
+
+    values = groups_obj_perms_queryset.values_list(fields[0], flat=True)
+    if group_model.objects.is_generic():
+        values = list(values)
+    return queryset.filter(pk__in=values)

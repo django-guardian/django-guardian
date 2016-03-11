@@ -839,6 +839,7 @@ class GetObjectsForUser(TestCase):
                           self.user, ['auth.change_permission', 'auth.change_group'])
 
     def test_has_any_permissions(self):
+        # We use groups as objects.
         group_names = ['group1', 'group2', 'group3']
         groups = [Group.objects.create(name=name) for name in group_names]
         for group in groups:
@@ -857,6 +858,20 @@ class GetObjectsForUser(TestCase):
         objects = get_objects_for_user(self.user,
                                        ['change_contenttype'], ContentType)
         self.assertEqual([obj.name for obj in objects], [self.ctype.name])
+
+    def test_has_any_group_permissions(self):
+        # We use groups as objects.
+        group_names = ['group1', 'group2', 'group3']
+        groups = [Group.objects.create(name=name) for name in group_names]
+        for group in groups:
+            assign_perm('change_group', self.group, group)
+
+        objects = get_objects_for_group(self.group, [], Group)
+        self.assertEqual(len(objects), len(groups))
+        self.assertTrue(isinstance(objects, QuerySet))
+        self.assertEqual(
+            set(objects),
+            set(groups))
 
 
 class GetObjectsForGroup(TestCase):
