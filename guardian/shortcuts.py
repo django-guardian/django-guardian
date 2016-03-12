@@ -552,14 +552,14 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
     values = user_obj_perms_queryset.values_list(fields[0], flat=True)
     if user_model.objects.is_generic():
         values = list(values)
-    objects = queryset.filter(pk__in=values)
+    q = Q(pk__in=values)
     if use_groups:
         values = groups_obj_perms_queryset.values_list(fields[0], flat=True)
         if group_model.objects.is_generic():
             values = list(values)
-        objects |= queryset.filter(pk__in=values)
+        q |= Q(pk__in=values)
 
-    return objects
+    return queryset.filter(q)
 
 
 def get_objects_for_group(group, perms, klass=None, any_perm=False, accept_global_perms=True):
