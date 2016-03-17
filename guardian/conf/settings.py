@@ -3,15 +3,14 @@ import warnings
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 
-ANONYMOUS_USER_NAME = getattr(settings, 'ANONYMOUS_USER_NAME', None)
-
-if ANONYMOUS_USER_NAME is None:
-    ANONYMOUS_USER_NAME = getattr(settings, 'ANONYMOUS_DEFAULT_USERNAME_VALUE', None)
-    if ANONYMOUS_USER_NAME is not None:
+try:
+    ANONYMOUS_USER_NAME = settings.ANONYMOUS_USER_NAME
+except AttributeError:
+    try:
+        ANONYMOUS_USER_NAME = settings.ANONYMOUS_DEFAULT_USERNAME_VALUE
         warnings.warn("The ANONYMOUS_DEFAULT_USERNAME_VALUE setting has been renamed to ANONYMOUS_USER_NAME.", DeprecationWarning)
-
-if ANONYMOUS_USER_NAME is None:
-    ANONYMOUS_USER_NAME = 'AnonymousUser'
+    except AttributeError:
+        ANONYMOUS_USER_NAME = "AnonymousUser"
 
 RENDER_403 = getattr(settings, 'GUARDIAN_RENDER_403', False)
 TEMPLATE_403 = getattr(settings, 'GUARDIAN_TEMPLATE_403', '403.html')

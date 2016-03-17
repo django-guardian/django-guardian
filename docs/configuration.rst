@@ -112,6 +112,8 @@ permissions-are disabled. You may need to choose this option if creating an
 ``User`` object-to represent anonymous users would be problematic in your
 environment.
 
+Defaults to ``"AnonymousUser"``.
+
 .. seealso:: https://docs.djangoproject.com/en/1.5/topics/auth/customizing/#substituting-a-custom-user-model
 
 
