@@ -33,7 +33,9 @@ def check_user_support(user_obj):
         # unauthorized
         if settings.ANONYMOUS_USER_NAME is None:
             return False, user_obj
-        user_obj = get_user_model().objects.get(username=settings.ANONYMOUS_USER_NAME)
+        User = get_user_model()
+        lookup = {User.USERNAME_FIELD: settings.ANONYMOUS_USER_NAME}
+        user_obj = User.objects.get(**lookup)
 
     return True, user_obj
 
