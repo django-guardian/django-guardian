@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 import os
 import unittest
 from guardian.utils import abspath
+from guardian.conf import settings as guardian_settings
 from django.conf import settings
 from django.conf import UserSettingsHolder
 from django.utils.functional import wraps
@@ -34,7 +35,7 @@ class TestDataMixin(object):
             from django.contrib.auth.models import User
         Group.objects.create(pk=1, name='admins')
         jack_group = Group.objects.create(pk=2, name='jackGroup')
-        User.objects.get_or_create(username=settings.ANONYMOUS_USER_NAME)
+        User.objects.get_or_create(username=guardian_settings.ANONYMOUS_USER_NAME)
         jack = User.objects.create(username='jack', is_active=True,
                                    is_superuser=False, is_staff=False)
         jack.groups.add(jack_group)

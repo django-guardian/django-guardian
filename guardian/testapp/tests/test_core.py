@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 from itertools import chain
 
 from django.conf import settings
+from guardian.conf import settings as guardian_settings
 # Try the new app settings (Django 1.7) and fall back to the old system
 try:
     from django.apps import apps as django_apps
@@ -28,7 +29,7 @@ class CustomUserTests(TestCase):
         create_anonymous_user(object())
         self.assertEqual(1, User.objects.all().count())
         anonymous = User.objects.all()[0]
-        self.assertEqual(anonymous.username, settings.ANONYMOUS_USER_NAME)
+        self.assertEqual(anonymous.username, guardian_settings.ANONYMOUS_USER_NAME)
 
 
 class ObjectPermissionTestCase(TestCase):
@@ -40,7 +41,7 @@ class ObjectPermissionTestCase(TestCase):
         self.ctype = ContentType.objects.create(
             model='bar', app_label='fake-for-guardian-tests')
         self.anonymous_user = User.objects.get(
-            username=settings.ANONYMOUS_USER_NAME)
+            username=guardian_settings.ANONYMOUS_USER_NAME)
 
 
 class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
