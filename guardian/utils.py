@@ -103,15 +103,11 @@ def get_403_or_None(request, perms, obj=None, login_url=None,
     if not has_permissions:
         if return_403:
             if guardian_settings.RENDER_403:
-                try:
-                    response = render_to_response(
-                        guardian_settings.TEMPLATE_403, {},
-                        RequestContext(request))
-                    response.status_code = 403
-                    return response
-                except TemplateDoesNotExist as e:
-                    if settings.DEBUG:
-                        raise e
+                response = render_to_response(
+                    guardian_settings.TEMPLATE_403, {},
+                    RequestContext(request))
+                response.status_code = 403
+                return response
             elif guardian_settings.RAISE_403:
                 raise PermissionDenied
             return HttpResponseForbidden()
