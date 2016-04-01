@@ -1,3 +1,15 @@
+Release 1.4.3 (UNRELEASED)
+==========================
+
+* guardian.VERSION should be a tuple, not a list. Fixes #411.
+* Support for prefetching permissions.
+* Fixed union between queries.
+* Allow specifying an empty list of permissions for get_objects_for_group.
+* Mixed group and user direction relations broken. Fixes #271.
+* Lookup anonymous user using custom username field.
+* Fix up processing of ANONYMOUS_USER_NAME where set to None. Fixes #409.
+* Require TEMPLATE_403 to exist if RENDER_403 set.
+
 Release 1.4.2 (Mar 09, 2016)
 ============================
 
