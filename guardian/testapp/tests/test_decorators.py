@@ -83,22 +83,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
             self.assertEqual(response.content, b'foobar403\n')
 
     @mock.patch('guardian.conf.settings.RENDER_403', True)
-    def test_403_response_is_empty_if_template_cannot_be_found(self):
-        request = self._get_request(self.anon)
-
-        @permission_required_or_403('not_installed_app.change_user')
-        def dummy_view(request):
-            return HttpResponse('dummy_view')
-        with mock.patch('guardian.conf.settings.TEMPLATE_403',
-                        '_non-exisitng-403.html'):
-            response = dummy_view(request)
-            self.assertEqual(response.status_code, 403)
-            self.assertEqual(response.content, b'')
-
-    @mock.patch('guardian.conf.settings.RENDER_403', True)
-    def test_403_response_raises_error_if_debug_is_turned_on(self):
-        org_DEBUG = settings.DEBUG
-        settings.DEBUG = True
+    def test_403_response_raises_error(self):
         request = self._get_request(self.anon)
 
         @permission_required_or_403('not_installed_app.change_user')
@@ -107,7 +92,6 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
         with mock.patch('guardian.conf.settings.TEMPLATE_403',
                         '_non-exisitng-403.html'):
             self.assertRaises(TemplateDoesNotExist, dummy_view, request)
-        settings.DEBUG = org_DEBUG
 
     @mock.patch('guardian.conf.settings.RENDER_403', False)
     @mock.patch('guardian.conf.settings.RAISE_403', True)
