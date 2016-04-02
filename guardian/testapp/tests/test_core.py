@@ -20,6 +20,8 @@ from guardian.models import UserObjectPermission, GroupObjectPermission
 from guardian.shortcuts import assign_perm
 from guardian.management import create_anonymous_user
 
+from guardian.testapp.models import Project
+
 User = get_user_model()
 
 
@@ -281,6 +283,121 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
 
             # Checking for same model but other instance shouldn't spawn any queries
             checker.has_perm("change_group", new_group)
+            self.assertEqual(len(connection.queries), query_count)
+
+        finally:
+            settings.DEBUG = False
+
+    def test_prefetch_user_perms_direct_rel(self):
+        settings.DEBUG = True
+        try:
+            from django.db import connection
+
+            ContentType.objects.clear_cache()
+            user = User.objects.create(username='active_user', is_active=True)
+            projects = \
+                [Project.objects.create(name='Project%s' % i)
+                    for i in range(2)]
+            for project in projects:
+                assign_perm("change_project", user, project)
+            checker = ObjectPermissionChecker(user)
+
+            # Prefetch permissions
+            self.assertTrue(checker.prefetch_perms(projects))
+            query_count = len(connection.queries)
+
+            # Checking cache is filled
+            self.assertEqual(len(checker._obj_perms_cache), 2)
+
+            # Checking shouldn't spawn any queries
+            checker.has_perm("change_project", projects[0])
+            self.assertEqual(len(connection.queries), query_count)
+
+            # Checking for other permission but for Group object again
+            # shouldn't spawn any query too
+            checker.has_perm("delete_project", projects[0])
+            self.assertEqual(len(connection.queries), query_count)
+
+            # Checking for same model but other instance shouldn't spawn any
+            #  queries
+            checker.has_perm("change_project", projects[1])
+            self.assertEqual(len(connection.queries), query_count)
+
+        finally:
+            settings.DEBUG = False
+
+    def test_prefetch_superuser_perms_direct_rel(self):
+        settings.DEBUG = True
+        try:
+            from django.db import connection
+
+            ContentType.objects.clear_cache()
+            user = User.objects.create(
+                username='active_user', is_active=True, is_superuser=True)
+            projects = \
+                [Project.objects.create(name='Project%s' % i)
+                    for i in range(2)]
+            for project in projects:
+                assign_perm("change_project", user, project)
+            checker = ObjectPermissionChecker(user)
+
+            # Prefetch permissions
+            self.assertTrue(checker.prefetch_perms(projects))
+            query_count = len(connection.queries)
+
+            # Checking cache is filled
+            self.assertEqual(len(checker._obj_perms_cache), 2)
+
+            # Checking shouldn't spawn any queries
+            checker.has_perm("change_project", projects[0])
+            self.assertEqual(len(connection.queries), query_count)
+
+            # Checking for other permission but for Group object again
+            # shouldn't spawn any query too
+            checker.has_perm("delete_project", projects[0])
+            self.assertEqual(len(connection.queries), query_count)
+
+            # Checking for same model but other instance shouldn't spawn any
+            #  queries
+            checker.has_perm("change_project", projects[1])
+            self.assertEqual(len(connection.queries), query_count)
+
+        finally:
+            settings.DEBUG = False
+
+    def test_prefetch_group_perms_direct_rel(self):
+        settings.DEBUG = True
+        try:
+            from django.db import connection
+
+            ContentType.objects.clear_cache()
+            new_group = Group.objects.create(name='new-group')
+            projects = \
+                [Project.objects.create(name='Project%s' % i)
+                    for i in range(2)]
+            for project in projects:
+                assign_perm("change_project", new_group, project)
+            checker = ObjectPermissionChecker(new_group)
+
+            # Prefetch permissions
+            self.assertTrue(checker.prefetch_perms(projects))
+            query_count = len(connection.queries)
+
+            # Checking cache is filled
+            self.assertEqual(len(checker._obj_perms_cache), 2)
+
+            # Checking shouldn't spawn any queries
+            checker.has_perm("change_project", projects[0])
+            self.assertEqual(len(connection.queries), query_count)
+
+            # Checking for other permission but for Group object again
+            # shouldn't spawn any query too
+            checker.has_perm("delete_project", projects[0])
+            self.assertEqual(len(connection.queries), query_count)
+
+            # Checking for same model but other instance shouldn't spawn any
+            #  queries
+            checker.has_perm("change_project", projects[1])
             self.assertEqual(len(connection.queries), query_count)
 
         finally:
