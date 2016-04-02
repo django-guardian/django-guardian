@@ -151,8 +151,6 @@ class ObjectPermissionChecker(object):
         ctype = ContentType.objects.get_for_model(obj)
         key = self.get_local_cache_key(obj)
         if key not in self._obj_perms_cache:
-
-
             if self.user and self.user.is_superuser:
                 perms = list(chain(*Permission.objects
                                    .filter(content_type=ctype)
@@ -206,10 +204,7 @@ class ObjectPermissionChecker(object):
 
         group_model = get_group_obj_perms_model(model)
 
-        group_filters = {
-            'object_pk__in': pks
-        }
-
+        group_filters = {}
         if self.user:
             fieldname = 'group__%s' % (
                 User.groups.field.related_query_name(),
@@ -221,18 +216,27 @@ class ObjectPermissionChecker(object):
         if group_model.objects.is_generic():
             group_filters.update({
                 'content_type': ctype,
+                'object_pk__in': pks,
+            })
+        else:
+            group_filters.update({
+                'content_object_id__in': pks
             })
 
         if self.user:
             model = get_user_obj_perms_model(model)
             user_filters = {
                 'user': self.user,
-                'object_pk__in': pks
             }
 
             if model.objects.is_generic():
                 user_filters.update({
                     'content_type': ctype,
+                    'object_pk__in': pks
+                })
+            else:
+                user_filters.update({
+                    'content_object_id__in': pks
                 })
 
             # Query user and group permissions separately and then combine
@@ -246,7 +250,10 @@ class ObjectPermissionChecker(object):
             )
 
         for perm in perms:
-            key = (ctype.id, perm.object_pk)
+            if type(perm).objects.is_generic():
+                key = (ctype.id, perm.object_pk)
+            else:
+                key = (ctype.id, force_text(perm.content_object_id))
 
             if key in self._obj_perms_cache:
                 self._obj_perms_cache[key].append(perm.permission.codename)
