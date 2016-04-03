@@ -1,6 +1,6 @@
 import os
 import sys
-from setuptools import setup, find_packages
+from setuptools import setup
 from extras import RunFlakesCommand
 
 
@@ -27,7 +27,12 @@ setup(
     description="Implementation of per object permissions for Django.",
     long_description=long_description,
     zip_safe=False,
-    packages=find_packages(),
+    packages=[
+        'guardian', 'guardian.conf', 'guardian.management',
+        'guardian.migrations', 'guardian.templatetags', 'guardian.testapp',
+        'guardian.management.commands', 'guardian.testapp.migrations',
+        'guardian.testapp.tests'
+    ],
     include_package_data=True,
     license='BSD',
     install_requires=[
