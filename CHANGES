@@ -1,5 +1,5 @@
-Release 1.4.3 (UNRELEASED)
-==========================
+Release 1.4.3 (Apr 03, 2016)
+============================
 
 * guardian.VERSION should be a tuple, not a list. Fixes #411.
 * Support for prefetching permissions.
