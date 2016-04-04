@@ -1,5 +1,5 @@
-Release 1.4.4 (UNRELEASED)
-==========================
+Release 1.4.4 (Apr 04, 2016)
+============================
 
 * Don't install support example_project.
 * Direct ForeignKey perms in prefetch_perms.
