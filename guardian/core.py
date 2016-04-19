@@ -7,6 +7,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models.query import QuerySet
 from django.utils.encoding import force_text
 
+from guardian.ctypes import get_ctype_from_polymorphic
 from guardian.utils import get_identity
 from guardian.utils import get_user_obj_perms_model
 from guardian.utils import get_group_obj_perms_model
@@ -148,7 +149,7 @@ class ObjectPermissionChecker(object):
         """
         if self.user and not self.user.is_active:
             return []
-        ctype = ContentType.objects.get_for_model(obj)
+        ctype = get_ctype_from_polymorphic(obj)
         key = self.get_local_cache_key(obj)
         if key not in self._obj_perms_cache:
             if self.user and self.user.is_superuser:
@@ -174,7 +175,7 @@ class ObjectPermissionChecker(object):
         """
         Returns cache key for ``_obj_perms_cache`` dict.
         """
-        ctype = ContentType.objects.get_for_model(obj)
+        ctype = get_ctype_from_polymorphic(obj)
         return (ctype.id, force_text(obj.pk))
 
     def prefetch_perms(self, objects):
