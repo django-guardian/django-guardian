@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 from itertools import chain
 
 from django.contrib.auth.models import Permission
-from django.contrib.contenttypes.models import ContentType
 from django.db.models.query import QuerySet
 from django.utils.encoding import force_text
 
@@ -23,13 +22,13 @@ def _get_pks_model_and_ctype(objects):
     if isinstance(objects, QuerySet):
         model = objects.model
         pks = [force_text(pk) for pk in objects.values_list('pk', flat=True)]
-        ctype = ContentType.objects.get_for_model(model)
+        ctype = get_ctype_from_polymorphic(model)
     else:
         pks = []
         for idx, obj in enumerate(objects):
             if not idx:
                 model = type(obj)
-                ctype = ContentType.objects.get_for_model(model)
+                ctype = get_ctype_from_polymorphic(model)
             pks.append(force_text(obj.pk))
 
     return pks, model, ctype
@@ -82,7 +81,7 @@ class ObjectPermissionChecker(object):
 
     def get_group_filters(self, obj):
         User = get_user_model()
-        ctype = ContentType.objects.get_for_model(obj)
+        ctype = get_ctype_from_polymorphic(obj)
 
         group_model = get_group_obj_perms_model(obj)
         group_rel_name = group_model.permission.field.related_query_name()
@@ -105,7 +104,7 @@ class ObjectPermissionChecker(object):
         return group_filters
 
     def get_user_filters(self, obj):
-        ctype = ContentType.objects.get_for_model(obj)
+        ctype = get_ctype_from_polymorphic(obj)
         model = get_user_obj_perms_model(obj)
         related_name = model.permission.field.related_query_name()
 
@@ -121,7 +120,7 @@ class ObjectPermissionChecker(object):
         return user_filters
 
     def get_user_perms(self, obj):
-        ctype = ContentType.objects.get_for_model(obj)
+        ctype = get_ctype_from_polymorphic(obj)
 
         perms_qs = Permission.objects.filter(content_type=ctype)
         user_filters = self.get_user_filters(obj)
@@ -131,7 +130,7 @@ class ObjectPermissionChecker(object):
         return user_perms
 
     def get_group_perms(self, obj):
-        ctype = ContentType.objects.get_for_model(obj)
+        ctype = get_ctype_from_polymorphic(obj)
 
         perms_qs = Permission.objects.filter(content_type=ctype)
         group_filters = self.get_group_filters(obj)
