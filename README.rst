@@ -12,7 +12,7 @@ work with older Django_ releases.
 Documentation
 -------------
 
-Online documentation is available at http://django-guardian.rtfd.org/.
+Online documentation is available at https://django-guardian.readthedocs.io/.
 
 Installation
 ------------
