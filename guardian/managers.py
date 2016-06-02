@@ -1,10 +1,10 @@
 from __future__ import unicode_literals
 
 from django.db import models
-from django.contrib.contenttypes.models import ContentType
 
 from guardian.exceptions import ObjectNotPersisted
 from guardian.models import Permission
+from guardian.ctypes import get_ctype_from_polymorphic
 import warnings
 
 # TODO: consolidate UserObjectPermissionManager and
@@ -31,7 +31,7 @@ class UserObjectPermissionManager(BaseObjectPermissionManager):
         if getattr(obj, 'pk', None) is None:
             raise ObjectNotPersisted("Object %s needs to be persisted first"
                                      % obj)
-        ctype = ContentType.objects.get_for_model(obj)
+        ctype = get_ctype_from_polymorphic(obj)
         permission = Permission.objects.get(content_type=ctype, codename=perm)
 
         kwargs = {'permission': permission, 'user': user}
@@ -61,7 +61,7 @@ class UserObjectPermissionManager(BaseObjectPermissionManager):
                                      % obj)
         filters = {
             'permission__codename': perm,
-            'permission__content_type': ContentType.objects.get_for_model(obj),
+            'permission__content_type': get_ctype_from_polymorphic(obj),
             'user': user,
         }
         if self.is_generic():
@@ -81,7 +81,7 @@ class GroupObjectPermissionManager(BaseObjectPermissionManager):
         if getattr(obj, 'pk', None) is None:
             raise ObjectNotPersisted("Object %s needs to be persisted first"
                                      % obj)
-        ctype = ContentType.objects.get_for_model(obj)
+        ctype = get_ctype_from_polymorphic(obj)
         permission = Permission.objects.get(content_type=ctype, codename=perm)
 
         kwargs = {'permission': permission, 'group': group}
@@ -107,7 +107,7 @@ class GroupObjectPermissionManager(BaseObjectPermissionManager):
                                      % obj)
         filters = {
             'permission__codename': perm,
-            'permission__content_type': ContentType.objects.get_for_model(obj),
+            'permission__content_type': get_ctype_from_polymorphic(obj),
             'group': group,
         }
         if self.is_generic():

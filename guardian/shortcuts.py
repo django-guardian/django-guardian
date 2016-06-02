@@ -14,6 +14,7 @@ from itertools import groupby
 from guardian.compat import basestring
 from guardian.compat import get_user_model
 from guardian.core import ObjectPermissionChecker
+from guardian.ctypes import get_ctype_from_polymorphic
 from guardian.exceptions import MixedContentTypeError
 from guardian.exceptions import WrongAppError
 from guardian.utils import get_anonymous_user
@@ -178,7 +179,7 @@ def get_perms_for_model(cls):
         model = apps.get_model(app_label, model_name)
     else:
         model = cls
-    ctype = ContentType.objects.get_for_model(model)
+    ctype = get_ctype_from_polymorphic(model)
     return Permission.objects.filter(content_type=ctype)
 
 
@@ -218,7 +219,7 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
         {<User: joe>: [u'change_flatpage']}
 
     """
-    ctype = ContentType.objects.get_for_model(obj)
+    ctype = get_ctype_from_polymorphic(obj)
     if not attach_perms:
         # It's much easier without attached perms so we do it first if that is
         # the case
@@ -290,7 +291,7 @@ def get_groups_with_perms(obj, attach_perms=False):
         {<Group: admins>: [u'change_flatpage']}
 
     """
-    ctype = ContentType.objects.get_for_model(obj)
+    ctype = get_ctype_from_polymorphic(obj)
     if not attach_perms:
         # It's much easier without attached perms so we do it first if that is
         # the case
@@ -448,7 +449,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
     # Compute queryset and ctype if still missing
     if ctype is None and klass is not None:
         queryset = _get_queryset(klass)
-        ctype = ContentType.objects.get_for_model(queryset.model)
+        ctype = get_ctype_from_polymorphic(queryset.model)
     elif ctype is not None and klass is None:
         queryset = _get_queryset(ctype.model_class())
     elif klass is None:
@@ -651,7 +652,7 @@ def get_objects_for_group(group, perms, klass=None, any_perm=False, accept_globa
     # Compute queryset and ctype if still missing
     if ctype is None and klass is not None:
         queryset = _get_queryset(klass)
-        ctype = ContentType.objects.get_for_model(queryset.model)
+        ctype = get_ctype_from_polymorphic(queryset.model)
     elif ctype is not None and klass is None:
         queryset = _get_queryset(ctype.model_class())
     elif klass is None:
