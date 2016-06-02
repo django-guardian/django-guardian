@@ -1,8 +1,8 @@
 from __future__ import unicode_literals
-from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.models import Q
 from guardian.core import ObjectPermissionChecker
+from guardian.ctypes import get_content_type
 from guardian.exceptions import ObjectNotPersisted
 from guardian.models import Permission
 
@@ -34,8 +34,7 @@ class BaseObjectPermissionManager(models.Manager):
         if getattr(obj, 'pk', None) is None:
             raise ObjectNotPersisted("Object %s needs to be persisted first"
                                      % obj)
-
-        ctype = ContentType.objects.get_for_model(obj)
+        ctype = get_content_type(obj)
         if not isinstance(perm, Permission):
             permission = Permission.objects.get(content_type=ctype, codename=perm)
         else:
@@ -56,7 +55,7 @@ class BaseObjectPermissionManager(models.Manager):
         ``user_or_group``.
         """
 
-        ctype = ContentType.objects.get_for_model(queryset.model)
+        ctype = get_content_type(queryset.model)
         if not isinstance(perm, Permission):
             permission = Permission.objects.get(content_type=ctype, codename=perm)
         else:
@@ -102,7 +101,7 @@ class BaseObjectPermissionManager(models.Manager):
             filters &= Q(permission=perm)
         else:
             filters &= Q(permission__codename=perm,
-                         permission__content_type=ContentType.objects.get_for_model(obj))
+                         permission__content_type=get_content_type(obj))
 
         if self.is_generic():
             filters &= Q(object_pk=obj.pk)
@@ -123,7 +122,7 @@ class BaseObjectPermissionManager(models.Manager):
         if isinstance(perm, Permission):
             filters &= Q(permission=perm)
         else:
-            ctype = ContentType.objects.get_for_model(queryset.model)
+            ctype = get_content_type(queryset.model)
             filters &= Q(permission__codename=perm,
                          permission__content_type=ctype)
 

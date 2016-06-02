@@ -10,14 +10,14 @@ from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.contrib.auth.models import AnonymousUser, Group
 from django.contrib.auth.views import redirect_to_login
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.db.models import Model
 from django.http import HttpResponseForbidden
 from django.shortcuts import render_to_response
-from django.template import RequestContext, TemplateDoesNotExist
+from django.template import RequestContext
 from guardian.compat import get_user_model
 from guardian.conf import settings as guardian_settings
+from guardian.ctypes import get_content_type
 from guardian.exceptions import NotUserNorGroup
 from itertools import chain
 
@@ -145,7 +145,7 @@ def clean_orphan_obj_perms():
 def get_obj_perms_model(obj, base_cls, generic_cls):
     if isinstance(obj, Model):
         obj = obj.__class__
-    ctype = ContentType.objects.get_for_model(obj)
+    ctype = get_content_type(obj)
 
     if django.VERSION >= (1, 8):
         fields = (f for f in obj._meta.get_fields()
@@ -165,7 +165,7 @@ def get_obj_perms_model(obj, base_cls, generic_cls):
                 # make sure that content_object's content_type is same as
                 # the one of given obj
                 fk = model._meta.get_field('content_object')
-                if ctype == ContentType.objects.get_for_model(fk.rel.to):
+                if ctype == get_content_type(fk.rel.to):
                     return model
     return generic_cls
 

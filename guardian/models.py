@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from guardian.compat import unicode, user_model_label
+from guardian.ctypes import get_content_type
 from guardian.managers import GroupObjectPermissionManager, UserObjectPermissionManager
 
 try:
@@ -30,7 +31,7 @@ class BaseObjectPermission(models.Model):
             unicode(self.permission.codename))
 
     def save(self, *args, **kwargs):
-        content_type = ContentType.objects.get_for_model(self.content_object)
+        content_type = get_content_type(self.content_object)
         if content_type != self.permission.content_type:
             raise ValidationError("Cannot persist permission not designed for "
                                   "this class (permission's type is %r and object's type is %r)"
