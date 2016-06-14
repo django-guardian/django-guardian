@@ -42,6 +42,7 @@ class ObjectPermissionTestCase(TestCase):
         self.user.groups.add(self.group)
         self.ctype = ContentType.objects.create(
             model='bar', app_label='fake-for-guardian-tests')
+        self.ctype_qset = ContentType.objects.filter(model='bar', app_label='fake-for-guardian-tests')
         self.anonymous_user = User.objects.get(
             username=guardian_settings.ANONYMOUS_USER_NAME)
 

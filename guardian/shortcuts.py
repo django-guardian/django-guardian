@@ -86,13 +86,25 @@ def assign_perm(perm, user_or_group, obj=None):
         if group:
             group.permissions.add(perm)
             return perm
+
     perm = perm.split('.')[-1]
-    if user:
-        model = get_user_obj_perms_model(obj)
-        return model.objects.assign_perm(perm, user, obj)
-    if group:
-        model = get_group_obj_perms_model(obj)
-        return model.objects.assign_perm(perm, group, obj)
+    try:
+        assigned_perms = []
+        for instance in obj:
+            if user:
+                model = get_user_obj_perms_model(instance)
+            if group:
+                model = get_group_obj_perms_model(instance)
+
+            assigned_perms.append(model.objects.assign_perm(perm, user or group, instance))
+        return assigned_perms
+    except TypeError:
+        if user:
+            model = get_user_obj_perms_model(obj)
+            return model.objects.assign_perm(perm, user, obj)
+        if group:
+            model = get_group_obj_perms_model(obj)
+            return model.objects.assign_perm(perm, group, obj)
 
 
 def assign(perm, user_or_group, obj=None):
