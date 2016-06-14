@@ -81,6 +81,21 @@ class AssignPermTest(ObjectPermissionTestCase):
         self.assertTrue(check.has_perm("change_contenttype", self.ctype))
         self.assertTrue(check.has_perm("delete_contenttype", self.ctype))
 
+    def test_user_assign_perm_queryset(self):
+        assign_perm("change_contenttype", self.user, self.ctype_qset)
+        assign_perm("change_contenttype", self.group, self.ctype_qset)
+        for obj in self.ctype_qset:
+            self.assertTrue(self.user.has_perm("change_contenttype", obj))
+
+    def test_group_assign_perm_queryset(self):
+        assign_perm("change_contenttype", self.group, self.ctype_qset)
+        assign_perm("delete_contenttype", self.group, self.ctype_qset)
+
+        check = ObjectPermissionChecker(self.group)
+        for obj in self.ctype_qset:
+            self.assertTrue(check.has_perm("change_contenttype", obj))
+            self.assertTrue(check.has_perm("delete_contenttype", obj))
+
     def test_user_assign_perm_global(self):
         perm = assign_perm("contenttypes.change_contenttype", self.user)
         self.assertTrue(self.user.has_perm("contenttypes.change_contenttype"))
