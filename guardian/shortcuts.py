@@ -25,7 +25,7 @@ import warnings
 
 def assign_perm(perm, user_or_group, obj=None):
     """
-    Assigns permission to user/group and object pair.
+    Assigns permission to user/group and object pair(s).
 
     :param perm: proper permission for given ``obj``, as string (in format:
       ``app_label.codename`` or ``codename``). If ``obj`` is not given, must
@@ -35,8 +35,9 @@ def assign_perm(perm, user_or_group, obj=None):
       passing any other object would raise
       ``guardian.exceptions.NotUserNorGroup`` exception
 
-    :param obj: persisted Django's ``Model`` instance or ``None`` if assigning
-      global permission. Default is ``None``.
+    :param obj: persisted Django's ``Model`` instance, QuerySet of ``Model``
+      instances, or ``None`` if assigning global permission. Default is
+      ``None``.
 
     We can assign permission for ``Model`` instance for specific user:
 
@@ -56,6 +57,15 @@ def assign_perm(perm, user_or_group, obj=None):
     >>> user.groups.add(group)
     >>> assign_perm("delete_site", group, site)
     <GroupObjectPermission: example.com | joe-group | delete_site>
+    >>> user.has_perm("delete_site", site)
+    True
+
+    ... or the same for a queryset:
+
+    >>> sites = Site.objects.all()
+    >>> assign_perm("delete_site", user, sites)
+    [<GroupObjectPermission: example.org | joe | delete_site>, ...]
+    >>> site = Site.objects.get(domain='example.org')
     >>> user.has_perm("delete_site", site)
     True
 
@@ -115,7 +125,7 @@ def assign(perm, user_or_group, obj=None):
 
 def remove_perm(perm, user_or_group=None, obj=None):
     """
-    Removes permission from user/group and object pair.
+    Removes permission from user/group and object pair(s).
 
     :param perm: proper permission for given ``obj``, as string (in format:
       ``app_label.codename`` or ``codename``). If ``obj`` is not given, must
@@ -125,8 +135,9 @@ def remove_perm(perm, user_or_group=None, obj=None):
       passing any other object would raise
       ``guardian.exceptions.NotUserNorGroup`` exception
 
-    :param obj: persisted Django's ``Model`` instance or ``None`` if assigning
-      global permission. Default is ``None``.
+    :param obj: persisted Django's ``Model`` instance, QuerySet of ``Model``
+      instances, or ``None`` if assigning global permission. Default is
+      ``None``.
 
     """
     user, group = get_identity(user_or_group)
