@@ -144,13 +144,23 @@ def remove_perm(perm, user_or_group=None, obj=None):
         elif group:
             group.permissions.remove(perm)
             return
+
     perm = perm.split('.')[-1]
-    if user:
-        model = get_user_obj_perms_model(obj)
-        model.objects.remove_perm(perm, user, obj)
-    if group:
-        model = get_group_obj_perms_model(obj)
-        model.objects.remove_perm(perm, group, obj)
+    try:
+        for instance in obj:
+            if user:
+                model = get_user_obj_perms_model(instance)
+            if group:
+                model = get_group_obj_perms_model(instance)
+
+            model.objects.remove_perm(perm, user or group, instance)
+    except TypeError:
+        if user:
+            model = get_user_obj_perms_model(obj)
+            model.objects.remove_perm(perm, user, obj)
+        if group:
+            model = get_group_obj_perms_model(obj)
+            model.objects.remove_perm(perm, group, obj)
 
 
 def get_perms(user_or_group, obj):
