@@ -120,7 +120,7 @@ class PermissionRequiredMixin(object):
          proceed to check object level permissions.
 
     ``PermissionRequiredMixin.permission_object``
-         *Default*: ``None``, object against which test the permission; if None fallback
+         *Default*: ``(not set)``, object against which test the permission; if not set fallback
          to ``self.get_permission_object()`` which return ``self.get_object()``
          or ``self.object`` by default.
 
@@ -132,7 +132,6 @@ class PermissionRequiredMixin(object):
     return_403 = False
     raise_exception = False
     accept_global_perms = False
-    permission_object = None
 
     def get_required_permissions(self, request=None):
         """
@@ -154,7 +153,7 @@ class PermissionRequiredMixin(object):
         return perms
 
     def get_permission_object(self):
-        if self.permission_object:
+        if hasattr(self, 'permission_object'):
             return self.permission_object
         return (hasattr(self, 'get_object') and self.get_object()
                 or getattr(self, 'object', None))
