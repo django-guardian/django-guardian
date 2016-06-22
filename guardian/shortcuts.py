@@ -138,7 +138,7 @@ def assign(perm, user_or_group, obj=None):
 
 def remove_perm(perm, user_or_group=None, obj=None):
     """
-    Removes permission from user/group and object pair(s).
+    Removes permission from user/group and object pair.
 
     :param perm: proper permission for given ``obj``, as string (in format:
       ``app_label.codename`` or ``codename``). If ``obj`` is not given, must
@@ -148,9 +148,8 @@ def remove_perm(perm, user_or_group=None, obj=None):
       passing any other object would raise
       ``guardian.exceptions.NotUserNorGroup`` exception
 
-    :param obj: persisted Django's ``Model`` instance, QuerySet of ``Model``
-      instances, or ``None`` if assigning global permission. Default is
-      ``None``.
+    :param obj: persisted Django's ``Model`` instance, or ``None`` if assigning
+      global permission. Default is ``None``.
 
     """
     user, group = get_identity(user_or_group)
@@ -170,21 +169,39 @@ def remove_perm(perm, user_or_group=None, obj=None):
             return
 
     perm = perm.split('.')[-1]
-    try:
-        for instance in obj:
-            if user:
-                model = get_user_obj_perms_model(instance)
-            if group:
-                model = get_group_obj_perms_model(instance)
+    if user:
+        model = get_user_obj_perms_model(obj)
+        model.objects.remove_perm(perm, user, obj)
+    if group:
+        model = get_group_obj_perms_model(obj)
+        model.objects.remove_perm(perm, group, obj)
 
-            model.objects.remove_perm(perm, user or group, instance)
-    except TypeError:
-        if user:
-            model = get_user_obj_perms_model(obj)
-            model.objects.remove_perm(perm, user, obj)
-        if group:
-            model = get_group_obj_perms_model(obj)
-            model.objects.remove_perm(perm, group, obj)
+
+def bulk_remove_perm(perm, user_or_group, queryset):
+    """
+    Removes permission from user/group and object pairs.
+
+    :param perm: proper permission for given ``obj``, as string (in format:
+      ``app_label.codename`` or ``codename``). If ``obj`` is not given, must
+      be in format ``app_label.codename``.
+
+    :param user_or_group: instance of ``User``, ``AnonymousUser`` or ``Group``;
+      passing any other object would raise
+      ``guardian.exceptions.NotUserNorGroup`` exception.
+
+    :param queryset: QuerySet of Django ``Model`` instances.
+    """
+
+    user, group = get_identity(user_or_group)
+    perm = perm.split('.')[-1]
+
+    if user:
+        model = get_user_obj_perms_model(queryset.model)
+    if group:
+        model = get_group_obj_perms_model(queryset.model)
+
+    for instance in queryset:
+        model.objects.remove_perm(perm, user or group, instance)
 
 
 def get_perms(user_or_group, obj):
