@@ -100,3 +100,16 @@ PASSWORD_HASHERS = (
 )
 
 AUTH_USER_MODEL = 'core.CustomUser'
+
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': TEMPLATE_DIRS,
+        'OPTIONS': {
+            'debug': TEMPLATE_DEBUG,
+            'loaders': TEMPLATE_LOADERS,
+            'context_processors': TEMPLATE_CONTEXT_PROCESSORS,
+        },
+    },
+]
