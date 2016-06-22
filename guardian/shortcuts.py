@@ -10,7 +10,6 @@ from django.db.models import Count, Q
 from django.apps import apps
 from django.shortcuts import _get_queryset
 from itertools import groupby
-
 from guardian.compat import basestring
 from guardian.compat import get_user_model
 from guardian.core import ObjectPermissionChecker
@@ -25,19 +24,19 @@ import warnings
 
 def assign_perm(perm, user_or_group, obj=None):
     """
-    Assigns permission to user/group and object pair(s).
+    Assigns permission to user/group and object pair.
 
     :param perm: proper permission for given ``obj``, as string (in format:
-      ``app_label.codename`` or ``codename``). If ``obj`` is not given, must
-      be in format ``app_label.codename``.
+      ``app_label.codename`` or ``codename``) or ``Permission`` instance.
+      If ``obj`` is not given, must be in format ``app_label.codename`` or
+      ``Permission`` instance.
 
     :param user_or_group: instance of ``User``, ``AnonymousUser`` or ``Group``;
       passing any other object would raise
       ``guardian.exceptions.NotUserNorGroup`` exception
 
-    :param obj: persisted Django's ``Model`` instance, QuerySet of ``Model``
-      instances, or ``None`` if assigning global permission. Default is
-      ``None``.
+    :param obj: persisted Django's ``Model`` instance or ``None`` if assigning
+      global permission. Default is ``None``.
 
     We can assign permission for ``Model`` instance for specific user:
 
@@ -60,15 +59,6 @@ def assign_perm(perm, user_or_group, obj=None):
     >>> user.has_perm("delete_site", site)
     True
 
-    ... or the same for a queryset:
-
-    >>> sites = Site.objects.all()
-    >>> assign_perm("delete_site", user, sites)
-    [<GroupObjectPermission: example.org | joe | delete_site>, ...]
-    >>> site = Site.objects.get(domain='example.org')
-    >>> user.has_perm("delete_site", site)
-    True
-
     **Global permissions**
 
     This function may also be used to assign standard, *global* permissions if
@@ -83,13 +73,15 @@ def assign_perm(perm, user_or_group, obj=None):
     user, group = get_identity(user_or_group)
     # If obj is None we try to operate on global permissions
     if obj is None:
-        try:
-            app_label, codename = perm.split('.', 1)
-        except ValueError:
-            raise ValueError("For global permissions, first argument must be in"
-                             " format: 'app_label.codename' (is %r)" % perm)
-        perm = Permission.objects.get(content_type__app_label=app_label,
-                                      codename=codename)
+        if not isinstance(perm, Permission):
+            try:
+                app_label, codename = perm.split('.', 1)
+            except ValueError:
+                raise ValueError("For global permissions, first argument must be in"
+                                 " format: 'app_label.codename' (is %r)" % perm)
+            perm = Permission.objects.get(content_type__app_label=app_label,
+                                          codename=codename)
+
         if user:
             user.user_permissions.add(perm)
             return perm
@@ -98,23 +90,44 @@ def assign_perm(perm, user_or_group, obj=None):
             return perm
 
     perm = perm.split('.')[-1]
-    try:
-        assigned_perms = []
-        for instance in obj:
-            if user:
-                model = get_user_obj_perms_model(instance)
-            if group:
-                model = get_group_obj_perms_model(instance)
 
-            assigned_perms.append(model.objects.assign_perm(perm, user or group, instance))
-        return assigned_perms
-    except TypeError:
-        if user:
-            model = get_user_obj_perms_model(obj)
-            return model.objects.assign_perm(perm, user, obj)
-        if group:
-            model = get_group_obj_perms_model(obj)
-            return model.objects.assign_perm(perm, group, obj)
+    if user:
+        model = get_user_obj_perms_model(obj)
+        return model.objects.assign_perm(perm, user, obj)
+    if group:
+        model = get_group_obj_perms_model(obj)
+        return model.objects.assign_perm(perm, group, obj)
+
+
+def bulk_assign_perm(perm, user_or_group, queryset):
+    """
+    Assigns permission to user/group and object pairs.
+
+    :param perm: proper permission for given ``obj``, as string (in format:
+      ``app_label.codename`` or ``codename``) or ``Permission`` instance.
+
+    :param user_or_group: instance of ``User``, ``AnonymousUser`` or ``Group``;
+      passing any other object would raise
+      ``guardian.exceptions.NotUserNorGroup`` exception.
+
+    :param queryset: QuerySet of Django ``Model`` instances.
+    """
+
+    user, group = get_identity(user_or_group)
+    if user:
+        model = get_user_obj_perms_model(queryset.model)
+    if group:
+        model = get_group_obj_perms_model(queryset.model)
+
+    if not isinstance(perm, Permission):
+        perm = perm.split('.')[-1]
+        ctype = ContentType.objects.get_for_model(queryset.model)
+        perm = Permission.objects.get(content_type=ctype, codename=perm)
+
+    assigned_perms = []
+    for instance in queryset:
+        assigned_perms.append(model.objects.assign_perm(perm, user or group, instance))
+    return assigned_perms
 
 
 def assign(perm, user_or_group, obj=None):
