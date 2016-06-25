@@ -10,7 +10,6 @@ from guardian.compat import basestring
 from guardian.models import UserObjectPermission
 from guardian.utils import get_403_or_None
 from guardian.utils import get_anonymous_user
-from guardian.shortcuts import get_objects_for_user
 
 
 class LoginRequiredMixin(object):
@@ -133,6 +132,7 @@ class PermissionRequiredMixin(object):
     return_403 = False
     raise_exception = False
     accept_global_perms = False
+    permission_object = None
 
     def get_required_permissions(self, request=None):
         """
@@ -154,10 +154,10 @@ class PermissionRequiredMixin(object):
         return perms
 
     def get_permission_object(self):
-        if hasattr(self, 'permission_object'):
+        if self.permission_object:
             return self.permission_object
-        return (hasattr(self, 'get_object') and self.get_object() or
-                getattr(self, 'object', None))
+        return (hasattr(self, 'get_object') and self.get_object()
+                or getattr(self, 'object', None))
 
     def check_permissions(self, request):
         """
@@ -216,24 +216,3 @@ class GuardianUserMixin(object):
 
     def del_obj_perm(self, perm, obj):
         return UserObjectPermission.objects.remove_perm(perm, self, obj)
-
-
-class PermissionListMixin(object):
-    permission_required = None
-
-    def get_required_permission(self):
-        if self.permission_required is None:
-            raise ImproperlyConfigured(
-                '{0} is missing the permission_required attribute. Define {0}.permission_required, or override '
-                '{0}.get_permission_required().'.format(self.__class__.__name__)
-            )
-        return self.permission_required
-
-    def get_get_objects_for_user_kwargs(self, queryset):
-        return dict(user=self.request.user,
-                    perms=self.get_required_permission(),
-                    klass=queryset)
-
-    def get_queryset(self, *args, **kwargs):
-        qs = super(PermissionListMixin, self).get_queryset(*args, **kwargs)
-        return get_objects_for_user(**self.get_get_objects_for_user_kwargs(qs))

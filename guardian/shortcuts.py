@@ -2,6 +2,7 @@
 Convenient shortcuts to manage or check object permissions.
 """
 from __future__ import unicode_literals
+from guardian.core import ObjectPermissionChecker
 
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
@@ -12,7 +13,6 @@ from django.shortcuts import _get_queryset
 from itertools import groupby
 from guardian.compat import basestring
 from guardian.compat import get_user_model
-from guardian.core import ObjectPermissionChecker
 from guardian.exceptions import MixedContentTypeError
 from guardian.exceptions import WrongAppError
 from guardian.utils import get_anonymous_user
@@ -119,15 +119,7 @@ def bulk_assign_perm(perm, user_or_group, queryset):
     if group:
         model = get_group_obj_perms_model(queryset.model)
 
-    if not isinstance(perm, Permission):
-        perm = perm.split('.')[-1]
-        ctype = ContentType.objects.get_for_model(queryset.model)
-        perm = Permission.objects.get(content_type=ctype, codename=perm)
-
-    assigned_perms = []
-    for instance in queryset:
-        assigned_perms.append(model.objects.assign_perm(perm, user or group, instance))
-    return assigned_perms
+    return model.objects.bulk_assign_perm(perm, user_or_group, queryset)
 
 
 def assign(perm, user_or_group, obj=None):
@@ -193,15 +185,16 @@ def bulk_remove_perm(perm, user_or_group, queryset):
     """
 
     user, group = get_identity(user_or_group)
-    perm = perm.split('.')[-1]
 
     if user:
         model = get_user_obj_perms_model(queryset.model)
     if group:
         model = get_group_obj_perms_model(queryset.model)
 
-    for instance in queryset:
-        model.objects.remove_perm(perm, user or group, instance)
+    if not isinstance(perm, Permission):
+        perm = perm.split('.')[-1]
+
+    model.objects.bulk_remove_perm(perm, user_or_group, queryset)
 
 
 def get_perms(user_or_group, obj):

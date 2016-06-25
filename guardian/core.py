@@ -72,11 +72,11 @@ class ObjectPermissionChecker(object):
         :param obj: Django model instance for which permission should be checked
 
         """
-        perm = perm.split('.')[-1]
         if self.user and not self.user.is_active:
             return False
         elif self.user and self.user.is_superuser:
             return True
+        perm = perm.split('.')[-1]
         return perm in self.get_perms(obj)
 
     def get_group_filters(self, obj):
