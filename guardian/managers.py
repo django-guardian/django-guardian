@@ -31,8 +31,12 @@ class UserObjectPermissionManager(BaseObjectPermissionManager):
         if getattr(obj, 'pk', None) is None:
             raise ObjectNotPersisted("Object %s needs to be persisted first"
                                      % obj)
+
         ctype = ContentType.objects.get_for_model(obj)
-        permission = Permission.objects.get(content_type=ctype, codename=perm)
+        if not isinstance(perm, Permission):
+            permission = Permission.objects.get(content_type=ctype, codename=perm)
+        else:
+            permission = perm
 
         kwargs = {'permission': permission, 'user': user}
         if self.is_generic():
@@ -81,8 +85,13 @@ class GroupObjectPermissionManager(BaseObjectPermissionManager):
         if getattr(obj, 'pk', None) is None:
             raise ObjectNotPersisted("Object %s needs to be persisted first"
                                      % obj)
+
         ctype = ContentType.objects.get_for_model(obj)
-        permission = Permission.objects.get(content_type=ctype, codename=perm)
+        if not isinstance(perm, Permission):
+            ctype = ContentType.objects.get_for_model(obj)
+            permission = Permission.objects.get(content_type=ctype, codename=perm)
+        else:
+            permission = perm
 
         kwargs = {'permission': permission, 'group': group}
         if self.is_generic():
