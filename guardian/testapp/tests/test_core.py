@@ -42,9 +42,16 @@ class ObjectPermissionTestCase(TestCase):
         self.user.groups.add(self.group)
         self.ctype = ContentType.objects.create(
             model='bar', app_label='fake-for-guardian-tests')
-        self.ctype_qset = ContentType.objects.filter(model='bar', app_label='fake-for-guardian-tests')
+        self.ctype_qset = ContentType.objects.filter(model='bar',
+                                                     app_label='fake-for-guardian-tests')
         self.anonymous_user = User.objects.get(
             username=guardian_settings.ANONYMOUS_USER_NAME)
+
+    def get_permission(self, codename, app_label=None):
+        qs = Permission.objects
+        if app_label:
+            qs = qs.filter(content_type__app_label=app_label)
+        return Permission.objects.get(codename=codename)
 
 
 class ObjectPermissionCheckerTest(ObjectPermissionTestCase):

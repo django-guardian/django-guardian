@@ -89,7 +89,8 @@ def assign_perm(perm, user_or_group, obj=None):
             group.permissions.add(perm)
             return perm
 
-    perm = perm.split('.')[-1]
+    if not isinstance(perm, Permission):
+        perm = perm.split('.')[-1]
 
     if user:
         model = get_user_obj_perms_model(obj)
@@ -160,7 +161,9 @@ def remove_perm(perm, user_or_group=None, obj=None):
             group.permissions.remove(perm)
             return
 
-    perm = perm.split('.')[-1]
+    if not isinstance(perm, Permission):
+        perm = perm.split('.')[-1]
+
     if user:
         model = get_user_obj_perms_model(obj)
         model.objects.remove_perm(perm, user, obj)

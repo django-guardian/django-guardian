@@ -71,30 +71,40 @@ class AssignPermTest(ObjectPermissionTestCase):
                           user_or_group=self.user)
 
     def test_user_assign_perm(self):
-        assign_perm("change_contenttype", self.user, self.ctype)
+        assign_perm("add_contenttype", self.user, self.ctype)
         assign_perm("change_contenttype", self.group, self.ctype)
+        assign_perm(self.get_permission("delete_contenttype"), self.user, self.ctype)
+        self.assertTrue(self.user.has_perm("add_contenttype", self.ctype))
         self.assertTrue(self.user.has_perm("change_contenttype", self.ctype))
+        self.assertTrue(self.user.has_perm("delete_contenttype", self.ctype))
 
     def test_group_assign_perm(self):
+        assign_perm("add_contenttype", self.group, self.ctype)
         assign_perm("change_contenttype", self.group, self.ctype)
-        assign_perm("delete_contenttype", self.group, self.ctype)
+        assign_perm(self.get_permission("delete_contenttype"), self.group, self.ctype)
 
         check = ObjectPermissionChecker(self.group)
+        self.assertTrue(check.has_perm("add_contenttype", self.ctype))
         self.assertTrue(check.has_perm("change_contenttype", self.ctype))
         self.assertTrue(check.has_perm("delete_contenttype", self.ctype))
 
     def test_user_bulk_assign_perm(self):
-        bulk_assign_perm("change_contenttype", self.user, self.ctype_qset)
+        bulk_assign_perm("add_contenttype", self.user, self.ctype_qset)
         bulk_assign_perm("change_contenttype", self.group, self.ctype_qset)
+        bulk_assign_perm(self.get_permission("delete_contenttype"), self.user, self.ctype_qset)
         for obj in self.ctype_qset:
+            self.assertTrue(self.user.has_perm("add_contenttype", obj))
             self.assertTrue(self.user.has_perm("change_contenttype", obj))
+            self.assertTrue(self.user.has_perm("delete_contenttype", obj))
 
     def test_group_bulk_assign_perm(self):
+        bulk_assign_perm("add_contenttype", self.group, self.ctype_qset)
         bulk_assign_perm("change_contenttype", self.group, self.ctype_qset)
-        bulk_assign_perm("delete_contenttype", self.group, self.ctype_qset)
+        bulk_assign_perm(self.get_permission("delete_contenttype"), self.group, self.ctype_qset)
 
         check = ObjectPermissionChecker(self.group)
         for obj in self.ctype_qset:
+            self.assertTrue(check.has_perm("add_contenttype", obj))
             self.assertTrue(check.has_perm("change_contenttype", obj))
             self.assertTrue(check.has_perm("delete_contenttype", obj))
 
