@@ -1,15 +1,15 @@
 from __future__ import unicode_literals
-
-import django
+# OrderedDict only available in Python 2.7.
+# This will always be the case in Django 1.7 and above, as these versions
+# no longer support Python 2.6.
+from collections import OrderedDict
 from django.conf import settings
-from django.contrib.auth.models import Group
-from django.contrib.auth.models import Permission
-from django.contrib.auth.models import AnonymousUser
-import six
-import sys
+from django.conf.urls import handler404, handler500, include, url
+from django.contrib.auth.models import AnonymousUser, Group, Permission
 from importlib import import_module
 
-from django.conf.urls import url, include, handler404, handler500
+import six
+import sys
 
 __all__ = [
     'User',
@@ -99,12 +99,6 @@ try:
     str = str  # pyflakes:ignore
 except NameError:
     basestring = unicode = str = str
-
-
-# OrderedDict only available in Python 2.7.
-# This will always be the case in Django 1.7 and above, as these versions
-# no longer support Python 2.6.
-from collections import OrderedDict
 
 
 # Django 1.7 compatibility

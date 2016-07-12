@@ -1,13 +1,12 @@
 from __future__ import unicode_literals
-
+from django.apps import apps
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
-from django.utils.functional import wraps
 from django.db.models import Model
-from django.apps import apps
 from django.db.models.base import ModelBase
 from django.db.models.query import QuerySet
 from django.shortcuts import get_object_or_404
+from django.utils.functional import wraps
 from guardian.compat import basestring
 from guardian.exceptions import GuardianError
 from guardian.utils import get_403_or_None
