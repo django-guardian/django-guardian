@@ -1,13 +1,7 @@
 from __future__ import unicode_literals
-
 from django import forms
 from django.utils.translation import ugettext as _
-
-from guardian.shortcuts import assign_perm
-from guardian.shortcuts import remove_perm
-from guardian.shortcuts import get_user_perms
-from guardian.shortcuts import get_group_perms
-from guardian.shortcuts import get_perms_for_model
+from guardian.shortcuts import assign_perm, get_group_perms, get_perms_for_model, get_user_perms, remove_perm
 
 
 class BaseObjectPermissionsForm(forms.Form):

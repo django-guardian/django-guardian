@@ -1,12 +1,11 @@
 from __future__ import unicode_literals
-
-from django.db import models
 from django.contrib.contenttypes.models import ContentType
-
+from django.db import models
+from django.db.models import Q
+from guardian.core import ObjectPermissionChecker
 from guardian.exceptions import ObjectNotPersisted
 from guardian.models import Permission
-from guardian.core import ObjectPermissionChecker
-from django.db.models import Q
+
 import warnings
 
 

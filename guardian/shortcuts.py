@@ -2,23 +2,17 @@
 Convenient shortcuts to manage or check object permissions.
 """
 from __future__ import unicode_literals
-from guardian.core import ObjectPermissionChecker
-
-from django.contrib.auth.models import Group
-from django.contrib.auth.models import Permission
+from django.apps import apps
+from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Count, Q, QuerySet
-from django.apps import apps
 from django.shortcuts import _get_queryset
+from guardian.compat import basestring, get_user_model
+from guardian.core import ObjectPermissionChecker
+from guardian.exceptions import MixedContentTypeError, WrongAppError
+from guardian.utils import get_anonymous_user, get_group_obj_perms_model, get_identity, get_user_obj_perms_model
 from itertools import groupby
-from guardian.compat import basestring
-from guardian.compat import get_user_model
-from guardian.exceptions import MixedContentTypeError
-from guardian.exceptions import WrongAppError
-from guardian.utils import get_anonymous_user
-from guardian.utils import get_group_obj_perms_model
-from guardian.utils import get_identity
-from guardian.utils import get_user_obj_perms_model
+
 import warnings
 
 

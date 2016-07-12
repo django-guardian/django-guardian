@@ -1,15 +1,11 @@
 from __future__ import unicode_literals
-
 from collections import Iterable
 from django.conf import settings
-from django.contrib.auth.decorators import REDIRECT_FIELD_NAME
-from django.contrib.auth.decorators import login_required
-from django.core.exceptions import ImproperlyConfigured
-from django.core.exceptions import PermissionDenied
+from django.contrib.auth.decorators import login_required, REDIRECT_FIELD_NAME
+from django.core.exceptions import ImproperlyConfigured, PermissionDenied
 from guardian.compat import basestring
 from guardian.models import UserObjectPermission
-from guardian.utils import get_403_or_None
-from guardian.utils import get_anonymous_user
+from guardian.utils import get_403_or_None, get_anonymous_user
 
 
 class LoginRequiredMixin(object):

@@ -6,12 +6,13 @@
 
 """
 from __future__ import unicode_literals
+
 from django import template
-from django.contrib.auth.models import Group, AnonymousUser
+from django.contrib.auth.models import AnonymousUser, Group
 
 from guardian.compat import get_user_model
-from guardian.exceptions import NotUserNorGroup
 from guardian.core import ObjectPermissionChecker
+from guardian.exceptions import NotUserNorGroup
 
 register = template.Library()
 

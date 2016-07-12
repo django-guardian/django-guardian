@@ -6,25 +6,24 @@ internal functionality. They are **not** guaranteed to be stable - which means
 they actual input parameters/output type may change in future releases.
 """
 from __future__ import unicode_literals
-import os
-import logging
-from itertools import chain
-import django
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.contrib.auth.models import AnonymousUser, Group
+from django.contrib.auth.views import redirect_to_login
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import PermissionDenied
 from django.db.models import Model
 from django.http import HttpResponseForbidden
 from django.shortcuts import render_to_response
 from django.template import RequestContext, TemplateDoesNotExist
-
 from guardian.compat import get_user_model
 from guardian.conf import settings as guardian_settings
 from guardian.exceptions import NotUserNorGroup
+from itertools import chain
 
-from django.contrib.auth.views import redirect_to_login
+import django
+import logging
+import os
 
 logger = logging.getLogger(__name__)
 abspath = lambda *p: os.path.abspath(os.path.join(*p))

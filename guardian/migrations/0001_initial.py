@@ -21,9 +21,9 @@ class Migration(migrations.Migration):
                                         serialize=False, auto_created=True, verbose_name='ID')),
                 ('object_pk', models.CharField(
                     max_length=255, verbose_name='object ID')),
-                ('content_type', models.ForeignKey(to='contenttypes.ContentType')),
-                ('group', models.ForeignKey(to='auth.Group')),
-                ('permission', models.ForeignKey(to='auth.Permission')),
+                ('content_type', models.ForeignKey(to='contenttypes.ContentType', on_delete=models.CASCADE)),
+                ('group', models.ForeignKey(to='auth.Group', on_delete=models.CASCADE)),
+                ('permission', models.ForeignKey(to='auth.Permission', on_delete=models.CASCADE)),
             ],
             options={
             },
@@ -36,9 +36,9 @@ class Migration(migrations.Migration):
                                         serialize=False, auto_created=True, verbose_name='ID')),
                 ('object_pk', models.CharField(
                     max_length=255, verbose_name='object ID')),
-                ('content_type', models.ForeignKey(to='contenttypes.ContentType')),
-                ('permission', models.ForeignKey(to='auth.Permission')),
-                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('content_type', models.ForeignKey(to='contenttypes.ContentType', on_delete=models.CASCADE)),
+                ('permission', models.ForeignKey(to='auth.Permission', on_delete=models.CASCADE)),
+                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
             ],
             options={
             },

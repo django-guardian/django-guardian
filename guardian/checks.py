@@ -1,6 +1,5 @@
-
-from django.core.checks import register, Tags, Warning
 from django.conf import settings
+from django.core.checks import register, Tags, Warning
 
 
 # noinspection PyUnusedLocal
