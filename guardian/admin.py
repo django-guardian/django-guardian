@@ -178,7 +178,7 @@ class GuardedModelAdminMixin(object):
         )
 
         if request.method == 'POST' and 'submit_manage_user' in request.POST:
-            user_form = UserManage(request.POST)
+            user_form = self.get_obj_perms_user_select_form()(request.POST)
             group_form = GroupManage()
             info = (
                 self.admin_site.name,
@@ -193,7 +193,7 @@ class GuardedModelAdminMixin(object):
                 )
                 return redirect(url)
         elif request.method == 'POST' and 'submit_manage_group' in request.POST:
-            user_form = UserManage()
+            user_form = self.get_obj_perms_user_select_form()()
             group_form = GroupManage(request.POST)
             info = (
                 self.admin_site.name,
@@ -208,7 +208,7 @@ class GuardedModelAdminMixin(object):
                 )
                 return redirect(url)
         else:
-            user_form = UserManage()
+            user_form = self.get_obj_perms_user_select_form()()
             group_form = GroupManage()
 
         context = self.get_obj_perms_base_context(request, obj)
@@ -286,6 +286,13 @@ class GuardedModelAdminMixin(object):
         if 'grappelli' in settings.INSTALLED_APPS:
             return 'admin/guardian/contrib/grappelli/obj_perms_manage_user.html'
         return self.obj_perms_manage_user_template
+
+    def get_obj_perms_user_select_form(self):
+        """
+        Returns form class for selecting a user for permissions management.  By
+        default :form:`UserManage` is returned.
+        """
+        return UserManage
 
     def get_obj_perms_manage_user_form(self):
         """
