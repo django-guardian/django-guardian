@@ -320,7 +320,12 @@ class GuardedModelAdminTests(TestCase):
     def test_obj_perms_manage_user_form_attr(self):
         attrs = {'obj_perms_manage_user_form': forms.Form}
         gma = self._get_gma(attrs=attrs)
-        self.assertTrue(gma.get_obj_perms_manage_user_form(), forms.Form)
+        self.assertTrue(issubclass(gma.get_obj_perms_manage_user_form(None), forms.Form))
+
+    def test_obj_perms_user_select_form_attr(self):
+        attrs = {'obj_perms_user_select_form': forms.Form}
+        gma = self._get_gma(attrs=attrs)
+        self.assertTrue(issubclass(gma.get_obj_perms_user_select_form(None), forms.Form))
 
     def test_obj_perms_manage_group_template_attr(self):
         attrs = {'obj_perms_manage_group_template': 'foobar.html'}
@@ -331,7 +336,12 @@ class GuardedModelAdminTests(TestCase):
     def test_obj_perms_manage_group_form_attr(self):
         attrs = {'obj_perms_manage_group_form': forms.Form}
         gma = self._get_gma(attrs=attrs)
-        self.assertTrue(gma.get_obj_perms_manage_group_form(), forms.Form)
+        self.assertTrue(issubclass(gma.get_obj_perms_manage_group_form(None), forms.Form))
+
+    def test_obj_perms_group_select_form_attr(self):
+        attrs = {'obj_perms_group_select_form': forms.Form}
+        gma = self._get_gma(attrs=attrs)
+        self.assertTrue(issubclass(gma.get_obj_perms_group_select_form(None), forms.Form))
 
     def test_user_can_acces_owned_objects_only(self):
         attrs = {

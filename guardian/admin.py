@@ -172,8 +172,8 @@ class GuardedModelAdminMixin(object):
         )
 
         if request.method == 'POST' and 'submit_manage_user' in request.POST:
-            user_form = UserManage(request.POST)
-            group_form = GroupManage()
+            user_form = self.get_obj_perms_user_select_form(request)(request.POST)
+            group_form = self.get_obj_perms_group_select_form(request)(request.POST)
             info = (
                 self.admin_site.name,
                 self.model._meta.app_label,
@@ -187,8 +187,8 @@ class GuardedModelAdminMixin(object):
                 )
                 return redirect(url)
         elif request.method == 'POST' and 'submit_manage_group' in request.POST:
-            user_form = UserManage()
-            group_form = GroupManage(request.POST)
+            user_form = self.get_obj_perms_user_select_form(request)(request.POST)
+            group_form = self.get_obj_perms_group_select_form(request)(request.POST)
             info = (
                 self.admin_site.name,
                 self.model._meta.app_label,
@@ -202,8 +202,8 @@ class GuardedModelAdminMixin(object):
                 )
                 return redirect(url)
         else:
-            user_form = UserManage()
-            group_form = GroupManage()
+            user_form = self.get_obj_perms_user_select_form(request)()
+            group_form = self.get_obj_perms_group_select_form(request)()
 
         context = self.get_obj_perms_base_context(request, obj)
         context['users_perms'] = users_perms
@@ -240,7 +240,7 @@ class GuardedModelAdminMixin(object):
 
         user = get_object_or_404(get_user_model(), pk=user_id)
         obj = get_object_or_404(self.get_queryset(request), pk=object_pk)
-        form_class = self.get_obj_perms_manage_user_form()
+        form_class = self.get_obj_perms_manage_user_form(request)
         form = form_class(user, obj, request.POST or None)
 
         if request.method == 'POST' and form.is_valid():
@@ -281,7 +281,22 @@ class GuardedModelAdminMixin(object):
             return 'admin/guardian/contrib/grappelli/obj_perms_manage_user.html'
         return self.obj_perms_manage_user_template
 
-    def get_obj_perms_manage_user_form(self):
+    def get_obj_perms_user_select_form(self, request):
+        """
+        Returns form class for selecting a user for permissions management.  By
+        default :form:`UserManage` is returned.
+        """
+        return UserManage
+
+    def get_obj_perms_group_select_form(self, request):
+        """
+        Returns form class for selecting a group for permissions management.  By
+        default :form:`GroupManage` is returned.
+        """
+        return GroupManage
+
+
+    def get_obj_perms_manage_user_form(self, request):
         """
         Returns form class for user object permissions management.  By default
         :form:`AdminUserObjectPermissionsForm` is returned.
@@ -298,7 +313,7 @@ class GuardedModelAdminMixin(object):
 
         group = get_object_or_404(Group, id=group_id)
         obj = get_object_or_404(self.get_queryset(request), pk=object_pk)
-        form_class = self.get_obj_perms_manage_group_form()
+        form_class = self.get_obj_perms_manage_group_form(request)
         form = form_class(group, obj, request.POST or None)
 
         if request.method == 'POST' and form.is_valid():
@@ -339,7 +354,7 @@ class GuardedModelAdminMixin(object):
             return 'admin/guardian/contrib/grappelli/obj_perms_manage_group.html'
         return self.obj_perms_manage_group_template
 
-    def get_obj_perms_manage_group_form(self):
+    def get_obj_perms_manage_group_form(self, request):
         """
         Returns form class for group object permissions management.  By default
         :form:`AdminGroupObjectPermissionsForm` is returned.
