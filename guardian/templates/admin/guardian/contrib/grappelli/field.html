@@ -11,13 +11,6 @@
     {% endif %}
     {% if field.help_text %}<p class="grp-help">{{ field.help_text|safe }}</p>{% endif %}
     {{ field.errors }}
-    {% if field.errors %}
-        <ul class="errorlist">
-            {% for error in field.errors %}
-            <li>{{ error }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
         </div>
     </div>
 </div>

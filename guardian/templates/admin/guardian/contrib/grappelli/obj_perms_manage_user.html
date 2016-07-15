@@ -1,5 +1,6 @@
 {% extends "admin/change_form.html" %}
 {% load i18n %}
+{% load admin_urls %}
 
 {% block extrahead %}{{ block.super }}
 {{ form.media }}
@@ -7,15 +8,29 @@
 
 {% block breadcrumbs %}{% if not is_popup %}
 <ul>
-    <li><a href="../../../../../../">{% trans "Home" %}</a></li>
-    <li><a href="../../../../../">{% trans app_label|capfirst|escape %}</a></li>
-    <li>{% if has_change_permission %}<a href="../../../../">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}</li>
-    <li>{% if has_change_permission %}<a href="../../../">{{ original|truncatewords:"18" }}</a>{% else %}{{ original|truncatewords:"18" }}{% endif %}</li>
-    <li>{% if has_change_permission %}<a href="../../">{% trans "Object permissions" %}</a>{% else %}{% trans "Object permissions" %}{% endif %}</li>
+    <li><a href="{% url 'admin:index' %}">{% trans 'Home' %}</a></li>
+    <li><a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a></li>
+    {% if has_change_permission %}
+        <li>
+            {% url opts|admin_urlname:'changelist' as changelist_url %}
+            <a href="{% add_preserved_filters changelist_url %}">{{ opts.verbose_name_plural|capfirst }}</a>
+        </li>
+        <li>
+            {% url opts|admin_urlname:'change' object.pk|admin_urlquote as object_url %}
+            <a href="{% add_preserved_filters object_url %}">{{ object|truncatewords:"18" }}</a>
+        </li>
+        <li>
+            {% url opts|admin_urlname:'permissions' object.pk|admin_urlquote as permissions_url %}
+            <a href="{% add_preserved_filters permissions_url %}">{% trans "Object permissions" %}</a>
+        </li>
+    {% else %}
+        <li>{{ opts.verbose_name_plural|capfirst }}</li>
+        <li>{{ original|truncatewords:"18" }}</li>
+        <li>{% trans "Object permissions" %}</li>
+    {% endif %}
     <li>{% trans "Manage user" %}: {{ user_obj|truncatewords:"18" }}</li>
 </ul>
 {% endif %}{% endblock %}
-
 
 {% block content %}
 <form action="." method="post">
