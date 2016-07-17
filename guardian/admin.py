@@ -193,7 +193,7 @@ class GuardedModelAdminMixin(object):
                 )
                 return redirect(url)
         elif request.method == 'POST' and 'submit_manage_group' in request.POST:
-            user_form = self.get_obj_perms_user_select_form(request)()
+            user_form = self.get_obj_perms_user_select_form(request)(request.POST)
             group_form = self.get_obj_perms_group_select_form(request)(request.POST)
             info = (
                 self.admin_site.name,
