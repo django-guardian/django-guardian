@@ -3,25 +3,19 @@ include LICENSE
 include README.rst
 include MANIFEST.in
 include *.py
+include *.ini
 include run_test_and_report.sh
 include *.txt
 include AUTHORS
-include tox.ini
 recursive-include guardian *.py
 recursive-include guardian/locale *.po *.mo
-recursive-include guardian/fixtures *.json
-recursive-include guardian/templates *.html
-recursive-include guardian/tests/templates *.html
 recursive-include docs *.bat
-recursive-include docs *.conf
 recursive-include docs *.css
 recursive-include docs *.eot
 recursive-include docs *.html
 recursive-include docs *.js
 recursive-include docs *.py
-recursive-include docs *.rb
 recursive-include docs *.rst
-recursive-include docs *.sass
 recursive-include docs *.sh
 recursive-include docs *.svg
 recursive-include docs *.ttf
@@ -32,6 +26,8 @@ recursive-include example_project *.html
 recursive-include example_project *.js
 recursive-include example_project *.png
 recursive-include example_project *.txt
+recursive-include example_project *.py
 recursive-exclude docs/build *
 recursive-include guardian *.html
 recursive-include guardian *.svg
+recursive-include benchmarks *.py

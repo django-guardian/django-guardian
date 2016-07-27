@@ -120,7 +120,7 @@ class PermissionRequiredMixin(object):
          proceed to check object level permissions.
 
     ``PermissionRequiredMixin.permission_object``
-         *Default*: ``None``, object against which test the permission; if None fallback
+         *Default*: ``(not set)``, object against which test the permission; if not set fallback
          to ``self.get_permission_object()`` which return ``self.get_object()``
          or ``self.object`` by default.
 

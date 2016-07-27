@@ -1,3 +1,9 @@
+Release 1.4.5
+============================
+
+* `assign_perm` and `remove_perm` shortcuts accept `Permission` 
+  instance as `perm` and `QuerySet` as `obj` too
+
 Release 1.4.4 (Apr 04, 2016)
 ============================
 

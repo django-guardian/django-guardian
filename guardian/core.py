@@ -72,11 +72,11 @@ class ObjectPermissionChecker(object):
         :param obj: Django model instance for which permission should be checked
 
         """
-        perm = perm.split('.')[-1]
         if self.user and not self.user.is_active:
             return False
         elif self.user and self.user.is_superuser:
             return True
+        perm = perm.split('.')[-1]
         return perm in self.get_perms(obj)
 
     def get_group_filters(self, obj):
@@ -204,12 +204,11 @@ class ObjectPermissionChecker(object):
 
         group_model = get_group_obj_perms_model(model)
 
-        group_filters = {}
         if self.user:
             fieldname = 'group__%s' % (
                 User.groups.field.related_query_name(),
             )
-            group_filters.update({fieldname: self.user})
+            group_filters = {fieldname: self.user}
         else:
             group_filters = {'group': self.group}
 
@@ -249,15 +248,18 @@ class ObjectPermissionChecker(object):
                 *(group_model.objects.filter(**group_filters).select_related('permission'),)
             )
 
+        # initialize entry in '_obj_perms_cache' for all prefetched objects
+        for obj in objects:
+            key = self.get_local_cache_key(obj)
+            if key not in self._obj_perms_cache:
+                self._obj_perms_cache[key] = []
+
         for perm in perms:
             if type(perm).objects.is_generic():
                 key = (ctype.id, perm.object_pk)
             else:
                 key = (ctype.id, force_text(perm.content_object_id))
 
-            if key in self._obj_perms_cache:
-                self._obj_perms_cache[key].append(perm.permission.codename)
-            else:
-                self._obj_perms_cache[key] = [perm.permission.codename]
+            self._obj_perms_cache[key].append(perm.permission.codename)
 
         return True

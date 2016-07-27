@@ -20,6 +20,7 @@ example_project/media
 example_project/conf/*.py
 .idea/
 .eggs/
+.cache/
 
 # WebDAV remote filesystem
 .DAV

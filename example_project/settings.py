@@ -27,6 +27,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'guardian',
     'posts',
+    'articles',
     'core',
     'django.contrib.staticfiles',
 )
@@ -66,6 +67,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     "django.template.context_processors.i18n",
     "django.template.context_processors.media",
     "django.template.context_processors.static",
+    "django.template.context_processors.request",
     "django.template.context_processors.tz",
     "django.contrib.messages.context_processors.messages"
 )
@@ -100,3 +102,16 @@ PASSWORD_HASHERS = (
 )
 
 AUTH_USER_MODEL = 'core.CustomUser'
+
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': TEMPLATE_DIRS,
+        'OPTIONS': {
+            'debug': TEMPLATE_DEBUG,
+            'loaders': TEMPLATE_LOADERS,
+            'context_processors': TEMPLATE_CONTEXT_PROCESSORS,
+        },
+    },
+]

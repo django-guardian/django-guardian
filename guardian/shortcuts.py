@@ -2,18 +2,17 @@
 Convenient shortcuts to manage or check object permissions.
 """
 from __future__ import unicode_literals
+from guardian.core import ObjectPermissionChecker
 
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Count, Q
+from django.db.models import Count, Q, QuerySet
 from django.apps import apps
 from django.shortcuts import _get_queryset
 from itertools import groupby
-
 from guardian.compat import basestring
 from guardian.compat import get_user_model
-from guardian.core import ObjectPermissionChecker
 from guardian.exceptions import MixedContentTypeError
 from guardian.exceptions import WrongAppError
 from guardian.utils import get_anonymous_user
@@ -28,15 +27,17 @@ def assign_perm(perm, user_or_group, obj=None):
     Assigns permission to user/group and object pair.
 
     :param perm: proper permission for given ``obj``, as string (in format:
-      ``app_label.codename`` or ``codename``). If ``obj`` is not given, must
-      be in format ``app_label.codename``.
+      ``app_label.codename`` or ``codename``) or ``Permission`` instance.
+      If ``obj`` is not given, must be in format ``app_label.codename`` or
+      ``Permission`` instance.
 
     :param user_or_group: instance of ``User``, ``AnonymousUser`` or ``Group``;
       passing any other object would raise
       ``guardian.exceptions.NotUserNorGroup`` exception
 
-    :param obj: persisted Django's ``Model`` instance or ``None`` if assigning
-      global permission. Default is ``None``.
+    :param obj: persisted Django's ``Model`` instance or QuerySet of Django
+      ``Model`` instances or ``None`` if assigning global permission.
+      Default is ``None``.
 
     We can assign permission for ``Model`` instance for specific user:
 
@@ -73,23 +74,37 @@ def assign_perm(perm, user_or_group, obj=None):
     user, group = get_identity(user_or_group)
     # If obj is None we try to operate on global permissions
     if obj is None:
-        try:
-            app_label, codename = perm.split('.', 1)
-        except ValueError:
-            raise ValueError("For global permissions, first argument must be in"
-                             " format: 'app_label.codename' (is %r)" % perm)
-        perm = Permission.objects.get(content_type__app_label=app_label,
-                                      codename=codename)
+        if not isinstance(perm, Permission):
+            try:
+                app_label, codename = perm.split('.', 1)
+            except ValueError:
+                raise ValueError("For global permissions, first argument must be in"
+                                 " format: 'app_label.codename' (is %r)" % perm)
+            perm = Permission.objects.get(content_type__app_label=app_label,
+                                          codename=codename)
+
         if user:
             user.user_permissions.add(perm)
             return perm
         if group:
             group.permissions.add(perm)
             return perm
-    perm = perm.split('.')[-1]
+
+    if not isinstance(perm, Permission):
+        perm = perm.split('.')[-1]
+
+    if isinstance(obj, QuerySet):
+        if user:
+            model = get_user_obj_perms_model(obj.model)
+            return model.objects.bulk_assign_perm(perm, user, obj)
+        if group:
+            model = get_group_obj_perms_model(obj.model)
+            return model.objects.bulk_assign_perm(perm, group, obj)
+
     if user:
         model = get_user_obj_perms_model(obj)
         return model.objects.assign_perm(perm, user, obj)
+
     if group:
         model = get_group_obj_perms_model(obj)
         return model.objects.assign_perm(perm, group, obj)
@@ -113,8 +128,9 @@ def remove_perm(perm, user_or_group=None, obj=None):
       passing any other object would raise
       ``guardian.exceptions.NotUserNorGroup`` exception
 
-    :param obj: persisted Django's ``Model`` instance or ``None`` if assigning
-      global permission. Default is ``None``.
+    :param obj: persisted Django's ``Model`` instance or QuerySet of Django
+      ``Model`` instances or ``None`` if assigning global permission.
+      Default is ``None``.
 
     """
     user, group = get_identity(user_or_group)
@@ -132,13 +148,25 @@ def remove_perm(perm, user_or_group=None, obj=None):
         elif group:
             group.permissions.remove(perm)
             return
-    perm = perm.split('.')[-1]
+
+    if not isinstance(perm, Permission):
+        perm = perm.split('.')[-1]
+
+    if isinstance(obj, QuerySet):
+        if user:
+            model = get_user_obj_perms_model(obj.model)
+            return model.objects.bulk_remove_perm(perm, user, obj)
+        if group:
+            model = get_group_obj_perms_model(obj.model)
+            return model.objects.bulk_remove_perm(perm, group, obj)
+
     if user:
         model = get_user_obj_perms_model(obj)
-        model.objects.remove_perm(perm, user, obj)
+        return model.objects.remove_perm(perm, user, obj)
+
     if group:
         model = get_group_obj_perms_model(obj)
-        model.objects.remove_perm(perm, group, obj)
+        return model.objects.remove_perm(perm, group, obj)
 
 
 def get_perms(user_or_group, obj):

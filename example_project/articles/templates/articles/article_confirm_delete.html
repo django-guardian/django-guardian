@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% load guardian_tags %}
+
+
+{% block content %}
+<p>Are you sure do you want to delete "<a href="{{object.get_absolute_url}}">{{object}}</a>"?</p>
+<form method="POST">
+    {% csrf_token %}
+    <input type="submit" class="btn btn-primary" value="Delete">
+</form>
+{% endblock %}
+
