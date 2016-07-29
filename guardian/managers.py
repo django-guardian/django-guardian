@@ -121,13 +121,15 @@ class BaseObjectPermissionManager(models.Manager):
         """
         filters = Q(**{self.user_or_group_field: user_or_group})
 
+        if isinstance(perm, Permission):
+            filters &= Q(permission=perm)
+        else:
+            ctype = ContentType.objects.get_for_model(queryset.model)
+            filters &= Q(permission__codename=perm,
+                         permission__content_type=ctype)
+
         if self.is_generic():
-            if isinstance(perm, Permission):
-                filters &= Q(permission=perm)
-            else:
-                ctype = ContentType.objects.get_for_model(queryset.model)
-                filters &= Q(permission__codename=perm,
-                             permission__content_type=ctype)
+            filters &= Q(object_pk__in = queryset.values_list('pk', flat=True))
         else:
             filters &= Q(content_object__in=queryset)
 
