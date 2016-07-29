@@ -129,7 +129,7 @@ class BaseObjectPermissionManager(models.Manager):
                          permission__content_type=ctype)
 
         if self.is_generic():
-            filters &= Q(object_pk__in = [str(o['pk']) for o in queryset.values_list('pk', flat=True)])
+            filters &= Q(object_pk__in = [str(pk) for pk in queryset.values_list('pk', flat=True)])
         else:
             filters &= Q(content_object__in=queryset)
 
