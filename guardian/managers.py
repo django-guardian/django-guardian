@@ -72,7 +72,7 @@ class BaseObjectPermissionManager(models.Manager):
                 kwargs = {'permission': permission, self.user_or_group_field: user_or_group}
                 if self.is_generic():
                     kwargs['content_type'] = ctype
-                    kwargs['object_pk'] = instance.pk
+                    kwargs['object_pk'] = str(instance.pk)
                 else:
                     kwargs['content_object'] = instance
                 assigned_perms.append(self.model(**kwargs))
