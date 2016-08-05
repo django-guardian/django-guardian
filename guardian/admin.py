@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.core.urlresolvers import reverse
-from django.shortcuts import get_object_or_404, redirect, render_to_response
+from django.shortcuts import get_object_or_404, redirect, render_to_response, render
 from django.template import RequestContext
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import ugettext
@@ -214,6 +214,9 @@ class GuardedModelAdminMixin(object):
         # https://github.com/django/django/commit/cf1f36bb6eb34fafe6c224003ad585a647f6117b
         request.current_app = self.admin_site.name
 
+        if django.VERSION >= (1, 10):
+            return render(request, self.get_obj_perms_manage_template(), context)
+
         return render_to_response(self.get_obj_perms_manage_template(), context, RequestContext(request))
 
     def get_obj_perms_manage_template(self):
@@ -264,6 +267,9 @@ class GuardedModelAdminMixin(object):
         context['form'] = form
 
         request.current_app = self.admin_site.name
+
+        if django.VERSION >= (1, 10):
+            return render(request, self.get_obj_perms_manage_user_template(), context)
 
         return render_to_response(self.get_obj_perms_manage_user_template(), context, RequestContext(request))
 
@@ -337,6 +343,9 @@ class GuardedModelAdminMixin(object):
         context['form'] = form
 
         request.current_app = self.admin_site.name
+
+        if django.VERSION >= (1, 10):
+            return render(request, self.get_obj_perms_manage_group_template(), context)
 
         return render_to_response(self.get_obj_perms_manage_group_template(), context, RequestContext(request))
 
