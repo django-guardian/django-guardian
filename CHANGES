@@ -1,5 +1,5 @@
-Release 1.4.5
-============================
+Release 1.4.5 (9th August, 2016)
+================================
 
 * Fix caching issue with prefetch_perms.
 * Convert readthedocs link for their .org -> .io migration for hosted projects
