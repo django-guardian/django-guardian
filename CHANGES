@@ -1,8 +1,29 @@
 Release 1.4.5
 ============================
 
+* Fix caching issue with prefetch_perms.
+* Convert readthedocs link for their .org -> .io migration for hosted projects
+* Remove .permission_object in PermissionRequiredMixin
+* Add PermissionListMixin class
+* Add example CRUD CBV project
+* Add TEMPLATES in example_project settings
+* Add Queryset support to assign_perm
+* Added QuerySet support to remove_perm
+* Updated assign_perm and remove_perm docstrings
+* Moved queryset support in assign_perms to its own function
+* Moved queryset support in remove_perms to its own function
+* Consolidated {User,Group}ObjectPermissionManager, move logic of bulk_*_perm
+  to managers
 * `assign_perm` and `remove_perm` shortcuts accept `Permission` 
-  instance as `perm` and `QuerySet` as `obj` too
+  instance as `perm` and `QuerySet` as `obj` too.
+* Consolidate bulk_assign_perm to assign_perm and bulk_remove_perm to remove_perm
+* Upgraded Grappelli templates breadcrumbs block to new Django 1.9 and
+  Grappelli 2.8 standards, including proper URLs and support for
+  preserved_filters. Removed the duplicated field.errors in the field.html
+  template file.
+* Make UserManage/GroupManage forms overridable
+* Fixed GuardedModelAdminMixin views render for Django 1.10
+
 
 Release 1.4.4 (Apr 04, 2016)
 ============================
