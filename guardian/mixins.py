@@ -6,6 +6,7 @@ from django.core.exceptions import ImproperlyConfigured, PermissionDenied
 from guardian.compat import basestring
 from guardian.models import UserObjectPermission
 from guardian.utils import get_403_or_None, get_anonymous_user
+from guardian.shortcuts import get_objects_for_user
 
 
 class LoginRequiredMixin(object):
@@ -212,3 +213,24 @@ class GuardianUserMixin(object):
 
     def del_obj_perm(self, perm, obj):
         return UserObjectPermission.objects.remove_perm(perm, self, obj)
+
+
+class PermissionListMixin(object):
+    permission_required = None
+
+    def get_required_permission(self):
+        if self.permission_required is None:
+            raise ImproperlyConfigured(
+                '{0} is missing the permission_required attribute. Define {0}.permission_required, or override '
+                '{0}.get_permission_required().'.format(self.__class__.__name__)
+            )
+        return self.permission_required
+
+    def get_get_objects_for_user_kwargs(self, queryset):
+        return dict(user=self.request.user,
+                    perms=self.get_required_permission(),
+                    klass=queryset)
+
+    def get_queryset(self, *args, **kwargs):
+        qs = super(PermissionListMixin, self).get_queryset(*args, **kwargs)
+        return get_objects_for_user(**self.get_get_objects_for_user_kwargs(qs))
