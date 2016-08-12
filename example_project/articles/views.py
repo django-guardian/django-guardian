@@ -3,7 +3,7 @@ from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
                                   UpdateView)
 from guardian.mixins import PermissionRequiredMixin, PermissionListMixin
 from guardian.shortcuts import assign_perm
-from .models import Article
+from articles.models import Article
 
 
 class ArticleListView(PermissionListMixin, ListView):
@@ -30,13 +30,13 @@ class ArticleCreateView(PermissionRequiredMixin, CreateView):
         return resp
 
 
-class ArticleUpdateView(UpdateView):
+class ArticleUpdateView(PermissionRequiredMixin, UpdateView):
     model = Article
     permission_required = ['view_article', 'change_article']
     fields = ['title', 'slug', 'content']
 
 
-class ArticleDeleteView(DeleteView):
+class ArticleDeleteView(PermissionRequiredMixin, DeleteView):
     model = Article
     success_url = reverse_lazy('articles:list')
     permission_required = ['view_article', 'delete_article']
