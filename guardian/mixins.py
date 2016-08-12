@@ -128,7 +128,6 @@ class PermissionRequiredMixin(object):
     return_403 = False
     raise_exception = False
     accept_global_perms = False
-    permission_object = None
 
     def get_required_permissions(self, request=None):
         """
@@ -150,10 +149,10 @@ class PermissionRequiredMixin(object):
         return perms
 
     def get_permission_object(self):
-        if self.permission_object:
+        if hasattr(self, 'permission_object'):
             return self.permission_object
-        return (hasattr(self, 'get_object') and self.get_object()
-                or getattr(self, 'object', None))
+        return (hasattr(self, 'get_object') and self.get_object() or
+                getattr(self, 'object', None))
 
     def check_permissions(self, request):
         """
