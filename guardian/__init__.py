@@ -8,7 +8,7 @@ from . import checks
 try:
     from .version import version as __version__
     __version__split__ = __version__.split(".")
-    VERSION = tuple([int(each) for each in __version__split__[:3]] + __version__split__[3:])
+    VERSION = tuple(['1', '5', '7'])
 
     def get_version():
         """
