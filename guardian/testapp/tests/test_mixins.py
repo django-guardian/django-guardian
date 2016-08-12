@@ -8,6 +8,7 @@ from django.test import TestCase
 from django.test.client import RequestFactory
 from django.views.generic import View
 
+from guardian.shortcuts import assign_perm
 from guardian.compat import get_user_model
 import mock
 from guardian.mixins import LoginRequiredMixin
@@ -33,6 +34,11 @@ class TestView(PermissionRequiredMixin, RemoveDatabaseView):
 
 class NoObjectView(PermissionRequiredMixin, RemoveDatabaseView):
     permission_required = 'testapp.change_post'
+
+
+class GlobalNoObjectView(PermissionRequiredMixin, RemoveDatabaseView):
+    permission_required = 'testapp.add_post'
+    accept_global_perms = True
 
 
 class TestViewMixins(TestCase):
@@ -110,6 +116,31 @@ class TestViewMixins(TestCase):
         view = NoObjectView.as_view()
         response = view(request)
         self.assertEqual(response.status_code, 302)
+
+    def test_permission_required_global_no_object(self):
+        """
+        This test would fail if permission is checked on a view's
+        object when it not set and **no** global permission
+        """
+
+        request = self.factory.get('/')
+        request.user = self.user
+        view = GlobalNoObjectView.as_view()
+        response = view(request)
+        self.assertEqual(response.status_code, 302)
+
+    def test_permission_granted_global_no_object(self):
+        """
+        This test would fail if permission is checked on a view's
+        object when it not set and **has** global permission
+        """
+
+        request = self.factory.get('/')
+        request.user = self.user
+        assign_perm('testapp.add_post', request.user)
+        view = GlobalNoObjectView.as_view()
+        with self.assertRaises(DatabaseRemovedError):
+            view(request)
 
     def test_permission_required_as_list(self):
         """
