@@ -33,9 +33,7 @@ install:
 script:
   - python ./setup.py --version
   - py.test --cov=guardian
-  - pip install .
-  - cd example_project
-  - python manage.py test
+  - bash -c "if [[ $DJANGO_VERSION = 1.9.* || $DJANGO_VERSION = "master" ]]; then pip install .; cd example_project; python manage.py test; fi; "
 
 notifications:
   irc: "irc.freenode.net#django-guardian"
