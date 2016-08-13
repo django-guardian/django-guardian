@@ -1,16 +1,23 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-
+import django
 from django.db import migrations, models
 import django.utils.timezone
 import django.core.validators
 import django.contrib.auth.models
 
+if django.VERSION >= (1, 8):
+    django_version_depend = {'managers': [
+                ('objects', django.contrib.auth.models.UserManager()),
+            ]}
+else:
+    django_version_depend = {}
+
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('auth', '0006_require_contenttypes_0002'),
+        ('auth', '0001_initial'),
     ]
 
     operations = [
@@ -50,8 +57,6 @@ class Migration(migrations.Migration):
                 'verbose_name': 'user',
                 'verbose_name_plural': 'users',
             },
-            managers=[
-                ('objects', django.contrib.auth.models.UserManager()),
-            ],
+            **django_version_depend
         ),
     ]
