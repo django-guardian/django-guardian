@@ -61,7 +61,7 @@ GUARDIAN_RAISE_403 = True
 ROOT_URLCONF = 'urls'
 
 TEMPLATE_CONTEXT_PROCESSORS = (
-    'context_processors.version',
+    'core.context_processors.version',
     "django.contrib.auth.context_processors.auth",
     "django.template.context_processors.debug",
     "django.template.context_processors.i18n",
