@@ -5,7 +5,7 @@ import sys
 
 if django.VERSION < (1, 5):
     sys.stderr.write("ERROR: guardian's example project must be run with "
-                     "Django 1.5 or later!\n")
+                     "Django 1.8 or later!\n")
     sys.exit(1)
 
 
