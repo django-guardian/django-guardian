@@ -161,6 +161,14 @@ class RemovePermTest(ObjectPermissionTestCase):
         for obj in self.ctype_qset:
             self.assertFalse(self.user.has_perm("change_contenttype", obj))
 
+    def test_user_remove_perm_empty_queryset(self):
+        assign_perm("change_contenttype", self.user, self.ctype_qset)
+        remove_perm("change_contenttype", self.user, self.ctype_qset.none())
+
+        self.assertEquals(list(self.ctype_qset.none()), [])
+        for obj in self.ctype_qset:
+            self.assertTrue(self.user.has_perm("change_contenttype", obj))
+
     def test_group_remove_perm_queryset(self):
         assign_perm("change_contenttype", self.group, self.ctype_qset)
         remove_perm("change_contenttype", self.group, self.ctype_qset)
