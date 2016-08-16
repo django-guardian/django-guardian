@@ -10,16 +10,19 @@ env:
  - DJANGO_VERSION=1.7.10 DATABASE_URL=postgres://postgres@/django_guardian
  - DJANGO_VERSION=1.8.7 DATABASE_URL=postgres://postgres@/django_guardian
  - DJANGO_VERSION=1.9.1 DATABASE_URL=postgres://postgres@/django_guardian
+ - DJANGO_VERSION=1.10 DATABASE_URL=postgres://postgres@/django_guardian
  - DJANGO_VERSION=master DATABASE_URL=postgres://postgres@/django_guardian
 
  - DJANGO_VERSION=1.7.10 DATABASE_URL=mysql://root:@localhost/django_guardian
  - DJANGO_VERSION=1.8.7 DATABASE_URL=mysql://root:@localhost/django_guardian
  - DJANGO_VERSION=1.9.1 DATABASE_URL=mysql://root:@localhost/django_guardian
+ - DJANGO_VERSION=1.10 DATABASE_URL=mysql://root:@localhost/django_guardian
  - DJANGO_VERSION=master DATABASE_URL=mysql://root:@localhost/django_guardian
 
  - DJANGO_VERSION=1.7.10 DATABASE_URL=sqlite://
  - DJANGO_VERSION=1.8.7 DATABASE_URL=sqlite://
  - DJANGO_VERSION=1.9.1 DATABASE_URL=sqlite://
+ - DJANGO_VERSION=1.10 DATABASE_URL=sqlite://
  - DJANGO_VERSION=master DATABASE_URL=sqlite://
 
 install:
@@ -33,7 +36,7 @@ install:
 script:
   - python ./setup.py --version
   - py.test --cov=guardian
-  - bash -c "if [[ $DJANGO_VERSION = 1.9.* || $DJANGO_VERSION = "master" ]]; then pip install .; cd example_project; python manage.py test; fi; "
+  - bash -c "if [[ $DJANGO_VERSION = 1.9.* || $DJANGO_VERSION = 1.10 || $DJANGO_VERSION = "master" ]]; then pip install .; cd example_project; python manage.py test; fi; "
 
 notifications:
   irc: "irc.freenode.net#django-guardian"
@@ -49,6 +52,13 @@ matrix:
         env: DJANGO_VERSION=1.9.1 DATABASE_URL=mysql://root:@localhost/django_guardian
       - python: 3.3
         env: DJANGO_VERSION=1.9.1 DATABASE_URL=sqlite://
+      # Drop python 3.3 and django 1.10
+      - python: 3.3
+        env: DJANGO_VERSION=1.10 DATABASE_URL=postgres://postgres@/django_guardian
+      - python: 3.3
+        env: DJANGO_VERSION=1.10 DATABASE_URL=mysql://root:@localhost/django_guardian
+      - python: 3.3
+        env: DJANGO_VERSION=1.10 DATABASE_URL=sqlite://
       # Drop python 3.3 and django master
       - python: 3.3
         env: DJANGO_VERSION=master DATABASE_URL=postgres://postgres@/django_guardian
@@ -70,6 +80,8 @@ matrix:
         env: DJANGO_VERSION=1.8.7 DATABASE_URL=postgres://postgres@/django_guardian
       - python: 3.3
         env: DJANGO_VERSION=1.9.1 DATABASE_URL=postgres://postgres@/django_guardian
+      - python: 3.3
+        env: DJANGO_VERSION=1.10 DATABASE_URL=postgres://postgres@/django_guardian
   allow_failures:
       - env: DJANGO_VERSION=master DATABASE_URL=postgres://postgres@/django_guardian
       - env: DJANGO_VERSION=master DATABASE_URL=mysql://root:@localhost/django_guardian
