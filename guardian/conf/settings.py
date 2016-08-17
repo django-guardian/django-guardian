@@ -20,6 +20,8 @@ GET_INIT_ANONYMOUS_USER = getattr(settings, 'GUARDIAN_GET_INIT_ANONYMOUS_USER',
 
 MONKEY_PATCH = getattr(settings, 'GUARDIAN_MONKEY_PATCH', True)
 
+GET_CONTENT_TYPE = getattr(settings, 'GUARDIAN_GET_CONTENT_TYPE', 'guardian.ctypes.get_default_content_type')
+
 
 def check_configuration():
     if RENDER_403 and RAISE_403:

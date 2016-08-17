@@ -8,7 +8,7 @@ from guardian.shortcuts import assign_perm, remove_perm
 
 class CustomPKModelTest(TestCase):
     """
-    Tests agains custom model with primary key other than *standard*
+    Tests against custom model with primary key other than *standard*
     ``id`` integer field.
     """
 

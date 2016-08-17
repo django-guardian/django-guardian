@@ -3,6 +3,7 @@ from django.db import models
 from guardian.compat import get_user_model
 from guardian.conf import settings
 from guardian.core import ObjectPermissionChecker
+from guardian.ctypes import get_content_type
 from guardian.exceptions import WrongAppError
 
 
@@ -83,8 +84,14 @@ class ObjectPermissionBackend(object):
         if '.' in perm:
             app_label, perm = perm.split('.')
             if app_label != obj._meta.app_label:
-                raise WrongAppError("Passed perm has app label of '%s' and "
-                                    "given obj has '%s'" % (app_label, obj._meta.app_label))
+                # Check the content_type app_label when permission
+                # and obj app labels don't match.
+                ctype = get_content_type(obj)
+                if app_label != ctype.app_label:
+                    raise WrongAppError("Passed perm has app label of '%s' while "
+                                        "given obj has app label '%s' and given obj"
+                                        "content_type has app label '%s'" %
+                                        (app_label, obj._meta.app_label, ctype.app_label))
 
         check = ObjectPermissionChecker(user_obj)
         return check.has_perm(perm, obj)
