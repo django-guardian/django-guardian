@@ -113,7 +113,7 @@ maintainence point of view, especially).
 .. _performance-prefetch:
 
 Prefetching permissions
--------------------
+-----------------------
 
 .. versionadded:: 1.4.3
 
