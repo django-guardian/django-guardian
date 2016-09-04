@@ -553,7 +553,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
             group_fields = generic_fields
         else:
             group_fields = direct_fields
-        if not any_perm and len(codenames) and not has_global_perms:
+        if not any_perm and len(codenames) > 1 and not has_global_perms:
             user_obj_perms = user_obj_perms_queryset.values_list(*user_fields)
             groups_obj_perms = groups_obj_perms_queryset.values_list(*group_fields)
             data = list(user_obj_perms) + list(groups_obj_perms)
@@ -576,12 +576,12 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
 
     values = user_obj_perms_queryset.values_list(user_fields[0], flat=True)
     if user_model.objects.is_generic():
-        values = list(values)
+        values = set(values)
     q = Q(pk__in=values)
     if use_groups:
         values = groups_obj_perms_queryset.values_list(group_fields[0], flat=True)
         if group_model.objects.is_generic():
-            values = list(values)
+            values = set(values)
         q |= Q(pk__in=values)
 
     return queryset.filter(q)
