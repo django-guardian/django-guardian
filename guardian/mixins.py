@@ -218,17 +218,21 @@ class PermissionListMixin(object):
     permission_required = None
     get_objects_for_user_extra_kwargs = {}
 
-    def get_required_permission(self):
-        if self.permission_required is None:
-            raise ImproperlyConfigured(
-                '{0} is missing the permission_required attribute. Define {0}.permission_required, or override '
-                '{0}.get_permission_required().'.format(self.__class__.__name__)
-            )
-        return self.permission_required
+    def get_required_permissions(self, request=None):
+        if isinstance(self.permission_required, basestring):
+            perms = [self.permission_required]
+        elif isinstance(self.permission_required, Iterable):
+            perms = [p for p in self.permission_required]
+        else:
+            raise ImproperlyConfigured("'PermissionRequiredMixin' requires "
+                                       "'permission_required' attribute to be set to "
+                                       "'<app_label>.<permission codename>' but is set to '%s' instead"
+                                       % self.permission_required)
+        return perms
 
     def get_get_objects_for_user_kwargs(self, queryset):
         return dict(user=self.request.user,
-                    perms=self.get_required_permission(),
+                    perms=self.get_required_permissions(self.request),
                     klass=queryset,
                     **self.get_objects_for_user_extra_kwargs)
 
