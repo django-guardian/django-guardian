@@ -22,6 +22,9 @@ env:
  - DJANGO_VERSION=1.9.1 DATABASE_URL=sqlite://
  - DJANGO_VERSION=master DATABASE_URL=sqlite://
 
+before_install:
+  - pip install -q -U pytest
+
 install:
   - travis_retry pip install -q mock==1.0.1 pytest pytest-django pytest-cov django-environ setuptools_scm
 # Install django master or version
