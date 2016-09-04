@@ -216,6 +216,7 @@ class GuardianUserMixin(object):
 
 class PermissionListMixin(object):
     permission_required = None
+    get_objects_for_user_extra_kwargs = {}
 
     def get_required_permission(self):
         if self.permission_required is None:
@@ -228,7 +229,8 @@ class PermissionListMixin(object):
     def get_get_objects_for_user_kwargs(self, queryset):
         return dict(user=self.request.user,
                     perms=self.get_required_permission(),
-                    klass=queryset)
+                    klass=queryset,
+                    **self.get_objects_for_user_extra_kwargs)
 
     def get_queryset(self, *args, **kwargs):
         qs = super(PermissionListMixin, self).get_queryset(*args, **kwargs)
