@@ -7,12 +7,14 @@ from django.http import HttpResponse
 from django.test import TestCase
 from django.test.client import RequestFactory
 from django.views.generic import View
+from django.views.generic import ListView
 
 from guardian.shortcuts import assign_perm
 from guardian.compat import get_user_model
 import mock
 from guardian.mixins import LoginRequiredMixin
 from guardian.mixins import PermissionRequiredMixin
+from guardian.mixins import PermissionListMixin
 
 from ..models import Post
 
@@ -41,10 +43,16 @@ class GlobalNoObjectView(PermissionRequiredMixin, RemoveDatabaseView):
     accept_global_perms = True
 
 
+class PostPermissionListView(PermissionListMixin, ListView):
+    model = Post
+    permission_required = 'testapp.change_post'
+    template_name = 'list.html'
+
+
 class TestViewMixins(TestCase):
 
     def setUp(self):
-        self.post = Post.objects.create(title='foo')
+        self.post = Post.objects.create(title='foo-post-title')
         self.factory = RequestFactory()
         self.user = get_user_model().objects.create_user(
             'joe', 'joe@doe.com', 'doe')
@@ -191,3 +199,18 @@ class TestViewMixins(TestCase):
         response = view(request)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b'secret-view')
+
+    def test_list_permission(self):
+        request = self.factory.get('/some-secret-list/')
+        request.user = AnonymousUser()
+
+        view = PostPermissionListView.as_view()
+
+        response = view(request)
+        self.assertNotContains(response, b'foo-post-title')
+
+        request.user = self.user
+        request.user.add_obj_perm('change_post', self.post)
+
+        response = view(request)
+        self.assertContains(response, b'foo-post-title')
