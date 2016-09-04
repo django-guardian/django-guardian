@@ -29,9 +29,9 @@ Sources are available at `issue-tracker`_. You may also file a bug there.
 Alternate projects
 ------------------
 
-Django_ 1.2 still has *only* foundation for object permissions [1]_ and
+Django_ still has *only* foundation for object permissions [1]_ and
 ``django-guardian`` make use of new facilities and it is based on them.  There
-are some other pluggable applications which does *NOT* require latest 1.2
+are some other pluggable applications which does *NOT* require 1.2+
 version of Django_. For instance, there are great `django-authority`_ or
 `django-permissions`_ available out there.
 
