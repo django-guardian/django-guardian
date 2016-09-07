@@ -26,3 +26,8 @@ PermissionRequiredMixin
 .. autoclass:: guardian.mixins.PermissionRequiredMixin
    :members:
 
+PermissionListMixin
+-----------------------
+
+.. autoclass:: guardian.mixins.PermissionListMixin
+   :members:

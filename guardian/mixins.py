@@ -215,20 +215,68 @@ class GuardianUserMixin(object):
 
 
 class PermissionListMixin(object):
-    permission_required = None
+    """
+    A view mixin that filter object in queryset for the current logged by required permission.
 
-    def get_required_permission(self):
-        if self.permission_required is None:
-            raise ImproperlyConfigured(
-                '{0} is missing the permission_required attribute. Define {0}.permission_required, or override '
-                '{0}.get_permission_required().'.format(self.__class__.__name__)
-            )
-        return self.permission_required
+    **Example Usage**::
+
+        class SecureView(PermissionListMixin, ListView):
+            ...
+            permission_required = 'articles.view_article'
+            ...
+
+    or::
+
+        class SecureView(PermissionListMixin, ListView):
+            ...
+            permission_required = 'auth.change_user'
+            get_objects_for_user_extra_kwargs = {'use_groups': False}
+            ...
+
+    **Class Settings**
+
+    ``PermissionListMixin.permission_required``
+
+        *Default*: ``None``, must be set to either a string or list of strings
+        in format: *<app_label>.<permission_codename>*.
+
+    ``PermissionListMixin.get_objects_for_user_extra_kwargs``
+
+        *Default*: ``{}``,  A extra params to pass for ```guardian.shorcuts.get_objects_for_user```
+
+    """
+    permission_required = None
+    get_objects_for_user_extra_kwargs = {}
+
+    def get_required_permissions(self, request=None):
+        """
+        Returns list of permissions in format *<app_label>.<codename>* that
+        should be checked against *request.user* and *object*. By default, it
+        returns list from ``permission_required`` attribute.
+
+        :param request: Original request.
+        """
+        if isinstance(self.permission_required, basestring):
+            perms = [self.permission_required]
+        elif isinstance(self.permission_required, Iterable):
+            perms = [p for p in self.permission_required]
+        else:
+            raise ImproperlyConfigured("'PermissionRequiredMixin' requires "
+                                       "'permission_required' attribute to be set to "
+                                       "'<app_label>.<permission codename>' but is set to '%s' instead"
+                                       % self.permission_required)
+        return perms
 
     def get_get_objects_for_user_kwargs(self, queryset):
+        """
+        Returns dict of kwargs that should be pass to ```get_objects_for_user```.
+
+        :param request: Queryset to filter
+        """
         return dict(user=self.request.user,
-                    perms=self.get_required_permission(),
-                    klass=queryset)
+                    perms=self.get_required_permissions(self.request),
+                    klass=queryset,
+                    **self.get_objects_for_user_extra_kwargs)
 
     def get_queryset(self, *args, **kwargs):
         qs = super(PermissionListMixin, self).get_queryset(*args, **kwargs)

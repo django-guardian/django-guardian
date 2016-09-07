@@ -4,14 +4,19 @@ from datetime import datetime
 from django.db import models
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import AbstractUser, AbstractBaseUser
+from django.utils.encoding import python_2_unicode_compatible
 
 from guardian.mixins import GuardianUserMixin
 from guardian.models import UserObjectPermissionBase
 from guardian.models import GroupObjectPermissionBase
 
 
+@python_2_unicode_compatible
 class Post(models.Model):
     title = models.CharField('title', max_length=64)
+
+    def __str__(self):
+        return self.title
 
 
 class DynamicAccessor(object):
@@ -38,7 +43,7 @@ class Project(models.Model):
     class Meta:
         get_latest_by = 'created_at'
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -49,6 +54,7 @@ class MixedGroupObjectPermission(GroupObjectPermissionBase):
     content_object = models.ForeignKey('Mixed')
 
 
+@python_2_unicode_compatible
 class Mixed(models.Model):
     """
     Model for tests obj perms checks with generic user object permissions model
@@ -56,7 +62,7 @@ class Mixed(models.Model):
     """
     name = models.CharField(max_length=128, unique=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
@@ -64,6 +70,7 @@ class ReverseMixedUserObjectPermission(UserObjectPermissionBase):
     content_object = models.ForeignKey('ReverseMixed')
 
 
+@python_2_unicode_compatible
 class ReverseMixed(models.Model):
     """
     Model for tests obj perms checks with generic group object permissions model
@@ -71,7 +78,7 @@ class ReverseMixed(models.Model):
     """
     name = models.CharField(max_length=128, unique=True)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
 
