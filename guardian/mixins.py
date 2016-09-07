@@ -269,7 +269,7 @@ class PermissionListMixin(object):
 
     def get_get_objects_for_user_kwargs(self, queryset):
         """
-        Returns dict of kwargs that should be pass to ```get_objects_for_user_kwargs```.
+        Returns dict of kwargs that should be pass to ```get_objects_for_user```.
 
         :param request: Queryset to filter
         """
