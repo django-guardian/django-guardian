@@ -1,13 +1,24 @@
-Release 1.4.5 (9th August, 2016)
-================================
+Release 1.4.6 (Sep 09, 2016)
+============================
+
+* Improved performance of get_objects_for_user
+* Added test-covered and documented guardian.mixins.PermissionListMixin
+* Allow content type retrieval to be overridden fg. for django-polymorphic support
+* Added support CreateView-like (no object) view in PermissionRequiredMixin
+* Added django 1.10 to TravisCI and tox
+* Run tests for example_project in TravisCI
+* Require django 1.9+ for example_project (django-guardian core support django 1.7+)
+* Fix django versions compatibility in example_project
+* Drop django in install_requires of setuptools
+
+Release 1.4.5 (Aug 09, 2016)
+============================
 
 * Fix caching issue with prefetch_perms.
 * Convert readthedocs link for their .org -> .io migration for hosted projects
-* Remove .permission_object in PermissionRequiredMixin
-* Add PermissionListMixin class
-* Add example CRUD CBV project
-* Add TEMPLATES in example_project settings
-* Add Queryset support to assign_perm
+* Added example CRUD CBV project
+* Added TEMPLATES in example_project settings
+* Added Queryset support to assign_perm
 * Added QuerySet support to remove_perm
 * Updated assign_perm and remove_perm docstrings
 * Moved queryset support in assign_perms to its own function
@@ -16,12 +27,12 @@ Release 1.4.5 (9th August, 2016)
   to managers
 * `assign_perm` and `remove_perm` shortcuts accept `Permission` 
   instance as `perm` and `QuerySet` as `obj` too.
-* Consolidate bulk_assign_perm to assign_perm and bulk_remove_perm to remove_perm
+* Consolidated bulk_assign_perm to assign_perm and bulk_remove_perm to remove_perm
 * Upgraded Grappelli templates breadcrumbs block to new Django 1.9 and
   Grappelli 2.8 standards, including proper URLs and support for
   preserved_filters. Removed the duplicated field.errors in the field.html
   template file.
-* Make UserManage/GroupManage forms overridable
+* Made UserManage/GroupManage forms overridable
 * Fixed GuardedModelAdminMixin views render for Django 1.10
 
 
