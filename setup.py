@@ -36,7 +36,6 @@ setup(
     include_package_data=True,
     license='BSD',
     install_requires=[
-        'Django >= 1.7',
         'six',
     ],
     tests_require=['mock', 'django-environ', 'pytest', 'pytest-django'],
