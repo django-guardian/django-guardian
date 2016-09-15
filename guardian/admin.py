@@ -3,12 +3,11 @@ from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
-from django.core.urlresolvers import reverse
 from django.shortcuts import get_object_or_404, redirect, render_to_response, render
 from django.template import RequestContext
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import ugettext
-from guardian.compat import get_model_name, get_user_model, OrderedDict, url
+from guardian.compat import get_model_name, get_user_model, OrderedDict, url, reverse
 from guardian.forms import GroupObjectPermissionsForm, UserObjectPermissionsForm
 from guardian.models import Group
 from guardian.shortcuts import (get_group_perms, get_groups_with_perms, get_perms_for_model, get_user_perms,

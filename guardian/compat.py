@@ -2,12 +2,14 @@ from __future__ import unicode_literals
 # OrderedDict only available in Python 2.7.
 # This will always be the case in Django 1.7 and above, as these versions
 # no longer support Python 2.6.
+
 from collections import OrderedDict
 from django.conf import settings
 from django.conf.urls import handler404, handler500, include, url
 from django.contrib.auth.models import AnonymousUser, Group, Permission
 from importlib import import_module
 
+import django
 import six
 import sys
 
@@ -134,3 +136,37 @@ def template_debug_getter():
     if hasattr(settings, 'TEMPLATE_DEBUG'):
         return settings.TEMPLATE_DEBUG
     return settings.TEMPLATES[0]['OPTIONS'].get('DEBUG', False)
+
+
+# Django 1.9 compatibility
+def remote_field(field):
+    """
+    https://docs.djangoproject.com/en/1.9/releases/1.9/#field-rel-changes
+    """
+    if django.VERSION < (1, 9):
+        return field.rel
+    return field.remote_field
+
+
+def remote_model(field):
+    if django.VERSION < (1, 9):
+        return remote_field(field).to
+    return remote_field(field).model
+
+
+# Django 1.10 compatibility
+def is_authenticated(user):
+    if django.VERSION < (1, 10):
+        return user.is_authenticated()
+    return user.is_authenticated
+
+
+def is_anonymous(user):
+    if django.VERSION < (1, 10):
+        return user.is_anonymous()
+    return user.is_anonymous
+
+try:
+    from django.urls import reverse, reverse_lazy
+except ImportError:
+    from django.core.urlresolvers import reverse, reverse_lazy

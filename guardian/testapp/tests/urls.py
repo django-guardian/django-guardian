@@ -13,7 +13,7 @@ class TestClassRedirectView(PermissionRequiredMixin, View):
     permission_required = 'testapp.change_project'
 
 urlpatterns = [
-    url(r'^admin/', include(admin.site.urls)),
+    url(r'^admin/', admin.site.urls),
     url(r'^accounts/login/', login, {'template_name': 'blank.html'}),
     url(r'^permission_required/', TestClassRedirectView.as_view()),
 ]

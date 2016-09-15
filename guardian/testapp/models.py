@@ -29,11 +29,11 @@ class DynamicAccessor(object):
 
 
 class ProjectUserObjectPermission(UserObjectPermissionBase):
-    content_object = models.ForeignKey('Project')
+    content_object = models.ForeignKey('Project', on_delete=models.CASCADE)
 
 
 class ProjectGroupObjectPermission(GroupObjectPermissionBase):
-    content_object = models.ForeignKey('Project')
+    content_object = models.ForeignKey('Project', on_delete=models.CASCADE)
 
 
 class Project(models.Model):
@@ -51,7 +51,7 @@ Project.not_a_relation_descriptor = DynamicAccessor()
 
 
 class MixedGroupObjectPermission(GroupObjectPermissionBase):
-    content_object = models.ForeignKey('Mixed')
+    content_object = models.ForeignKey('Mixed', on_delete=models.CASCADE)
 
 
 @python_2_unicode_compatible
@@ -67,7 +67,7 @@ class Mixed(models.Model):
 
 
 class ReverseMixedUserObjectPermission(UserObjectPermissionBase):
-    content_object = models.ForeignKey('ReverseMixed')
+    content_object = models.ForeignKey('ReverseMixed', on_delete=models.CASCADE)
 
 
 @python_2_unicode_compatible
@@ -83,7 +83,9 @@ class ReverseMixed(models.Model):
 
 
 class LogEntryWithGroup(LogEntry):
-    group = models.ForeignKey('auth.Group', null=True, blank=True)
+    group = models.ForeignKey('auth.Group', null=True, blank=True, on_delete=models.CASCADE)
+
+    objects = models.Manager()
 
 
 class NonIntPKModel(models.Model):
