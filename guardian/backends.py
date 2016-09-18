@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 from django.db import models
-from guardian.compat import get_user_model
+from guardian.compat import get_user_model, is_authenticated
 from guardian.conf import settings
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
@@ -27,7 +27,7 @@ def check_user_support(user_obj):
     """
     # This is how we support anonymous users - simply try to retrieve User
     # instance and perform checks for that predefined user
-    if not user_obj.is_authenticated():
+    if not is_authenticated(user_obj):
         # If anonymous user permission is disabled then they are always
         # unauthorized
         if settings.ANONYMOUS_USER_NAME is None:

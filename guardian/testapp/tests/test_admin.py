@@ -5,13 +5,13 @@ from django import forms
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.contenttypes.models import ContentType
-from django.core.urlresolvers import reverse
 from django.http import HttpRequest
 from django.test import TestCase
 from django.test.client import Client
 
 from guardian.admin import GuardedModelAdmin
 from guardian.compat import get_user_model, get_model_name
+from guardian.compat import reverse
 from guardian.compat import str
 from guardian.shortcuts import get_perms
 from guardian.shortcuts import get_perms_for_model
