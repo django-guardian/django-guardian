@@ -9,8 +9,8 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('auth', '0007_alter_validators_add_error_messages'),
-        ('admin', '0002_logentry_remove_auto_add'),
+        ('auth', '0001_initial'),
+        ('admin', '0001_initial'),
         ('testapp', '0001_initial'),
     ]
 
