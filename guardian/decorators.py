@@ -77,6 +77,7 @@ def permission_required(perm, lookup_variables=None, **kwargs):
     redirect_field_name = kwargs.pop(
         'redirect_field_name', REDIRECT_FIELD_NAME)
     return_403 = kwargs.pop('return_403', False)
+    return_404 = kwargs.pop('return_404', False)
     accept_global_perms = kwargs.pop('accept_global_perms', False)
 
     # Check if perm is given as string in order not to decorate
