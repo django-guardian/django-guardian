@@ -109,7 +109,7 @@ def get_40x_or_None(request, perms, obj=None, login_url=None,
                 response.status_code = 403
                 return response
             elif guardian_settings.RAISE_403:
-                raise ObjectDoesNotExist, PermissionDenied
+                raise PermissionDenied
             return HttpResponseForbidden()
         if return_404:
             if guardian_settings.RENDER_404:
