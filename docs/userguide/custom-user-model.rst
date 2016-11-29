@@ -16,7 +16,7 @@ functionality. This can result in errors if guardian is imported into the models
 of the same app where the custom user model lives.
 
 To fix this, it is recommended to add the setting ``GUARDIAN_MONKEY_PATCH = False``
-in your settings.py and add the ``GuardianUserMixin`` to your custom user model.
+in your settings.py and subclass ``guardian.mixins.GuardianUserMixin`` in your custom user model.
 
 .. important::
     ``django-guardian`` relies **heavily** on the ``auth.User`` model.
