@@ -10,9 +10,9 @@ from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.contrib.auth.models import AnonymousUser, Group
 from django.contrib.auth.views import redirect_to_login
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db.models import Model
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, HttpResponseNotFound
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from guardian.compat import get_user_model, remote_model
@@ -109,7 +109,7 @@ def get_40x_or_None(request, perms, obj=None, login_url=None,
                 response.status_code = 403
                 return response
             elif guardian_settings.RAISE_403:
-                raise PermissionDenied
+                raise ObjectDoesNotExist, PermissionDenied
             return HttpResponseForbidden()
         if return_404:
             if guardian_settings.RENDER_404:

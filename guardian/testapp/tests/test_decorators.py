@@ -1,11 +1,12 @@
 from __future__ import unicode_literals
 from django.conf import settings, global_settings
 from django.contrib.auth.models import Group, AnonymousUser
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db.models.base import ModelBase
 from django.http import HttpRequest
 from django.http import HttpResponse
 from django.http import HttpResponseForbidden
+from django.http import HttpResponseNotFound
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template import TemplateDoesNotExist
@@ -80,7 +81,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
         with mock.patch('guardian.conf.settings.RENDER_404', False):
             response = dummy_view(request)
             self.assertEqual(response.content, b'')
-            self.assertTrue(isinstance(response, ObjectDoesNotExist))
+            self.assertTrue(isinstance(response, HttpResponseNotFound))
 
     @mock.patch('guardian.conf.settings.RENDER_403', True)
     def test_TEMPLATE_403_setting(self):
