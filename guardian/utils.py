@@ -82,8 +82,9 @@ def get_identity(identity):
                           "(got %s)" % identity)
 
 
-def get_403_or_None(request, perms, obj=None, login_url=None,
-                    redirect_field_name=None, return_403=False, accept_global_perms=False):
+def get_40x_or_None(request, perms, obj=None, login_url=None,
+                    redirect_field_name=None, return_403=False,
+                    return_404=False, accept_global_perms=False):
     login_url = login_url or settings.LOGIN_URL
     redirect_field_name = redirect_field_name or REDIRECT_FIELD_NAME
 
@@ -110,6 +111,16 @@ def get_403_or_None(request, perms, obj=None, login_url=None,
             elif guardian_settings.RAISE_403:
                 raise PermissionDenied
             return HttpResponseForbidden()
+        if return_404:
+            if guardian_settings.RENDER_404:
+                response = render_to_response(
+                    guardian_settings.TEMPLATE_404, {},
+                    RequestContext(request))
+                response.status_code = 404
+                return response
+            elif guardian_settings.RAISE_404:
+                raise ObjectDoesNotExist
+            return HttpResponseNotFound()
         else:
             return redirect_to_login(request.get_full_path(),
                                      login_url,

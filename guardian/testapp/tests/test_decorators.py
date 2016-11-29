@@ -15,7 +15,7 @@ from guardian.compat import get_user_model
 from guardian.compat import get_user_model_path
 from guardian.compat import get_user_permission_full_codename
 import mock
-from guardian.decorators import permission_required, permission_required_or_403
+from guardian.decorators import permission_required, permission_required_or_403, permission_required_or_404
 from guardian.exceptions import GuardianError
 from guardian.exceptions import WrongAppError
 from guardian.shortcuts import assign_perm
@@ -70,6 +70,18 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
             self.assertEqual(response.content, b'')
             self.assertTrue(isinstance(response, HttpResponseForbidden))
 
+    def test_RENDER_404_is_false(self):
+        request = self._get_request(self.anon)
+
+        @permission_required_or_404('not_installed_app.change_user')
+        def dummy_view(request):
+            return HttpResponse('dummy_view')
+
+        with mock.patch('guardian.conf.settings.RENDER_404', False):
+            response = dummy_view(request)
+            self.assertEqual(response.content, b'')
+            self.assertTrue(isinstance(response, ObjectDoesNotExist))
+
     @mock.patch('guardian.conf.settings.RENDER_403', True)
     def test_TEMPLATE_403_setting(self):
         request = self._get_request(self.anon)
@@ -82,6 +94,18 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
             response = dummy_view(request)
             self.assertEqual(response.content, b'foobar403\n')
 
+    @mock.patch('guardian.conf.settings.RENDER_404', True)
+    def test_TEMPLATE_404_setting(self):
+        request = self._get_request(self.anon)
+
+        @permission_required_or_404('not_installed_app.change_user')
+        def dummy_view(request):
+            return HttpResponse('dummy_view')
+
+        with mock.patch('guardian.conf.settings.TEMPLATE_404', 'dummy404.html'):
+            response = dummy_view(request)
+            self.assertEqual(response.content, b'foobar404\n')
+
     @mock.patch('guardian.conf.settings.RENDER_403', True)
     def test_403_response_raises_error(self):
         request = self._get_request(self.anon)
@@ -91,6 +115,17 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
             return HttpResponse('dummy_view')
         with mock.patch('guardian.conf.settings.TEMPLATE_403',
                         '_non-exisitng-403.html'):
+            self.assertRaises(TemplateDoesNotExist, dummy_view, request)
+
+    @mock.patch('guardian.conf.settings.RENDER_404', True)
+    def test_404_response_raises_error(self):
+        request = self._get_request(self.anon)
+
+        @permission_required_or_404('not_installed_app.change_user')
+        def dummy_view(request):
+            return HttpResponse('dummy_view')
+        with mock.patch('guardian.conf.settings.TEMPLATE_404',
+                        '_non-exisitng-404.html'):
             self.assertRaises(TemplateDoesNotExist, dummy_view, request)
 
     @mock.patch('guardian.conf.settings.RENDER_403', False)
@@ -103,6 +138,17 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
             return HttpResponse('dummy_view')
 
         self.assertRaises(PermissionDenied, dummy_view, request)
+
+    @mock.patch('guardian.conf.settings.RENDER_404', False)
+    @mock.patch('guardian.conf.settings.RAISE_404', True)
+    def test_RAISE_404_setting_is_true(self):
+        request = self._get_request(self.anon)
+
+        @permission_required_or_404('not_installed_app.change_user')
+        def dummy_view(request):
+            return HttpResponse('dummy_view')
+
+        self.assertRaises(ObjectDoesNotExist, dummy_view, request)
 
     def test_anonymous_user_wrong_app(self):
 
