@@ -11,7 +11,7 @@ def version_scheme(version):
 
 readme_file = os.path.join(os.path.dirname(__file__), 'README.rst')
 with open(readme_file, 'r') as f:
-    long_description = f.readline().strip()
+    long_description = f.read()
 
 setup(
     name='django-guardian',
