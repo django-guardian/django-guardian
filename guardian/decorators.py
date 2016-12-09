@@ -9,7 +9,7 @@ from django.shortcuts import get_object_or_404
 from django.utils.functional import wraps
 from guardian.compat import basestring
 from guardian.exceptions import GuardianError
-from guardian.utils import get_403_or_None
+from guardian.utils import get_40x_or_None
 
 
 def permission_required(perm, lookup_variables=None, **kwargs):
@@ -32,6 +32,10 @@ def permission_required(perm, lookup_variables=None, **kwargs):
       login page, response with status code 403 is returned (
       ``django.http.HttpResponseForbidden`` instance or rendered template -
       see :setting:`GUARDIAN_RENDER_403`). Defaults to ``False``.
+    :param return_404: if set to ``True`` then instead of redirecting to the
+      login page, response with status code 404 is returned (
+      ``django.http.HttpResponseNotFound`` instance or rendered template -
+      see :setting:`GUARDIAN_RENDER_404`). Defaults to ``False``.
     :param accept_global_perms: if set to ``True``, then *object level
       permission* would be required **only if user does NOT have global
       permission** for target *model*. If turned on, makes this decorator
@@ -73,6 +77,7 @@ def permission_required(perm, lookup_variables=None, **kwargs):
     redirect_field_name = kwargs.pop(
         'redirect_field_name', REDIRECT_FIELD_NAME)
     return_403 = kwargs.pop('return_403', False)
+    return_404 = kwargs.pop('return_404', False)
     accept_global_perms = kwargs.pop('accept_global_perms', False)
 
     # Check if perm is given as string in order not to decorate
@@ -113,9 +118,9 @@ def permission_required(perm, lookup_variables=None, **kwargs):
                     lookup_dict[lookup] = kwargs[view_arg]
                 obj = get_object_or_404(model, **lookup_dict)
 
-            response = get_403_or_None(request, perms=[perm], obj=obj,
+            response = get_40x_or_None(request, perms=[perm], obj=obj,
                                        login_url=login_url, redirect_field_name=redirect_field_name,
-                                       return_403=return_403, accept_global_perms=accept_global_perms)
+                                       return_403=return_403, return_404=return_404, accept_global_perms=accept_global_perms)
             if response:
                 return response
             return view_func(request, *args, **kwargs)
@@ -135,4 +140,19 @@ def permission_required_or_403(perm, *args, **kwargs):
     one always set ``return_403`` parameter to ``True``.
     """
     kwargs['return_403'] = True
+    return permission_required(perm, *args, **kwargs)
+
+
+def permission_required_or_404(perm, *args, **kwargs):
+    """
+    Simple wrapper for permission_required decorator.
+
+    Standard Django's permission_required decorator redirects user to login page
+    in case permission check failed. This decorator may be used to return
+    HttpResponseNotFound (status 404) instead of redirection.
+
+    The only difference between ``permission_required`` decorator is that this
+    one always set ``return_404`` parameter to ``True``.
+    """
+    kwargs['return_404'] = True
     return permission_required(perm, *args, **kwargs)

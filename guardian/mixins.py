@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required, REDIRECT_FIELD_NAME
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
 from guardian.compat import basestring
 from guardian.models import UserObjectPermission
-from guardian.utils import get_403_or_None, get_anonymous_user
+from guardian.utils import get_40x_or_None, get_anonymous_user
 from guardian.shortcuts import get_objects_for_user
 
 
@@ -103,6 +103,11 @@ class PermissionRequiredMixin(object):
         *Default*: ``False``. Returns 403 error page instead of redirecting
         user.
 
+    ``PermissionRequiredMixin.return_404``
+
+        *Default*: ``False``. Returns 404 error page instead of redirecting
+        user.
+
     ``PermissionRequiredMixin.raise_exception``
 
         *Default*: ``False``
@@ -127,6 +132,7 @@ class PermissionRequiredMixin(object):
     permission_required = None
     redirect_field_name = REDIRECT_FIELD_NAME
     return_403 = False
+    return_404 = False
     raise_exception = False
     accept_global_perms = False
 
@@ -164,13 +170,14 @@ class PermissionRequiredMixin(object):
         """
         obj = self.get_permission_object()
 
-        forbidden = get_403_or_None(request,
+        forbidden = get_40x_or_None(request,
                                     perms=self.get_required_permissions(
                                         request),
                                     obj=obj,
                                     login_url=self.login_url,
                                     redirect_field_name=self.redirect_field_name,
                                     return_403=self.return_403,
+                                    return_404=self.return_404,
                                     accept_global_perms=self.accept_global_perms
                                     )
         if forbidden:
