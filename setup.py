@@ -1,5 +1,4 @@
 import os
-import sys
 from setuptools import setup
 from extras import RunFlakesCommand
 
@@ -8,6 +7,7 @@ def version_scheme(version):
     from setuptools_scm.version import guess_next_dev_version
     version = guess_next_dev_version(version)
     return version.lstrip("v")
+
 
 readme_file = os.path.join(os.path.dirname(__file__), 'README.rst')
 with open(readme_file, 'r') as f:
