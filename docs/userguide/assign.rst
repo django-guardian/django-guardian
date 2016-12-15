@@ -128,9 +128,10 @@ Another example:
     >>> userA.has_perm('change_company', companyB)
     False
     >>> userB = User.objects.create(username="User B")
+    >>> userB.groups.add(companyUserGroupB)
     >>> userB.has_perm('change_company', companyA)
     False
-    >>> userA.has_perm('change_company', companyB)
+    >>> userB.has_perm('change_company', companyB)
     True
 
 Assigning Permissions inside Signals
