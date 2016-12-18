@@ -1,4 +1,4 @@
 Django==1.9.1
 six
 django-environ
-setuptools_scm
+bumpversion

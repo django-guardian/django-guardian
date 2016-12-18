@@ -2,7 +2,7 @@ Release 1.4.7 (tba)
 ============================
 
 * Improved performance of `clean_orphan_obj_perms` management command
-
+* Use bumpversion for versioning.
 
 Release 1.4.6 (Sep 09, 2016)
 ============================
