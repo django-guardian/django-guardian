@@ -3,11 +3,7 @@ from setuptools import setup
 from extras import RunFlakesCommand
 
 
-def version_scheme(version):
-    from setuptools_scm.version import guess_next_dev_version
-    version = guess_next_dev_version(version)
-    return version.lstrip("v")
-
+version = '1.4.7'
 
 readme_file = os.path.join(os.path.dirname(__file__), 'README.rst')
 with open(readme_file, 'r') as f:
@@ -15,11 +11,8 @@ with open(readme_file, 'r') as f:
 
 setup(
     name='django-guardian',
-    use_scm_version={
-        'write_to': "guardian/version.py",
-        'version_scheme': version_scheme,
-    },
-    setup_requires=['setuptools_scm', 'pytest-runner'],
+    version=version,
+    setup_requires=['pytest-runner', ],
     url='http://github.com/django-guardian/django-guardian',
     author='Lukasz Balcerzak',
     author_email='lukaszbalcerzak@gmail.com',
