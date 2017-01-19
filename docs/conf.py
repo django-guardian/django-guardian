@@ -62,8 +62,7 @@ copyright = u'Lukasz Balcerzak'
 # built documents.
 #
 # The short X.Y version.
-from setuptools_scm import get_version
-version = get_version(root="..")
+version = guardian.__version__
 # The full version, including alpha/beta/rc tags.
 release = version
 
