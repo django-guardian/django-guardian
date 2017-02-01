@@ -38,7 +38,6 @@ models within the admin. In example, look at following model:
         def __unicode__(self):
             return self.title
 
-        @models.permalink
         def get_absolute_url(self):
             return {'post_slug': self.slug}
 
