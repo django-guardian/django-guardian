@@ -6,6 +6,7 @@ from django.template import Template, Context, TemplateSyntaxError
 from django.test import TestCase
 
 from guardian.compat import get_user_model, template_debug_getter, template_debug_setter
+from guardian.core import ObjectPermissionChecker
 from guardian.exceptions import NotUserNorGroup
 from guardian.models import UserObjectPermission, GroupObjectPermission
 
@@ -128,6 +129,23 @@ class GetObjPermsTagTest(TestCase):
             '{{ obj_perms|join:" " }}',
         ))
         context = {'group': self.group, 'contenttype': self.ctype}
+        output = render(template, context)
+
+        self.assertEqual(output, 'delete_contenttype')
+        
+    def test_checker(self):
+        GroupObjectPermission.objects.assign_perm("delete_contenttype", self.group,
+                                                          self.ctype)
+
+        checker = ObjectPermissionChecker(self.user)
+        checker.prefetch_perms(Group.objects.all())
+                
+        template = ''.join((
+            '{% load guardian_tags %}',
+            '{% get_obj_perms group for contenttype as "obj_perms" checker %}',
+            '{{ obj_perms|join:" " }}',
+        ))
+        context = {'group': self.group, 'contenttype': self.ctype, 'checker': checker}
         output = render(template, context)
 
         self.assertEqual(output, 'delete_contenttype')
