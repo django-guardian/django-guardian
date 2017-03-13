@@ -1,4 +1,4 @@
-Django==1.9.1
+Django>=1.10.6
 six
 django-environ
 bumpversion

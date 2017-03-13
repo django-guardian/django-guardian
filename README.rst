@@ -5,9 +5,8 @@ django-guardian
 .. image:: https://travis-ci.org/django-guardian/django-guardian.svg?branch=devel
   :target: https://travis-ci.org/django-guardian/django-guardian
 
-``django-guardian`` is implementation of per object permissions [1]_ as 
-authorization backend which is supported since Django_ 1.5. It won't
-work with older Django_ releases.
+``django-guardian`` is an implementation of per object permissions [1]_ on top
+of Django's authorization backend
 
 Documentation
 -------------
@@ -17,10 +16,10 @@ Online documentation is available at https://django-guardian.readthedocs.io/.
 Requirements
 ------------
 
-* Python 2.7 or 3.3+
-* A supported version of Django (currently 1.7+)
+* Python 2.7 or 3.4+
+* A supported version of Django (currently 1.8+)
 
-Travis CI tests on Django version 1.7-1.10.
+Travis CI tests on Django version 1.8,1.10.
 
 Installation
 ------------
