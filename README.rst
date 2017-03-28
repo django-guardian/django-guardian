@@ -51,7 +51,7 @@ We need to hook ``django-guardian`` into our project.
         'guardian.backends.ObjectPermissionBackend',
     )
 
-4. Create ``guardian`` database tables by running::
+3. Create ``guardian`` database tables by running::
 
      python manage.py migrate
 
