@@ -27,8 +27,8 @@ class Article(models.Model):
 
 
 class ArticleUserObjectPermission(UserObjectPermissionBase):
-    content_object = models.ForeignKey(Article)
+    content_object = models.ForeignKey(Article, on_delete=models.CASCADE)
 
 
 class ArticleGroupObjectPermission(GroupObjectPermissionBase):
-    content_object = models.ForeignKey(Article)
+    content_object = models.ForeignKey(Article, on_delete=models.CASCADE)

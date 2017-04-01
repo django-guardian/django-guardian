@@ -16,7 +16,7 @@ Let's assume we have following model:
     class Task(models.Model):
         summary = models.CharField(max_length=32)
         content = models.TextField()
-        reported_by = models.ForeignKey(User)
+        reported_by = models.ForeignKey(User, on_delete=models.CASCADE)
         created_at = models.DateTimeField(auto_now_add=True)
 
 ... and we want to be able to set custom permission *view_task*. We let Django
@@ -28,7 +28,7 @@ model could look like:
     class Task(models.Model):
         summary = models.CharField(max_length=32)
         content = models.TextField()
-        reported_by = models.ForeignKey(User)
+        reported_by = models.ForeignKey(User, on_delete=models.CASCADE)
         created_at = models.DateTimeField(auto_now_add=True)
 
         class Meta:
