@@ -88,10 +88,10 @@ models:
         name = models.CharField(max_length=128, unique=True)
 
     class ProjectUserObjectPermission(UserObjectPermissionBase):
-        content_object = models.ForeignKey(Project)
+        content_object = models.ForeignKey(Project, on_delete=models.CASCADE)
 
     class ProjectGroupObjectPermission(GroupObjectPermissionBase):
-        content_object = models.ForeignKey(Project)
+        content_object = models.ForeignKey(Project, on_delete=models.CASCADE)
 
 
 .. important::
