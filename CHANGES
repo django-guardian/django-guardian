@@ -1,4 +1,4 @@
-Release 1.4.7 (Apr 04, 2017)
+Release 1.4.8 (Apr 04, 2017)
 ============================
 
 * Improved performance of `clean_orphan_obj_perms` management command
