@@ -9,7 +9,6 @@ from __future__ import unicode_literals
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.contrib.auth.models import AnonymousUser, Group
-from django.contrib.auth.views import redirect_to_login
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db.models import Model
 from django.http import HttpResponseForbidden, HttpResponseNotFound
@@ -122,6 +121,7 @@ def get_40x_or_None(request, perms, obj=None, login_url=None,
                 raise ObjectDoesNotExist
             return HttpResponseNotFound()
         else:
+            from django.contrib.auth.views import redirect_to_login
             return redirect_to_login(request.get_full_path(),
                                      login_url,
                                      redirect_field_name)
