@@ -1,4 +1,4 @@
-Release 1.4.7 (tba)
+Release 1.4.7 (Apr 04, 2017)
 ============================
 
 * Improved performance of `clean_orphan_obj_perms` management command
@@ -6,6 +6,7 @@ Release 1.4.7 (tba)
 * Enable Python 3.6 testing
 * Python 2.7, 3.4, 3.5, 3.6 are only supported Python versions
 * Django 1.8, 1.10, and 1.11 are only supported Django versions
+* Added explicity on_delete to all ForeignKeys
 
 Release 1.4.6 (Sep 09, 2016)
 ============================
