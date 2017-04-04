@@ -5,7 +5,7 @@ Release 1.4.7 (tba)
 * Use bumpversion for versioning.
 * Enable Python 3.6 testing
 * Python 2.7, 3.4, 3.5, 3.6 are only supported Python versions
-* Django 1.8 and 1.10 are only supported Django versions
+* Django 1.8, 1.10, and 1.11 are only supported Django versions
 
 Release 1.4.6 (Sep 09, 2016)
 ============================
