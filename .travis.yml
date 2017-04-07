@@ -47,6 +47,19 @@ notifications:
 
 matrix:
   fast_finish: true
+  exclude:
+    - python: 2.7
+      env: DJANGO_VERSION=master DATABASE_URL=postgres://postgres@/django_guardian
+    - python: 2.7
+      env: DJANGO_VERSION=master DATABASE_URL=mysql://root:@localhost/django_guardian
+    - python: 2.7
+      env: DJANGO_VERSION=master DATABASE_URL=sqlite://
+    - python: 3.4
+      env: DJANGO_VERSION=master DATABASE_URL=postgres://postgres@/django_guardian
+    - python: 3.4
+      env: DJANGO_VERSION=master DATABASE_URL=mysql://root:@localhost/django_guardian
+    - python: 3.4
+      env: DJANGO_VERSION=master DATABASE_URL=sqlite://
   allow_failures:
       - env: DJANGO_VERSION=master DATABASE_URL=postgres://postgres@/django_guardian
       - env: DJANGO_VERSION=master DATABASE_URL=mysql://root:@localhost/django_guardian
