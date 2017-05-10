@@ -8,7 +8,7 @@ they actual input parameters/output type may change in future releases.
 from __future__ import unicode_literals
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
-from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.models import AnonymousUser, Group
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db.models import Model
 from django.http import HttpResponseForbidden, HttpResponseNotFound
@@ -18,7 +18,7 @@ from guardian.compat import get_user_model, remote_model
 from guardian.conf import settings as guardian_settings
 from guardian.ctypes import get_content_type
 from guardian.exceptions import NotUserNorGroup
-from guardian.models import Group 
+#from guardian.models import Group 
 from itertools import chain
 
 import django
