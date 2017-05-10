@@ -18,7 +18,6 @@ from guardian.compat import get_user_model, remote_model, import_string
 from guardian.conf import settings as guardian_settings
 from guardian.ctypes import get_content_type
 from guardian.exceptions import NotUserNorGroup
-#from guardian.models import Group 
 from itertools import chain
 
 import django
