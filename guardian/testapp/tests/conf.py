@@ -27,7 +27,7 @@ class TestDataMixin(object):
 
     def setUp(self):
         super(TestDataMixin, self).setUp()
-        from django.contrib.auth.models import Group
+        from guardian.models import Group
         try:
             from django.contrib.auth import get_user_model
             User = get_user_model()

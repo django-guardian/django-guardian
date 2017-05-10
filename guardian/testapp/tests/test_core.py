@@ -9,14 +9,14 @@ try:
     auth_app = django_apps.get_app_config("auth")
 except ImportError:
     from django.contrib.auth import models as auth_app
-from django.contrib.auth.models import Group, Permission, AnonymousUser
+from django.contrib.auth.models import Permission, AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 
 from guardian.core import ObjectPermissionChecker
 from guardian.compat import get_user_model, create_permissions
 from guardian.exceptions import NotUserNorGroup
-from guardian.models import UserObjectPermission, GroupObjectPermission
+from guardian.models import Group, UserObjectPermission, GroupObjectPermission
 from guardian.shortcuts import assign_perm
 from guardian.management import create_anonymous_user
 

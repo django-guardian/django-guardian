@@ -8,11 +8,12 @@
 from __future__ import unicode_literals
 
 from django import template
-from django.contrib.auth.models import AnonymousUser, Group
+from django.contrib.auth.models import AnonymousUser
 
 from guardian.compat import get_user_model
 from guardian.core import ObjectPermissionChecker
 from guardian.exceptions import NotUserNorGroup
+from guardian.models import Group
 
 register = template.Library()
 
