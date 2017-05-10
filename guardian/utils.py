@@ -8,13 +8,13 @@ they actual input parameters/output type may change in future releases.
 from __future__ import unicode_literals
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
-from django.contrib.auth.models import AnonymousUser, Group
+from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db.models import Model
 from django.http import HttpResponseForbidden, HttpResponseNotFound
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from guardian.compat import get_user_model, remote_model
+from guardian.compat import get_user_model, remote_model, import_string
 from guardian.conf import settings as guardian_settings
 from guardian.ctypes import get_content_type
 from guardian.exceptions import NotUserNorGroup
@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 abspath = lambda *p: os.path.abspath(os.path.join(*p))
 
 
+Group = import_string(guardian_settings.GROUP_MODEL)
 def get_anonymous_user():
     """
     Returns ``User`` instance (not ``AnonymousUser``) depending on

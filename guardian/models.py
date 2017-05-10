@@ -8,14 +8,13 @@ from guardian.compat import unicode, user_model_label, import_string
 from guardian.ctypes import get_content_type
 from guardian.managers import GroupObjectPermissionManager, UserObjectPermissionManager
 from guardian.conf import settings as guardian_settings
+from guardian.utils import Group
 
 try:
     from django.contrib.contenttypes.fields import GenericForeignKey
 except ImportError:
     from django.contrib.contenttypes.generic import GenericForeignKey
 
-
-Group = import_string(guardian_settings.GROUP_MODEL)
 
 class BaseObjectPermission(models.Model):
     """
