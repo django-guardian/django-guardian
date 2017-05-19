@@ -4,6 +4,8 @@ from __future__ import unicode_literals
 from django.conf.urls import url
 from . import views
 
+
+app_name = 'articles'
 urlpatterns = [
     url(r'^$', views.ArticleListView.as_view(),
         name="list"),
