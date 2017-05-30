@@ -4,7 +4,7 @@ Overview
 ========
 
 ``django-guardian`` is an implementation of object permissions for Django_
-providing extra *authentication backend*.
+providing an extra *authentication backend*.
 
 Features
 --------
@@ -29,15 +29,15 @@ Sources are available at `issue-tracker`_. You may also file a bug there.
 Alternate projects
 ------------------
 
-Django_ still has *only* foundation for object permissions [1]_ and
-``django-guardian`` make use of new facilities and it is based on them.  There
-are some other pluggable applications which does *NOT* require 1.2+
-version of Django_. For instance, there are great `django-authority`_ or
-`django-permissions`_ available out there.
+Django_ still *only* has the foundation for object permissions [1]_ and
+``django-guardian`` makes use of new facilities and it is based on them.  There
+are some other pluggable applications which do *NOT* require Django_ version 1.2+. 
+For instance, `django-authority`_ or
+`django-permissions`_ are great options available.
 
 .. _django: http://www.djangoproject.com/
-.. _django-authority: http://bitbucket.org/jezdez/django-authority/
-.. _django-permissions: http://bitbucket.org/diefenbach/django-permissions/
+.. _django-authority: https://github.com/jazzband/django-authority
+.. _django-permissions: https://github.com/lambdalisue/django-permission
 .. _issue-tracker: http://github.com/lukaszb/django-guardian
 .. _grappelli: https://github.com/sehmaschine/django-grappelli
 
