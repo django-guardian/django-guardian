@@ -27,6 +27,7 @@ from guardian.testapp.tests.test_core import ObjectPermissionTestCase
 from guardian.models import Group, Permission
 
 import warnings
+import django
 
 
 User = get_user_model()
@@ -920,6 +921,21 @@ class GetObjectsForUser(TestCase):
             set(objects),
             set(groups))
 
+    def test_prefer_subquery(self):
+        group_names = ['group1', 'group2', 'group3']
+        groups = [Group.objects.create(name=name) for name in group_names]
+        for group in groups:
+            assign_perm('change_group', self.user, group)
+
+        to_check = lambda: list(get_objects_for_user(self.user, ['auth.change_group']))
+
+        to_check()  # cache content type
+
+        if django.VERSION >= (1, 11):
+            self.assertNumQueries(2, to_check)
+        else:
+            self.assertNumQueries(4, to_check)
+
 
 class GetObjectsForGroup(TestCase):
     """
@@ -1044,8 +1060,8 @@ class GetObjectsForGroup(TestCase):
                                         ['contenttypes.change_contenttype',
                                          'contenttypes.delete_contenttype'], any_perm=True)
         self.assertTrue(isinstance(objects, QuerySet))
-        self.assertEqual([obj for obj in objects.order_by('app_label')],
-                         [self.obj1, self.obj3])
+        self.assertEqual(set([obj for obj in objects]),
+                         set([self.obj1, self.obj3]))
 
     def test_results_for_different_groups_are_correct(self):
         assign_perm('change_contenttype', self.group1, self.obj1)
@@ -1097,3 +1113,17 @@ class GetObjectsForGroup(TestCase):
     def test_exception_different_ctypes(self):
         self.assertRaises(MixedContentTypeError, get_objects_for_group,
                           self.group1, ['auth.change_permission', 'auth.change_group'])
+
+    def test_prefer_subquery(self):
+        assign_perm('change_contenttype', self.group1, self.obj1)
+        assign_perm('change_contenttype', self.group1, self.obj2)
+
+        to_check = lambda: list(get_objects_for_group(
+            self.group1, 'contenttypes.change_contenttype', any_perm=True))
+
+        to_check()  # cache content type
+
+        if django.VERSION >= (1, 11):
+            self.assertNumQueries(3, to_check)
+        else:
+            self.assertNumQueries(4, to_check)

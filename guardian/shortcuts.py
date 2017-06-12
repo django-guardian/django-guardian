@@ -21,6 +21,23 @@ from guardian.models import GroupObjectPermission
 from guardian.utils import get_anonymous_user, get_group_obj_perms_model, get_identity, get_user_obj_perms_model
 
 
+import django
+
+if django.VERSION >= (1, 11):
+    from django.db.models.functions import Cast
+    from django.db.models import IntegerField, CharField, AutoField
+
+
+def subquery_or_set(queryset, target_field, source_field):
+    if django.VERSION >= (1, 11):
+        if isinstance(target_field, (CharField, )):
+            return queryset.values_list(source_field)
+        elif isinstance(target_field, (AutoField, )):
+            return queryset.values_list(Cast(source_field, IntegerField()))
+    # TODO use subquery
+    return set(queryset.values_list(source_field, flat=True))
+
+
 def assign_perm(perm, user_or_group, obj=None):
     """
     Assigns permission to user/group and object pair.
@@ -581,15 +598,17 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
         user_obj_perms_queryset = counts.filter(
             object_pk_count__gte=len(codenames))
 
-    values = user_obj_perms_queryset.values_list(user_fields[0], flat=True)
+    values = user_obj_perms_queryset
     if user_model.objects.is_generic():
-        values = set(values)
-    q = Q(pk__in=values)
+        q = Q(pk__in=subquery_or_set(values, queryset.model._meta.pk, user_fields[0]))
+    else:
+        q = Q(pk__in=values.values_list(user_fields[0], flat=True))
     if use_groups:
-        values = groups_obj_perms_queryset.values_list(group_fields[0], flat=True)
+        values = groups_obj_perms_queryset
         if group_model.objects.is_generic():
-            values = set(values)
-        q |= Q(pk__in=values)
+            q |= Q(pk__in=subquery_or_set(values, queryset.model._meta.pk, group_fields[0]))
+        else:
+            q |= Q(pk__in=values.values_list(group_fields[0], flat=True))
 
     return queryset.filter(q)
 
@@ -734,7 +753,7 @@ def get_objects_for_group(group, perms, klass=None, any_perm=False, accept_globa
         objects = queryset.filter(pk__in=pk_list)
         return objects
 
-    values = groups_obj_perms_queryset.values_list(fields[0], flat=True)
+    values = groups_obj_perms_queryset
     if group_model.objects.is_generic():
-        values = list(values)
+        values = subquery_or_set(values, queryset.model._meta.pk, fields[0])
     return queryset.filter(pk__in=values)

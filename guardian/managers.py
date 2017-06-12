@@ -8,6 +8,11 @@ from guardian.models import Permission
 
 import warnings
 
+import django
+
+if django.VERSION >= (1, 11):
+    from django.db.models.functions import Cast
+
 
 class BaseObjectPermissionManager(models.Manager):
 
@@ -127,7 +132,15 @@ class BaseObjectPermissionManager(models.Manager):
                          permission__content_type=ctype)
 
         if self.is_generic():
-            filters &= Q(object_pk__in = [str(pk) for pk in queryset.values_list('pk', flat=True)])
+            if django.VERSION >= (1, 11):
+                if isinstance(queryset.model._meta.pk, (models.CharField, )):
+                    filters &= Q(object_pk__in=queryset.values_list('pk'))
+                else:
+                    filters &= Q(object_pk__in=queryset.values_list(
+                        Cast('id', models.CharField(max_length=self.model._meta.get_field('object_pk').max_length))))
+            else:
+                # TODO use subquery
+                filters &= Q(object_pk__in=[str(pk) for pk in queryset.values_list('pk', flat=True)])
         else:
             filters &= Q(content_object__in=queryset)
 
