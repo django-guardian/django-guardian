@@ -31,7 +31,7 @@ class BaseObjectPermissionsForm(forms.Form):
         field = field_class(
             label=self.get_obj_perms_field_label(),
             choices=self.get_obj_perms_field_choices(),
-            initial=self.get_obj_perms_field_initial(),
+            initial=list(self.get_obj_perms_field_initial()),
             widget=self.get_obj_perms_field_widget(),
             required=self.are_obj_perms_required(),
         )

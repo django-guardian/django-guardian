@@ -162,7 +162,7 @@ class AdminTests(TestCase):
         response = self.client.post(url, data, follow=True)
         self.assertEqual(len(response.redirect_chain), 1)
         self.assertEqual(response.redirect_chain[0][1], 302)
-
+        self.assertIn('selected', str(response.context['form']))
         self.assertEqual(
             set(get_perms(self.user, self.obj)),
             set(perms),
