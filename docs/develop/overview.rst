@@ -80,8 +80,8 @@ How to do a new release?
 
 To enroll a new relase you should perform the following task:
 
-* Ensure file ``CHANGES`` reflect all important changes.
-* Ensure file ``CHANGES`` consist a new version identifier and current release date.
+* Ensure file ``CHANGES`` reflects all important changes.
+* Ensure file ``CHANGES`` includes a new version identifier and current release date.
 * Execute ``bumpversion patch`` (or accordinly - see `Semantic Versioning 2.0 <http://semver.org/>`_ ) to reflects changes in codebase.
 * Commit changes of codebase, e.g. ``git commit -m "Release 1.4.8" -a``.
 * Tag a new release, e.g. ``git tag "v1.4.8"``.
