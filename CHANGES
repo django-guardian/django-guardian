@@ -1,3 +1,13 @@
+Release 1.4.9 (Jul 01, 2017)
+============================
+
+* Drop ``django_guardian.compat.OrderedDict`` as a consequence of drop Python 1.6
+  earlier.
+* Fix django admin 1.11 not showing selected permissions
+* Add a optional checker variable to get_obj_perms
+* Add missing classifiers in setup.py
+
+
 Release 1.4.8 (Apr 04, 2017)
 ============================
 
