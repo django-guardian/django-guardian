@@ -7,7 +7,7 @@ from . import checks
 default_app_config = 'guardian.apps.GuardianConfig'
 
 # PEP 396: The __version__ attribute's value SHOULD be a string.
-__version__ = '1.4.8'
+__version__ = '1.4.9'
 
 # Compatibility to eg. django-rest-framework
 VERSION = tuple(int(x) for x in __version__.split('.')[:3])
