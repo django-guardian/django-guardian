@@ -12,7 +12,7 @@ from django.contrib.auth.models import AnonymousUser, Group
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db.models import Model
 from django.http import HttpResponseForbidden, HttpResponseNotFound
-from django.shortcuts import render_to_response
+from django.shortcuts import render_to_response, render
 from django.template import RequestContext
 from guardian.compat import get_user_model, remote_model
 from guardian.conf import settings as guardian_settings
@@ -102,9 +102,12 @@ def get_40x_or_None(request, perms, obj=None, login_url=None,
     if not has_permissions:
         if return_403:
             if guardian_settings.RENDER_403:
-                response = render_to_response(
-                    guardian_settings.TEMPLATE_403, {},
-                    RequestContext(request))
+                if django.VERSION >= (1, 10):
+                    response = render(request, guardian_settings.TEMPLATE_403)
+                else:
+                    response = render_to_response(
+                        guardian_settings.TEMPLATE_403, {},
+                        RequestContext(request))
                 response.status_code = 403
                 return response
             elif guardian_settings.RAISE_403:
@@ -112,9 +115,12 @@ def get_40x_or_None(request, perms, obj=None, login_url=None,
             return HttpResponseForbidden()
         if return_404:
             if guardian_settings.RENDER_404:
-                response = render_to_response(
-                    guardian_settings.TEMPLATE_404, {},
-                    RequestContext(request))
+                if django.VERSION >= (1, 10):
+                    response = render(request, guardian_settings.TEMPLATE_404)
+                else:
+                    response = render_to_response(
+                        guardian_settings.TEMPLATE_404, {},
+                        RequestContext(request))
                 response.status_code = 404
                 return response
             elif guardian_settings.RAISE_404:
