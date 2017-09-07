@@ -107,7 +107,8 @@ class Benchmark(object):
 
     def prepare_db(self):
         from django.core.management import call_command
-        call_command('syncdb', interactive=False)
+        call_command('makemigrations', interactive=False)
+        call_command('migrate', interactive=False)
 
         for model in [User, Group, self.Model]:
             model.objects.all().delete()

@@ -21,7 +21,7 @@ and hook guardian's authentication backend::
 
 .. note::
    Once project is configured to work with ``django-guardian``, calling
-   ``syncdb`` management command would create ``User`` instance for
+   ``migrate`` management command would create ``User`` instance for
    anonymous user support (with name of ``AnonymousUser``).
 
 .. note::
@@ -127,7 +127,7 @@ GUARDIAN_GET_INIT_ANONYMOUS_USER
 Guardian supports object level permissions for anonymous users, however when
 in our project we use custom User model, default function might fail. This can
 lead to issues as ``guardian`` tries to create anonymous user after each
-``syncdb`` call. Object that is going to be created is retrieved using function
+``migrate`` call. Object that is going to be created is retrieved using function
 pointed by this setting. Once retrieved, ``save`` method would be called on
 that instance.
 
