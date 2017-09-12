@@ -52,11 +52,13 @@ SECRET_KEY = ''.join([random.choice(string.ascii_letters) for x in range(40)])
 DATABASES = {'default': env.db(default="sqlite:///")}
 
 # workaround - "Illegal mix of collations (utf8_unicode_ci,IMPLICIT) and (utf8_general_ci,IMPLICIT) for operation '='"
-if 'mysql' in DATABASES['default']['ENGINE']:
-    DATABASES['default']['TEST'] = {
-        'CHARSET': "utf8",
-        'COLLATION': "utf8_general_ci",
-    }
+if django.VERSION >= (1, 11):
+    for db in DATABASES.values():
+        if 'mysql' in db['ENGINE']:
+            db['TEST'] = {
+                'CHARSET': "utf8",
+                'COLLATION': "utf8_general_ci",
+            }
 
 
 TEMPLATES = [
