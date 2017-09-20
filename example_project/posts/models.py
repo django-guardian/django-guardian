@@ -1,6 +1,8 @@
 from django.db import models
+from django.utils.six import python_2_unicode_compatible
 
 
+@python_2_unicode_compatible
 class Post(models.Model):
     title = models.CharField('title', max_length=64)
     slug = models.SlugField(max_length=64)
@@ -13,7 +15,7 @@ class Post(models.Model):
         )
         get_latest_by = 'created_at'
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     @models.permalink

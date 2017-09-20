@@ -1,12 +1,14 @@
 from __future__ import unicode_literals
 
 from django.db import models
+from django.utils.six import python_2_unicode_compatible
 from guardian.compat import reverse
 
 
 from guardian.models import GroupObjectPermissionBase, UserObjectPermissionBase
 
 
+@python_2_unicode_compatible
 class Article(models.Model):
     title = models.CharField('title', max_length=64)
     slug = models.SlugField(max_length=64)
@@ -19,7 +21,7 @@ class Article(models.Model):
         )
         get_latest_by = 'created_at'
 
-    def __unicode__(self):
+    def __str__(self):
         return self.title
 
     def get_absolute_url(self):
