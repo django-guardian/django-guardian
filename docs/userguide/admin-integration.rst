@@ -21,8 +21,10 @@ models within the admin. In example, look at following model:
 .. code-block:: python
 
     from django.db import models
+    from django.utils.six import python_2_unicode_compatible
 
 
+    @python_2_unicode_compatible
     class Post(models.Model):
         title = models.CharField('title', max_length=64)
         slug = models.SlugField(max_length=64)
@@ -35,7 +37,7 @@ models within the admin. In example, look at following model:
             )
             get_latest_by = 'created_at'
 
-        def __unicode__(self):
+        def __str__(self):
             return self.title
 
         def get_absolute_url(self):
