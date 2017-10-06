@@ -723,7 +723,8 @@ class GetObjectsForUser(TestCase):
         perm = 'auth.change_group'
 
         assign_perm(perm, self.user)
-        objects = get_objects_for_user(self.user, perm)
+        objects = get_objects_for_user(
+            self.user, perm, accept_global_perms=True)
         remove_perm(perm, self.user)
         self.assertEqual(set(objects),
                          set(Group.objects.all()))
@@ -736,7 +737,8 @@ class GetObjectsForUser(TestCase):
         perm_obj = 'delete_group'
         assign_perm(perm_global, self.user)
         assign_perm(perm_obj, self.user, groups[0])
-        objects = get_objects_for_user(self.user, [perm_global, perm_obj])
+        objects = get_objects_for_user(
+            self.user, [perm_global, perm_obj], accept_global_perms=True)
         remove_perm(perm_global, self.user)
         self.assertEqual(set(objects.values_list('name', flat=True)),
                          set([groups[0].name]))
@@ -1062,7 +1064,7 @@ class GetObjectsForGroup(TestCase):
         assign_perm('contenttypes.change_contenttype', self.group1)
 
         objects = get_objects_for_group(
-            self.group1, ['contenttypes.change_contenttype'])
+            self.group1, ['contenttypes.change_contenttype'], accept_global_perms=True)
         self.assertEquals(set(objects),
                           set(ContentType.objects.all()))
 
@@ -1070,8 +1072,11 @@ class GetObjectsForGroup(TestCase):
         assign_perm('contenttypes.change_contenttype', self.group1)
         assign_perm('contenttypes.delete_contenttype', self.group1, self.obj1)
 
-        objects = get_objects_for_group(self.group1, [
-                                        'contenttypes.change_contenttype', 'contenttypes.delete_contenttype'], any_perm=False)
+        objects = get_objects_for_group(
+            self.group1, [
+                'contenttypes.change_contenttype',
+                'contenttypes.delete_contenttype'
+            ], any_perm=False, accept_global_perms=True)
         self.assertEquals(set(objects),
                           set([self.obj1]))
 
@@ -1079,8 +1084,11 @@ class GetObjectsForGroup(TestCase):
         assign_perm('contenttypes.change_contenttype', self.group1)
         assign_perm('contenttypes.delete_contenttype', self.group1, self.obj1)
 
-        objects = get_objects_for_group(self.group1, [
-                                        'contenttypes.change_contenttype', 'contenttypes.delete_contenttype'], any_perm=True)
+        objects = get_objects_for_group(
+            self.group1, [
+                'contenttypes.change_contenttype',
+                'contenttypes.delete_contenttype'
+            ], any_perm=True, accept_global_perms=True)
         self.assertEquals(set(objects),
                           set(ContentType.objects.all()))
 
