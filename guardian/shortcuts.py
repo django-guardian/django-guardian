@@ -348,7 +348,7 @@ def get_groups_with_perms(obj, attach_perms=False):
 
 
 def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=False,
-                         with_superuser=True, accept_global_perms=True):
+                         with_superuser=True, accept_global_perms=False):
     """
     Returns queryset of objects for which a given ``user`` has *all*
     permissions present at ``perms``.
@@ -374,7 +374,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
       Object based permissions are taken into account if more than one permission is handed in in perms and at least
       one of these perms is not globally set. If any_perm is set to false then the intersection of matching object
       is returned. Note, that if with_superuser is False, accept_global_perms will be ignored, which means that only
-      object permissions will be checked! Default is ``True``.
+      object permissions will be checked! Default is ``False``.
 
     :raises MixedContentTypeError: when computed content type for ``perms``
       and/or ``klass`` clashes.
@@ -594,7 +594,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
     return queryset.filter(q)
 
 
-def get_objects_for_group(group, perms, klass=None, any_perm=False, accept_global_perms=True):
+def get_objects_for_group(group, perms, klass=None, any_perm=False, accept_global_perms=False):
     """
     Returns queryset of objects for which a given ``group`` has *all*
     permissions present at ``perms``.
@@ -611,7 +611,7 @@ def get_objects_for_group(group, perms, klass=None, any_perm=False, accept_globa
     :param any_perm: if True, any of permission in sequence is accepted
     :param accept_global_perms: if ``True`` takes global permissions into account.
       If any_perm is set to false then the intersection of matching objects based on global and object based permissions
-      is returned. Default is ``True``.
+      is returned. Default is ``False``.
 
     :raises MixedContentTypeError: when computed content type for ``perms``
       and/or ``klass`` clashes.
