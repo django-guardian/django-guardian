@@ -482,6 +482,18 @@ class GetGroupsWithPerms(TestCase):
         result = get_groups_with_perms(self.obj1, attach_perms=True)
         self.assertEqual(len(result), 0)
 
+    def test_filter_by_contenttype(self):
+        # Make sure that both objects have same pk.
+        obj = ContentType.objects.create(pk=1042, model='baz', app_label='guardian-tests')
+        group = Group.objects.create(pk=1042, name='group')
+
+        assign_perm("change_group", self.group1, group)
+        assign_perm("change_contenttype", self.group1, obj)
+
+        result = get_groups_with_perms(obj, attach_perms=True)
+        # No group permissions should be included, even though objects have same pk.
+        self.assertEqual(result[self.group1], ["change_contenttype"])
+
     def test_mixed(self):
         assign_perm("change_contenttype", self.group1, self.obj1)
         assign_perm("change_contenttype", self.group1, self.obj2)
