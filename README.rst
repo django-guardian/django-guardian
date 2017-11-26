@@ -1,3 +1,5 @@
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fdjango-guardian%2Fdjango-guardian.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fdjango-guardian%2Fdjango-guardian?ref=badge_shield)
+
 ===============
 django-guardian
 ===============
@@ -112,3 +114,7 @@ For example:
 
 .. _Django: http://www.djangoproject.com/
 
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fdjango-guardian%2Fdjango-guardian.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fdjango-guardian%2Fdjango-guardian?ref=badge_large)
