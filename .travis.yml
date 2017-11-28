@@ -26,7 +26,7 @@ env:
  - DJANGO_VERSION=master DATABASE_URL=sqlite://
 
 before_install:
-  - pip install -U pip
+  - pip install -U pip six
   - pip install -q -U pytest
 
 install:
