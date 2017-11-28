@@ -14,3 +14,9 @@ GuardedModelAdmin
 .. autoclass:: guardian.admin.GuardedModelAdmin
    :members:
 
+GuardedModelAdminMixin
+----------------------
+
+.. autoclass:: guardian.admin.GuardedModelAdminMixin
+   :members:
+
