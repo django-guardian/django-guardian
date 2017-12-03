@@ -12,17 +12,19 @@ python:
 env:
  - DJANGO_VERSION=1.8 DATABASE_URL=postgres://postgres@/django_guardian
  - DJANGO_VERSION=1.10 DATABASE_URL=postgres://postgres@/django_guardian
- - DJANGO_VERSION=1.11 DATABASE_URL=postgres://postgres@/django_guardian
+ - DJANGO_VERSION=2.0 DATABASE_URL=postgres://postgres@/django_guardian
  - DJANGO_VERSION=master DATABASE_URL=postgres://postgres@/django_guardian
 
  - DJANGO_VERSION=1.8 DATABASE_URL=mysql://root:@localhost/django_guardian
  - DJANGO_VERSION=1.10 DATABASE_URL=mysql://root:@localhost/django_guardian
  - DJANGO_VERSION=1.11 DATABASE_URL=mysql://root:@localhost/django_guardian
+ - DJANGO_VERSION=2.0 DATABASE_URL=mysql://root:@localhost/django_guardian
  - DJANGO_VERSION=master DATABASE_URL=mysql://root:@localhost/django_guardian
 
  - DJANGO_VERSION=1.8 DATABASE_URL=sqlite://
  - DJANGO_VERSION=1.10 DATABASE_URL=sqlite://
  - DJANGO_VERSION=1.11 DATABASE_URL=sqlite://
+ - DJANGO_VERSION=2.0 DATABASE_URL=sqlite://
  - DJANGO_VERSION=master DATABASE_URL=sqlite://
 
 before_install:
@@ -40,7 +42,7 @@ install:
 script:
   - python ./setup.py --version
   - py.test --cov=guardian
-  - bash -c "if [[ $DJANGO_VERSION = 1.10 || $DJANGO_VERSION = 1.11 || $DJANGO_VERSION = "master" ]]; then pip install .; cd example_project; python manage.py test; fi; "
+  - bash -c "if [[ $DJANGO_VERSION = 1.10 || $DJANGO_VERSION = 1.11 || $DJANGO_VERSION = 2.0 || $DJANGO_VERSION = "master" ]]; then pip install .; cd example_project; python manage.py test; fi; "
 
 notifications:
   irc: "irc.freenode.net#django-guardian"
@@ -61,6 +63,20 @@ matrix:
       env: DJANGO_VERSION=master DATABASE_URL=mysql://root:@localhost/django_guardian
     - python: 3.4
       env: DJANGO_VERSION=master DATABASE_URL=sqlite://
+    # Drop Python 2.7 django 2.0+
+    - python: 2.7
+      env: DJANGO_VERSION=2.0 DATABASE_URL=postgres://postgres@/django_guardian
+    - python: 2.7
+      env: DJANGO_VERSION=2.0 DATABASE_URL=mysql://root:@localhost/django_guardian
+    - python: 2.7
+      env: DJANGO_VERSION=2.0 DATABASE_URL=sqlite://
+    - python: 2.7
+      env: DJANGO_VERSION=master DATABASE_URL=postgres://postgres@/django_guardian
+    - python: 2.7
+      env: DJANGO_VERSION=master DATABASE_URL=mysql://root:@localhost/django_guardian
+    - python: 2.7
+      env: DJANGO_VERSION=master DATABASE_URL=sqlite://
+
   allow_failures:
       - env: DJANGO_VERSION=master DATABASE_URL=postgres://postgres@/django_guardian
       - env: DJANGO_VERSION=master DATABASE_URL=mysql://root:@localhost/django_guardian
