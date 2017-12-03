@@ -28,22 +28,11 @@ env:
  - DJANGO_VERSION=2.0 DATABASE_URL=sqlite://
  - DJANGO_VERSION=master DATABASE_URL=sqlite://
 
-before_install:
-  - pip install -U pip six
-  - pip install -q -U pytest
-
 install:
-  - travis_retry pip install -q mock==1.0.1 pytest pytest-django pytest-cov django-environ setuptools_scm
-# Install django master or version
-  - bash -c "if [[ "$DJANGO_VERSION" == 'master' ]]; then pip install 'https://github.com/django/django/archive/master.tar.gz'; else pip install Django==$DJANGO_VERSION; fi; "
-# Install database drivers
-  - bash -c "if [[ $DATABASE_URL = postgres* ]]; then pip install psycopg2==2.7.1; fi; "
-  - bash -c "if [[ $DATABASE_URL = mysql* ]]; then pip install mysqlclient==1.3.10; fi; "
+  - ./contrib/travis/install.sh
 
 script:
-  - python ./setup.py --version
-  - py.test --cov=guardian
-  - bash -c "if [[ $DJANGO_VERSION = 1.10 || $DJANGO_VERSION = 1.11 || $DJANGO_VERSION = 2.0 || $DJANGO_VERSION = "master" ]]; then pip install .; cd example_project; python manage.py test; fi; "
+  - ./contrib/travis/test.sh
 
 notifications:
   irc: "irc.freenode.net#django-guardian"
