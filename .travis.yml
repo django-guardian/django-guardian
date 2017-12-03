@@ -12,6 +12,7 @@ python:
 env:
  - DJANGO_VERSION=1.8 DATABASE_URL=postgres://postgres@/django_guardian
  - DJANGO_VERSION=1.10 DATABASE_URL=postgres://postgres@/django_guardian
+ - DJANGO_VERSION=1.11 DATABASE_URL=postgres://postgres@/django_guardian
  - DJANGO_VERSION=2.0 DATABASE_URL=postgres://postgres@/django_guardian
  - DJANGO_VERSION=master DATABASE_URL=postgres://postgres@/django_guardian
 
