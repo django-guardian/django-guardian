@@ -3,7 +3,7 @@
 python ./setup.py --version
 py.test --cov=guardian
 
-# Tests django example on supported;
+# Test example_project on supported django versions
 if [ "$DJANGO_VERSION" = "1.10" ] || \
    [ "$DJANGO_VERSION" = "1.11" ] || \
    [ "$DJANGO_VERSION" = "2.0" ] || \

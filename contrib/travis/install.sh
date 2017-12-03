@@ -1,7 +1,7 @@
 #!/bin/bash
 pip install -U pip six
 
-# Arrays of packages
+# Array of packages
 PACKAGES=('mock==1.0.1' 'pytest' 'pytest-django' 'pytest-cov' 'django-environ' 'setuptools_scm')
 # Install django master or version
 if [[ "$DJANGO_VERSION" == 'master' ]]; then 
