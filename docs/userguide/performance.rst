@@ -108,7 +108,7 @@ maintainence point of view, especially).
 To temporarily disable the detection of this direct relation model, add
 ``enabled = False`` to the object permission model classes. This is useful to
 allow the ORM to create the tables for you and for you to migrate data from the
-generic model table before using the direct models.
+generic model tables before using the direct models.
 
 .. note::
    By defining direct relation models we can also tweak that object permission
