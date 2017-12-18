@@ -176,7 +176,7 @@ def get_obj_perms_model(obj, base_cls, generic_cls):
         else:
             model = getattr(attr, 'related_model', None)
         if (model and issubclass(model, base_cls) and
-                model is not generic_cls and getattr(attr, 'enabled', True)):
+                model is not generic_cls and getattr(model, 'enabled', True)):
             # if model is generic one it would be returned anyway
             if not model.objects.is_generic():
                 # make sure that content_object's content_type is same as
