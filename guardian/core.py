@@ -71,7 +71,8 @@ class ObjectPermissionChecker(object):
             return False
         elif self.user and self.user.is_superuser:
             return True
-        perm = perm.split('.')[-1]
+        if '.' in perm:
+            _, perm = perm.split('.', maxsplit=1)
         return perm in self.get_perms(obj)
 
     def get_group_filters(self, obj):
