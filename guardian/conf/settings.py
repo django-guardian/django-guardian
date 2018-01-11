@@ -26,6 +26,16 @@ MONKEY_PATCH = getattr(settings, 'GUARDIAN_MONKEY_PATCH', True)
 GET_CONTENT_TYPE = getattr(settings, 'GUARDIAN_GET_CONTENT_TYPE', 'guardian.ctypes.get_default_content_type')
 
 
+FALLBACK_TO_MODEL = getattr(settings, 'GUARDIAN_FALLBACK_TO_MODEL', None)
+
+def effective_fallback(input_fallback):
+    if input_fallback is not None:
+        return input_fallback
+    if FALLBACK_TO_MODEL is not None:
+        return FALLBACK_TO_MODEL
+    return False
+
+
 def check_configuration():
     if RENDER_403 and RAISE_403:
         raise ImproperlyConfigured("Cannot use both GUARDIAN_RENDER_403 AND "

@@ -4,6 +4,8 @@ from itertools import chain
 from django.conf import settings
 from guardian.conf import settings as guardian_settings
 # Try the new app settings (Django 1.7) and fall back to the old system
+from guardian.ctypes import get_content_type
+
 try:
     from django.apps import apps as django_apps
     auth_app = django_apps.get_app_config("auth")
@@ -20,7 +22,7 @@ from guardian.models import UserObjectPermission, GroupObjectPermission
 from guardian.shortcuts import assign_perm
 from guardian.management import create_anonymous_user
 
-from guardian.testapp.models import Project
+from guardian.testapp.models import Project, ProjectUserObjectPermission
 
 User = get_user_model()
 
@@ -48,6 +50,7 @@ class ObjectPermissionTestCase(TestCase):
             username=guardian_settings.ANONYMOUS_USER_NAME)
 
     def get_permission(self, codename, app_label=None):
+        # todo: qs below is not used
         qs = Permission.objects
         if app_label:
             qs = qs.filter(content_type__app_label=app_label)
@@ -166,31 +169,77 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
 
     def test_get_perms(self):
         group = Group.objects.create(name='group')
-        obj1 = ContentType.objects.create(
+        foo_obj = ContentType.objects.create(
             model='foo', app_label='guardian-tests')
-        obj2 = ContentType.objects.create(
+        bar_obj = ContentType.objects.create(
             model='bar', app_label='guardian-tests')
 
-        assign_perms = {
+        perms_to_assign = {
             group: ('change_group', 'delete_group'),
-            obj1: ('change_contenttype', 'delete_contenttype'),
-            obj2: ('delete_contenttype',),
+            foo_obj: ('change_contenttype', 'delete_contenttype'),
+            bar_obj: ('delete_contenttype',),
         }
 
-        check = ObjectPermissionChecker(self.user)
+        checker = ObjectPermissionChecker(self.user)
 
-        for obj, perms in assign_perms.items():
+        for obj, perms in perms_to_assign.items():
             for perm in perms:
                 UserObjectPermission.objects.assign_perm(perm, self.user, obj)
-            self.assertEqual(sorted(perms), sorted(check.get_perms(obj)))
+            self.assertEqual(sorted(perms), sorted(checker.get_perms(obj)))
 
-        check = ObjectPermissionChecker(self.group)
+        checker = ObjectPermissionChecker(self.group)
 
-        for obj, perms in assign_perms.items():
+        for obj, perms in perms_to_assign.items():
             for perm in perms:
                 GroupObjectPermission.objects.assign_perm(
                     perm, self.group, obj)
-            self.assertEqual(sorted(perms), sorted(check.get_perms(obj)))
+            self.assertEqual(sorted(perms), sorted(checker.get_perms(obj)))
+
+    def test_get_perms_fallback(self):
+        foo_project = Project.objects.create(name='foo_project') # obj permission, and model
+        bar_project = Project.objects.create(name='bar_project') # just model level permissions
+
+        ctype = get_content_type(foo_project)
+        perm_objs = Permission.objects.filter(content_type=ctype)
+
+        user_checker = ObjectPermissionChecker(self.user)
+        group_checker = ObjectPermissionChecker(self.group)
+
+        # user permission for obj
+        perm = perm_objs.get(codename='add_project')
+        ProjectUserObjectPermission.objects.assign_perm(perm, self.user, foo_project)
+        # user check
+        self.assertEqual(['add_project'], sorted(user_checker.get_perms(foo_project, True)))
+        self.assertEqual([], sorted(user_checker.get_perms(bar_project, True)))
+        # group check
+        self.assertEqual([], sorted(group_checker.get_perms(foo_project, True)))
+
+        # user permission for model
+        perm = perm_objs.get(codename='change_project')
+        self.user.user_permissions.add(perm)
+        user_checker._obj_perms_cache = {}
+        # user check
+        self.assertEqual(['add_project', 'change_project'],
+                         sorted(user_checker.get_perms(foo_project, True)))
+        self.assertEqual(['change_project'], sorted(user_checker.get_perms(bar_project, True)))
+        # group check
+        self.assertEqual([], sorted(group_checker.get_perms(foo_project, True)))
+
+        # group permission for model
+        perm = perm_objs.get(codename='delete_project')
+        self.group.permissions.add(perm)
+        user_checker._obj_perms_cache = {} # have to have both
+        group_checker._obj_perms_cache = {}
+        # user check
+        self.assertEqual(['add_project', 'change_project', 'delete_project'],
+                         sorted(user_checker.get_perms(foo_project, True)))
+        self.assertEqual(['change_project', 'delete_project'],
+                         sorted(user_checker.get_perms(bar_project, True)))
+        # group check
+        self.assertEqual(['delete_project'], sorted(group_checker.get_perms(foo_project, True)))
+        self.assertEqual(['delete_project'], sorted(group_checker.get_perms(bar_project, True)))
+
+
 
     def test_prefetch_user_perms(self):
         settings.DEBUG = True
