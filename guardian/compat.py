@@ -144,10 +144,21 @@ def remote_field(field):
     return field.remote_field
 
 
-def remote_model(field):
+def get_remote_model(field):
     if django.VERSION < (1, 9):
         return remote_field(field).to
     return remote_field(field).model
+
+def get_related_model(field):
+    if django.VERSION < (1, 8):
+        return getattr(field, 'field_model', None)
+    return getattr(field, 'related_model', None)
+
+def get_model_fields (model):
+    if django.VERSION >= (1, 8):
+        return (f for f in model._meta.get_fields()
+            if (f.one_to_many or f.one_to_one) and f.auto_created)
+    return model._meta.get_all_related_objects()
 
 
 # Django 1.10 compatibility
