@@ -2,3 +2,4 @@ Django>=1.10.6
 six
 django-environ
 bumpversion
+mock
