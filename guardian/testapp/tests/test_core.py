@@ -217,7 +217,7 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
         # user permission for model
         perm = perm_objs.get(codename='change_project')
         self.user.user_permissions.add(perm)
-        user_checker._obj_perms_cache = {}
+        user_checker.clear_cache()
         # user check
         self.assertEqual(['add_project', 'change_project'],
                          sorted(user_checker.get_perms(foo_project, True)))
@@ -228,8 +228,8 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
         # group permission for model
         perm = perm_objs.get(codename='delete_project')
         self.group.permissions.add(perm)
-        user_checker._obj_perms_cache = {} # have to have both
-        group_checker._obj_perms_cache = {}
+        user_checker.clear_cache() # have to have both
+        group_checker.clear_cache()
         # user check
         self.assertEqual(['add_project', 'change_project', 'delete_project'],
                          sorted(user_checker.get_perms(foo_project, True)))

@@ -57,7 +57,12 @@ class ObjectPermissionChecker(object):
           ``Group`` instance
         """
         self.user, self.group = get_identity(user_or_group)
+        self.clear_cache()
+
+    def clear_cache(self):
         self._obj_perms_cache = {}
+        self._model_user_perms_cache = {}
+        self._model_group_perms_cache = {} # used for user's groups if checker is for a user
 
     def has_perm(self, perm, obj, fallback_to_model=None):
         """
@@ -134,11 +139,16 @@ class ObjectPermissionChecker(object):
     def get_user_model_perms(self, obj):
         """
         self.user's model level permissions for the obj's content type
-        hits db
+        cached
         """
         ctype = get_content_type(obj)
-        return self.user.user_permissions.filter(content_type=ctype) \
-            .values_list("codename", flat=True)
+        key = ctype
+        if key not in self._model_user_perms_cache:
+            perms=self.user.user_permissions.filter(content_type=ctype) \
+                        .values_list("codename", flat=True)
+            self._model_user_perms_cache[key] = perms
+            return perms
+        return self._model_user_perms_cache[key]
 
     def get_group_perms(self, obj, fallback_to_model=None):
         ctype = get_content_type(obj)
@@ -161,23 +171,33 @@ class ObjectPermissionChecker(object):
     def get_user_groups_model_perms(self, obj):
         """
         self.user's groups' model level permissions for the obj's content type
-        hits db
+        cached
         """
         ctype = get_content_type(obj)
-        user_groups_field = self.user._meta.get_field('groups')
-        user_groups_query = 'group__%s' % user_groups_field.related_query_name()
-        return Permission.objects \
-            .filter(content_type=ctype, **{user_groups_query: self.user}) \
-            .values_list("codename", flat=True)
+        key = ctype
+        if key not in self._model_group_perms_cache:
+            user_groups_field = self.user._meta.get_field('groups')
+            user_groups_query = 'group__%s' % user_groups_field.related_query_name()
+            perms = Permission.objects \
+                    .filter(content_type=ctype, **{user_groups_query: self.user}) \
+                    .values_list("codename", flat=True)
+            self._model_group_perms_cache[key] = perms
+            return perms
+        return self._model_group_perms_cache[key]
 
     def get_group_model_perms(self, obj):
         """
         self.group's model level permissions for the obj's content type
-        hits db
+        cached
         """
         ctype = get_content_type(obj)
-        return self.group.permissions.filter(content_type=ctype) \
-            .values_list("codename", flat=True)
+        key = ctype
+        if key not in self._model_group_perms_cache:
+            perms = self.group.permissions.filter(content_type=ctype) \
+                        .values_list("codename", flat=True)
+            self._model_group_perms_cache[key] = perms
+            return perms
+        return self._model_group_perms_cache[key]
 
     def get_perms(self, obj, fallback_to_model=None):
         """
