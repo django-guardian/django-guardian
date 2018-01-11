@@ -233,6 +233,8 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
         # user check
         self.assertEqual(['add_project', 'change_project', 'delete_project'],
                          sorted(user_checker.get_perms(foo_project, True)))
+        self.assertEqual(['add_project'],
+                         sorted(user_checker.get_perms(foo_project, False)))
         self.assertEqual(['change_project', 'delete_project'],
                          sorted(user_checker.get_perms(bar_project, True)))
         # group check

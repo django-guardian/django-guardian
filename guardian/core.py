@@ -209,7 +209,7 @@ class ObjectPermissionChecker(object):
         if self.user and not self.user.is_active:
             return []
         ctype = get_content_type(obj)
-        key = self.get_local_cache_key(obj)
+        key = self.get_local_cache_key(obj, fallback_to_model)
         if key not in self._obj_perms_cache:
             if self.user and self.user.is_superuser:
                 perms = list(Permission.objects
@@ -234,12 +234,12 @@ class ObjectPermissionChecker(object):
             return perms
         return self._obj_perms_cache[key]
 
-    def get_local_cache_key(self, obj):
+    def get_local_cache_key(self, obj, fallback_to_model=None):
         """
         Returns cache key for ``_obj_perms_cache`` dict.
         """
         ctype = get_content_type(obj)
-        return (ctype.id, force_text(obj.pk))
+        return (ctype.id, force_text(obj.pk), fallback_to_model)
 
     def prefetch_perms(self, objects):
         """
@@ -320,9 +320,9 @@ class ObjectPermissionChecker(object):
 
         for perm in perms:
             if type(perm).objects.is_generic():
-                key = (ctype.id, perm.object_pk)
+                key = (ctype.id, perm.object_pk, None) # none for fallback_to_model
             else:
-                key = (ctype.id, force_text(perm.content_object_id))
+                key = (ctype.id, force_text(perm.content_object_id), None) # none for fallback_to_model
 
             self._obj_perms_cache[key].append(perm.permission.codename)
 
