@@ -6,11 +6,11 @@ from guardian.conf import settings as guardian_settings
 from guardian.compat import import_string
 
 
-def get_content_type(obj):
+def get_content_type(model):
     get_content_type_function = import_string(
         guardian_settings.GET_CONTENT_TYPE)
-    return get_content_type_function(obj)
+    return get_content_type_function(model)
 
 
-def get_default_content_type(obj):
-    return ContentType.objects.get_for_model(obj)
+def get_default_content_type(model):
+    return ContentType.objects.get_for_model(model)

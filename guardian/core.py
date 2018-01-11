@@ -3,6 +3,7 @@ from django.contrib.auth.models import Permission
 from django.db.models.query import QuerySet
 from django.utils.encoding import force_text
 from guardian.compat import get_user_model
+from guardian.conf.settings import effective_fallback
 from guardian.ctypes import get_content_type
 from guardian.utils import get_group_obj_perms_model, get_identity, get_user_obj_perms_model
 from itertools import chain
@@ -56,9 +57,14 @@ class ObjectPermissionChecker(object):
           ``Group`` instance
         """
         self.user, self.group = get_identity(user_or_group)
-        self._obj_perms_cache = {}
+        self.clear_cache()
 
-    def has_perm(self, perm, obj):
+    def clear_cache(self):
+        self._obj_perms_cache = {}
+        self._model_user_perms_cache = {}
+        self._model_group_perms_cache = {} # used for user's groups if checker is for a user
+
+    def has_perm(self, perm, obj, fallback_to_model=None):
         """
         Checks if user/group has given permission for object.
 
@@ -72,7 +78,7 @@ class ObjectPermissionChecker(object):
         elif self.user and self.user.is_superuser:
             return True
         perm = perm.split('.')[-1]
-        return perm in self.get_perms(obj)
+        return perm in self.get_perms(obj, fallback_to_model=None)
 
     def get_group_filters(self, obj):
         User = get_user_model()
@@ -88,6 +94,7 @@ class ObjectPermissionChecker(object):
             group_filters = {fieldname: self.user}
         else:
             group_filters = {'%s__group' % group_rel_name: self.group}
+
         if group_model.objects.is_generic():
             group_filters.update({
                 '%s__content_type' % group_rel_name: ctype,
@@ -98,13 +105,14 @@ class ObjectPermissionChecker(object):
 
         return group_filters
 
+
     def get_user_filters(self, obj):
         ctype = get_content_type(obj)
-        model = get_user_obj_perms_model(obj)
-        related_name = model.permission.field.related_query_name()
+        perms_model = get_user_obj_perms_model(obj) # ex. UserObjectPermission
+        related_name = perms_model.permission.field.related_query_name() # ex. userobjectpermission
 
         user_filters = {'%s__user' % related_name: self.user}
-        if model.objects.is_generic():
+        if perms_model.objects.is_generic():
             user_filters.update({
                 '%s__content_type' % related_name: ctype,
                 '%s__object_pk' % related_name: obj.pk,
@@ -114,27 +122,84 @@ class ObjectPermissionChecker(object):
 
         return user_filters
 
-    def get_user_perms(self, obj):
+    def get_user_perms(self, obj, fallback_to_model=None):
         ctype = get_content_type(obj)
 
-        perms_qs = Permission.objects.filter(content_type=ctype)
-        user_filters = self.get_user_filters(obj)
-        user_perms_qs = perms_qs.filter(**user_filters)
-        user_perms = user_perms_qs.values_list("codename", flat=True)
+        obj_perms = Permission.objects.filter(content_type=ctype) \
+                .filter(**self.get_user_filters(obj)) \
+                .values_list("codename", flat=True)
 
-        return user_perms
+        # add missing from user's model level perms
+        if effective_fallback(fallback_to_model):
+            return set(list(obj_perms)) \
+                .union(set(list(self.get_user_model_perms(obj))))
 
-    def get_group_perms(self, obj):
+        return obj_perms
+
+    def get_user_model_perms(self, obj):
+        """
+        self.user's model level permissions for the obj's content type
+        cached
+        """
+        ctype = get_content_type(obj)
+        key = ctype
+        if key not in self._model_user_perms_cache:
+            perms=self.user.user_permissions.filter(content_type=ctype) \
+                        .values_list("codename", flat=True)
+            self._model_user_perms_cache[key] = perms
+            return perms
+        return self._model_user_perms_cache[key]
+
+    def get_group_perms(self, obj, fallback_to_model=None):
         ctype = get_content_type(obj)
 
-        perms_qs = Permission.objects.filter(content_type=ctype)
-        group_filters = self.get_group_filters(obj)
-        group_perms_qs = perms_qs.filter(**group_filters)
-        group_perms = group_perms_qs.values_list("codename", flat=True)
+        obj_perms = Permission.objects.filter(content_type=ctype) \
+                .filter(**self.get_group_filters(obj)) \
+                .values_list("codename", flat=True)
 
-        return group_perms
+        # add missing from user's groups' model level perms
+        if effective_fallback(fallback_to_model):
+            if self.user:
+                return set(list(obj_perms))\
+                    .union(set(list(self.get_user_groups_model_perms(obj))))
+            # self.group
+            return set(list(obj_perms))\
+                .union(set(list(self.get_group_model_perms(obj))))
 
-    def get_perms(self, obj):
+        return obj_perms
+
+    def get_user_groups_model_perms(self, obj):
+        """
+        self.user's groups' model level permissions for the obj's content type
+        cached
+        """
+        ctype = get_content_type(obj)
+        key = ctype
+        if key not in self._model_group_perms_cache:
+            user_groups_field = self.user._meta.get_field('groups')
+            user_groups_query = 'group__%s' % user_groups_field.related_query_name()
+            perms = Permission.objects \
+                    .filter(content_type=ctype, **{user_groups_query: self.user}) \
+                    .values_list("codename", flat=True)
+            self._model_group_perms_cache[key] = perms
+            return perms
+        return self._model_group_perms_cache[key]
+
+    def get_group_model_perms(self, obj):
+        """
+        self.group's model level permissions for the obj's content type
+        cached
+        """
+        ctype = get_content_type(obj)
+        key = ctype
+        if key not in self._model_group_perms_cache:
+            perms = self.group.permissions.filter(content_type=ctype) \
+                        .values_list("codename", flat=True)
+            self._model_group_perms_cache[key] = perms
+            return perms
+        return self._model_group_perms_cache[key]
+
+    def get_perms(self, obj, fallback_to_model=None):
         """
         Returns list of ``codename``'s of all permissions for given ``obj``.
 
@@ -144,33 +209,37 @@ class ObjectPermissionChecker(object):
         if self.user and not self.user.is_active:
             return []
         ctype = get_content_type(obj)
-        key = self.get_local_cache_key(obj)
+        key = self.get_local_cache_key(obj, fallback_to_model)
         if key not in self._obj_perms_cache:
             if self.user and self.user.is_superuser:
-                perms = list(chain(*Permission.objects
-                                   .filter(content_type=ctype)
-                                   .values_list("codename")))
+                perms = list(Permission.objects
+                           .filter(content_type=ctype)
+                           .values_list("codename", flat=True))
             elif self.user:
                 # Query user and group permissions separately and then combine
                 # the results to avoid a slow query
-                user_perms = self.get_user_perms(obj)
-                group_perms = self.get_group_perms(obj)
+                user_perms = self.get_user_perms(obj, fallback_to_model)
+                group_perms = self.get_group_perms(obj, fallback_to_model)
                 perms = list(set(chain(user_perms, group_perms)))
             else:
                 group_filters = self.get_group_filters(obj)
-                perms = list(set(chain(*Permission.objects
-                                       .filter(content_type=ctype)
-                                       .filter(**group_filters)
-                                       .values_list("codename"))))
+                perms = set(Permission.objects
+                               .filter(content_type=ctype)
+                               .filter(**group_filters)
+                               .values_list("codename", flat=True))
+                if effective_fallback(fallback_to_model):
+                    perms = perms.union(set(self.get_group_model_perms(obj)))
+                perms=list(perms)
             self._obj_perms_cache[key] = perms
+            return perms
         return self._obj_perms_cache[key]
 
-    def get_local_cache_key(self, obj):
+    def get_local_cache_key(self, obj, fallback_to_model=None):
         """
         Returns cache key for ``_obj_perms_cache`` dict.
         """
         ctype = get_content_type(obj)
-        return (ctype.id, force_text(obj.pk))
+        return (ctype.id, force_text(obj.pk), fallback_to_model)
 
     def prefetch_perms(self, objects):
         """
@@ -251,9 +320,9 @@ class ObjectPermissionChecker(object):
 
         for perm in perms:
             if type(perm).objects.is_generic():
-                key = (ctype.id, perm.object_pk)
+                key = (ctype.id, perm.object_pk, None) # none for fallback_to_model
             else:
-                key = (ctype.id, force_text(perm.content_object_id))
+                key = (ctype.id, force_text(perm.content_object_id), None) # none for fallback_to_model
 
             self._obj_perms_cache[key].append(perm.permission.codename)
 
