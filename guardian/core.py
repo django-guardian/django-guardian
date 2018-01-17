@@ -56,6 +56,15 @@ class ObjectPermissionChecker(object):
           ``Group`` instance
         """
         self.user, self.group = get_identity(user_or_group)
+        self.user_or_group = user_or_group
+
+        if not hasattr(user_or_group, '_obj_perms_cache'):
+            user_or_group._obj_perms_cache = {}
+            # attaching cache to user/group keeps it between successive calls to user.has_perm()
+        self._obj_perms_cache = user_or_group._obj_perms_cache
+
+    def clear_cache(self):
+        self.user_or_group._obj_perms_cache = {}
         self._obj_perms_cache = {}
 
     def has_perm(self, perm, obj):

@@ -5,6 +5,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models.query import QuerySet
 from django.test import TestCase
 
+from guardian.managers import clear_cache
 from guardian.shortcuts import get_perms_for_model
 from guardian.core import ObjectPermissionChecker
 from guardian.compat import get_user_model
@@ -90,6 +91,8 @@ class AssignPermTest(ObjectPermissionTestCase):
         assign_perm("add_contenttype", self.user, self.ctype_qset)
         assign_perm("change_contenttype", self.group, self.ctype_qset)
         assign_perm(self.get_permission("delete_contenttype"), self.user, self.ctype_qset)
+
+        clear_cache(self.user)
         for obj in self.ctype_qset:
             self.assertTrue(self.user.has_perm("add_contenttype", obj))
             self.assertTrue(self.user.has_perm("change_contenttype", obj))
@@ -101,6 +104,7 @@ class AssignPermTest(ObjectPermissionTestCase):
         assign_perm(self.get_permission("delete_contenttype"), self.group, self.ctype_qset)
 
         check = ObjectPermissionChecker(self.group)
+        check.clear_cache()
         for obj in self.ctype_qset:
             self.assertTrue(check.has_perm("add_contenttype", obj))
             self.assertTrue(check.has_perm("change_contenttype", obj))

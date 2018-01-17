@@ -9,7 +9,7 @@ from django.test.client import RequestFactory
 from django.views.generic import View
 from django.views.generic import ListView
 
-from guardian.shortcuts import assign_perm
+from guardian.shortcuts import assign_perm, clear_cache
 from guardian.compat import get_user_model
 import mock
 from guardian.mixins import LoginRequiredMixin
@@ -173,6 +173,7 @@ class TestViewMixins(TestCase):
                                                                     response, obj=self.post)
 
         request.user.add_obj_perm('add_post', self.post)
+        clear_cache(request.user)
         with self.assertRaises(DatabaseRemovedError):
             view(request)
 

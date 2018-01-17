@@ -9,6 +9,11 @@ from guardian.models import Permission
 import warnings
 
 
+def clear_cache(user_or_group):
+    user_or_group._obj_perms_cache = {}
+
+
+
 class BaseObjectPermissionManager(models.Manager):
 
     @property
@@ -31,6 +36,7 @@ class BaseObjectPermissionManager(models.Manager):
         Assigns permission with given ``perm`` for an instance ``obj`` and
         ``user``.
         """
+        clear_cache(user_or_group)
         if getattr(obj, 'pk', None) is None:
             raise ObjectNotPersisted("Object %s needs to be persisted first"
                                      % obj)
@@ -55,6 +61,7 @@ class BaseObjectPermissionManager(models.Manager):
         ``user_or_group``.
         """
 
+        clear_cache(user_or_group)
         ctype = get_content_type(queryset.model)
         if not isinstance(perm, Permission):
             permission = Permission.objects.get(content_type=ctype, codename=perm)
@@ -91,6 +98,7 @@ class BaseObjectPermissionManager(models.Manager):
         use ``Queryset.delete`` method for removing it. Main implication of this
         is that ``post_delete`` signals would NOT be fired.
         """
+        clear_cache(user_or_group)
         if getattr(obj, 'pk', None) is None:
             raise ObjectNotPersisted("Object %s needs to be persisted first"
                                      % obj)
@@ -117,6 +125,8 @@ class BaseObjectPermissionManager(models.Manager):
         use ``Queryset.delete`` method for removing it. Main implication of this
         is that ``post_delete`` signals would NOT be fired.
         """
+        clear_cache(user_or_group)
+
         filters = Q(**{self.user_or_group_field: user_or_group})
 
         if isinstance(perm, Permission):

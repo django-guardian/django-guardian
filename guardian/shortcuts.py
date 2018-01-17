@@ -18,7 +18,9 @@ from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
 from guardian.exceptions import MixedContentTypeError, WrongAppError
 from guardian.models import GroupObjectPermission
-from guardian.utils import get_anonymous_user, get_group_obj_perms_model, get_identity, get_user_obj_perms_model
+from guardian.managers import clear_cache
+from guardian.utils import get_anonymous_user, get_group_obj_perms_model, \
+    get_identity, get_user_obj_perms_model
 
 
 def assign_perm(perm, user_or_group, obj=None):
@@ -71,6 +73,7 @@ def assign_perm(perm, user_or_group, obj=None):
     """
 
     user, group = get_identity(user_or_group)
+    clear_cache(user_or_group)
     # If obj is None we try to operate on global permissions
     if obj is None:
         if not isinstance(perm, Permission):
@@ -135,6 +138,7 @@ def remove_perm(perm, user_or_group=None, obj=None):
 
     """
     user, group = get_identity(user_or_group)
+    clear_cache(user_or_group)
     if obj is None:
         try:
             app_label, codename = perm.split('.', 1)
