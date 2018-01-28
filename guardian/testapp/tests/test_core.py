@@ -192,6 +192,34 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
                     perm, self.group, obj)
             self.assertEqual(sorted(perms), sorted(check.get_perms(obj)))
 
+    def test_cross_model_get_perms(self):
+        guardian_settings.ALLOW_CROSS_MODEL_PERMISSIONS=True
+        group = Group.objects.create(name='group')
+        ct_obj = ContentType.objects.create(
+            model='foo', app_label='guardian-tests')
+
+        assign_perms = {
+            ct_obj: ('auth.change_group', 'auth.delete_group'),
+            group: ('contenttypes.change_contenttype', 'contenttypes.delete_contenttype'),
+        }
+
+        check = ObjectPermissionChecker(self.user)
+
+        for obj, perms in assign_perms.items():
+            for perm in perms:
+                UserObjectPermission.objects.assign_perm(perm, self.user, obj)
+            self.assertEqual(sorted(perms), sorted(check.get_perms(obj)))
+
+        check = ObjectPermissionChecker(self.group)
+
+        for obj, perms in assign_perms.items():
+            for perm in perms:
+                GroupObjectPermission.objects.assign_perm(
+                    perm, self.group, obj)
+            self.assertEqual(sorted(perms), sorted(check.get_perms(obj)))
+
+        guardian_settings.ALLOW_CROSS_MODEL_PERMISSIONS=False
+
     def test_prefetch_user_perms(self):
         settings.DEBUG = True
         try:

@@ -248,7 +248,6 @@ class ObjectPermissionBackendTests(TestCase):
         self.assertFalse(self.backend.has_perm(user, "change_user", self.user))
 
     def test_has_perm_wrong_app(self):
-        guardian_settings.ALLOW_CROSS_MODEL_PERMISSIONS=False
         self.assertRaises(WrongAppError, self.backend.has_perm,
                           self.user, "no_app.change_user", self.user)
 
@@ -258,6 +257,7 @@ class ObjectPermissionBackendTests(TestCase):
             self.backend.has_perm(self.user, "no_app.change_user", self.user)
         except WrongAppError:
             self.fail('WrongAppError raised erroneously!')
+        guardian_settings.ALLOW_CROSS_MODEL_PERMISSIONS=False
 
     def test_obj_is_not_model(self):
         for obj in (Group, 666, "String", [2, 1, 5, 7], {}):

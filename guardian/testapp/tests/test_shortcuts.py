@@ -81,6 +81,7 @@ class AssignPermTest(ObjectPermissionTestCase):
         assign_perm("add_contenttype", self.group, self.ctype)
         assign_perm("change_contenttype", self.group, self.ctype)
         assign_perm(self.get_permission("delete_contenttype"), self.group, self.ctype)
+        clear_cache(self.group) # event if the checker is newly constructed cache is transferred
 
         check = ObjectPermissionChecker(self.group)
         self.assertTrue(check.has_perm("add_contenttype", self.ctype))
@@ -91,8 +92,9 @@ class AssignPermTest(ObjectPermissionTestCase):
         assign_perm("add_contenttype", self.user, self.ctype_qset)
         assign_perm("change_contenttype", self.group, self.ctype_qset)
         assign_perm(self.get_permission("delete_contenttype"), self.user, self.ctype_qset)
-
         clear_cache(self.user)
+        clear_cache(self.group)
+
         for obj in self.ctype_qset:
             self.assertTrue(self.user.has_perm("add_contenttype", obj))
             self.assertTrue(self.user.has_perm("change_contenttype", obj))
@@ -214,11 +216,11 @@ class GetPermsTest(ObjectPermissionTestCase):
         perms_to_assign = ("change_contenttype",)
 
         for perm in perms_to_assign:
-            assign_perm("change_contenttype", self.user, self.ctype)
+            assign_perm(perm, self.user, self.ctype)
 
         perms = get_perms(self.user, self.ctype)
         for perm in perms_to_assign:
-            self.assertTrue(perm in perms)
+            self.assertIn(perm, perms)
 
 
 class GetUsersWithPermsTest(TestCase):
@@ -389,8 +391,10 @@ class GetUsersWithPermsTest(TestCase):
         self.assertEqual(set(get_group_perms(self.group1, self.obj1)), set(['delete_contenttype']))
         self.assertEqual(set(get_group_perms(self.group2, self.obj1)), set([]))
         self.assertEqual(set(get_group_perms(admin, self.obj1)), set([]))
-        self.assertEqual(set(get_perms(admin, self.obj1)), set(['add_contenttype', 'change_contenttype', 'delete_contenttype']))
-        self.assertEqual(set(get_perms(self.user1, self.obj1)), set(['change_contenttype', 'delete_contenttype']))
+        self.assertEqual(set(get_perms(admin, self.obj1)),
+                         set(['add_contenttype', 'change_contenttype', 'delete_contenttype']))
+        self.assertEqual(set(get_perms(self.user1, self.obj1)),
+                         set(['change_contenttype', 'delete_contenttype']))
         self.assertEqual(set(get_perms(self.user2, self.obj1)), set(['delete_contenttype']))
         self.assertEqual(set(get_perms(self.group1, self.obj1)), set(['delete_contenttype']))
         self.assertEqual(set(get_perms(self.group2, self.obj1)), set([]))

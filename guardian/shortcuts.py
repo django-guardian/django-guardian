@@ -289,9 +289,12 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
                                          with_superusers=with_superusers):
             # TODO: Support the case of set with_group_users but not with_superusers.
             if with_group_users or with_superusers:
-                users[user] = sorted(get_perms(user, obj))
+                perms = get_perms(user, obj)
             else:
-                users[user] = sorted(get_user_perms(user, obj))
+                perms = get_user_perms(user, obj)
+            app_label = obj._meta.app_label + '.'
+            perms = [perm.replace(app_label, '') for perm in perms]
+            users[user] = sorted(perms)
         return users
 
 

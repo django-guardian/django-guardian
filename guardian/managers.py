@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 from django.db import models
 from django.db.models import Q
+from guardian.conf import settings
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
 from guardian.exceptions import ObjectNotPersisted
@@ -11,7 +12,6 @@ import warnings
 
 def clear_cache(user_or_group):
     user_or_group._obj_perms_cache = {}
-
 
 
 class BaseObjectPermissionManager(models.Manager):
@@ -37,16 +37,21 @@ class BaseObjectPermissionManager(models.Manager):
         ``user``.
         """
         clear_cache(user_or_group)
+        ctype = get_content_type(obj)
+
         if getattr(obj, 'pk', None) is None:
             raise ObjectNotPersisted("Object %s needs to be persisted first"
                                      % obj)
-        ctype = get_content_type(obj)
         if not isinstance(perm, Permission):
-            permission = Permission.objects.get(content_type=ctype, codename=perm)
-        else:
-            permission = perm
+            if settings.ALLOW_CROSS_MODEL_PERMISSIONS and '.' in perm:
+                app_label, perm = perm.split('.')
+                perm = Permission.objects.get(content_type__app_label=app_label, codename=perm)
+            else:
+                if '.' in perm:
+                    perm = perm.split('.')[-1]
+                perm = Permission.objects.get(content_type=ctype, codename=perm)
 
-        kwargs = {'permission': permission, self.user_or_group_field: user_or_group}
+        kwargs = {'permission': perm, self.user_or_group_field: user_or_group}
         if self.is_generic():
             kwargs['content_type'] = ctype
             kwargs['object_pk'] = obj.pk
