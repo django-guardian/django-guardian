@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
+from guardian.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.six import python_2_unicode_compatible
@@ -34,7 +35,8 @@ class BaseObjectPermission(models.Model):
 
     def save(self, *args, **kwargs):
         content_type = get_content_type(self.content_object)
-        if content_type != self.permission.content_type:
+        if not settings.ALLOW_CROSS_MODEL_PERMISSIONS \
+            and content_type != self.permission.content_type:
             raise ValidationError("Cannot persist permission not designed for "
                                   "this class (permission's type is %r and object's type is %r)"
                                   % (self.permission.content_type, content_type))
