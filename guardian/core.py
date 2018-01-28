@@ -124,16 +124,16 @@ class ObjectPermissionChecker(object):
         return user_filters
 
     def get_user_perms(self, obj):
-        ctype = get_content_type(obj)
-        return Permission.objects.filter(content_type=ctype) \
-                    .filter(**self.get_user_filters(obj)) \
-                    .values_list("codename", flat=True)
+        return self.get_content_type_perms(obj, **self.get_user_filters(obj))
 
     def get_group_perms(self, obj):
+        return self.get_content_type_perms(obj, **self.get_group_filters(obj))
+
+    def get_content_type_perms(self, obj, **filters):
         ctype = get_content_type(obj)
         return Permission.objects.filter(content_type=ctype) \
-                    .filter(**self.get_group_filters(obj)) \
-                    .values_list("codename", flat=True)
+            .filter(**filters) \
+            .values_list("codename", flat=True)
 
     def get_perms(self, obj):
         """
@@ -144,13 +144,10 @@ class ObjectPermissionChecker(object):
         """
         if self.user and not self.user.is_active:
             return []
-        ctype = get_content_type(obj)
         key = self.get_local_cache_key(obj)
         if key not in self._obj_perms_cache:
             if self.user and self.user.is_superuser:
-                perms = list(Permission.objects
-                           .filter(content_type=ctype)
-                           .values_list("codename", flat=True))
+                perms = list(self.get_content_type_perms(obj))
             else:
                 group_perms = self.get_group_perms(obj)
                 if self.user:
@@ -185,10 +182,7 @@ class ObjectPermissionChecker(object):
         pks, model, ctype = _get_pks_model_and_ctype(objects)
 
         if self.user and self.user.is_superuser:
-            perms = list(chain(
-                *Permission.objects
-                .filter(content_type=ctype)
-                .values_list("codename")))
+            perms = list(self.get_content_type_perms(objects[0]))
 
             for pk in pks:
                 key = (ctype.id, force_text(pk))
