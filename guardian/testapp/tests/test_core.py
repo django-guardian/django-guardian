@@ -129,7 +129,7 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
         perms = sorted(chain(*Permission.objects
                              .filter(content_type=ctype)
                              .values_list('codename')))
-        self.assertEqual(perms, check.get_perms(self.ctype))
+        self.assertEqual(set(perms), check.get_perms(self.ctype))
         for perm in perms:
             self.assertTrue(check.has_perm(perm, self.ctype))
 
