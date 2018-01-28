@@ -125,23 +125,15 @@ class ObjectPermissionChecker(object):
 
     def get_user_perms(self, obj):
         ctype = get_content_type(obj)
-
-        perms_qs = Permission.objects.filter(content_type=ctype)
-        user_filters = self.get_user_filters(obj)
-        user_perms_qs = perms_qs.filter(**user_filters)
-        user_perms = user_perms_qs.values_list("codename", flat=True)
-
-        return user_perms
+        return Permission.objects.filter(content_type=ctype) \
+                    .filter(**self.get_user_filters(obj)) \
+                    .values_list("codename", flat=True)
 
     def get_group_perms(self, obj):
         ctype = get_content_type(obj)
-
-        perms_qs = Permission.objects.filter(content_type=ctype)
-        group_filters = self.get_group_filters(obj)
-        group_perms_qs = perms_qs.filter(**group_filters)
-        group_perms = group_perms_qs.values_list("codename", flat=True)
-
-        return group_perms
+        return Permission.objects.filter(content_type=ctype) \
+                    .filter(**self.get_group_filters(obj)) \
+                    .values_list("codename", flat=True)
 
     def get_perms(self, obj):
         """
