@@ -151,18 +151,15 @@ class ObjectPermissionChecker(object):
                 perms = list(Permission.objects
                            .filter(content_type=ctype)
                            .values_list("codename", flat=True))
-            elif self.user:
-                # Query user and group permissions separately and then combine
-                # the results to avoid a slow query
-                user_perms = self.get_user_perms(obj)
-                group_perms = self.get_group_perms(obj)
-                perms = list(set(chain(user_perms, group_perms)))
             else:
-                group_filters = self.get_group_filters(obj)
-                perms = list(set(Permission.objects
-                               .filter(content_type=ctype)
-                               .filter(**group_filters)
-                               .values_list("codename", flat=True)))
+                group_perms = self.get_group_perms(obj)
+                if self.user:
+                    # Query user and group permissions separately and then combine
+                    # the results to avoid a slow query
+                    user_perms = self.get_user_perms(obj)
+                    perms = list(set(chain(user_perms, group_perms)))
+                else:
+                    perms = list(set(group_perms))
             self._obj_perms_cache[key] = perms
             return perms
         return self._obj_perms_cache[key]
