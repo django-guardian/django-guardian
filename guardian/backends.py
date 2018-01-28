@@ -83,7 +83,8 @@ class ObjectPermissionBackend(object):
 
         if '.' in perm:
             app_label, perm = perm.split('.')
-            if app_label != obj._meta.app_label:
+            if not settings.ALLOW_CROSS_MODEL_PERMISSIONS \
+                and app_label != obj._meta.app_label:
                 # Check the content_type app_label when permission
                 # and obj app labels don't match.
                 ctype = get_content_type(obj)
