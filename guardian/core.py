@@ -125,16 +125,16 @@ class ObjectPermissionChecker(object):
         if key not in self._obj_perms_cache:
             if self.user and self.user.is_superuser:
                 ctype = get_content_type(obj)
-                perms = set(self._filter_perms(obj, content_type=ctype))
+                perms = self._filter_perms(obj, content_type=ctype)
             else:
                 group_perms = self.get_group_perms(obj)
                 if self.user:
                     # Query user and group permissions separately and then combine
                     # the results to avoid a slow query
-                    user_perms = self.get_user_perms(obj)
-                    perms = set(chain(user_perms, group_perms))
+                    perms = self.get_user_perms(obj)
+                    perms.update(group_perms)
                 else:
-                    perms = set(group_perms)
+                    perms = group_perms
             self._obj_perms_cache[key] = perms
             return perms
         return self._obj_perms_cache[key]
