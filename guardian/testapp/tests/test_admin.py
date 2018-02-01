@@ -13,7 +13,7 @@ from guardian.admin import GuardedModelAdmin
 from guardian.compat import get_user_model, get_model_name
 from guardian.compat import reverse
 from guardian.compat import str
-from guardian.shortcuts import get_perms
+from guardian.shortcuts import get_perms, clear_cache
 from guardian.shortcuts import get_perms_for_model
 from guardian.testapp.tests.conf import TEST_SETTINGS
 from guardian.testapp.tests.conf import override_settings
@@ -169,6 +169,7 @@ class AdminTests(TestCase):
         )
 
         # Remove perm and check if change was persisted
+        clear_cache(self.user)
         perms = ['change_%s' % self.obj_info[1]]
         data = {'permissions': perms}
         response = self.client.post(url, data, follow=True)
@@ -273,6 +274,7 @@ class AdminTests(TestCase):
         )
 
         # Remove perm and check if change was persisted
+        clear_cache(self.group)
         perms = ['delete_%s' % self.obj_info[1]]
         data = {'permissions': perms}
         response = self.client.post(url, data, follow=True)

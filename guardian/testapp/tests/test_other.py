@@ -17,12 +17,14 @@ from guardian.compat import get_user_model_path
 from guardian.compat import get_user_permission_codename
 from guardian.compat import basestring
 from guardian.compat import unicode
+from guardian.conf import settings as guardian_settings
 from guardian.exceptions import GuardianError
 from guardian.exceptions import NotUserNorGroup
 from guardian.exceptions import ObjectNotPersisted
 from guardian.exceptions import WrongAppError
 from guardian.models import GroupObjectPermission
 from guardian.models import UserObjectPermission
+from guardian.shortcuts import clear_cache
 from guardian.testapp.tests.conf import TestDataMixin
 User = get_user_model()
 user_model_path = get_user_model_path()
@@ -137,24 +139,26 @@ class GroupPermissionTests(TestDataMixin, TestCase):
         self.obj2 = ContentType.objects.create(
             model='bar', app_label='guardian-tests')
 
-    def test_assignement(self):
+    def test_assignment(self):
         self.assertFalse(self.user.has_perm('change_contenttype', self.ctype))
         self.assertFalse(self.user.has_perm('contenttypes.change_contenttype',
                                             self.ctype))
 
         GroupObjectPermission.objects.assign_perm('change_contenttype', self.group,
                                                   self.ctype)
+        clear_cache(self.user)
         self.assertTrue(self.user.has_perm('change_contenttype', self.ctype))
         self.assertTrue(self.user.has_perm('contenttypes.change_contenttype',
                                            self.ctype))
 
-    def test_assignement_and_remove(self):
+    def test_assignment_and_remove(self):
         GroupObjectPermission.objects.assign_perm('change_contenttype', self.group,
                                                   self.ctype)
         self.assertTrue(self.user.has_perm('change_contenttype', self.ctype))
 
         GroupObjectPermission.objects.remove_perm('change_contenttype',
                                                   self.group, self.ctype)
+        clear_cache(self.user)
         self.assertFalse(self.user.has_perm('change_contenttype', self.ctype))
 
     def test_ctypes(self):
@@ -167,6 +171,7 @@ class GroupPermissionTests(TestDataMixin, TestCase):
                                                   self.group, self.obj1)
         GroupObjectPermission.objects.assign_perm('change_contenttype', self.group,
                                                   self.obj2)
+        clear_cache(self.user)
         self.assertTrue(self.user.has_perm('change_contenttype', self.obj2))
         self.assertFalse(self.user.has_perm('change_contenttype', self.obj1))
 
@@ -174,6 +179,7 @@ class GroupPermissionTests(TestDataMixin, TestCase):
                                                   self.obj1)
         GroupObjectPermission.objects.assign_perm('change_contenttype', self.group,
                                                   self.obj2)
+        clear_cache(self.user)
         self.assertTrue(self.user.has_perm('change_contenttype', self.obj2))
         self.assertTrue(self.user.has_perm('change_contenttype', self.obj1))
 
@@ -181,6 +187,7 @@ class GroupPermissionTests(TestDataMixin, TestCase):
                                                   self.group, self.obj1)
         GroupObjectPermission.objects.remove_perm('change_contenttype',
                                                   self.group, self.obj2)
+        clear_cache(self.user)
         self.assertFalse(self.user.has_perm('change_contenttype', self.obj2))
         self.assertFalse(self.user.has_perm('change_contenttype', self.obj1))
 
@@ -243,6 +250,14 @@ class ObjectPermissionBackendTests(TestCase):
     def test_has_perm_wrong_app(self):
         self.assertRaises(WrongAppError, self.backend.has_perm,
                           self.user, "no_app.change_user", self.user)
+
+    def test_allow_cross_model_perms(self):
+        guardian_settings.ALLOW_CROSS_MODEL_PERMISSIONS=True
+        try:
+            self.backend.has_perm(self.user, "no_app.change_user", self.user)
+        except WrongAppError:
+            self.fail('WrongAppError raised erroneously!')
+        guardian_settings.ALLOW_CROSS_MODEL_PERMISSIONS=False
 
     def test_obj_is_not_model(self):
         for obj in (Group, 666, "String", [2, 1, 5, 7], {}):

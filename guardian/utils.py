@@ -14,7 +14,8 @@ from django.db.models import Model
 from django.http import HttpResponseForbidden, HttpResponseNotFound
 from django.shortcuts import render_to_response, render
 from django.template import RequestContext
-from guardian.compat import get_user_model, remote_model
+from guardian.compat import get_user_model, get_remote_model, get_related_model, \
+    get_model_fields
 from guardian.conf import settings as guardian_settings
 from guardian.ctypes import get_content_type
 from guardian.exceptions import NotUserNorGroup
@@ -159,37 +160,52 @@ def clean_orphan_obj_perms():
 # TODO: should raise error when multiple UserObjectPermission direct relations
 # are defined
 
-def get_obj_perms_model(obj, base_cls, generic_cls):
+def get_obj_perms_model(obj, base_model, generic_model):
+    """
+    returns ObjectPermission model associated with the obj
+
+    this is, in the generic case, UserObjectPermission or GroupObjectPermission;
+
+    or, if direct foreign keys used, a subclass of UserObjectPermissionBase,
+        GroupObjectPermissionBase. Example: ProjectUserObjectPermission
+        in other words: obj's model is properly FK'ed by an ObjectPermission
+        model/table dedicated to it.
+
+    :param obj:
+    :param base_model:
+    :param generic_model:
+    :return:
+    """
+
     if isinstance(obj, Model):
-        obj = obj.__class__
-    ctype = get_content_type(obj)
-
-    if django.VERSION >= (1, 8):
-        fields = (f for f in obj._meta.get_fields()
-                  if (f.one_to_many or f.one_to_one) and f.auto_created)
+        obj_model = obj.__class__
+    elif issubclass(obj, Model):
+        obj_model = obj
     else:
-        fields = obj._meta.get_all_related_objects()
+        raise ValueError('obj must be either a Model or an instance of it')
 
-    for attr in fields:
-        if django.VERSION < (1, 8):
-            model = getattr(attr, 'model', None)
-        else:
-            model = getattr(attr, 'related_model', None)
-        if (model and issubclass(model, base_cls) and
-                model is not generic_cls):
-            # if model is generic one it would be returned anyway
-            if not model.objects.is_generic():
-                # make sure that content_object's content_type is same as
-                # the one of given obj
-                fk = model._meta.get_field('content_object')
-                if ctype == get_content_type(remote_model(fk)):
-                    return model
-    return generic_cls
+    ctype = get_content_type(obj_model)
+    model_fields = get_model_fields(obj_model)
+
+    for field in model_fields:
+        related_model = get_related_model(field)
+
+        if (related_model and issubclass(related_model, base_model)
+                and related_model is not generic_model
+                # if field_model is generic, it would be returned anyway
+                and not related_model.objects.is_generic()):
+            content_obj_field = related_model._meta.get_field('content_object')
+            # make sure that content_object's content_type is same as
+            # the one of given obj
+            if ctype == get_content_type(get_remote_model(content_obj_field)):
+                return related_model
+    return generic_model
 
 
 def get_user_obj_perms_model(obj):
     """
-    Returns model class that connects given ``obj`` and User class.
+    Returns the model that connects given ``obj`` and User model.
+    Usually UserObjectPermission
     """
     from guardian.models import UserObjectPermissionBase
     from guardian.models import UserObjectPermission
@@ -198,7 +214,8 @@ def get_user_obj_perms_model(obj):
 
 def get_group_obj_perms_model(obj):
     """
-    Returns model class that connects given ``obj`` and Group class.
+    Returns the model that connects given ``obj`` and Group model.
+    Usually GroupObjectPermission
     """
     from guardian.models import GroupObjectPermissionBase
     from guardian.models import GroupObjectPermission

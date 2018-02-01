@@ -56,7 +56,88 @@ class ObjectPermissionChecker(object):
           ``Group`` instance
         """
         self.user, self.group = get_identity(user_or_group)
+        self.user_or_group = user_or_group
+
+        if not hasattr(user_or_group, '_obj_perms_cache'):
+            user_or_group._obj_perms_cache = {}
+            # attaching cache to user/group keeps it between successive calls to user.has_perm()
+        self._obj_perms_cache = user_or_group._obj_perms_cache
+
+    def clear_cache(self):
+        self.user_or_group._obj_perms_cache = {}
         self._obj_perms_cache = {}
+
+    def get_group_filters(self, obj):
+        User = get_user_model()
+
+        group_model = get_group_obj_perms_model(obj)
+        group_rel_name = group_model.permission.field.related_query_name()
+        if self.user:
+            fieldname = '%s__group__%s' % (
+                group_rel_name,
+                User.groups.field.related_query_name(),
+            )
+            group_filters = {fieldname: self.user}
+        else:
+            group_filters = {'%s__group' % group_rel_name: self.group}
+        if group_model.objects.is_generic():
+            group_filters['%s__object_pk' % group_rel_name] = obj.pk
+        else:
+            group_filters['%s__content_object' % group_rel_name] = obj
+
+        return group_filters
+
+    def get_user_filters(self, obj):
+        model = get_user_obj_perms_model(obj)
+        related_name = model.permission.field.related_query_name()
+
+        user_filters = {'%s__user' % related_name: self.user}
+        if model.objects.is_generic():
+            user_filters['%s__object_pk' % related_name] = obj.pk
+        else:
+            user_filters['%s__content_object' % related_name] = obj
+
+        return user_filters
+
+    def get_user_perms(self, obj):
+        return self._filter_perms(obj, **self.get_user_filters(obj))
+
+    def get_group_perms(self, obj):
+        return self._filter_perms(obj, **self.get_group_filters(obj))
+
+    def _filter_perms(self, obj, **filters):
+        app_label = obj._meta.app_label
+        perms = Permission.objects.filter(**filters) \
+            .values_list('content_type__app_label', "codename").order_by()
+        perms = {app + '.' + cname if app != app_label else cname for app, cname in perms}
+        return perms
+
+    def get_perms(self, obj):
+        """
+        Returns list of ``codename``'s of all permissions for given ``obj``.
+
+        :param obj: Django model instance for which permission should be checked
+
+        """
+        if self.user and not self.user.is_active:
+            return []
+        key = self.get_local_cache_key(obj)
+        if key not in self._obj_perms_cache:
+            if self.user and self.user.is_superuser:
+                ctype = get_content_type(obj)
+                perms = self._filter_perms(obj, content_type=ctype)
+            else:
+                group_perms = self.get_group_perms(obj)
+                if self.user:
+                    # Query user and group permissions separately and then combine
+                    # the results to avoid a slow query
+                    perms = self.get_user_perms(obj)
+                    perms.update(group_perms)
+                else:
+                    perms = group_perms
+            self._obj_perms_cache[key] = perms
+            return perms
+        return self._obj_perms_cache[key]
 
     def has_perm(self, perm, obj):
         """
@@ -71,99 +152,9 @@ class ObjectPermissionChecker(object):
             return False
         elif self.user and self.user.is_superuser:
             return True
-        perm = perm.split('.')[-1]
+        app_label = obj._meta.app_label + '.'
+        perm.replace(app_label, '')
         return perm in self.get_perms(obj)
-
-    def get_group_filters(self, obj):
-        User = get_user_model()
-        ctype = get_content_type(obj)
-
-        group_model = get_group_obj_perms_model(obj)
-        group_rel_name = group_model.permission.field.related_query_name()
-        if self.user:
-            fieldname = '%s__group__%s' % (
-                group_rel_name,
-                User.groups.field.related_query_name(),
-            )
-            group_filters = {fieldname: self.user}
-        else:
-            group_filters = {'%s__group' % group_rel_name: self.group}
-        if group_model.objects.is_generic():
-            group_filters.update({
-                '%s__content_type' % group_rel_name: ctype,
-                '%s__object_pk' % group_rel_name: obj.pk,
-            })
-        else:
-            group_filters['%s__content_object' % group_rel_name] = obj
-
-        return group_filters
-
-    def get_user_filters(self, obj):
-        ctype = get_content_type(obj)
-        model = get_user_obj_perms_model(obj)
-        related_name = model.permission.field.related_query_name()
-
-        user_filters = {'%s__user' % related_name: self.user}
-        if model.objects.is_generic():
-            user_filters.update({
-                '%s__content_type' % related_name: ctype,
-                '%s__object_pk' % related_name: obj.pk,
-            })
-        else:
-            user_filters['%s__content_object' % related_name] = obj
-
-        return user_filters
-
-    def get_user_perms(self, obj):
-        ctype = get_content_type(obj)
-
-        perms_qs = Permission.objects.filter(content_type=ctype)
-        user_filters = self.get_user_filters(obj)
-        user_perms_qs = perms_qs.filter(**user_filters)
-        user_perms = user_perms_qs.values_list("codename", flat=True)
-
-        return user_perms
-
-    def get_group_perms(self, obj):
-        ctype = get_content_type(obj)
-
-        perms_qs = Permission.objects.filter(content_type=ctype)
-        group_filters = self.get_group_filters(obj)
-        group_perms_qs = perms_qs.filter(**group_filters)
-        group_perms = group_perms_qs.values_list("codename", flat=True)
-
-        return group_perms
-
-    def get_perms(self, obj):
-        """
-        Returns list of ``codename``'s of all permissions for given ``obj``.
-
-        :param obj: Django model instance for which permission should be checked
-
-        """
-        if self.user and not self.user.is_active:
-            return []
-        ctype = get_content_type(obj)
-        key = self.get_local_cache_key(obj)
-        if key not in self._obj_perms_cache:
-            if self.user and self.user.is_superuser:
-                perms = list(chain(*Permission.objects
-                                   .filter(content_type=ctype)
-                                   .values_list("codename")))
-            elif self.user:
-                # Query user and group permissions separately and then combine
-                # the results to avoid a slow query
-                user_perms = self.get_user_perms(obj)
-                group_perms = self.get_group_perms(obj)
-                perms = list(set(chain(user_perms, group_perms)))
-            else:
-                group_filters = self.get_group_filters(obj)
-                perms = list(set(chain(*Permission.objects
-                                       .filter(content_type=ctype)
-                                       .filter(**group_filters)
-                                       .values_list("codename"))))
-            self._obj_perms_cache[key] = perms
-        return self._obj_perms_cache[key]
 
     def get_local_cache_key(self, obj):
         """
@@ -186,10 +177,7 @@ class ObjectPermissionChecker(object):
         pks, model, ctype = _get_pks_model_and_ctype(objects)
 
         if self.user and self.user.is_superuser:
-            perms = list(chain(
-                *Permission.objects
-                .filter(content_type=ctype)
-                .values_list("codename")))
+            perms = list(self._filter_perms(objects[0]))
 
             for pk in pks:
                 key = (ctype.id, force_text(pk))
