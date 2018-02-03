@@ -82,7 +82,7 @@ class ObjectPermissionBackend(object):
             return False
 
         expected_app_label = obj._meta.app_label
-        perm.replace(expected_app_label + '.', '')
+        perm = perm.replace(expected_app_label + '.', '')
 
         if '.' in perm and not settings.ALLOW_CROSS_MODEL_PERMISSIONS:
             app_label, perm = perm.split('.')
