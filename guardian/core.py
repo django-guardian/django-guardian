@@ -157,11 +157,7 @@ class ObjectPermissionChecker(object):
                 group_perms = self.get_group_perms(obj)
                 perms = list(set(chain(user_perms, group_perms)))
             else:
-                group_filters = self.get_group_filters(obj)
-                perms = list(set(chain(*Permission.objects
-                                       .filter(content_type=ctype)
-                                       .filter(**group_filters)
-                                       .values_list("codename"))))
+                perms = list(set(self.get_group_perms(obj)))
             self._obj_perms_cache[key] = perms
         return self._obj_perms_cache[key]
 
