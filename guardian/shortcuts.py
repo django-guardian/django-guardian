@@ -90,7 +90,7 @@ def assign_perm(perm, user_or_group, obj=None):
             return perm
 
     if not isinstance(perm, Permission):
-        perm = perm.split('.')[-1]
+        perm = perm.split('.', 1)[-1]
 
     if isinstance(obj, QuerySet):
         if user:
@@ -151,7 +151,7 @@ def remove_perm(perm, user_or_group=None, obj=None):
             return
 
     if not isinstance(perm, Permission):
-        perm = perm.split('.')[-1]
+        perm = perm.split('.', 1)[-1]
 
     if isinstance(obj, QuerySet):
         if user:
@@ -203,7 +203,7 @@ def get_perms_for_model(cls):
     possible to pass Model as class or instance.
     """
     if isinstance(cls, basestring):
-        app_label, model_name = cls.split('.')
+        app_label, model_name = cls.split('.', 1)
         model = apps.get_model(app_label, model_name)
     else:
         model = cls
