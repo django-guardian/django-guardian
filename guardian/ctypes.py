@@ -1,9 +1,9 @@
 from __future__ import unicode_literals
 
 from django.contrib.contenttypes.models import ContentType
+from django.utils.module_loading import import_string
 
 from guardian.conf import settings as guardian_settings
-from guardian.compat import import_string
 
 
 def get_content_type(obj):

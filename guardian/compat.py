@@ -15,7 +15,6 @@ __all__ = [
     'Permission',
     'AnonymousUser',
     'get_user_model',
-    'import_string',
     'user_model_label',
     'url',
     'patterns',
@@ -65,29 +64,6 @@ def get_user_permission_codename(perm):
     ``myapp.CustomUser`` is used it would return ``change_customuser``.
     """
     return get_user_permission_full_codename(perm).split('.')[1]
-
-
-def import_string(dotted_path):
-    """
-    Import a dotted module path and return the attribute/class designated by the
-    last name in the path. Raise ImportError if the import failed.
-
-    Backported from Django 1.7
-    """
-    try:
-        module_path, class_name = dotted_path.rsplit('.', 1)
-    except ValueError:
-        msg = "%s doesn't look like a module path" % dotted_path
-        six.reraise(ImportError, ImportError(msg), sys.exc_info()[2])
-
-    module = import_module(module_path)
-
-    try:
-        return getattr(module, class_name)
-    except AttributeError:
-        msg = 'Module "%s" does not define a "%s" attribute/class' % (
-            dotted_path, class_name)
-        six.reraise(ImportError, ImportError(msg), sys.exc_info()[2])
 
 
 # Python 3
