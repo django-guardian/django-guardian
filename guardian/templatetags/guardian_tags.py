@@ -8,9 +8,9 @@
 from __future__ import unicode_literals
 
 from django import template
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, Group
 
-from guardian.compat import get_user_model
 from guardian.core import ObjectPermissionChecker
 from guardian.exceptions import NotUserNorGroup
 
@@ -42,7 +42,7 @@ class ObjectPermissionsNode(template.Node):
         obj = self.obj.resolve(context)
         if not obj:
             return ''
-        
+
         check = self.checker.resolve(context) if self.checker else ObjectPermissionChecker(for_whom)
         perms = check.get_perms(obj)
 

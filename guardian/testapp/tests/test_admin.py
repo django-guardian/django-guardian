@@ -4,6 +4,7 @@ import copy
 from django import forms
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.http import HttpRequest
 from django.test import TestCase
@@ -11,7 +12,6 @@ from django.test.client import Client
 from django.urls import reverse
 
 from guardian.admin import GuardedModelAdmin
-from guardian.compat import get_user_model
 from guardian.compat import str
 from guardian.shortcuts import get_perms
 from guardian.shortcuts import get_perms_for_model

@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
+from django.contrib.auth import get_user_model
 from django.db import models
-from guardian.compat import get_user_model
 from guardian.conf import settings
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type

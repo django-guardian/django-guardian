@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ImproperlyConfigured
 from django.core.exceptions import PermissionDenied
@@ -10,7 +11,6 @@ from django.views.generic import View
 from django.views.generic import ListView
 
 from guardian.shortcuts import assign_perm
-from guardian.compat import get_user_model
 import mock
 from guardian.mixins import LoginRequiredMixin
 from guardian.mixins import PermissionRequiredMixin

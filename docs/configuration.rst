@@ -33,7 +33,7 @@ and hook guardian's authentication backend::
 
    .. code-block:: python
 
-      from guardian.compat import get_user_model
+      from django.contrib.auth import get_user_model
       User = get_user_model()
       anon = User.get_anonymous()
       anon.is_anonymous  # returns False
