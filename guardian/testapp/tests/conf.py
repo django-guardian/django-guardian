@@ -19,11 +19,8 @@ class TestDataMixin(object):
     def setUp(self):
         super(TestDataMixin, self).setUp()
         from django.contrib.auth.models import Group
-        try:
-            from django.contrib.auth import get_user_model
-            User = get_user_model()
-        except ImportError:
-            from django.contrib.auth.models import User
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
         Group.objects.create(pk=1, name='admins')
         jack_group = Group.objects.create(pk=2, name='jackGroup')
         User.objects.get_or_create(username=guardian_settings.ANONYMOUS_USER_NAME)
