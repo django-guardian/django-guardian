@@ -11,14 +11,12 @@ import six
 import sys
 
 __all__ = [
-    'User',
     'Group',
     'Permission',
     'AnonymousUser',
     'get_user_model',
     'user_model_label',
     'url',
-    'patterns',
     'include',
     'handler404',
     'handler500',
@@ -79,5 +77,3 @@ def create_permissions(*args, **kwargs):
     if len(args) > 1 and isinstance(args[1], (list, tuple)):
         args = args[:1] + args[2:]
     return original_create_permissions(*args, **kwargs)
-
-__all__ = ['User', 'Group', 'Permission', 'AnonymousUser']
