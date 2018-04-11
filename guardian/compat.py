@@ -126,17 +126,6 @@ def template_debug_getter():
 
 
 # Django 1.10 compatibility
-def is_authenticated(user):
-    if django.VERSION < (1, 10):
-        return user.is_authenticated()
-    return user.is_authenticated
-
-
-def is_anonymous(user):
-    if django.VERSION < (1, 10):
-        return user.is_anonymous()
-    return user.is_anonymous
-
 try:
     from django.urls import reverse, reverse_lazy
 except ImportError:

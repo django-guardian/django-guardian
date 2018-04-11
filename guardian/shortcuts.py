@@ -13,7 +13,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models import Count, Q, QuerySet
 from django.shortcuts import _get_queryset
 
-from guardian.compat import basestring, get_user_model, is_anonymous
+from guardian.compat import basestring, get_user_model
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
 from guardian.exceptions import MixedContentTypeError, WrongAppError
@@ -523,7 +523,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
     # Check if the user is anonymous. The
     # django.contrib.auth.models.AnonymousUser object doesn't work for queries
     # and it's nice to be able to pass in request.user blindly.
-    if is_anonymous(user):
+    if user.is_anonymous:
         user = get_anonymous_user()
 
     global_perms = set()

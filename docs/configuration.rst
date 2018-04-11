@@ -36,11 +36,11 @@ and hook guardian's authentication backend::
       from guardian.compat import get_user_model
       User = get_user_model()
       anon = User.get_anonymous()
-      anon.is_anonymous()   # returns False
+      anon.is_anonymous  # returns False
 
 We can change id to whatever we like. Project should be now ready to use object
 permissions.
- 
+
 
 Optional settings
 =================
