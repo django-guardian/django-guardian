@@ -2,10 +2,10 @@ from __future__ import unicode_literals
 
 import django
 from django.db.models import signals
+from django.utils.module_loading import import_string
 
 from guardian.conf import settings as guardian_settings
 from guardian.compat import get_user_model
-from guardian.compat import import_string
 
 
 def get_init_anonymous_user(User):
