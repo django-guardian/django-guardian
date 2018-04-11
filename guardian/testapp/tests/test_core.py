@@ -3,12 +3,7 @@ from itertools import chain
 
 from django.conf import settings
 from guardian.conf import settings as guardian_settings
-# Try the new app settings (Django 1.7) and fall back to the old system
-try:
-    from django.apps import apps as django_apps
-    auth_app = django_apps.get_app_config("auth")
-except ImportError:
-    from django.contrib.auth import models as auth_app
+from django.apps import apps as django_apps
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission, AnonymousUser
 from django.contrib.contenttypes.models import ContentType
@@ -23,6 +18,7 @@ from guardian.management import create_anonymous_user
 
 from guardian.testapp.models import Project
 
+auth_app = django_apps.get_app_config('auth')
 User = get_user_model()
 
 
