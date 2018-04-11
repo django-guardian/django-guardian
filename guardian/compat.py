@@ -126,19 +126,10 @@ def template_debug_getter():
 
 
 # Django 1.9 compatibility
-def remote_field(field):
-    """
-    https://docs.djangoproject.com/en/1.9/releases/1.9/#field-rel-changes
-    """
-    if django.VERSION < (1, 9):
-        return field.rel
-    return field.remote_field
-
-
 def remote_model(field):
     if django.VERSION < (1, 9):
-        return remote_field(field).to
-    return remote_field(field).model
+        return field.rel.to
+    return field.remote_field.model
 
 
 # Django 1.10 compatibility
