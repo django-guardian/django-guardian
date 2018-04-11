@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 import copy
+import unittest
 
 from django import forms
 from django.conf import settings
@@ -19,7 +20,7 @@ from guardian.testapp.tests.conf import TEST_SETTINGS
 from guardian.testapp.tests.conf import override_settings
 from guardian.models import Group
 from guardian.testapp.tests.conf import skipUnlessTestApp
-from guardian.testapp.models import LogEntryWithGroup as LogEntry
+from guardian.testapp.models import LogEntryWithGroup as LogEntry, CustomUuidUser
 
 User = get_user_model()
 
@@ -32,6 +33,29 @@ try:
 except admin.sites.NotRegistered:
     pass
 admin.site.register(ContentType, ContentTypeGuardedAdmin)
+
+@unittest.skip("breaks other tests")
+@override_settings(AUTH_USER_MODEL='testapp.CustomUuidUser',**TEST_SETTINGS)
+class AdminUuidTests(TestCase):
+    def setUp(self):
+        self.admin = CustomUuidUser.objects.create_superuser(username='uuid_admin', password='admin')
+        self.user = CustomUuidUser.objects.create_user(username='uuid_joe', password='joe')
+        self.group = Group.objects.create(name='group')
+        self.client = Client()
+        self.obj = ContentType.objects.create(
+            model='bar', app_label='fake-for-guardian-tests')
+        self.obj_info = self.obj._meta.app_label, get_model_name(self.obj)
+        self.client.login(username='uuid_admin', password='admin')
+
+    def tearDown(self):
+        self.client.logout()
+
+    def test_view_manage_uuid_user(self):
+        url = reverse('admin:%s_%s_permissions_manage_user' % self.obj_info,
+                      args=[self.obj.pk, str(self.user.pk)])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['object'], self.obj)
 
 
 @override_settings(**TEST_SETTINGS)
