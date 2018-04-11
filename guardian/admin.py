@@ -10,7 +10,7 @@ from django.shortcuts import get_object_or_404, redirect, render_to_response, re
 from django.template import RequestContext
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import ugettext
-from guardian.compat import get_model_name, get_user_model, url, reverse
+from guardian.compat import get_user_model, url, reverse
 from guardian.forms import GroupObjectPermissionsForm, UserObjectPermissionsForm
 from guardian.models import Group
 from guardian.shortcuts import (get_group_perms, get_groups_with_perms, get_perms_for_model, get_user_perms,
@@ -96,7 +96,7 @@ class GuardedModelAdminMixin(object):
         """
         urls = super(GuardedModelAdminMixin, self).get_urls()
         if self.include_object_permissions_urls:
-            info = self.model._meta.app_label, get_model_name(self.model)
+            info = self.model._meta.app_label, self.model._meta.model_name
             myurls = [
                 url(r'^(?P<object_pk>.+)/permissions/$',
                     view=self.admin_site.admin_view(
@@ -179,7 +179,7 @@ class GuardedModelAdminMixin(object):
             info = (
                 self.admin_site.name,
                 self.model._meta.app_label,
-                get_model_name(self.model)
+                self.model._meta.model_name,
             )
             if user_form.is_valid():
                 user_id = user_form.cleaned_data['user'].pk
@@ -194,7 +194,7 @@ class GuardedModelAdminMixin(object):
             info = (
                 self.admin_site.name,
                 self.model._meta.app_label,
-                get_model_name(self.model)
+                self.model._meta.model_name,
             )
             if group_form.is_valid():
                 group_id = group_form.cleaned_data['group'].id
@@ -255,7 +255,7 @@ class GuardedModelAdminMixin(object):
             info = (
                 self.admin_site.name,
                 self.model._meta.app_label,
-                get_model_name(self.model)
+                self.model._meta.model_name,
             )
             url = reverse(
                 '%s:%s_%s_permissions_manage_user' % info,
@@ -331,7 +331,7 @@ class GuardedModelAdminMixin(object):
             info = (
                 self.admin_site.name,
                 self.model._meta.app_label,
-                get_model_name(self.model)
+                self.model._meta.model_name,
             )
             url = reverse(
                 '%s:%s_%s_permissions_manage_group' % info,

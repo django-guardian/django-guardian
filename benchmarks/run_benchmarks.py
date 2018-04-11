@@ -43,15 +43,6 @@ def random_string(length=25, chars=string.ascii_letters + string.digits):
     return ''.join(random.choice(chars) for i in range(length))
 
 
-def get_model_name(model):
-    """
-    Returns the name of the model
-    """
-    # model._meta.module_name is deprecated in django version 1.7 and removed in django version 1.8.
-    # It is replaced by model._meta.model_name
-    return model._meta.model_name
-
-
 class Call(object):
 
     def __init__(self, args, kwargs, start=None, finish=None):
@@ -100,7 +91,7 @@ class Benchmark(object):
         self.objects_with_perms_count = objects_with_perms_count
         self.subquery = subquery
         self.Model = model
-        self.perm = 'add_%s' % get_model_name(model)
+        self.perm = 'add_%s' % model._meta.model_name
 
     def info(self, msg):
         print(colorize(msg + '\n', fg='green'))

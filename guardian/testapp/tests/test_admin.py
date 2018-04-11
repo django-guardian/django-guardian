@@ -10,7 +10,7 @@ from django.test import TestCase
 from django.test.client import Client
 
 from guardian.admin import GuardedModelAdmin
-from guardian.compat import get_user_model, get_model_name
+from guardian.compat import get_user_model
 from guardian.compat import reverse
 from guardian.compat import str
 from guardian.shortcuts import get_perms
@@ -45,7 +45,7 @@ class AdminTests(TestCase):
         self.client = Client()
         self.obj = ContentType.objects.create(
             model='bar', app_label='fake-for-guardian-tests')
-        self.obj_info = self.obj._meta.app_label, get_model_name(self.obj)
+        self.obj_info = self.obj._meta.app_label, self.obj._meta.model_name
 
     def tearDown(self):
         self.client.logout()
