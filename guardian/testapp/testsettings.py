@@ -2,7 +2,6 @@ import os
 import random
 import string
 import environ
-import django
 
 env = environ.Env()
 
@@ -29,16 +28,12 @@ AUTHENTICATION_BACKENDS = (
     'guardian.backends.ObjectPermissionBackend',
 )
 
-# this fixes warnings in django 1.10
 MIDDLEWARE = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
 )
-
-if django.VERSION < (1, 10):
-    MIDDLEWARE_CLASSES = MIDDLEWARE
 
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
@@ -72,6 +67,3 @@ TEMPLATES = [
         },
     },
 ]
-
-if django.VERSION < (1, 8):
-    TEMPLATE_DIRS = TEMPLATES[0]['DIRS']
