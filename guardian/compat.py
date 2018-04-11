@@ -81,15 +81,3 @@ def create_permissions(*args, **kwargs):
     return original_create_permissions(*args, **kwargs)
 
 __all__ = ['User', 'Group', 'Permission', 'AnonymousUser']
-
-
-def template_debug_setter(value):
-    if hasattr(settings, 'TEMPLATE_DEBUG'):
-        settings.TEMPLATE_DEBUG = value
-    settings.TEMPLATES[0]['OPTIONS']['DEBUG'] = value
-
-
-def template_debug_getter():
-    if hasattr(settings, 'TEMPLATE_DEBUG'):
-        return settings.TEMPLATE_DEBUG
-    return settings.TEMPLATES[0]['OPTIONS'].get('DEBUG', False)
