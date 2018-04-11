@@ -113,15 +113,6 @@ def create_permissions(*args, **kwargs):
 __all__ = ['User', 'Group', 'Permission', 'AnonymousUser']
 
 
-def get_model_name(model):
-    """
-    Returns the name of the model
-    """
-    # model._meta.module_name is deprecated in django version 1.7 and removed
-    # in django version 1.8.  It is replaced by model._meta.model_name
-    return model._meta.model_name
-
-
 def template_debug_setter(value):
     if hasattr(settings, 'TEMPLATE_DEBUG'):
         settings.TEMPLATE_DEBUG = value
