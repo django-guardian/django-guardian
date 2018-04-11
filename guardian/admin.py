@@ -8,9 +8,10 @@ from django.contrib import admin, messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.shortcuts import get_object_or_404, redirect, render_to_response, render
 from django.template import RequestContext
+from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import ugettext
-from guardian.compat import get_user_model, url, reverse
+from guardian.compat import get_user_model, url
 from guardian.forms import GroupObjectPermissionsForm, UserObjectPermissionsForm
 from guardian.models import Group
 from guardian.shortcuts import (get_group_perms, get_groups_with_perms, get_perms_for_model, get_user_perms,

@@ -123,10 +123,3 @@ def template_debug_getter():
     if hasattr(settings, 'TEMPLATE_DEBUG'):
         return settings.TEMPLATE_DEBUG
     return settings.TEMPLATES[0]['OPTIONS'].get('DEBUG', False)
-
-
-# Django 1.10 compatibility
-try:
-    from django.urls import reverse, reverse_lazy
-except ImportError:
-    from django.core.urlresolvers import reverse, reverse_lazy
