@@ -20,7 +20,6 @@ from guardian.ctypes import get_content_type
 from guardian.exceptions import NotUserNorGroup
 from itertools import chain
 
-import django
 import logging
 import os
 
@@ -102,12 +101,7 @@ def get_40x_or_None(request, perms, obj=None, login_url=None,
     if not has_permissions:
         if return_403:
             if guardian_settings.RENDER_403:
-                if django.VERSION >= (1, 10):
-                    response = render(request, guardian_settings.TEMPLATE_403)
-                else:
-                    response = render_to_response(
-                        guardian_settings.TEMPLATE_403, {},
-                        RequestContext(request))
+                response = render(request, guardian_settings.TEMPLATE_403)
                 response.status_code = 403
                 return response
             elif guardian_settings.RAISE_403:
@@ -115,12 +109,7 @@ def get_40x_or_None(request, perms, obj=None, login_url=None,
             return HttpResponseForbidden()
         if return_404:
             if guardian_settings.RENDER_404:
-                if django.VERSION >= (1, 10):
-                    response = render(request, guardian_settings.TEMPLATE_404)
-                else:
-                    response = render_to_response(
-                        guardian_settings.TEMPLATE_404, {},
-                        RequestContext(request))
+                response = render(request, guardian_settings.TEMPLATE_404)
                 response.status_code = 404
                 return response
             elif guardian_settings.RAISE_404:
@@ -164,17 +153,11 @@ def get_obj_perms_model(obj, base_cls, generic_cls):
         obj = obj.__class__
     ctype = get_content_type(obj)
 
-    if django.VERSION >= (1, 8):
-        fields = (f for f in obj._meta.get_fields()
-                  if (f.one_to_many or f.one_to_one) and f.auto_created)
-    else:
-        fields = obj._meta.get_all_related_objects()
+    fields = (f for f in obj._meta.get_fields()
+                if (f.one_to_many or f.one_to_one) and f.auto_created)
 
     for attr in fields:
-        if django.VERSION < (1, 8):
-            model = getattr(attr, 'model', None)
-        else:
-            model = getattr(attr, 'related_model', None)
+        model = getattr(attr, 'related_model', None)
         if (model and issubclass(model, base_cls) and
                 model is not generic_cls):
             # if model is generic one it would be returned anyway
