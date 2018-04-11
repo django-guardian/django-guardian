@@ -9,7 +9,6 @@ abspath = lambda *p: os.path.abspath(os.path.join(*p))
 
 
 DEBUG = True
-TEMPLATE_DEBUG = DEBUG
 SECRET_KEY = 'CHANGE_THIS_TO_SOMETHING_UNIQUE_AND_SECURE'
 
 PROJECT_ROOT = abspath(os.path.dirname(__file__))
@@ -60,26 +59,6 @@ GUARDIAN_RAISE_403 = True
 
 ROOT_URLCONF = 'urls'
 
-TEMPLATE_CONTEXT_PROCESSORS = (
-    'core.context_processors.version',
-    "django.contrib.auth.context_processors.auth",
-    "django.template.context_processors.debug",
-    "django.template.context_processors.i18n",
-    "django.template.context_processors.media",
-    "django.template.context_processors.static",
-    "django.template.context_processors.request",
-    "django.template.context_processors.tz",
-    "django.contrib.messages.context_processors.messages"
-)
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-)
-
-TEMPLATE_DIRS = (
-    os.path.join(os.path.dirname(__file__), 'templates'),
-)
-
 SITE_ID = 1
 
 USE_I18N = True
@@ -107,11 +86,26 @@ AUTH_USER_MODEL = 'core.CustomUser'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': TEMPLATE_DIRS,
+        'DIRS': (
+            os.path.join(os.path.dirname(__file__), 'templates'),
+        ),
         'OPTIONS': {
-            'debug': TEMPLATE_DEBUG,
-            'loaders': TEMPLATE_LOADERS,
-            'context_processors': TEMPLATE_CONTEXT_PROCESSORS,
+            'debug': DEBUG,
+            'loaders': (
+                'django.template.loaders.filesystem.Loader',
+                'django.template.loaders.app_directories.Loader',
+            ),
+            'context_processors': (
+                'core.context_processors.version',
+                'django.contrib.auth.context_processors.auth',
+                'django.template.context_processors.debug',
+                'django.template.context_processors.i18n',
+                'django.template.context_processors.media',
+                'django.template.context_processors.static',
+                'django.template.context_processors.request',
+                'django.template.context_processors.tz',
+                'django.contrib.messages.context_processors.messages'
+            ),
         },
     },
 ]

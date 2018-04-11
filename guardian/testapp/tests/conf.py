@@ -8,15 +8,6 @@ from django.conf import UserSettingsHolder
 from django.utils.functional import wraps
 
 
-THIS = abspath(os.path.dirname(__file__))
-TEST_TEMPLATES_DIR = abspath(THIS, 'templates')
-
-
-TEST_SETTINGS = dict(
-    TEMPLATE_DIRS=[TEST_TEMPLATES_DIR],
-)
-
-
 def skipUnlessTestApp(obj):
     app = 'guardian.testapp'
     return unittest.skipUnless(app in settings.INSTALLED_APPS,

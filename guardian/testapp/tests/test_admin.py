@@ -15,8 +15,6 @@ from guardian.admin import GuardedModelAdmin
 from guardian.compat import str
 from guardian.shortcuts import get_perms
 from guardian.shortcuts import get_perms_for_model
-from guardian.testapp.tests.conf import TEST_SETTINGS
-from guardian.testapp.tests.conf import override_settings
 from guardian.models import Group
 from guardian.testapp.tests.conf import skipUnlessTestApp
 from guardian.testapp.models import LogEntryWithGroup as LogEntry
@@ -34,7 +32,6 @@ except admin.sites.NotRegistered:
 admin.site.register(ContentType, ContentTypeGuardedAdmin)
 
 
-@override_settings(**TEST_SETTINGS)
 class AdminTests(TestCase):
 
     def setUp(self):
