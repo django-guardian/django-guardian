@@ -125,13 +125,6 @@ def template_debug_getter():
     return settings.TEMPLATES[0]['OPTIONS'].get('DEBUG', False)
 
 
-# Django 1.9 compatibility
-def remote_model(field):
-    if django.VERSION < (1, 9):
-        return field.rel.to
-    return field.remote_field.model
-
-
 # Django 1.10 compatibility
 def is_authenticated(user):
     if django.VERSION < (1, 10):
