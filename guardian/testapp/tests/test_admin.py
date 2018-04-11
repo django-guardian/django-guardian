@@ -8,10 +8,10 @@ from django.contrib.contenttypes.models import ContentType
 from django.http import HttpRequest
 from django.test import TestCase
 from django.test.client import Client
+from django.urls import reverse
 
 from guardian.admin import GuardedModelAdmin
 from guardian.compat import get_user_model
-from guardian.compat import reverse
 from guardian.compat import str
 from guardian.shortcuts import get_perms
 from guardian.shortcuts import get_perms_for_model
