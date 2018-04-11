@@ -14,7 +14,7 @@ from django.db.models import Model
 from django.http import HttpResponseForbidden, HttpResponseNotFound
 from django.shortcuts import render_to_response, render
 from django.template import RequestContext
-from guardian.compat import get_user_model, remote_model
+from guardian.compat import get_user_model
 from guardian.conf import settings as guardian_settings
 from guardian.ctypes import get_content_type
 from guardian.exceptions import NotUserNorGroup
@@ -182,7 +182,7 @@ def get_obj_perms_model(obj, base_cls, generic_cls):
                 # make sure that content_object's content_type is same as
                 # the one of given obj
                 fk = model._meta.get_field('content_object')
-                if ctype == get_content_type(remote_model(fk)):
+                if ctype == get_content_type(fk.remote_field.model):
                     return model
     return generic_cls
 
