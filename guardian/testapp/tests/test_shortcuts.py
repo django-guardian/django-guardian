@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.query import QuerySet
@@ -7,7 +8,6 @@ from django.test import TestCase
 
 from guardian.shortcuts import get_perms_for_model
 from guardian.core import ObjectPermissionChecker
-from guardian.compat import get_user_model
 from guardian.compat import get_user_permission_full_codename
 from guardian.shortcuts import assign
 from guardian.shortcuts import assign_perm

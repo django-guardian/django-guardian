@@ -1,10 +1,10 @@
 from __future__ import unicode_literals
 from django.test import TestCase
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import Group, AnonymousUser
 from django.db import models
 
-from guardian.compat import get_user_model
 from guardian.testapp.tests.conf import skipUnlessTestApp
 from guardian.testapp.tests.test_core import ObjectPermissionTestCase
 from guardian.testapp.models import Project

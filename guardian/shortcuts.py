@@ -8,12 +8,13 @@ from collections import defaultdict
 from itertools import groupby
 
 from django.apps import apps
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Count, Q, QuerySet
 from django.shortcuts import _get_queryset
 
-from guardian.compat import basestring, get_user_model
+from guardian.compat import basestring
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
 from guardian.exceptions import MixedContentTypeError, WrongAppError

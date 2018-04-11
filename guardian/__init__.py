@@ -18,7 +18,7 @@ def get_version():
 
 
 def monkey_patch_user():
-    from .compat import get_user_model
+    from django.contrib.auth import get_user_model
     from .utils import get_anonymous_user
     from .models import UserObjectPermission
     User = get_user_model()
