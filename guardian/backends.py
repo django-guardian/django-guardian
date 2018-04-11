@@ -82,16 +82,19 @@ class ObjectPermissionBackend(object):
             return False
 
         if '.' in perm:
-            app_label, perm = perm.split('.', 1)
-            if app_label != obj._meta.app_label:
-                # Check the content_type app_label when permission
-                # and obj app labels don't match.
-                ctype = get_content_type(obj)
-                if app_label != ctype.app_label:
-                    raise WrongAppError("Passed perm has app label of '%s' while "
-                                        "given obj has app label '%s' and given obj"
-                                        "content_type has app label '%s'" %
-                                        (app_label, obj._meta.app_label, ctype.app_label))
+            ctype = get_content_type(obj)
+            if perm.startswith('%s.' % obj._meta.app_label) \
+                or perm.startswith('%s.' % ctype):
+                perm = perm.split('.', 1)[-1]
+            # if app_label != obj._meta.app_label:
+            #     # Check the content_type app_label when permission
+            #     # and obj app labels don't match.
+            #     ctype = get_content_type(obj)
+            #     if app_label != ctype.app_label:
+            #         raise WrongAppError("Passed perm has app label of '%s' while "
+            #                             "given obj has app label '%s' and given obj"
+            #                             "content_type has app label '%s'" %
+            #                             (app_label, obj._meta.app_label, ctype.app_label))
 
         check = ObjectPermissionChecker(user_obj)
         return check.has_perm(perm, obj)

@@ -71,7 +71,8 @@ class ObjectPermissionChecker(object):
             return False
         elif self.user and self.user.is_superuser:
             return True
-        if perm.startswith('%s.' % get_content_type(obj)):
+        if perm.startswith('%s.' % obj._meta.app_label) \
+            or perm.startswith('%s.' % get_content_type(obj)):
             perm = perm.split('.', 1)[-1]
         return perm in self.get_perms(obj)
 

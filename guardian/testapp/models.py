@@ -96,6 +96,10 @@ class NonIntPKModel(models.Model):
     char_pk = models.CharField(primary_key=True, max_length=128)
 
 
+class CustomPermissionsModel(models.Model):
+    class Meta:
+        permissions = (('perm.with.dots', 'perm with dots'), )
+
 class CustomUser(AbstractUser, GuardianUserMixin):
     custom_id = models.AutoField(primary_key=True)
 

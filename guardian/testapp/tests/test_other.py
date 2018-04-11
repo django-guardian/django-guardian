@@ -23,6 +23,7 @@ from guardian.exceptions import ObjectNotPersisted
 from guardian.exceptions import WrongAppError
 from guardian.models import GroupObjectPermission
 from guardian.models import UserObjectPermission
+from guardian.testapp.models import CustomPermissionsModel
 from guardian.testapp.tests.conf import TestDataMixin
 User = get_user_model()
 user_model_path = get_user_model_path()
@@ -57,6 +58,18 @@ class UserPermissionTests(TestDataMixin, TestCase):
         UserObjectPermission.objects.remove_perm('change_contenttype',
                                                  self.user, self.ctype)
         self.assertFalse(self.user.has_perm('change_contenttype', self.ctype))
+
+    def test_assignement_and_remove_with_dots_in_codename(self):
+        obj = CustomPermissionsModel()
+        obj.save()
+
+        UserObjectPermission.objects.assign_perm('perm.with.dots', self.user,
+                                                 obj)
+        self.assertTrue(self.user.has_perm('perm.with.dots', obj))
+
+        UserObjectPermission.objects.remove_perm('perm.with.dots', self.user,
+                                                 obj)
+        self.assertFalse(self.user.has_perm('perm.with.dots', obj))
 
     def test_ctypes(self):
         UserObjectPermission.objects.assign_perm(
