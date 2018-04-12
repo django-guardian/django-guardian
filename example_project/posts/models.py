@@ -1,4 +1,5 @@
 from django.db import models
+from django.urls import reverse
 from django.utils.six import python_2_unicode_compatible
 
 
@@ -18,6 +19,5 @@ class Post(models.Model):
     def __str__(self):
         return self.title
 
-    @models.permalink
     def get_absolute_url(self):
-        return ('posts_post_detail', (), {'slug': self.slug})
+        return reverse('posts_post_detail', args=(), kwargs={'slug': self.slug})
