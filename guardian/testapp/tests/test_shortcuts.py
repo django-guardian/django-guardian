@@ -165,7 +165,7 @@ class RemovePermTest(ObjectPermissionTestCase):
         assign_perm("change_contenttype", self.user, self.ctype_qset)
         remove_perm("change_contenttype", self.user, self.ctype_qset.none())
 
-        self.assertEquals(list(self.ctype_qset.none()), [])
+        self.assertEqual(list(self.ctype_qset.none()), [])
         for obj in self.ctype_qset:
             self.assertTrue(self.user.has_perm("change_contenttype", obj))
 
@@ -1124,7 +1124,7 @@ class GetObjectsForGroup(TestCase):
 
         objects = get_objects_for_group(
             self.group1, ['contenttypes.change_contenttype'])
-        self.assertEquals(set(objects),
+        self.assertEqual(set(objects),
                           set(ContentType.objects.all()))
 
     def test_has_global_permission_and_object_based_permission(self):
@@ -1133,7 +1133,7 @@ class GetObjectsForGroup(TestCase):
 
         objects = get_objects_for_group(self.group1, [
                                         'contenttypes.change_contenttype', 'contenttypes.delete_contenttype'], any_perm=False)
-        self.assertEquals(set(objects),
+        self.assertEqual(set(objects),
                           set([self.obj1]))
 
     def test_has_global_permission_and_object_based_permission_any_perm(self):
@@ -1142,7 +1142,7 @@ class GetObjectsForGroup(TestCase):
 
         objects = get_objects_for_group(self.group1, [
                                         'contenttypes.change_contenttype', 'contenttypes.delete_contenttype'], any_perm=True)
-        self.assertEquals(set(objects),
+        self.assertEqual(set(objects),
                           set(ContentType.objects.all()))
 
     def test_has_global_permission_and_object_based_permission_3perms(self):
@@ -1152,7 +1152,7 @@ class GetObjectsForGroup(TestCase):
 
         objects = get_objects_for_group(self.group1, [
                                         'contenttypes.change_contenttype', 'contenttypes.delete_contenttype',  'contenttypes.add_contenttype'], any_perm=False)
-        self.assertEquals(set(objects),
+        self.assertEqual(set(objects),
                           set())
 
     def test_exception_different_ctypes(self):
