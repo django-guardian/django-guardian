@@ -30,7 +30,6 @@ __all__ = [
 # to get_user_model deferred to execution time
 
 user_model_label = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
-
 try:
     from django.contrib.auth import get_user_model
 except ImportError:

@@ -8,7 +8,7 @@ from collections import defaultdict
 from itertools import groupby
 
 from django.apps import apps
-from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Count, Q, QuerySet
 from django.shortcuts import _get_queryset
@@ -17,7 +17,7 @@ from guardian.compat import basestring, get_user_model, is_anonymous
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
 from guardian.exceptions import MixedContentTypeError, WrongAppError
-from guardian.models import GroupObjectPermission
+from guardian.models import GroupObjectPermission, Group
 from guardian.utils import get_anonymous_user, get_group_obj_perms_model, get_identity, get_user_obj_perms_model
 
 

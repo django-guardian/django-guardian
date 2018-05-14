@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 from django.test import TestCase
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.auth.models import Group, AnonymousUser
+from django.contrib.auth.models import AnonymousUser
 from django.db import models
 
 from guardian.compat import get_user_model
@@ -13,6 +13,7 @@ from guardian.testapp.models import ProjectGroupObjectPermission
 from guardian.models import UserObjectPermission
 from guardian.models import UserObjectPermissionBase
 from guardian.models import GroupObjectPermission
+from guardian.models import Group
 from guardian.utils import get_anonymous_user
 from guardian.utils import get_identity
 from guardian.utils import get_user_obj_perms_model

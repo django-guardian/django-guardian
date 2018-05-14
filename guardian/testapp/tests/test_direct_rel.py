@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.models import Permission
 from django.test import TestCase
 
 from guardian.compat import get_user_model
@@ -15,6 +15,7 @@ from guardian.testapp.models import Project
 from guardian.testapp.models import ProjectGroupObjectPermission
 from guardian.testapp.models import ProjectUserObjectPermission
 from guardian.testapp.tests.conf import skipUnlessTestApp
+from guardian.models import Group 
 
 User = get_user_model()
 
