@@ -16,7 +16,7 @@ from django.shortcuts import _get_queryset
 from guardian.compat import basestring, get_user_model, is_anonymous
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
-from guardian.exceptions import MixedContentTypeError, WrongAppError
+from guardian.exceptions import MixedContentTypeError, WrongAppError, MultipleIdentityAndObjectError
 from guardian.models import GroupObjectPermission
 from guardian.utils import get_anonymous_user, get_group_obj_perms_model, get_identity, get_user_obj_perms_model
 
@@ -30,7 +30,8 @@ def assign_perm(perm, user_or_group, obj=None):
       If ``obj`` is not given, must be in format ``app_label.codename`` or
       ``Permission`` instance.
 
-    :param user_or_group: instance of ``User``, ``AnonymousUser`` or ``Group``;
+    :param user_or_group: instance of ``User``, ``AnonymousUser``, ``Group``,
+      list of ``User`` or ``Group``, or queryset of ``User`` or ``Group``; 
       passing any other object would raise
       ``guardian.exceptions.NotUserNorGroup`` exception
 
@@ -69,7 +70,6 @@ def assign_perm(perm, user_or_group, obj=None):
     <Permission: sites | site | Can change site>
 
     """
-
     user, group = get_identity(user_or_group)
     # If obj is None we try to operate on global permissions
     if obj is None:
@@ -93,12 +93,22 @@ def assign_perm(perm, user_or_group, obj=None):
         perm = perm.split('.')[-1]
 
     if isinstance(obj, QuerySet):
+        if isinstance(user_or_group, (QuerySet, list)):
+            raise MultipleIdentityAndObjectError("Only bulk operations on either users/groups OR objects supported")
         if user:
             model = get_user_obj_perms_model(obj.model)
             return model.objects.bulk_assign_perm(perm, user, obj)
         if group:
             model = get_group_obj_perms_model(obj.model)
             return model.objects.bulk_assign_perm(perm, group, obj)
+
+    if isinstance(user_or_group, (QuerySet, list)):
+        if user:
+            model = get_user_obj_perms_model(obj)
+            return model.objects.assign_perm_to_many(perm, user, obj)
+        if group:
+            model = get_group_obj_perms_model(obj)
+            return model.objects.assign_perm_to_many(perm, group, obj)
 
     if user:
         model = get_user_obj_perms_model(obj)

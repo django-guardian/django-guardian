@@ -22,6 +22,7 @@ from guardian.shortcuts import get_objects_for_group
 from guardian.exceptions import MixedContentTypeError
 from guardian.exceptions import NotUserNorGroup
 from guardian.exceptions import WrongAppError
+from guardian.exceptions import MultipleIdentityAndObjectError
 from guardian.testapp.models import NonIntPKModel
 from guardian.testapp.tests.test_core import ObjectPermissionTestCase
 from guardian.models import Group, Permission
@@ -123,6 +124,60 @@ class AssignPermTest(ObjectPermissionTestCase):
             assign("contenttypes.change_contenttype", self.group)
             self.assertEqual(len(warns), 1)
             self.assertTrue(isinstance(warns[0].message, DeprecationWarning))
+
+
+class MultipleIdentitiesOperationsTest(ObjectPermissionTestCase):
+    """ 
+    Tests assignment of permission to multiple users or groups 
+    """
+    def setUp(self):
+        super(MultipleIdentitiesOperationsTest, self).setUp()
+        self.users_list = jim, bob = [
+            User.objects.create_user(username='jim'),
+            User.objects.create_user(username='bob')
+        ]
+        self.groups_list = jim_group, bob_group = [
+            Group.objects.create(name='jimgroup'),
+            Group.objects.create(name='bobgroup')
+        ]
+        jim_group.user_set.add(jim)
+        bob_group.user_set.add(bob)
+        self.users_qs = User.objects.exclude(username='AnonymousUser')
+        self.groups_qs = Group.objects.all()
+
+    def test_assign_to_many_users_queryset(self):
+        assign_perm("add_contenttype", self.users_qs, self.ctype)
+        assign_perm(self.get_permission("delete_contenttype"), self.users_qs, self.ctype)
+        for user in self.users_list:
+            self.assertTrue(user.has_perm("add_contenttype", self.ctype))
+            self.assertTrue(user.has_perm("delete_contenttype", self.ctype))
+
+    def test_assign_to_many_users_list(self):
+        assign_perm("add_contenttype", self.users_list, self.ctype)
+        assign_perm(self.get_permission("delete_contenttype"), self.users_list, self.ctype)
+        for user in self.users_list:
+            self.assertTrue(user.has_perm("add_contenttype", self.ctype))
+            self.assertTrue(user.has_perm("delete_contenttype", self.ctype))
+
+    def test_assign_to_many_groups_queryset(self):
+        assign_perm("add_contenttype", self.groups_qs, self.ctype)
+        assign_perm(self.get_permission("delete_contenttype"), self.groups_qs, self.ctype)
+        for user in self.users_list:
+            self.assertTrue(user.has_perm("add_contenttype", self.ctype))
+            self.assertTrue(user.has_perm("delete_contenttype", self.ctype))
+
+    def test_assign_to_many_groups_list(self):
+        assign_perm("add_contenttype", self.groups_list, self.ctype)
+        assign_perm(self.get_permission("delete_contenttype"), self.groups_list, self.ctype)
+        for user in self.users_list:
+            self.assertTrue(user.has_perm("add_contenttype", self.ctype))
+            self.assertTrue(user.has_perm("delete_contenttype", self.ctype))
+
+    def test_assign_to_multiple_identity_and_obj(self):
+        with self.assertRaises(MultipleIdentityAndObjectError):
+            assign_perm("add_contenttype", self.users_list, self.ctype_qset)
+        with self.assertRaises(MultipleIdentityAndObjectError):
+            assign_perm("add_contenttype", self.users_qs, self.ctype_qset)
 
 
 class RemovePermTest(ObjectPermissionTestCase):
