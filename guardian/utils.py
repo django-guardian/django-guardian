@@ -15,7 +15,7 @@ from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME, get_user_model
 from django.contrib.auth.models import AnonymousUser, Group
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
-from django.db.models import Model
+from django.db.models import Model, QuerySet
 from django.http import HttpResponseForbidden, HttpResponseNotFound
 from django.shortcuts import render
 from guardian.conf import settings as guardian_settings
@@ -70,9 +70,23 @@ def get_identity(identity):
     if isinstance(identity, AnonymousUser):
         identity = get_anonymous_user()
 
+    # get identity from queryset model type
+    if isinstance(identity, QuerySet):
+        identity_model_type = identity.model
+        if identity_model_type == get_user_model():
+            return identity, None
+        elif identity_model_type == Group:
+            return None, identity
+
+    # get identity from first element in list
+    if isinstance(identity, list) and isinstance(identity[0], get_user_model()):
+        return identity, None
+    if isinstance(identity, list) and isinstance(identity[0], Group):
+        return None, identity
+
     if isinstance(identity, get_user_model()):
         return identity, None
-    elif isinstance(identity, Group):
+    if isinstance(identity, Group):
         return None, identity
 
     raise NotUserNorGroup("User/AnonymousUser or Group instance is required "
