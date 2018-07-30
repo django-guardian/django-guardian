@@ -11,14 +11,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
-            model_name='groupobjectpermission',
-            name='object_pk',
-            field=models.PositiveIntegerField(db_index=True),
-        ),
-        migrations.AlterField(
-            model_name='userobjectpermission',
-            name='object_pk',
-            field=models.PositiveIntegerField(db_index=True),
-        ),
+        # default migration does not include 'using object_pk::integer' so thats why we have custom migration
+        migrations.RunSQL("alter table guardian_userobjectpermission alter column object_pk type integer using object_pk::integer;"),
+        migrations.RunSQL("alter table guardian_groupobjectpermission alter column object_pk type integer using object_pk::integer;"),
     ]
