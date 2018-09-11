@@ -1,11 +1,13 @@
 from __future__ import unicode_literals
+
+from itertools import chain
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.db.models.query import QuerySet
 from django.utils.encoding import force_text
 from guardian.ctypes import get_content_type
 from guardian.utils import get_group_obj_perms_model, get_identity, get_user_obj_perms_model
-from itertools import chain
 
 
 def _get_pks_model_and_ctype(objects):

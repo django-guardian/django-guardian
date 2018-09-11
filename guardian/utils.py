@@ -6,6 +6,11 @@ internal functionality. They are **not** guaranteed to be stable - which means
 they actual input parameters/output type may change in future releases.
 """
 from __future__ import unicode_literals
+
+import logging
+import os
+from itertools import chain
+
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME, get_user_model
 from django.contrib.auth.models import AnonymousUser, Group
@@ -16,10 +21,6 @@ from django.shortcuts import render
 from guardian.conf import settings as guardian_settings
 from guardian.ctypes import get_content_type
 from guardian.exceptions import NotUserNorGroup
-from itertools import chain
-
-import logging
-import os
 
 logger = logging.getLogger(__name__)
 abspath = lambda *p: os.path.abspath(os.path.join(*p))
