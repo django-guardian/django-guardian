@@ -22,5 +22,5 @@ if [[ $DATABASE_URL = mysql* ]]; then
     PACKAGES+=('mysqlclient==1.3.10');
 fi;
 echo "Install " ${PACKAGES[*]};
-pip install ${PACKAGES[*]};
+pip install --upgrade --upgrade-strategy=only-if-needed ${PACKAGES[*]};
 pip check
