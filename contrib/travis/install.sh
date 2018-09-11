@@ -2,7 +2,7 @@
 
 set -ev
 
-pip install -U pip six
+pip install -U pip
 
 # Array of packages
 PACKAGES=('mock==1.0.1' 'pytest' 'pytest-django' 'pytest-cov' 'django-environ' 'setuptools_scm')

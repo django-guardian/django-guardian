@@ -28,9 +28,7 @@ setup(
     ],
     include_package_data=True,
     license='BSD',
-    install_requires=[
-        'six',
-    ],
+    install_requires=[],
     tests_require=['mock', 'django-environ', 'pytest', 'pytest-django'],
     classifiers=['Development Status :: 5 - Production/Stable',
                  'Environment :: Web Environment',

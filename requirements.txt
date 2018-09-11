@@ -1,5 +1,4 @@
 Django>=1.11
-six
 django-environ
 bumpversion
 mock
