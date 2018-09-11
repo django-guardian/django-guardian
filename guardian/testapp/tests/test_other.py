@@ -4,6 +4,7 @@ import mock
 import unittest
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
@@ -291,8 +292,6 @@ class TestMonkeyPatch(TestCase):
 
     @mock.patch('django.contrib.auth.get_user_model')
     def test_monkey_patch(self, mocked_get_user_model):
-        # Import AbstractUser here as it is only available since Django 1.5
-        from django.contrib.auth.models import AbstractUser
 
         class CustomUserTestClass(AbstractUser):
             pass

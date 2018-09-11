@@ -4,11 +4,6 @@ from django.conf import settings
 from django.conf.urls import handler404, handler500, include, url
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, Group, Permission
-from importlib import import_module
-
-import django
-import six
-import sys
 
 __all__ = [
     'Group',
@@ -65,15 +60,3 @@ try:
     str = str  # pyflakes:ignore
 except NameError:
     basestring = unicode = str = str
-
-
-# Django 1.7 compatibility
-# create_permission API changed: skip the create_models (second
-# positional argument) if we have django 1.7+ and 2+ positional
-# arguments with the second one being a list/tuple
-def create_permissions(*args, **kwargs):
-    from django.contrib.auth.management import create_permissions as original_create_permissions
-
-    if len(args) > 1 and isinstance(args[1], (list, tuple)):
-        args = args[:1] + args[2:]
-    return original_create_permissions(*args, **kwargs)

@@ -5,12 +5,12 @@ from django.conf import settings
 from guardian.conf import settings as guardian_settings
 from django.apps import apps as django_apps
 from django.contrib.auth import get_user_model
+from django.contrib.auth.management import create_permissions
 from django.contrib.auth.models import Group, Permission, AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 
 from guardian.core import ObjectPermissionChecker
-from guardian.compat import create_permissions
 from guardian.exceptions import NotUserNorGroup
 from guardian.models import UserObjectPermission, GroupObjectPermission
 from guardian.shortcuts import assign_perm
@@ -56,7 +56,7 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
     def setUp(self):
         super(ObjectPermissionCheckerTest, self).setUp()
         # Required if MySQL backend is used :/
-        create_permissions(auth_app, [], 1)
+        create_permissions(auth_app, 1)
 
     def test_cache_for_queries_count(self):
         settings.DEBUG = True

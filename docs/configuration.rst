@@ -114,7 +114,7 @@ environment.
 
 Defaults to ``"AnonymousUser"``.
 
-.. seealso:: https://docs.djangoproject.com/en/1.5/topics/auth/customizing/#substituting-a-custom-user-model
+.. seealso:: https://docs.djangoproject.com/en/2.1/topics/auth/customizing/#substituting-a-custom-user-model
 
 
 .. setting:: GUARDIAN_GET_INIT_ANONYMOUS_USER

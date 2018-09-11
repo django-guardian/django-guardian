@@ -23,7 +23,6 @@ from guardian.shortcuts import assign_perm
 from guardian.testapp.tests.conf import TestDataMixin
 from guardian.testapp.tests.conf import override_settings
 from guardian.testapp.tests.conf import skipUnlessTestApp
-from django import get_version as django_get_version
 
 User = get_user_model()
 user_model_path = get_user_model_path()
@@ -391,10 +390,6 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
     @override_settings(LOGIN_URL='django.contrib.auth.views.login')
     def test_redirection_class(self):
         view_url = '/permission_required/'
-
-        if django_get_version() < "1.5":
-            # skip this test for django versions < 1.5
-            return
 
         response = self.client.get(view_url)
         # this should be '/account/login'
