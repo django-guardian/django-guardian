@@ -12,8 +12,7 @@ from django.contrib.auth.models import AnonymousUser, Group
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db.models import Model
 from django.http import HttpResponseForbidden, HttpResponseNotFound
-from django.shortcuts import render_to_response, render
-from django.template import RequestContext
+from django.shortcuts import render
 from guardian.conf import settings as guardian_settings
 from guardian.ctypes import get_content_type
 from guardian.exceptions import NotUserNorGroup

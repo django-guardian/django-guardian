@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 # handler404 and handler500 are needed for admin tests
-from guardian.compat import include, url, handler404, handler500  # pyflakes:ignore
+from guardian.compat import url, handler404, handler500  # pyflakes:ignore
 from guardian.mixins import PermissionRequiredMixin
 from django.contrib import admin
 from django.contrib.auth.views import LoginView

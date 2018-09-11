@@ -1,7 +1,5 @@
 from __future__ import unicode_literals
-import os
 import unittest
-from guardian.utils import abspath
 from guardian.conf import settings as guardian_settings
 from django.conf import settings
 from django.conf import UserSettingsHolder

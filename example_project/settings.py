@@ -1,6 +1,5 @@
 import os
 import sys
-from django.conf import global_settings
 import environ
 
 env = environ.Env()
