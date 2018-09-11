@@ -115,7 +115,7 @@ class GuardedModelAdminMixin(object):
         making sure all required template vars are in the context.
         """
         context = self.admin_site.each_context(request)
-        context.update( {
+        context.update({
             'adminform': {'model_admin': self},
             'media': self.media,
             'object': obj,
