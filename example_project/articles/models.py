@@ -16,6 +16,7 @@ class Article(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
     class Meta:
+        default_permissions = ('add', 'change', 'delete')
         permissions = (
             ('view_article', 'Can view article'),
         )

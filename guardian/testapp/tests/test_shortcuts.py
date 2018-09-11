@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import warnings
 
+import django
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
@@ -37,10 +38,11 @@ user_module_name = User._meta.model_name
 class ShortcutsTests(ObjectPermissionTestCase):
 
     def test_get_perms_for_model(self):
-        self.assertEqual(get_perms_for_model(self.user).count(), 3)
+        expected_perms_amount = 3 if django.VERSION < (2, 1) else 4
+        self.assertEqual(get_perms_for_model(self.user).count(), expected_perms_amount)
         self.assertTrue(list(get_perms_for_model(self.user)) ==
                         list(get_perms_for_model(User)))
-        self.assertEqual(get_perms_for_model(Permission).count(), 3)
+        self.assertEqual(get_perms_for_model(Permission).count(), expected_perms_amount)
 
         model_str = 'contenttypes.ContentType'
         self.assertEqual(
@@ -434,7 +436,10 @@ class GetUsersWithPermsTest(TestCase):
         self.assertEqual(set(get_group_perms(self.group1, self.obj1)), set(['delete_contenttype']))
         self.assertEqual(set(get_group_perms(self.group2, self.obj1)), set([]))
         self.assertEqual(set(get_group_perms(admin, self.obj1)), set([]))
-        self.assertEqual(set(get_perms(admin, self.obj1)), set(['add_contenttype', 'change_contenttype', 'delete_contenttype']))
+        expected_permissions = ['add_contenttype', 'change_contenttype', 'delete_contenttype']
+        if django.VERSION >= (2, 1):
+            expected_permissions.append('view_contenttype')
+        self.assertEqual(set(get_perms(admin, self.obj1)), set(expected_permissions))
         self.assertEqual(set(get_perms(self.user1, self.obj1)), set(['change_contenttype', 'delete_contenttype']))
         self.assertEqual(set(get_perms(self.user2, self.obj1)), set(['delete_contenttype']))
         self.assertEqual(set(get_perms(self.group1, self.obj1)), set(['delete_contenttype']))
@@ -452,6 +457,8 @@ class GetUsersWithPermsTest(TestCase):
             admin: ["add_contenttype", "change_contenttype", "delete_contenttype"],
             self.user2: ["delete_contenttype"]
         }
+        if django.VERSION >= (2, 1):
+            expected[admin].append("view_contenttype")
         result = get_users_with_perms(self.obj1, attach_perms=True,
             with_superusers=False, with_group_users=True)
         self.assertEqual(result.keys(), expected.keys())
