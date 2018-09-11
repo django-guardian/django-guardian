@@ -3,24 +3,6 @@ sudo: false
 
 cache: pip
 
-python:
- - 3.4
- - 3.5
- - 3.6
-
-env:
- - DJANGO_VERSION=1.11 DATABASE_URL=postgres://postgres@/django_guardian
- - DJANGO_VERSION=2.0 DATABASE_URL=postgres://postgres@/django_guardian
- - DJANGO_VERSION=master DATABASE_URL=postgres://postgres@/django_guardian
-
- - DJANGO_VERSION=1.11 DATABASE_URL=mysql://root:@localhost/django_guardian
- - DJANGO_VERSION=2.0 DATABASE_URL=mysql://root:@localhost/django_guardian
- - DJANGO_VERSION=master DATABASE_URL=mysql://root:@localhost/django_guardian
-
- - DJANGO_VERSION=1.11 DATABASE_URL=sqlite://
- - DJANGO_VERSION=2.0 DATABASE_URL=sqlite://
- - DJANGO_VERSION=master DATABASE_URL=sqlite://
-
 install:
   - ./contrib/travis/install.sh
 
@@ -30,25 +12,50 @@ script:
 notifications:
   irc: "irc.freenode.net#django-guardian"
 
+templates:
+  django111: &django111 DJANGO_VERSION=1.11
+  django20: &django20 DJANGO_VERSION=2.0
+  djangomaster: &djangomaster DJANGO_VERSION=master
+
+  postgres: &postgres DATABASE_URL=postgres://postgres@/django_guardian
+  mysql: &mysql DATABASE_URL=mysql://root:@localhost/django_guardian
+  sqlite: &sqlite  DATABASE_URL=sqlite://
+
 
 matrix:
   fast_finish: true
   include:
-    - python: 2.7
-      env: DJANGO_VERSION=1.11 DATABASE_URL=postgres://postgres@/django_guardian
-    - python: 2.7
-      env: DJANGO_VERSION=1.11 DATABASE_URL=mysql://root:@localhost/django_guardian
-    - python: 2.7
-      env: DJANGO_VERSION=1.11 DATABASE_URL=sqlite://
-  exclude:
-    - python: 3.4
-      env: DJANGO_VERSION=master DATABASE_URL=postgres://postgres@/django_guardian
-    - python: 3.4
-      env: DJANGO_VERSION=master DATABASE_URL=mysql://root:@localhost/django_guardian
-    - python: 3.4
-      env: DJANGO_VERSION=master DATABASE_URL=sqlite://
+    - { python: 2.7, env: [*django111, *postgres]}
+    - { python: 2.7, env: [*django111, *mysql]}
+    - { python: 2.7, env: [*django111, *sqlite]}
 
+    - { python: 3.4, env: [*django111, *postgres]}
+    - { python: 3.4, env: [*django111, *mysql]}
+    - { python: 3.4, env: [*django111, *sqlite]}
+    - { python: 3.4, env: [*django20, *postgres]}
+    - { python: 3.4, env: [*django20, *mysql]}
+    - { python: 3.4, env: [*django20, *sqlite]}
+
+    - { python: 3.5, env: [*django111, *postgres]}
+    - { python: 3.5, env: [*django111, *mysql]}
+    - { python: 3.5, env: [*django111, *sqlite]}
+    - { python: 3.5, env: [*django20, *postgres]}
+    - { python: 3.5, env: [*django20, *mysql]}
+    - { python: 3.5, env: [*django20, *sqlite]}
+    - { python: 3.5, env: [*djangomaster, *postgres]}
+    - { python: 3.5, env: [*djangomaster, *mysql]}
+    - { python: 3.5, env: [*djangomaster, *sqlite]}
+
+    - { python: 3.6, env: [*django111, *postgres]}
+    - { python: 3.6, env: [*django111, *mysql]}
+    - { python: 3.6, env: [*django111, *sqlite]}
+    - { python: 3.6, env: [*django20, *postgres]}
+    - { python: 3.6, env: [*django20, *mysql]}
+    - { python: 3.6, env: [*django20, *sqlite]}
+    - { python: 3.6, env: [*djangomaster, *postgres]}
+    - { python: 3.6, env: [*djangomaster, *mysql]}
+    - { python: 3.6, env: [*djangomaster, *sqlite]}
   allow_failures:
-      - env: DJANGO_VERSION=master DATABASE_URL=postgres://postgres@/django_guardian
-      - env: DJANGO_VERSION=master DATABASE_URL=mysql://root:@localhost/django_guardian
-      - env: DJANGO_VERSION=master DATABASE_URL=sqlite://
+    - env: [*djangomaster, *postgres]
+    - env: [*djangomaster, *mysql]
+    - env: [*djangomaster, *sqlite]
