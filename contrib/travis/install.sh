@@ -1,4 +1,7 @@
 #!/bin/bash
+
+set -ev
+
 pip install -U pip six
 
 # Array of packages
@@ -20,3 +23,4 @@ if [[ $DATABASE_URL = mysql* ]]; then
 fi;
 echo "Install " ${PACKAGES[*]};
 pip install ${PACKAGES[*]};
+pip check
