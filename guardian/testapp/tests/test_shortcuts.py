@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+import warnings
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
@@ -25,8 +27,6 @@ from guardian.exceptions import WrongAppError
 from guardian.testapp.models import NonIntPKModel
 from guardian.testapp.tests.test_core import ObjectPermissionTestCase
 from guardian.models import Group, Permission
-
-import warnings
 
 
 User = get_user_model()

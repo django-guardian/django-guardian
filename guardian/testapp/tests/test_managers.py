@@ -1,7 +1,8 @@
 from __future__ import unicode_literals
-from django.test import TestCase
-import mock
 import warnings
+
+import mock
+from django.test import TestCase
 from guardian.managers import UserObjectPermissionManager
 from guardian.managers import GroupObjectPermissionManager
 
