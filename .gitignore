@@ -21,6 +21,8 @@ example_project/conf/*.py
 .idea/
 .eggs/
 .cache/
+.mypy_cache/
+.pytest_cache/
 
 # WebDAV remote filesystem
 .DAV
