@@ -271,13 +271,10 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
             user_filters = {'%s__content_object' % related_name: obj}
         qset = Q(**user_filters)
         if only_with_perms_in is not None:
-            permission_qset = Q()
-            for permission in only_with_perms_in:
-                permission_qset |= Q(**{
-                    '%s__permission' % related_name: Permission.objects.get(
-                        content_type=ctype, codename=permission)
-                    })
-            qset &= permission_qset
+            permission_ids = Permission.objects.filter(content_type=ctype, codename__in=only_with_perms_in).values_list('id', flat=True)
+            qset &= Q(**{
+                '%s__permission_id__in' % related_name: permission_ids,
+                })
         if with_group_users:
             group_model = get_group_obj_perms_model(obj)
             group_rel_name = group_model.group.field.related_query_name()
@@ -291,11 +288,9 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
                     'groups__%s__content_object' % group_rel_name: obj,
                 }
             if only_with_perms_in is not None:
-                for permission in only_with_perms_in:
-                    group_filters.update({
-                            'groups__%s__permission' % group_rel_name: Permission.objects.get(
-                                content_type=ctype, codename=permission)
-                            })
+                group_filters.update({
+                    'groups__%s__permission_id__in' % group_rel_name: permission_ids,
+                    })
             qset = qset | Q(**group_filters)
         if with_superusers:
             qset = qset | Q(is_superuser=True)
