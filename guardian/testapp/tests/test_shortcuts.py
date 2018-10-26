@@ -279,6 +279,24 @@ class GetUsersWithPermsTest(TestCase):
         # assign perms to groups
         assign_perm("change_contenttype", self.group1, self.obj1)
         assign_perm("delete_contenttype", self.group2, self.obj1)
+        assign_perm("add_contenttype", self.group3, self.obj2)
+
+        result = get_users_with_perms(self.obj1, only_with_perms_in=('change_contenttype', 'delete_contenttype'), with_group_users=True)
+        result_vals = result.values_list('username', flat=True)
+
+        self.assertEqual(
+            set(result_vals),
+            set((self.user1.username, self.user2.username)),
+        )
+
+    def test_only_with_perms_in_and_not_with_group_users(self):
+        self.user1.groups.add(self.group1)
+        self.user2.groups.add(self.group2)
+        self.user3.groups.add(self.group3)
+
+        # assign perms to groups
+        assign_perm("change_contenttype", self.group1, self.obj1)
+        assign_perm("delete_contenttype", self.group2, self.obj1)
         assign_perm("delete_contenttype", self.group3, self.obj2)
 
         # assign perms to user
@@ -291,7 +309,6 @@ class GetUsersWithPermsTest(TestCase):
             set(result_vals),
             set((self.user2.username,)),
         )
-
 
     def test_only_with_perms_in_attached(self):
         assign_perm("change_contenttype", self.user1, self.obj1)
