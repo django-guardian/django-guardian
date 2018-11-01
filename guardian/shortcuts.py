@@ -32,7 +32,7 @@ def assign_perm(perm, user_or_group, obj=None):
       ``Permission`` instance.
 
     :param user_or_group: instance of ``User``, ``AnonymousUser``, ``Group``,
-      list of ``User`` or ``Group``, or queryset of ``User`` or ``Group``; 
+      list of ``User`` or ``Group``, or queryset of ``User`` or ``Group``;
       passing any other object would raise
       ``guardian.exceptions.NotUserNorGroup`` exception
 
@@ -287,21 +287,21 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
                 })
         if with_group_users:
             group_model = get_group_obj_perms_model(obj)
-            group_rel_name = group_model.group.field.related_query_name()
             if group_model.objects.is_generic():
-                group_filters = {
-                    'groups__%s__content_type' % group_rel_name: ctype,
-                    'groups__%s__object_pk' % group_rel_name: obj.pk,
+                group_obj_perm_filters = {
+                    'content_type': ctype,
+                    'object_pk': obj.pk,
                 }
             else:
-                group_filters = {
-                    'groups__%s__content_object' % group_rel_name: obj,
+                group_obj_perm_filters = {
+                    'content_object': obj,
                 }
             if only_with_perms_in is not None:
-                group_filters.update({
-                    'groups__%s__permission_id__in' % group_rel_name: permission_ids,
+                group_obj_perm_filters.update({
+                    'permission_id__in': permission_ids,
                     })
-            qset = qset | Q(**group_filters)
+            group_ids = set(group_model.objects.filter(**group_obj_perm_filters).values_list('group_id', flat=True).distinct())
+            qset = qset | Q(groups__in=group_ids)
         if with_superusers:
             qset = qset | Q(is_superuser=True)
         return get_user_model().objects.filter(qset).distinct()
