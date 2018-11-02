@@ -15,7 +15,7 @@ from guardian.compat import url
 from guardian.forms import GroupObjectPermissionsForm, UserObjectPermissionsForm
 from guardian.models import Group
 from guardian.shortcuts import (get_group_perms, get_groups_with_perms, get_perms_for_model, get_user_perms,
-                                get_users_with_perms)
+                                get_users_with_perms, get_objects_for_user, assign_perm, remove_perm)
 
 
 class AdminUserObjectPermissionsForm(UserObjectPermissionsForm):
@@ -428,6 +428,66 @@ class GuardedModelAdmin(GuardedModelAdminMixin, admin.ModelAdmin):
         admin.site.register(Author, AuthorAdmin)
 
     """
+    def get_model_objs(self, request, action=None, klass=None):
+        opts = self.opts
+        actions = [action] if action else ['view', 'change', 'delete']
+        klass = klass if klass else opts.model
+        model_name = klass._meta.model_name
+        return get_objects_for_user(user=request.user, perms=['{}_{}'.format(perm, model_name) for perm in actions],
+                                    klass=klass, any_perm=True)
+
+    def has_module_permission(self, request):
+        if super(GuardedModelAdmin, self).has_module_permission(request):
+            return True
+        return self.get_model_objs(request).exists()
+
+    def get_queryset(self, request):
+        if request.user.is_superuser:
+            return super(GuardedModelAdmin, self).get_queryset(request)
+
+        data = self.get_model_objs(request)
+        return data
+
+    def has_perm(self, request, obj, action):
+        opts = self.opts
+        codename = '{action}_{model_name}'.format(action=action, model_name=opts.model_name)
+        if obj:
+            return request.user.has_perm('{label}.{codename}'.format(label=opts.app_label, codename=codename), obj)
+        else:
+            return self.get_model_objs(request, action).exists()
+
+    def has_view_permission(self, request, obj=None):
+        return self.has_perm(request, obj, 'view')
+
+    def has_change_permission(self, request, obj=None):
+        return self.has_perm(request, obj, 'change')
+
+    def has_delete_permission(self, request, obj=None):
+        return self.has_perm(request, obj, 'delete')
+
+    def save_model(self, request, obj, form, change):
+        result = super(GuardedModelAdmin, self).save_model(request, obj, form, change)
+        if not request.user.is_superuser and not change:
+            opts = self.opts
+            actions = ['view', 'add', 'change', 'delete']
+            [assign_perm('{}.{}_{}'.format(opts.app_label, action, opts.model_name), request.user, obj)
+             for action in actions]
+        return result
+
+    @staticmethod
+    def remove_obj_perms(obj):
+        perms_dict = get_users_with_perms(obj, attach_perms=True)
+        perms_dict.update(get_groups_with_perms(obj, attach_perms=True))
+        for user_or_group in perms_dict:
+            [remove_perm(perm, user_or_group, obj) for perm in perms_dict[user_or_group]]
+
+    def delete_model(self, request, obj):
+        self.remove_obj_perms(obj)
+        return super(GuardedModelAdmin, self).delete_model(request, obj)
+
+    def delete_queryset(self, request, queryset):
+        [self.remove_obj_perms(obj) for obj in queryset]
+        return super(GuardedModelAdmin, self).delete_queryset(request, queryset)
 
 
 class UserManage(forms.Form):
