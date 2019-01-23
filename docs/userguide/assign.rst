@@ -19,7 +19,7 @@ Let's assume we have following model:
         reported_by = models.ForeignKey(User, on_delete=models.CASCADE)
         created_at = models.DateTimeField(auto_now_add=True)
 
-... and we want to be able to set custom permission *view_task*. We let Django
+... and we want to be able to set custom permission *assign_task*. We let Django
 know to do so by adding ``permissions`` tuple to ``Meta`` class and our final
 model could look like:
 
@@ -33,11 +33,11 @@ model could look like:
 
         class Meta:
             permissions = (
-                ('view_task', 'View task'),
+                ('assign_task', 'Assign task'),
             )
 
 After we call management commands ``makemigrations`` and ``migrate``
-our *view_task* permission would be added to default set of permissions.
+our *assign_task* permission would be added to default set of permissions.
 
 .. note::
    By default, Django adds 3 permissions for each registered model:
@@ -45,10 +45,16 @@ our *view_task* permission would be added to default set of permissions.
    - *add_modelname*
    - *change_modelname*
    - *delete_modelname*
+   - *view_modelname* (since Django 2.1)
 
    (where *modelname* is a simplified name of our model's class). See
    https://docs.djangoproject.com/en/dev/topics/auth/default/#default-permissions for
    more detail.
+
+.. note::
+   When upgrading to Django 2.1 custom created *view_modelname* permissions
+   clash with the newly built-in ones.  The simplest way to fix this is to
+   add ``default_permissions = ('add', 'change', 'delete')`` to ``Meta``.
 
 There is nothing new here since creation of permissions is 
 `handled by django <http://docs.djangoproject.com/en/1.2/topics/auth/#id1>`_.
@@ -65,7 +71,7 @@ convenient function: :func:`guardian.shortcuts.assign_perm`.
 For user
 ~~~~~~~~
 
-Continuing our example we now can allow Joe user to view some task:
+Continuing our example we now can allow Joe user to assign some task:
 
 .. code-block:: python
 
@@ -73,7 +79,7 @@ Continuing our example we now can allow Joe user to view some task:
     >>> boss = User.objects.create(username='Big Boss')
     >>> joe = User.objects.create(username='joe')
     >>> task = Task.objects.create(summary='Some job', content='', reported_by=boss)
-    >>> joe.has_perm('view_task', task)
+    >>> joe.has_perm('assign_task', task)
     False
 
 Well, not so fast Joe, let us create an object permission finally:
@@ -81,8 +87,8 @@ Well, not so fast Joe, let us create an object permission finally:
 .. code-block:: python
 
     >>> from guardian.shortcuts import assign_perm
-    >>> assign_perm('view_task', joe, task)
-    >>> joe.has_perm('view_task', task)
+    >>> assign_perm('assign_task', joe, task)
+    >>> joe.has_perm('assign_task', task)
     True
 
 

@@ -33,7 +33,7 @@ models within the admin. In example, look at following model:
 
         class Meta:
             permissions = (
-                ('view_post', 'Can view post'),
+                ('hide_post', 'Can hide post'),
             )
             get_latest_by = 'created_at'
 
