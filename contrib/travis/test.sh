@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 python ./setup.py --version
 py.test --cov=guardian
@@ -7,6 +7,7 @@ py.test --cov=guardian
 if [ "$DJANGO_VERSION" = "1.11" ] || \
    [ "$DJANGO_VERSION" = "2.0" ] || \
    [ "$DJANGO_VERSION" = "2.1" ] || \
+   [ "${DJANGO_VERSION:0:3}" = "2.2" ] || \
    [ "$DJANGO_VERSION" = "master" ]; then
     pip install .; 
     cd example_project; 
