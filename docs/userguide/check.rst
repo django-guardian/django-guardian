@@ -80,14 +80,14 @@ could be easily achieved using :shortcut:`get_objects_for_user`:
 
 .. code-block:: python
 
-    from django.shortcuts import render_to_response
+    from django.shortcuts import render
     from django.template import RequestContext
     from projects.models import Project
     from guardian.shortcuts import get_objects_for_user
 
     def user_dashboard(request, template_name='projects/dashboard.html'):
         projects = get_objects_for_user(request.user, 'projects.view_project')
-        return render_to_response(template_name, {'projects': projects},
+        return render(request, template_name, {'projects': projects},
             RequestContext(request))
 
 It is also possible to provide list of permissions rather than single string,
