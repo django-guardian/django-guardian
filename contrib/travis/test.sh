@@ -11,5 +11,5 @@ if [ "${DJANGO_VERSION:0:3}" = "1.11" ] || \
    [ "$DJANGO_VERSION" = "master" ]; then
     pip install .; 
     cd example_project; 
-    python manage.py test;
+    python -Wa manage.py test;
 fi;
