@@ -18,9 +18,9 @@ templates:
     dist: xenial
     sudo: required
 
-  django111: &django111 DJANGO_VERSION=1.11
-  django20: &django20 DJANGO_VERSION=2.0
-  django21: &django21 DJANGO_VERSION=2.1
+  django111: &django111 DJANGO_VERSION=1.11.*
+  django20: &django20 DJANGO_VERSION=2.0.*
+  django21: &django21 DJANGO_VERSION=2.1.*
   django22: &django22 DJANGO_VERSION=2.2a1
   djangomaster: &djangomaster DJANGO_VERSION=master
 
