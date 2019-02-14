@@ -17,9 +17,9 @@ Requirements
 ------------
 
 * Python 3.4+
-* A supported version of Django (currently 1.11+)
+* A supported version of Django (currently 2.0+)
 
-Travis CI tests on Django version 1.11, 2.0, and master.
+Travis CI tests on Django version 2.0, 2.1, 2.2, and master.
 
 Installation
 ------------
@@ -111,4 +111,3 @@ For example:
 .. [1] Great paper about this feature is available at `djangoadvent articles <https://github.com/djangoadvent/djangoadvent-articles/blob/master/1.2/06_object-permissions.rst>`_.
 
 .. _Django: http://www.djangoproject.com/
-
