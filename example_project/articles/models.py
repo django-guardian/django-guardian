@@ -1,14 +1,10 @@
-from __future__ import unicode_literals
-
 from django.db import models
 from django.urls import reverse
-from django.utils.six import python_2_unicode_compatible
 
 
 from guardian.models import GroupObjectPermissionBase, UserObjectPermissionBase
 
 
-@python_2_unicode_compatible
 class Article(models.Model):
     title = models.CharField('title', max_length=64)
     slug = models.SlugField(max_length=64)

@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 import unittest
 from guardian.conf import settings as guardian_settings
 from django.conf import settings

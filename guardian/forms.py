@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 from django import forms
 from django.utils.translation import ugettext as _
 from guardian.shortcuts import assign_perm, get_group_perms, get_perms_for_model, get_user_perms, remove_perm

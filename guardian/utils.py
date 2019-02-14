@@ -5,8 +5,6 @@ Functions defined within this module should be considered as django-guardian's
 internal functionality. They are **not** guaranteed to be stable - which means
 they actual input parameters/output type may change in future releases.
 """
-from __future__ import unicode_literals
-
 import logging
 import os
 from itertools import chain

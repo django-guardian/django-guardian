@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import mock
 import unittest
 
@@ -16,8 +14,6 @@ import guardian
 from guardian.backends import ObjectPermissionBackend
 from guardian.compat import get_user_model_path
 from guardian.compat import get_user_permission_codename
-from guardian.compat import basestring
-from guardian.compat import unicode
 from guardian.exceptions import GuardianError
 from guardian.exceptions import NotUserNorGroup
 from guardian.exceptions import ObjectNotPersisted
@@ -106,12 +102,6 @@ class UserPermissionTests(TestDataMixin, TestCase):
         )
         self.assertRaises(ValidationError, UserObjectPermission.objects.create,
                           **create_info)
-
-    def test_unicode(self):
-        codename = get_user_permission_codename('change')
-        obj_perm = UserObjectPermission.objects.assign_perm(codename,
-                                                            self.user, self.user)
-        self.assertTrue(isinstance(unicode(obj_perm), unicode))
 
     def test_errors(self):
         not_saved_user = User(username='not_saved_user')
@@ -203,11 +193,6 @@ class GroupPermissionTests(TestDataMixin, TestCase):
         self.assertRaises(ValidationError, GroupObjectPermission.objects.create,
                           **create_info)
 
-    def test_unicode(self):
-        obj_perm = GroupObjectPermission.objects.assign_perm("change_group",
-                                                             self.group, self.group)
-        self.assertTrue(isinstance(unicode(obj_perm), unicode))
-
     def test_errors(self):
         not_saved_group = Group(name='not_saved_group')
         self.assertRaises(ObjectNotPersisted,
@@ -269,10 +254,10 @@ class GuardianBaseTests(TestCase):
 
     def test_version(self):
         for x in guardian.VERSION:
-            self.assertTrue(isinstance(x, (int, basestring)))
+            self.assertTrue(isinstance(x, (int, str)))
 
     def test_get_version(self):
-        self.assertTrue(isinstance(guardian.get_version(), basestring))
+        self.assertTrue(isinstance(guardian.get_version(), str))
 
 
 class TestExceptions(TestCase):

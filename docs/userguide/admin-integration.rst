@@ -21,10 +21,8 @@ models within the admin. In example, look at following model:
 .. code-block:: python
 
     from django.db import models
-    from django.utils.six import python_2_unicode_compatible
 
 
-    @python_2_unicode_compatible
     class Post(models.Model):
         title = models.CharField('title', max_length=64)
         slug = models.SlugField(max_length=64)
@@ -92,4 +90,3 @@ permissions.
 .. note::
    Example above is shipped with ``django-guardian`` package with the example
    project.
-

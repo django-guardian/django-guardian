@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from django.apps import apps as django_apps
 auth_app = django_apps.get_app_config("auth")
 

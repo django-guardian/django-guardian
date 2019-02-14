@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 import copy
 
 from django import forms
@@ -12,7 +11,6 @@ from django.test.client import Client
 from django.urls import reverse
 
 from guardian.admin import GuardedModelAdmin
-from guardian.compat import str
 from guardian.shortcuts import get_perms
 from guardian.shortcuts import get_perms_for_model
 from guardian.models import Group

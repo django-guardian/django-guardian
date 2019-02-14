@@ -32,10 +32,6 @@ templates:
 matrix:
   fast_finish: true
   include:
-    - { python: 2.7, env: [*django111, *postgres]}
-    - { python: 2.7, env: [*django111, *mysql]}
-    - { python: 2.7, env: [*django111, *sqlite]}
-
     - { python: 3.4, env: [*django111, *postgres]}
     - { python: 3.4, env: [*django111, *mysql]}
     - { python: 3.4, env: [*django111, *sqlite]}

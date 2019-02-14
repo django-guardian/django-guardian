@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 import warnings
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
