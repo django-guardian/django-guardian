@@ -1,17 +1,11 @@
-from __future__ import unicode_literals
+from collections.abc import Iterable
+
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, REDIRECT_FIELD_NAME
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
-from guardian.compat import basestring
 from guardian.models import UserObjectPermission
 from guardian.utils import get_40x_or_None, get_anonymous_user
 from guardian.shortcuts import get_objects_for_user
-
-try:
-    from collections.abc import Iterable
-except ImportError:
-    # Python 2.7 compat
-    from collections import Iterable
 
 
 class LoginRequiredMixin(object):
@@ -149,7 +143,7 @@ class PermissionRequiredMixin(object):
 
         :param request: Original request.
         """
-        if isinstance(self.permission_required, basestring):
+        if isinstance(self.permission_required, str):
             perms = [self.permission_required]
         elif isinstance(self.permission_required, Iterable):
             perms = [p for p in self.permission_required]
@@ -268,7 +262,7 @@ class PermissionListMixin(object):
 
         :param request: Original request.
         """
-        if isinstance(self.permission_required, basestring):
+        if isinstance(self.permission_required, str):
             perms = [self.permission_required]
         elif isinstance(self.permission_required, Iterable):
             perms = [p for p in self.permission_required]

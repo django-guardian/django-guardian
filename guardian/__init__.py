@@ -1,7 +1,6 @@
 """
 Implementation of per object permissions for Django.
 """
-from __future__ import unicode_literals
 from . import checks
 
 default_app_config = 'guardian.apps.GuardianConfig'

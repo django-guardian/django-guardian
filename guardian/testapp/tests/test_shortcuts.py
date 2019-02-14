@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import warnings
 
 import django
@@ -129,8 +127,8 @@ class AssignPermTest(ObjectPermissionTestCase):
 
 
 class MultipleIdentitiesOperationsTest(ObjectPermissionTestCase):
-    """ 
-    Tests assignment of permission to multiple users or groups 
+    """
+    Tests assignment of permission to multiple users or groups
     """
     def setUp(self):
         super(MultipleIdentitiesOperationsTest, self).setUp()

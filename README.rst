@@ -16,7 +16,7 @@ Online documentation is available at https://django-guardian.readthedocs.io/.
 Requirements
 ------------
 
-* Python 2.7 or 3.4+
+* Python 3.4+
 * A supported version of Django (currently 1.11+)
 
 Travis CI tests on Django version 1.11, 2.0, and master.

@@ -1,17 +1,14 @@
-from __future__ import unicode_literals
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.utils.six import python_2_unicode_compatible
 from django.utils.translation import ugettext_lazy as _
-from guardian.compat import unicode, user_model_label
+from guardian.compat import user_model_label
 from guardian.ctypes import get_content_type
 from guardian.managers import GroupObjectPermissionManager, UserObjectPermissionManager
 
 
-@python_2_unicode_compatible
 class BaseObjectPermission(models.Model):
     """
     Abstract ObjectPermission class. Actual class should additionally define
@@ -24,9 +21,9 @@ class BaseObjectPermission(models.Model):
 
     def __str__(self):
         return '%s | %s | %s' % (
-            unicode(self.content_object),
-            unicode(getattr(self, 'user', False) or self.group),
-            unicode(self.permission.codename))
+            str(self.content_object),
+            str(getattr(self, 'user', False) or self.group),
+            str(self.permission.codename))
 
     def save(self, *args, **kwargs):
         content_type = get_content_type(self.content_object)

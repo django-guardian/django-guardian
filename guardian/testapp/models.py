@@ -1,17 +1,14 @@
-from __future__ import unicode_literals
 from datetime import datetime
 
 from django.db import models
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import AbstractUser, AbstractBaseUser
-from django.utils.encoding import python_2_unicode_compatible
 
 from guardian.mixins import GuardianUserMixin
 from guardian.models import UserObjectPermissionBase
 from guardian.models import GroupObjectPermissionBase
 
 
-@python_2_unicode_compatible
 class Post(models.Model):
     title = models.CharField('title', max_length=64)
 
@@ -54,7 +51,6 @@ class MixedGroupObjectPermission(GroupObjectPermissionBase):
     content_object = models.ForeignKey('Mixed', on_delete=models.CASCADE)
 
 
-@python_2_unicode_compatible
 class Mixed(models.Model):
     """
     Model for tests obj perms checks with generic user object permissions model
@@ -70,7 +66,6 @@ class ReverseMixedUserObjectPermission(UserObjectPermissionBase):
     content_object = models.ForeignKey('ReverseMixed', on_delete=models.CASCADE)
 
 
-@python_2_unicode_compatible
 class ReverseMixed(models.Model):
     """
     Model for tests obj perms checks with generic group object permissions model

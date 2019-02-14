@@ -1,8 +1,6 @@
 """
 Convenient shortcuts to manage or check object permissions.
 """
-from __future__ import unicode_literals
-
 import warnings
 from collections import defaultdict
 from itertools import groupby
@@ -14,7 +12,6 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models import Count, Q, QuerySet
 from django.shortcuts import _get_queryset
 
-from guardian.compat import basestring
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
 from guardian.exceptions import MixedContentTypeError, WrongAppError, MultipleIdentityAndObjectError
@@ -213,7 +210,7 @@ def get_perms_for_model(cls):
     Returns queryset of all Permission objects for the given class. It is
     possible to pass Model as class or instance.
     """
-    if isinstance(cls, basestring):
+    if isinstance(cls, str):
         app_label, model_name = cls.split('.')
         model = apps.get_model(app_label, model_name)
     else:
@@ -477,7 +474,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
         - If accept_global_perms is ``True``: Empty list.
         - If accept_global_perms is ``False``: Empty list.
     """
-    if isinstance(perms, basestring):
+    if isinstance(perms, str):
         perms = [perms]
     ctype = None
     app_label = None
@@ -680,7 +677,7 @@ def get_objects_for_group(group, perms, klass=None, any_perm=False, accept_globa
         [<Task some task>]
 
     """
-    if isinstance(perms, basestring):
+    if isinstance(perms, str):
         perms = [perms]
     ctype = None
     app_label = None

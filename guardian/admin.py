@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from collections import OrderedDict
 
 from django import forms
@@ -121,7 +119,7 @@ class GuardedModelAdminMixin(object):
             'object': obj,
             'app_label': self.model._meta.app_label,
             'opts': self.model._meta,
-            'original': hasattr(obj, '__unicode__') and obj.__unicode__() or str(obj),
+            'original': str(obj),
             'has_change_permission': self.has_change_permission(request, obj),
             'model_perms': get_perms_for_model(obj),
             'title': _("Object permissions"),
