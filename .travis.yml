@@ -51,9 +51,6 @@ matrix:
     - { python: 3.5, env: [*django22, *postgres]}
     - { python: 3.5, env: [*django22, *mysql]}
     - { python: 3.5, env: [*django22, *sqlite]}
-    - { python: 3.5, env: [*djangomaster, *postgres]}
-    - { python: 3.5, env: [*djangomaster, *mysql]}
-    - { python: 3.5, env: [*djangomaster, *sqlite]}
 
     - { python: 3.6, env: [*django111, *postgres]}
     - { python: 3.6, env: [*django111, *mysql]}
