@@ -15,7 +15,7 @@ notifications:
 templates:
   django20: &django20 DJANGO_VERSION=2.0.*
   django21: &django21 DJANGO_VERSION=2.1.*
-  django22: &django22 DJANGO_VERSION=2.2a1
+  django22: &django22 DJANGO_VERSION=2.2b1
   djangomaster: &djangomaster DJANGO_VERSION=master
 
   postgres: &postgres DATABASE_URL=postgres://postgres@/django_guardian
