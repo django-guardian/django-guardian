@@ -16,7 +16,7 @@ class Post(models.Model):
         return self.title
 
 
-class DynamicAccessor(object):
+class DynamicAccessor:
 
     def __init__(self):
         pass

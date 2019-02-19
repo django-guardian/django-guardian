@@ -29,7 +29,7 @@ def _get_pks_model_and_ctype(objects):
     return pks, model, ctype
 
 
-class ObjectPermissionChecker(object):
+class ObjectPermissionChecker:
     """
     Generic object permissions checker class being the heart of
     ``django-guardian``.

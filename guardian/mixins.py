@@ -8,7 +8,7 @@ from guardian.utils import get_40x_or_None, get_anonymous_user
 from guardian.shortcuts import get_objects_for_user
 
 
-class LoginRequiredMixin(object):
+class LoginRequiredMixin:
     """
     A login required mixin for use with class based views. This Class is a
     light wrapper around the `login_required` decorator and hence function
@@ -47,7 +47,7 @@ class LoginRequiredMixin(object):
         )(request, *args, **kwargs)
 
 
-class PermissionRequiredMixin(object):
+class PermissionRequiredMixin:
     """
     A view mixin that verifies if the current logged in user has the specified
     permission by wrapping the ``request.user.has_perm(..)`` method.
@@ -207,7 +207,7 @@ class PermissionRequiredMixin(object):
                                                              **kwargs)
 
 
-class GuardianUserMixin(object):
+class GuardianUserMixin:
 
     @staticmethod
     def get_anonymous():
@@ -220,7 +220,7 @@ class GuardianUserMixin(object):
         return UserObjectPermission.objects.remove_perm(perm, self, obj)
 
 
-class PermissionListMixin(object):
+class PermissionListMixin:
     """
     A view mixin that filter object in queryset for the current logged by required permission.
 

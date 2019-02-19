@@ -11,7 +11,7 @@ def skipUnlessTestApp(obj):
                                'app %r must be installed to run this test' % app)(obj)
 
 
-class TestDataMixin(object):
+class TestDataMixin:
 
     def setUp(self):
         super(TestDataMixin, self).setUp()
@@ -26,7 +26,7 @@ class TestDataMixin(object):
         jack.groups.add(jack_group)
 
 
-class override_settings(object):
+class override_settings:
     """
     Acts as either a decorator, or a context manager. If it's a decorator it
     takes a function and returns a wrapped function. If it's a contextmanager

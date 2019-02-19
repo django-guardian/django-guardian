@@ -47,7 +47,7 @@ def check_support(user_obj, obj):
     return obj_support and user_support, user_obj
 
 
-class ObjectPermissionBackend(object):
+class ObjectPermissionBackend:
     supports_object_permissions = True
     supports_anonymous_user = True
     supports_inactive_user = True
