@@ -38,7 +38,7 @@ class AdminGroupObjectPermissionsForm(GroupObjectPermissionsForm):
         return FilteredSelectMultiple(_("Permissions"), False)
 
 
-class GuardedModelAdminMixin(object):
+class GuardedModelAdminMixin:
     """
     Serves as a helper for custom subclassing ``admin.ModelAdmin``.
     """
