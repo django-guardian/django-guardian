@@ -131,7 +131,7 @@ class MultipleIdentitiesOperationsTest(ObjectPermissionTestCase):
     Tests assignment of permission to multiple users or groups
     """
     def setUp(self):
-        super(MultipleIdentitiesOperationsTest, self).setUp()
+        super().setUp()
         self.users_list = jim, bob = [
             User.objects.create_user(username='jim'),
             User.objects.create_user(username='bob')

@@ -17,7 +17,7 @@ class BaseObjectPermissionsForm(forms.Form):
           permissions"
         """
         self.obj = obj
-        super(BaseObjectPermissionsForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         field_name = self.get_obj_perms_field_name()
         self.fields[field_name] = self.get_obj_perms_field()
 
@@ -118,7 +118,7 @@ class UserObjectPermissionsForm(BaseObjectPermissionsForm):
 
     def __init__(self, user, *args, **kwargs):
         self.user = user
-        super(UserObjectPermissionsForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def get_obj_perms_field_initial(self):
         perms = get_user_perms(self.user, self.obj)
@@ -166,7 +166,7 @@ class GroupObjectPermissionsForm(BaseObjectPermissionsForm):
 
     def __init__(self, group, *args, **kwargs):
         self.group = group
-        super(GroupObjectPermissionsForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def get_obj_perms_field_initial(self):
         perms = get_group_perms(self.group, self.obj)

@@ -18,8 +18,7 @@ class BaseObjectPermissionsFormTests(TestCase):
 
             def __init__(formself, user, *args, **kwargs):
                 self.user = user
-                super(MyUserObjectPermissionsForm, formself).__init__(*args,
-                                                                      **kwargs)
+                super().__init__(*args, **kwargs)
 
         form = MyUserObjectPermissionsForm(self.user, self.obj, {})
         self.assertRaises(NotImplementedError, form.save_obj_perms)

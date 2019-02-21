@@ -57,7 +57,7 @@ class GuardedModelAdminMixin:
     include_object_permissions_urls = True
 
     def get_queryset(self, request):
-        qs = super(GuardedModelAdminMixin, self).get_queryset(request)
+        qs = super().get_queryset(request)
 
         if request.user.is_superuser:
             return qs
@@ -86,7 +86,7 @@ class GuardedModelAdminMixin:
            ``/admin/flatpages/1/``)
 
         """
-        urls = super(GuardedModelAdminMixin, self).get_urls()
+        urls = super().get_urls()
         if self.include_object_permissions_urls:
             info = self.model._meta.app_label, self.model._meta.model_name
             myurls = [

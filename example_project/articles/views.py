@@ -23,7 +23,7 @@ class ArticleCreateView(PermissionRequiredMixin, CreateView):
     fields = ['title', 'slug', 'content']
 
     def form_valid(self, *args, **kwargs):
-        resp = super(ArticleCreateView, self).form_valid(*args, **kwargs)
+        resp = super().form_valid(*args, **kwargs)
         assign_perm('view_article', self.request.user, self.object)
         assign_perm('change_article', self.request.user, self.object)
         assign_perm('delete_article', self.request.user, self.object)

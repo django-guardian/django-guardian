@@ -31,7 +31,7 @@ class BaseObjectPermission(models.Model):
             raise ValidationError("Cannot persist permission not designed for "
                                   "this class (permission's type is %r and object's type is %r)"
                                   % (self.permission.content_type, content_type))
-        return super(BaseObjectPermission, self).save(*args, **kwargs)
+        return super().save(*args, **kwargs)
 
 
 class BaseGenericObjectPermission(models.Model):

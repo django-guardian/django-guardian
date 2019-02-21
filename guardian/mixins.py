@@ -43,7 +43,7 @@ class LoginRequiredMixin:
     def dispatch(self, request, *args, **kwargs):
         return login_required(redirect_field_name=self.redirect_field_name,
                               login_url=self.login_url)(
-            super(LoginRequiredMixin, self).dispatch
+            super().dispatch
         )(request, *args, **kwargs)
 
 
@@ -203,8 +203,7 @@ class PermissionRequiredMixin:
         response = self.check_permissions(request)
         if response:
             return response
-        return super(PermissionRequiredMixin, self).dispatch(request, *args,
-                                                             **kwargs)
+        return super().dispatch(request, *args, **kwargs)
 
 
 class GuardianUserMixin:
@@ -285,5 +284,5 @@ class PermissionListMixin:
                     **self.get_objects_for_user_extra_kwargs)
 
     def get_queryset(self, *args, **kwargs):
-        qs = super(PermissionListMixin, self).get_queryset(*args, **kwargs)
+        qs = super().get_queryset(*args, **kwargs)
         return get_objects_for_user(**self.get_get_objects_for_user_kwargs(qs))
