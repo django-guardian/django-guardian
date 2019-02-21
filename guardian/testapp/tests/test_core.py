@@ -53,7 +53,7 @@ class ObjectPermissionTestCase(TestCase):
 class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
 
     def setUp(self):
-        super(ObjectPermissionCheckerTest, self).setUp()
+        super().setUp()
         # Required if MySQL backend is used :/
         create_permissions(auth_app, 1)
 

@@ -28,7 +28,7 @@ user_model_path = get_user_model_path()
 class UserPermissionTests(TestDataMixin, TestCase):
 
     def setUp(self):
-        super(UserPermissionTests, self).setUp()
+        super().setUp()
         self.user = User.objects.get(username='jack')
         self.ctype = ContentType.objects.create(
             model='bar', app_label='fake-for-guardian-tests')
@@ -117,7 +117,7 @@ class UserPermissionTests(TestDataMixin, TestCase):
 class GroupPermissionTests(TestDataMixin, TestCase):
 
     def setUp(self):
-        super(GroupPermissionTests, self).setUp()
+        super().setUp()
         self.user = User.objects.get(username='jack')
         self.group, created = Group.objects.get_or_create(name='jackGroup')
         self.user.groups.add(self.group)

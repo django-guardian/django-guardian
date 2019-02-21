@@ -31,7 +31,7 @@ user_model_path = get_user_model_path()
 class PermissionRequiredTest(TestDataMixin, TestCase):
 
     def setUp(self):
-        super(PermissionRequiredTest, self).setUp()
+        super().setUp()
         self.anon = AnonymousUser()
         self.user = User.objects.get_or_create(username='jack')[0]
         self.group = Group.objects.get_or_create(name='jackGroup')[0]
