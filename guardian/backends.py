@@ -82,7 +82,7 @@ class ObjectPermissionBackend(object):
             return False
 
         if '.' in perm:
-            app_label, _ = perm.split('.', maxsplit=1)
+            app_label, _ = perm.split('.', 1)
             if app_label != obj._meta.app_label:
                 # Check the content_type app_label when permission
                 # and obj app labels don't match.
