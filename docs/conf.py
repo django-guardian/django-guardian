@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-#
 # django-guardian documentation build configuration file, created by
 # sphinx-quickstart on Thu Feb 18 23:18:28 2010.
 #
