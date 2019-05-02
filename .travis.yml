@@ -13,7 +13,6 @@ notifications:
   irc: "irc.freenode.net#django-guardian"
 
 templates:
-  django20: &django20 DJANGO_VERSION=2.0.*
   django21: &django21 DJANGO_VERSION=2.1.*
   django22: &django22 DJANGO_VERSION=2.2.*
   djangomaster: &djangomaster DJANGO_VERSION=master
@@ -31,9 +30,6 @@ templates:
 matrix:
   fast_finish: true
   include:
-    - { python: 3.5, env: [*django20, *postgres], <<: *pgdb}
-    - { python: 3.5, env: [*django20, *mysql], <<: *mariadb}
-    - { python: 3.5, env: [*django20, *sqlite]}
     - { python: 3.5, env: [*django21, *postgres], <<: *pgdb}
     - { python: 3.5, env: [*django21, *mysql], <<: *mariadb}
     - { python: 3.5, env: [*django21, *sqlite]}
@@ -41,9 +37,6 @@ matrix:
     - { python: 3.5, env: [*django22, *mysql], <<: *mariadb}
     - { python: 3.5, env: [*django22, *sqlite]}
 
-    - { python: 3.6, env: [*django20, *postgres], <<: *pgdb}
-    - { python: 3.6, env: [*django20, *mysql], <<: *mariadb}
-    - { python: 3.6, env: [*django20, *sqlite]}
     - { python: 3.6, env: [*django21, *postgres], <<: *pgdb}
     - { python: 3.6, env: [*django21, *mysql], <<: *mariadb}
     - { python: 3.6, env: [*django21, *sqlite]}
@@ -54,9 +47,6 @@ matrix:
     - { python: 3.6, env: [*djangomaster, *mysql], <<: *mariadb}
     - { python: 3.6, env: [*djangomaster, *sqlite]}
 
-    - { python: 3.7, env: [*django20, *postgres], <<: *pgdb}
-    - { python: 3.7, env: [*django20, *mysql], <<: *mariadb}
-    - { python: 3.7, env: [*django20, *sqlite]}
     - { python: 3.7, env: [*django21, *postgres], <<: *pgdb}
     - { python: 3.7, env: [*django21, *mysql], <<: *mariadb}
     - { python: 3.7, env: [*django21, *sqlite]}
