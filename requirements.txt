@@ -1,4 +1,4 @@
-Django>=2.0
+Django>=2.1
 django-environ
 bumpversion
 mock
