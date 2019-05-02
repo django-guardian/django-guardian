@@ -86,4 +86,4 @@ To enroll a new relase you should perform the following task:
 * Commit changes of codebase, e.g. ``git commit -m "Release 1.4.8" -a``.
 * Tag a new release, e.g. ``git tag "v1.4.8"``.
 * Push new tag to repo - ``git push origin --tags``.
-* Push a new release to PyPI - ``python setup.py sdist bdist_wheel upload``.
+* Push a new release to PyPI - ``python3 setup.py sdist bdist_wheel upload``.
