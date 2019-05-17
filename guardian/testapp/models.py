@@ -1,6 +1,9 @@
 from __future__ import unicode_literals
+
+import uuid
 from datetime import datetime
 
+from django.contrib.auth.base_user import BaseUserManager
 from django.db import models
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import AbstractUser, AbstractBaseUser
@@ -109,3 +112,65 @@ class CustomUsernameUser(AbstractBaseUser, GuardianUserMixin):
 
     def get_short_name(self):
         return self.email
+
+class CustomUuidUserManager(BaseUserManager):
+    def create_user(self, username, password=None):
+        if not username:
+            raise ValueError('Users must have an email address')
+
+        user = self.model(
+            username=username,
+        )
+
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, username, password):
+        user = self.create_user(
+            username,
+            password=password,
+        )
+        user.staff = True
+        user.admin = True
+        user.save(using=self._db)
+        return user
+
+
+class CustomUuidUser(AbstractBaseUser, GuardianUserMixin):
+    custom_id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    username = models.CharField(max_length=100, unique=True)
+    active = models.BooleanField(default=True)
+    staff = models.BooleanField(default=False) # a admin user; non super-user
+    admin = models.BooleanField(default=False) # a superuser
+
+    USERNAME_FIELD = 'username'
+    objects = CustomUuidUserManager()
+
+    def get_full_name(self):
+        return self.username
+
+    def get_short_name(self):
+        return self.username
+
+    def has_perm(self, perm, obj=None):
+        return True
+
+    def has_module_perms(self, app_label):
+        return True
+
+    @property
+    def is_staff(self):
+        return self.staff
+
+    @property
+    def is_admin(self):
+        return self.admin
+
+    @property
+    def is_superuser(self):
+        return self.admin
+
+    @property
+    def is_active(self):
+        return self.active
