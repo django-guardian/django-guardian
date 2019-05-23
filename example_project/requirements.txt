@@ -1,6 +1,5 @@
-Django==1.9.4
-django-environ==0.4.0
-django-rosetta==0.7.8
-microsofttranslator==0.7
-polib==1.0.7
-six==1.10.0
+Django==1.11
+django-environ==0.4.5
+django-rosetta==0.9.0
+microsofttranslator==0.8
+polib==1.1.0

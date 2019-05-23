@@ -28,7 +28,8 @@ class Migration(migrations.Migration):
             ],
             options={
                 'get_latest_by': 'created_at',
-                'permissions': (('view_articlew', 'Can view article'),),
+                'default_permissions': ('add', 'change', 'delete'),
+                'permissions': (('view_article', 'Can view article'),),
             },
         ),
         migrations.CreateModel(

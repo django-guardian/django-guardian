@@ -1,6 +1,5 @@
 import os
 import sys
-from django.conf import global_settings
 import environ
 
 env = environ.Env()
@@ -9,7 +8,6 @@ abspath = lambda *p: os.path.abspath(os.path.join(*p))
 
 
 DEBUG = True
-TEMPLATE_DEBUG = DEBUG
 SECRET_KEY = 'CHANGE_THIS_TO_SOMETHING_UNIQUE_AND_SECURE'
 
 PROJECT_ROOT = abspath(os.path.dirname(__file__))
@@ -45,7 +43,7 @@ try:
 except ImportError:
     pass
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -59,26 +57,6 @@ STATICFILES_DIRS = [abspath(PROJECT_ROOT, 'static')]
 GUARDIAN_RAISE_403 = True
 
 ROOT_URLCONF = 'urls'
-
-TEMPLATE_CONTEXT_PROCESSORS = (
-    'core.context_processors.version',
-    "django.contrib.auth.context_processors.auth",
-    "django.template.context_processors.debug",
-    "django.template.context_processors.i18n",
-    "django.template.context_processors.media",
-    "django.template.context_processors.static",
-    "django.template.context_processors.request",
-    "django.template.context_processors.tz",
-    "django.contrib.messages.context_processors.messages"
-)
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-)
-
-TEMPLATE_DIRS = (
-    os.path.join(os.path.dirname(__file__), 'templates'),
-)
 
 SITE_ID = 1
 
@@ -107,11 +85,26 @@ AUTH_USER_MODEL = 'core.CustomUser'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': TEMPLATE_DIRS,
+        'DIRS': (
+            os.path.join(os.path.dirname(__file__), 'templates'),
+        ),
         'OPTIONS': {
-            'debug': TEMPLATE_DEBUG,
-            'loaders': TEMPLATE_LOADERS,
-            'context_processors': TEMPLATE_CONTEXT_PROCESSORS,
+            'debug': DEBUG,
+            'loaders': (
+                'django.template.loaders.filesystem.Loader',
+                'django.template.loaders.app_directories.Loader',
+            ),
+            'context_processors': (
+                'core.context_processors.version',
+                'django.contrib.auth.context_processors.auth',
+                'django.template.context_processors.debug',
+                'django.template.context_processors.i18n',
+                'django.template.context_processors.media',
+                'django.template.context_processors.static',
+                'django.template.context_processors.request',
+                'django.template.context_processors.tz',
+                'django.contrib.messages.context_processors.messages'
+            ),
         },
     },
 ]

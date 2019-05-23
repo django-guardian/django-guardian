@@ -1,3 +1,16 @@
+Release 1.5.1 (May 2, 2019)
+==========================
+
+* Restore compatibility with Python 2.7
+
+.. important::
+		The 1.5.x release line will be the last one that has support for Python 2.7.
+
+Release 1.5.0 (Jan 31, 2019)
+==========================
+
+* Updates for compatibility with latest Python and Django versions.
+
 Release 1.4.9 (Jul 01, 2017)
 ============================
 
@@ -45,7 +58,7 @@ Release 1.4.5 (Aug 09, 2016)
 * Moved queryset support in remove_perms to its own function
 * Consolidated {User,Group}ObjectPermissionManager, move logic of bulk_*_perm
   to managers
-* `assign_perm` and `remove_perm` shortcuts accept `Permission` 
+* `assign_perm` and `remove_perm` shortcuts accept `Permission`
   instance as `perm` and `QuerySet` as `obj` too.
 * Consolidated bulk_assign_perm to assign_perm and bulk_remove_perm to remove_perm
 * Upgraded Grappelli templates breadcrumbs block to new Django 1.9 and

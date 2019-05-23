@@ -33,14 +33,14 @@ and hook guardian's authentication backend::
 
    .. code-block:: python
 
-      from guardian.compat import get_user_model
+      from django.contrib.auth import get_user_model
       User = get_user_model()
       anon = User.get_anonymous()
-      anon.is_anonymous()   # returns False
+      anon.is_anonymous  # returns False
 
 We can change id to whatever we like. Project should be now ready to use object
 permissions.
- 
+
 
 Optional settings
 =================
@@ -114,7 +114,7 @@ environment.
 
 Defaults to ``"AnonymousUser"``.
 
-.. seealso:: https://docs.djangoproject.com/en/1.5/topics/auth/customizing/#substituting-a-custom-user-model
+.. seealso:: https://docs.djangoproject.com/en/2.1/topics/auth/customizing/#substituting-a-custom-user-model
 
 
 .. setting:: GUARDIAN_GET_INIT_ANONYMOUS_USER

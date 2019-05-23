@@ -3,11 +3,12 @@ from __future__ import unicode_literals
 from django.apps import apps as django_apps
 auth_app = django_apps.get_app_config("auth")
 
+from django.contrib.auth import get_user_model
+from django.contrib.auth.management import create_permissions
 from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.test import TestCase
 
-from guardian.compat import get_user_model, create_permissions, get_model_name
 from guardian.utils import clean_orphan_obj_perms
 from guardian.shortcuts import assign_perm
 from guardian.models import Group
@@ -15,7 +16,7 @@ from guardian.testapp.tests.conf import skipUnlessTestApp
 
 
 User = get_user_model()
-user_module_name = get_model_name(User)
+user_module_name = User._meta.model_name
 
 
 @skipUnlessTestApp
@@ -30,7 +31,7 @@ class OrphanedObjectPermissionsTest(TestCase):
         self.target_obj2 = ContentType.objects.create(
             model='bar', app_label='fake-for-guardian-tests')
         # Required if MySQL backend is used :/
-        create_permissions(auth_app, [], 1)
+        create_permissions(auth_app, 1)
 
         self.user = User.objects.create(username='user')
         self.group = Group.objects.create(name='group')

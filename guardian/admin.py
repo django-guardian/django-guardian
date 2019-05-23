@@ -6,17 +6,16 @@ from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
-from django.shortcuts import get_object_or_404, redirect, render_to_response, render
-from django.template import RequestContext
+from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import ugettext
-from guardian.compat import get_model_name, get_user_model, url, reverse
+from guardian.compat import url
 from guardian.forms import GroupObjectPermissionsForm, UserObjectPermissionsForm
 from guardian.models import Group
 from guardian.shortcuts import (get_group_perms, get_groups_with_perms, get_perms_for_model, get_user_perms,
                                 get_users_with_perms)
-
-import django
 
 
 class AdminUserObjectPermissionsForm(UserObjectPermissionsForm):
@@ -60,12 +59,7 @@ class GuardedModelAdminMixin(object):
     include_object_permissions_urls = True
 
     def get_queryset(self, request):
-        # Prefer the Django >= 1.6 interface but maintain
-        # backward compatibility
-        method = getattr(
-            super(GuardedModelAdminMixin, self), 'get_queryset',
-            getattr(super(GuardedModelAdminMixin, self), 'queryset', None))
-        qs = method(request)
+        qs = super(GuardedModelAdminMixin, self).get_queryset(request)
 
         if request.user.is_superuser:
             return qs
@@ -96,7 +90,7 @@ class GuardedModelAdminMixin(object):
         """
         urls = super(GuardedModelAdminMixin, self).get_urls()
         if self.include_object_permissions_urls:
-            info = self.model._meta.app_label, get_model_name(self.model)
+            info = self.model._meta.app_label, self.model._meta.model_name
             myurls = [
                 url(r'^(?P<object_pk>.+)/permissions/$',
                     view=self.admin_site.admin_view(
@@ -117,14 +111,11 @@ class GuardedModelAdminMixin(object):
     def get_obj_perms_base_context(self, request, obj):
         """
         Returns context dictionary with common admin and object permissions
-        related content. It uses AdminSite.each_context (available in Django >= 1.8,
+        related content. It uses AdminSite.each_context,
         making sure all required template vars are in the context.
         """
-        if django.VERSION >= (1, 8):
-            context = self.admin_site.each_context(request)
-        else:
-            context = {}
-        context.update( {
+        context = self.admin_site.each_context(request)
+        context.update({
             'adminform': {'model_admin': self},
             'media': self.media,
             'object': obj,
@@ -149,12 +140,7 @@ class GuardedModelAdminMixin(object):
             post_url = reverse('admin:index', current_app=self.admin_site.name)
             return redirect(post_url)
 
-        try:
-            # django >= 1.7
-            from django.contrib.admin.utils import unquote
-        except ImportError:
-            # django < 1.7
-            from django.contrib.admin.util import unquote
+        from django.contrib.admin.utils import unquote
         obj = get_object_or_404(self.get_queryset(
             request), pk=unquote(object_pk))
         users_perms = OrderedDict(
@@ -179,7 +165,7 @@ class GuardedModelAdminMixin(object):
             info = (
                 self.admin_site.name,
                 self.model._meta.app_label,
-                get_model_name(self.model)
+                self.model._meta.model_name,
             )
             if user_form.is_valid():
                 user_id = user_form.cleaned_data['user'].pk
@@ -194,7 +180,7 @@ class GuardedModelAdminMixin(object):
             info = (
                 self.admin_site.name,
                 self.model._meta.app_label,
-                get_model_name(self.model)
+                self.model._meta.model_name,
             )
             if group_form.is_valid():
                 group_id = group_form.cleaned_data['group'].id
@@ -216,10 +202,7 @@ class GuardedModelAdminMixin(object):
         # https://github.com/django/django/commit/cf1f36bb6eb34fafe6c224003ad585a647f6117b
         request.current_app = self.admin_site.name
 
-        if django.VERSION >= (1, 10):
-            return render(request, self.get_obj_perms_manage_template(), context)
-
-        return render_to_response(self.get_obj_perms_manage_template(), context, RequestContext(request))
+        return render(request, self.get_obj_perms_manage_template(), context)
 
     def get_obj_perms_manage_template(self):
         """
@@ -255,7 +238,7 @@ class GuardedModelAdminMixin(object):
             info = (
                 self.admin_site.name,
                 self.model._meta.app_label,
-                get_model_name(self.model)
+                self.model._meta.model_name,
             )
             url = reverse(
                 '%s:%s_%s_permissions_manage_user' % info,
@@ -270,10 +253,7 @@ class GuardedModelAdminMixin(object):
 
         request.current_app = self.admin_site.name
 
-        if django.VERSION >= (1, 10):
-            return render(request, self.get_obj_perms_manage_user_template(), context)
-
-        return render_to_response(self.get_obj_perms_manage_user_template(), context, RequestContext(request))
+        return render(request, self.get_obj_perms_manage_user_template(), context)
 
     def get_obj_perms_manage_user_template(self):
         """
@@ -331,7 +311,7 @@ class GuardedModelAdminMixin(object):
             info = (
                 self.admin_site.name,
                 self.model._meta.app_label,
-                get_model_name(self.model)
+                self.model._meta.model_name,
             )
             url = reverse(
                 '%s:%s_%s_permissions_manage_group' % info,
@@ -346,10 +326,7 @@ class GuardedModelAdminMixin(object):
 
         request.current_app = self.admin_site.name
 
-        if django.VERSION >= (1, 10):
-            return render(request, self.get_obj_perms_manage_group_template(), context)
-
-        return render_to_response(self.get_obj_perms_manage_group_template(), context, RequestContext(request))
+        return render(request, self.get_obj_perms_manage_group_template(), context)
 
     def get_obj_perms_manage_group_template(self):
         """

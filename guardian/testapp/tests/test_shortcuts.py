@@ -1,5 +1,9 @@
 from __future__ import unicode_literals
 
+import warnings
+
+import django
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.query import QuerySet
@@ -7,8 +11,7 @@ from django.test import TestCase
 
 from guardian.shortcuts import get_perms_for_model
 from guardian.core import ObjectPermissionChecker
-from guardian.compat import get_user_model
-from guardian.compat import get_user_permission_full_codename, get_model_name
+from guardian.compat import get_user_permission_full_codename
 from guardian.shortcuts import assign
 from guardian.shortcuts import assign_perm
 from guardian.shortcuts import remove_perm
@@ -22,25 +25,25 @@ from guardian.shortcuts import get_objects_for_group
 from guardian.exceptions import MixedContentTypeError
 from guardian.exceptions import NotUserNorGroup
 from guardian.exceptions import WrongAppError
+from guardian.exceptions import MultipleIdentityAndObjectError
 from guardian.testapp.models import NonIntPKModel
 from guardian.testapp.tests.test_core import ObjectPermissionTestCase
 from guardian.models import Group, Permission
 
-import warnings
-
 
 User = get_user_model()
 user_app_label = User._meta.app_label
-user_module_name = get_model_name(User)
+user_module_name = User._meta.model_name
 
 
 class ShortcutsTests(ObjectPermissionTestCase):
 
     def test_get_perms_for_model(self):
-        self.assertEqual(get_perms_for_model(self.user).count(), 3)
+        expected_perms_amount = 3 if django.VERSION < (2, 1) else 4
+        self.assertEqual(get_perms_for_model(self.user).count(), expected_perms_amount)
         self.assertTrue(list(get_perms_for_model(self.user)) ==
                         list(get_perms_for_model(User)))
-        self.assertEqual(get_perms_for_model(Permission).count(), 3)
+        self.assertEqual(get_perms_for_model(Permission).count(), expected_perms_amount)
 
         model_str = 'contenttypes.ContentType'
         self.assertEqual(
@@ -125,6 +128,60 @@ class AssignPermTest(ObjectPermissionTestCase):
             self.assertTrue(isinstance(warns[0].message, DeprecationWarning))
 
 
+class MultipleIdentitiesOperationsTest(ObjectPermissionTestCase):
+    """ 
+    Tests assignment of permission to multiple users or groups 
+    """
+    def setUp(self):
+        super(MultipleIdentitiesOperationsTest, self).setUp()
+        self.users_list = jim, bob = [
+            User.objects.create_user(username='jim'),
+            User.objects.create_user(username='bob')
+        ]
+        self.groups_list = jim_group, bob_group = [
+            Group.objects.create(name='jimgroup'),
+            Group.objects.create(name='bobgroup')
+        ]
+        jim_group.user_set.add(jim)
+        bob_group.user_set.add(bob)
+        self.users_qs = User.objects.exclude(username='AnonymousUser')
+        self.groups_qs = Group.objects.all()
+
+    def test_assign_to_many_users_queryset(self):
+        assign_perm("add_contenttype", self.users_qs, self.ctype)
+        assign_perm(self.get_permission("delete_contenttype"), self.users_qs, self.ctype)
+        for user in self.users_list:
+            self.assertTrue(user.has_perm("add_contenttype", self.ctype))
+            self.assertTrue(user.has_perm("delete_contenttype", self.ctype))
+
+    def test_assign_to_many_users_list(self):
+        assign_perm("add_contenttype", self.users_list, self.ctype)
+        assign_perm(self.get_permission("delete_contenttype"), self.users_list, self.ctype)
+        for user in self.users_list:
+            self.assertTrue(user.has_perm("add_contenttype", self.ctype))
+            self.assertTrue(user.has_perm("delete_contenttype", self.ctype))
+
+    def test_assign_to_many_groups_queryset(self):
+        assign_perm("add_contenttype", self.groups_qs, self.ctype)
+        assign_perm(self.get_permission("delete_contenttype"), self.groups_qs, self.ctype)
+        for user in self.users_list:
+            self.assertTrue(user.has_perm("add_contenttype", self.ctype))
+            self.assertTrue(user.has_perm("delete_contenttype", self.ctype))
+
+    def test_assign_to_many_groups_list(self):
+        assign_perm("add_contenttype", self.groups_list, self.ctype)
+        assign_perm(self.get_permission("delete_contenttype"), self.groups_list, self.ctype)
+        for user in self.users_list:
+            self.assertTrue(user.has_perm("add_contenttype", self.ctype))
+            self.assertTrue(user.has_perm("delete_contenttype", self.ctype))
+
+    def test_assign_to_multiple_identity_and_obj(self):
+        with self.assertRaises(MultipleIdentityAndObjectError):
+            assign_perm("add_contenttype", self.users_list, self.ctype_qset)
+        with self.assertRaises(MultipleIdentityAndObjectError):
+            assign_perm("add_contenttype", self.users_qs, self.ctype_qset)
+
+
 class RemovePermTest(ObjectPermissionTestCase):
     """
     Tests object permissions removal.
@@ -165,7 +222,7 @@ class RemovePermTest(ObjectPermissionTestCase):
         assign_perm("change_contenttype", self.user, self.ctype_qset)
         remove_perm("change_contenttype", self.user, self.ctype_qset.none())
 
-        self.assertEquals(list(self.ctype_qset.none()), [])
+        self.assertEqual(list(self.ctype_qset.none()), [])
         for obj in self.ctype_qset:
             self.assertTrue(self.user.has_perm("change_contenttype", obj))
 
@@ -277,19 +334,36 @@ class GetUsersWithPermsTest(TestCase):
         # assign perms to groups
         assign_perm("change_contenttype", self.group1, self.obj1)
         assign_perm("delete_contenttype", self.group2, self.obj1)
+        assign_perm("add_contenttype", self.group3, self.obj2)
+
+        result = get_users_with_perms(self.obj1, only_with_perms_in=('change_contenttype', 'delete_contenttype'), with_group_users=True)
+        result_vals = result.values_list('username', flat=True)
+
+        self.assertEqual(
+            set(result_vals),
+            set((self.user1.username, self.user2.username)),
+        )
+
+    def test_only_with_perms_in_and_not_with_group_users(self):
+        self.user1.groups.add(self.group1)
+        self.user2.groups.add(self.group2)
+        self.user3.groups.add(self.group3)
+
+        # assign perms to groups
+        assign_perm("change_contenttype", self.group1, self.obj1)
+        assign_perm("delete_contenttype", self.group2, self.obj1)
         assign_perm("delete_contenttype", self.group3, self.obj2)
 
         # assign perms to user
         assign_perm("change_contenttype", self.user2, self.obj1)
 
-        result = get_users_with_perms(self.obj1, only_with_perms_in=('change_contenttype','delete_contenttype'), with_group_users=False)
+        result = get_users_with_perms(self.obj1, only_with_perms_in=('change_contenttype', 'delete_contenttype'), with_group_users=False)
         result_vals = result.values_list('username', flat=True)
 
         self.assertEqual(
             set(result_vals),
             set((self.user2.username,)),
         )
-
 
     def test_only_with_perms_in_attached(self):
         assign_perm("change_contenttype", self.user1, self.obj1)
@@ -300,7 +374,7 @@ class GetUsersWithPermsTest(TestCase):
         result = get_users_with_perms(self.obj1, only_with_perms_in=('delete_contenttype',),
             attach_perms=True)
 
-        expected = { self.user2 : ('change_contenttype', 'delete_contenttype') }
+        expected = {self.user2: ('change_contenttype', 'delete_contenttype')}
         self.assertEqual(result.keys(), expected.keys())
         for key, perms in result.items():
             self.assertEqual(set(perms), set(expected[key]))
@@ -434,7 +508,10 @@ class GetUsersWithPermsTest(TestCase):
         self.assertEqual(set(get_group_perms(self.group1, self.obj1)), set(['delete_contenttype']))
         self.assertEqual(set(get_group_perms(self.group2, self.obj1)), set([]))
         self.assertEqual(set(get_group_perms(admin, self.obj1)), set([]))
-        self.assertEqual(set(get_perms(admin, self.obj1)), set(['add_contenttype', 'change_contenttype', 'delete_contenttype']))
+        expected_permissions = ['add_contenttype', 'change_contenttype', 'delete_contenttype']
+        if django.VERSION >= (2, 1):
+            expected_permissions.append('view_contenttype')
+        self.assertEqual(set(get_perms(admin, self.obj1)), set(expected_permissions))
         self.assertEqual(set(get_perms(self.user1, self.obj1)), set(['change_contenttype', 'delete_contenttype']))
         self.assertEqual(set(get_perms(self.user2, self.obj1)), set(['delete_contenttype']))
         self.assertEqual(set(get_perms(self.group1, self.obj1)), set(['delete_contenttype']))
@@ -452,6 +529,8 @@ class GetUsersWithPermsTest(TestCase):
             admin: ["add_contenttype", "change_contenttype", "delete_contenttype"],
             self.user2: ["delete_contenttype"]
         }
+        if django.VERSION >= (2, 1):
+            expected[admin].append("view_contenttype")
         result = get_users_with_perms(self.obj1, attach_perms=True,
             with_superusers=False, with_group_users=True)
         self.assertEqual(result.keys(), expected.keys())
@@ -1124,7 +1203,7 @@ class GetObjectsForGroup(TestCase):
 
         objects = get_objects_for_group(
             self.group1, ['contenttypes.change_contenttype'])
-        self.assertEquals(set(objects),
+        self.assertEqual(set(objects),
                           set(ContentType.objects.all()))
 
     def test_has_global_permission_and_object_based_permission(self):
@@ -1133,7 +1212,7 @@ class GetObjectsForGroup(TestCase):
 
         objects = get_objects_for_group(self.group1, [
                                         'contenttypes.change_contenttype', 'contenttypes.delete_contenttype'], any_perm=False)
-        self.assertEquals(set(objects),
+        self.assertEqual(set(objects),
                           set([self.obj1]))
 
     def test_has_global_permission_and_object_based_permission_any_perm(self):
@@ -1142,7 +1221,7 @@ class GetObjectsForGroup(TestCase):
 
         objects = get_objects_for_group(self.group1, [
                                         'contenttypes.change_contenttype', 'contenttypes.delete_contenttype'], any_perm=True)
-        self.assertEquals(set(objects),
+        self.assertEqual(set(objects),
                           set(ContentType.objects.all()))
 
     def test_has_global_permission_and_object_based_permission_3perms(self):
@@ -1151,8 +1230,8 @@ class GetObjectsForGroup(TestCase):
         assign_perm('contenttypes.add_contenttype', self.group1, self.obj2)
 
         objects = get_objects_for_group(self.group1, [
-                                        'contenttypes.change_contenttype', 'contenttypes.delete_contenttype',  'contenttypes.add_contenttype'], any_perm=False)
-        self.assertEquals(set(objects),
+                                        'contenttypes.change_contenttype', 'contenttypes.delete_contenttype', 'contenttypes.add_contenttype'], any_perm=False)
+        self.assertEqual(set(objects),
                           set())
 
     def test_exception_different_ctypes(self):

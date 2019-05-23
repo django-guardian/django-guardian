@@ -1,11 +1,13 @@
 from __future__ import unicode_literals
+
+from itertools import chain
+
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.db.models.query import QuerySet
 from django.utils.encoding import force_text
-from guardian.compat import get_user_model
 from guardian.ctypes import get_content_type
 from guardian.utils import get_group_obj_perms_model, get_identity, get_user_obj_perms_model
-from itertools import chain
 
 
 def _get_pks_model_and_ctype(objects):
@@ -71,7 +73,8 @@ class ObjectPermissionChecker(object):
             return False
         elif self.user and self.user.is_superuser:
             return True
-        perm = perm.split('.')[-1]
+        if '.' in perm:
+            _, perm = perm.split('.', 1)
         return perm in self.get_perms(obj)
 
     def get_group_filters(self, obj):
@@ -157,11 +160,7 @@ class ObjectPermissionChecker(object):
                 group_perms = self.get_group_perms(obj)
                 perms = list(set(chain(user_perms, group_perms)))
             else:
-                group_filters = self.get_group_filters(obj)
-                perms = list(set(chain(*Permission.objects
-                                       .filter(content_type=ctype)
-                                       .filter(**group_filters)
-                                       .values_list("codename"))))
+                perms = list(set(self.get_group_perms(obj)))
             self._obj_perms_cache[key] = perms
         return self._obj_perms_cache[key]
 

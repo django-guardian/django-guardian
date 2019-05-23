@@ -4,19 +4,17 @@ import copy
 from django import forms
 from django.conf import settings
 from django.contrib import admin
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.http import HttpRequest
 from django.test import TestCase
 from django.test.client import Client
+from django.urls import reverse
 
 from guardian.admin import GuardedModelAdmin
-from guardian.compat import get_user_model, get_model_name
-from guardian.compat import reverse
 from guardian.compat import str
 from guardian.shortcuts import get_perms
 from guardian.shortcuts import get_perms_for_model
-from guardian.testapp.tests.conf import TEST_SETTINGS
-from guardian.testapp.tests.conf import override_settings
 from guardian.models import Group
 from guardian.testapp.tests.conf import skipUnlessTestApp
 from guardian.testapp.models import LogEntryWithGroup as LogEntry
@@ -34,7 +32,6 @@ except admin.sites.NotRegistered:
 admin.site.register(ContentType, ContentTypeGuardedAdmin)
 
 
-@override_settings(**TEST_SETTINGS)
 class AdminTests(TestCase):
 
     def setUp(self):
@@ -45,7 +42,7 @@ class AdminTests(TestCase):
         self.client = Client()
         self.obj = ContentType.objects.create(
             model='bar', app_label='fake-for-guardian-tests')
-        self.obj_info = self.obj._meta.app_label, get_model_name(self.obj)
+        self.obj_info = self.obj._meta.app_label, self.obj._meta.model_name
 
     def tearDown(self):
         self.client.logout()

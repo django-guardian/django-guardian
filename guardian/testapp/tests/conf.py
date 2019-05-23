@@ -1,20 +1,9 @@
 from __future__ import unicode_literals
-import os
 import unittest
-from guardian.utils import abspath
 from guardian.conf import settings as guardian_settings
 from django.conf import settings
 from django.conf import UserSettingsHolder
 from django.utils.functional import wraps
-
-
-THIS = abspath(os.path.dirname(__file__))
-TEST_TEMPLATES_DIR = abspath(THIS, 'templates')
-
-
-TEST_SETTINGS = dict(
-    TEMPLATE_DIRS=[TEST_TEMPLATES_DIR],
-)
 
 
 def skipUnlessTestApp(obj):
@@ -28,11 +17,8 @@ class TestDataMixin(object):
     def setUp(self):
         super(TestDataMixin, self).setUp()
         from django.contrib.auth.models import Group
-        try:
-            from django.contrib.auth import get_user_model
-            User = get_user_model()
-        except ImportError:
-            from django.contrib.auth.models import User
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
         Group.objects.create(pk=1, name='admins')
         jack_group = Group.objects.create(pk=2, name='jackGroup')
         User.objects.get_or_create(username=guardian_settings.ANONYMOUS_USER_NAME)

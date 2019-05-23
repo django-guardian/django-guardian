@@ -1,10 +1,10 @@
 from __future__ import unicode_literals
 from django.test import TestCase
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.models import Group, AnonymousUser
 from django.db import models
 
-from guardian.compat import get_user_model
 from guardian.testapp.tests.conf import skipUnlessTestApp
 from guardian.testapp.tests.test_core import ObjectPermissionTestCase
 from guardian.testapp.models import Project
@@ -52,6 +52,26 @@ class GetIdentityTest(ObjectPermissionTestCase):
         self.assertRaises(NotUserNorGroup, get_identity, 1)
         self.assertRaises(NotUserNorGroup, get_identity, "User")
         self.assertRaises(NotUserNorGroup, get_identity, User)
+
+    def test_multiple_user_qs(self):
+        user, group = get_identity(User.objects.all())
+        self.assertIsInstance(user, models.QuerySet)
+        self.assertIsNone(group)
+
+    def test_multiple_user_list(self):
+        user, group = get_identity([self.user])
+        self.assertIsInstance(user, list)
+        self.assertIsNone(group)
+
+    def test_multiple_group_qs(self):
+        user, group = get_identity(Group.objects.all())
+        self.assertIsInstance(group, models.QuerySet)
+        self.assertIsNone(user)
+
+    def test_multiple_group_list(self):
+        user, group = get_identity([self.group])
+        self.assertIsInstance(group, list)
+        self.assertIsNone(user)
 
 
 @skipUnlessTestApp

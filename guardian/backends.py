@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
+from django.contrib.auth import get_user_model
 from django.db import models
-from guardian.compat import get_user_model, is_authenticated
 from guardian.conf import settings
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
@@ -27,7 +27,7 @@ def check_user_support(user_obj):
     """
     # This is how we support anonymous users - simply try to retrieve User
     # instance and perform checks for that predefined user
-    if not is_authenticated(user_obj):
+    if not user_obj.is_authenticated:
         # If anonymous user permission is disabled then they are always
         # unauthorized
         if settings.ANONYMOUS_USER_NAME is None:
@@ -82,7 +82,7 @@ class ObjectPermissionBackend(object):
             return False
 
         if '.' in perm:
-            app_label, perm = perm.split('.')
+            app_label, _ = perm.split('.', 1)
             if app_label != obj._meta.app_label:
                 # Check the content_type app_label when permission
                 # and obj app labels don't match.

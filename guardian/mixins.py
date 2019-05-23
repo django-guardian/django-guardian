@@ -1,5 +1,4 @@
 from __future__ import unicode_literals
-from collections import Iterable
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, REDIRECT_FIELD_NAME
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
@@ -7,6 +6,12 @@ from guardian.compat import basestring
 from guardian.models import UserObjectPermission
 from guardian.utils import get_40x_or_None, get_anonymous_user
 from guardian.shortcuts import get_objects_for_user
+
+try:
+    from collections.abc import Iterable
+except ImportError:
+    # Python 2.7 compat
+    from collections import Iterable
 
 
 class LoginRequiredMixin(object):

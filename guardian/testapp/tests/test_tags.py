@@ -1,11 +1,12 @@
 from __future__ import unicode_literals
 
+from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.template import Template, Context, TemplateSyntaxError
 from django.test import TestCase
 
-from guardian.compat import get_user_model, template_debug_getter, template_debug_setter
 from guardian.core import ObjectPermissionChecker
 from guardian.exceptions import NotUserNorGroup
 from guardian.models import UserObjectPermission, GroupObjectPermission
@@ -82,11 +83,12 @@ class GetObjPermsTagTest(TestCase):
         ))
         context = {'some_obj': ContentType(), 'contenttype': self.ctype}
         # This test would raise TemplateSyntaxError instead of NotUserNorGroup
-        # if TEMPLATE_DEBUG is set to True during tests
-        tmp = template_debug_getter()
-        template_debug_setter(False)
+        # if the template option 'debug' is set to True during tests.
+        template_options = settings.TEMPLATES[0]['OPTIONS']
+        tmp = template_options.get('debug', False)
+        template_options['debug'] = False
         self.assertRaises(NotUserNorGroup, render, template, context)
-        template_debug_setter(tmp)
+        template_options['debug'] = tmp
 
     def test_superuser(self):
         user = User.objects.create(username='superuser', is_superuser=True)
@@ -132,14 +134,14 @@ class GetObjPermsTagTest(TestCase):
         output = render(template, context)
 
         self.assertEqual(output, 'delete_contenttype')
-        
+
     def test_checker(self):
         GroupObjectPermission.objects.assign_perm("delete_contenttype", self.group,
                                                           self.ctype)
 
         checker = ObjectPermissionChecker(self.user)
         checker.prefetch_perms(Group.objects.all())
-                
+
         template = ''.join((
             '{% load guardian_tags %}',
             '{% get_obj_perms group for contenttype as "obj_perms" checker %}',

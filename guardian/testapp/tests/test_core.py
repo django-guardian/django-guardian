@@ -3,18 +3,14 @@ from itertools import chain
 
 from django.conf import settings
 from guardian.conf import settings as guardian_settings
-# Try the new app settings (Django 1.7) and fall back to the old system
-try:
-    from django.apps import apps as django_apps
-    auth_app = django_apps.get_app_config("auth")
-except ImportError:
-    from django.contrib.auth import models as auth_app
+from django.apps import apps as django_apps
+from django.contrib.auth import get_user_model
+from django.contrib.auth.management import create_permissions
 from django.contrib.auth.models import Group, Permission, AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 
 from guardian.core import ObjectPermissionChecker
-from guardian.compat import get_user_model, create_permissions
 from guardian.exceptions import NotUserNorGroup
 from guardian.models import UserObjectPermission, GroupObjectPermission
 from guardian.shortcuts import assign_perm
@@ -22,6 +18,7 @@ from guardian.management import create_anonymous_user
 
 from guardian.testapp.models import Project
 
+auth_app = django_apps.get_app_config('auth')
 User = get_user_model()
 
 
@@ -59,7 +56,7 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
     def setUp(self):
         super(ObjectPermissionCheckerTest, self).setUp()
         # Required if MySQL backend is used :/
-        create_permissions(auth_app, [], 1)
+        create_permissions(auth_app, 1)
 
     def test_cache_for_queries_count(self):
         settings.DEBUG = True

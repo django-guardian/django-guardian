@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 import mock
 import unittest
 
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.auth.models import Group
 from django.contrib.auth.models import Permission
@@ -12,7 +14,6 @@ from django.test import TestCase
 
 import guardian
 from guardian.backends import ObjectPermissionBackend
-from guardian.compat import get_user_model
 from guardian.compat import get_user_model_path
 from guardian.compat import get_user_permission_codename
 from guardian.compat import basestring
@@ -289,10 +290,8 @@ class TestExceptions(TestCase):
 @unittest.skip("test is broken")
 class TestMonkeyPatch(TestCase):
 
-    @mock.patch('guardian.compat.get_user_model')
+    @mock.patch('django.contrib.auth.get_user_model')
     def test_monkey_patch(self, mocked_get_user_model):
-        # Import AbstractUser here as it is only available since Django 1.5
-        from django.contrib.auth.models import AbstractUser
 
         class CustomUserTestClass(AbstractUser):
             pass

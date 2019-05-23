@@ -3,7 +3,7 @@ from setuptools import setup
 from extras import RunFlakesCommand
 
 
-version = '1.4.9'
+version = '1.5.1'
 
 readme_file = os.path.join(os.path.dirname(__file__), 'README.rst')
 with open(readme_file, 'r') as f:
@@ -28,18 +28,15 @@ setup(
     ],
     include_package_data=True,
     license='BSD',
-    install_requires=[
-        'six',
-    ],
+    install_requires=[],
     tests_require=['mock', 'django-environ', 'pytest', 'pytest-django'],
     classifiers=['Development Status :: 5 - Production/Stable',
                  'Environment :: Web Environment',
                  'Framework :: Django',
-                 'Framework :: Django :: 1.8',
-                 'Framework :: Django :: 1.9',
-                 'Framework :: Django :: 1.10',
                  'Framework :: Django :: 1.11',
                  'Framework :: Django :: 2.0',
+                 'Framework :: Django :: 2.1',
+                 'Framework :: Django :: 2.2',
                  'Intended Audience :: Developers',
                  'License :: OSI Approved :: BSD License',
                  'Operating System :: OS Independent',
@@ -49,6 +46,7 @@ setup(
                  'Programming Language :: Python :: 3.4',
                  'Programming Language :: Python :: 3.5',
                  'Programming Language :: Python :: 3.6',
+                 'Programming Language :: Python :: 3.7',
                  ],
     test_suite='tests.main',
     cmdclass={'flakes': RunFlakesCommand},
