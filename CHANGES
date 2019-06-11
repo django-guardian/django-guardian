@@ -1,3 +1,8 @@
+Release 2.0.0 (June 11, 2019)
+==========================
+
+* Drop support for Python 2.7 & 3.4 and Django 1.11 & 2.0
+
 Release 1.5.1 (May 2, 2019)
 ==========================
 
