@@ -8,14 +8,14 @@ Introduction
 
 ``django-guardian`` is extending capabilities of Django's authorization
 facilities and as so, it changes it's security somehow. It is extremaly
-important to provide as simplest :ref:`api` as possible. 
+important to provide as simplest :ref:`api` as possible.
 
 According to OWASP_, `broken authentication
 <http://www.owasp.org/index.php/Top_10_2010-A3>`_ is one of most commonly
 security issue exposed in web applications.
 
 Having this on mind we tried to build small set of necessary functions and
-created a lot of testing scenarios. Neverteless, if anyone would found a bug in
+created a lot of testing scenarios. Nevertheless, if anyone would found a bug in
 this application, please take a minute and file it at `issue-tracker`_.
 Moreover, if someone would spot a *security hole* (a bug that might affect
 security of systems that use ``django-guardian`` as permission management
@@ -65,20 +65,20 @@ Result should be somehow similar to following::
     Destroying test database 'default'...
     Name                                  Stmts   Exec  Cover   Missing
     -------------------------------------------------------------------
-    guardian/__init__                         4      4   100%   
-    guardian/backends                        20     20   100%   
-    guardian/conf/__init__                    1      1   100%   
-    guardian/core                            29     29   100%   
-    guardian/exceptions                       8      8   100%   
-    guardian/management/__init__             10     10   100%   
-    guardian/managers                        40     40   100%   
-    guardian/models                          36     36   100%   
-    guardian/shortcuts                       30     30   100%   
-    guardian/templatetags/__init__            1      1   100%   
-    guardian/templatetags/guardian_tags      39     39   100%   
-    guardian/utils                           13     13   100%   
+    guardian/__init__                         4      4   100%
+    guardian/backends                        20     20   100%
+    guardian/conf/__init__                    1      1   100%
+    guardian/core                            29     29   100%
+    guardian/exceptions                       8      8   100%
+    guardian/management/__init__             10     10   100%
+    guardian/managers                        40     40   100%
+    guardian/models                          36     36   100%
+    guardian/shortcuts                       30     30   100%
+    guardian/templatetags/__init__            1      1   100%
+    guardian/templatetags/guardian_tags      39     39   100%
+    guardian/utils                           13     13   100%
     -------------------------------------------------------------------
-    TOTAL                                   231    231   100% 
+    TOTAL                                   231    231   100%
 
 
 Tox
