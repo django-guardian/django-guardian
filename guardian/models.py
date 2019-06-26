@@ -41,6 +41,9 @@ class BaseGenericObjectPermission(models.Model):
 
     class Meta:
         abstract = True
+        indexes = [
+            models.Index(fields=['content_type', 'object_pk']),
+        ]
 
 
 class UserObjectPermissionBase(BaseObjectPermission):
@@ -58,7 +61,7 @@ class UserObjectPermissionBase(BaseObjectPermission):
 
 class UserObjectPermission(UserObjectPermissionBase, BaseGenericObjectPermission):
 
-    class Meta:
+    class Meta(UserObjectPermissionBase.Meta, BaseGenericObjectPermission.Meta):
         unique_together = ['user', 'permission', 'object_pk']
 
 
@@ -77,7 +80,7 @@ class GroupObjectPermissionBase(BaseObjectPermission):
 
 class GroupObjectPermission(GroupObjectPermissionBase, BaseGenericObjectPermission):
 
-    class Meta:
+    class Meta(GroupObjectPermissionBase.Meta, BaseGenericObjectPermission.Meta):
         unique_together = ['group', 'permission', 'object_pk']
 
 
