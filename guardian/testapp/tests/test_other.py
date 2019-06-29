@@ -215,8 +215,14 @@ class ObjectPermissionBackendTests(TestCase):
         self.assertTrue(self.backend.supports_inactive_user)
 
     def test_authenticate(self):
-        self.assertEqual(self.backend.authenticate(
-            self.user.username, self.user.password), None)
+        self.assertEqual(
+            self.backend.authenticate(
+                request={},
+                username=self.user.username,
+                password=self.user.password
+            ),
+            None
+        )
 
     def test_has_perm_noobj(self):
         result = self.backend.has_perm(self.user, "change_contenttype")
