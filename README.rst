@@ -5,6 +5,12 @@ django-guardian
 .. image:: https://travis-ci.org/django-guardian/django-guardian.svg?branch=devel
   :target: https://travis-ci.org/django-guardian/django-guardian
 
+.. image:: https://img.shields.io/pypi/v/django-guardian.svg
+    :target: https://pypi.python.org/pypi/django-guardian
+
+.. image:: https://img.shields.io/pypi/pyversions/django-guardian.svg
+    :target: https://pypi.python.org/pypi/django-guardian
+
 ``django-guardian`` is an implementation of per object permissions [1]_ on top
 of Django's authorization backend
 
