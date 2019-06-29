@@ -9,6 +9,6 @@ if [ "${DJANGO_VERSION:0:3}" = "2.1" ] || \
    [ "$DJANGO_VERSION" = "master" ]; then
     pip install .;
     cd example_project;
-    python -Wa manage.py test --keepdb;
     python -Wa manage.py makemigrations --check --dry-run;
+    python -Wa manage.py test;
 fi;
