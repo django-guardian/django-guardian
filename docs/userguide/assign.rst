@@ -40,7 +40,7 @@ After we call management commands ``makemigrations`` and ``migrate``
 our *assign_task* permission would be added to default set of permissions.
 
 .. note::
-   By default, Django adds 3 permissions for each registered model:
+   By default, Django adds 4 permissions for each registered model:
 
    - *add_modelname*
    - *change_modelname*
