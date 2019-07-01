@@ -26,7 +26,7 @@ and hook guardian's authentication backend::
 
 .. note::
 
-   The Guardian anonymous user is different to the Django Anonymous user.  The
+   The Guardian anonymous user is different from the Django Anonymous user.  The
    Django Anonymous user does not have an entry in the database, however the
    Guardian anonymous user does. This means that the following code will return
    an unexpected result:
