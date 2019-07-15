@@ -48,7 +48,7 @@ our *assign_task* permission would be added to default set of permissions.
    - *view_modelname* (since Django 2.1)
 
    (where *modelname* is a simplified name of our model's class). See
-   https://docs.djangoproject.com/en/dev/topics/auth/default/#default-permissions for
+   https://docs.djangoproject.com/en/stable/topics/auth/default/#default-permissions for
    more detail.
 
 .. note::
