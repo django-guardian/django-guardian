@@ -27,7 +27,7 @@ other models:
 
 .. seealso::
 
-    https://docs.djangoproject.com/en/1.4/ref/contrib/contenttypes/#generic-relations
+    https://docs.djangoproject.com/en/stable/ref/contrib/contenttypes/#generic-relations
 
 Let's consider following model:
 
