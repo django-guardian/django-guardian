@@ -62,7 +62,7 @@ can use lower level ``ObjectPermissionChecker`` class which is described in
 the next section.
 
 There is also ``get_user_perms`` to get permissions assigned directly to the user
-(and not inherited from its superuser status or group membership.
+(and not inherited from its superuser status or group membership).
 Similarly, ``get_group_perms`` returns only permissions which are inferred
 through user's group membership.
 ``get_user_perms`` and ``get_group_perms`` are useful when you care what permissions
