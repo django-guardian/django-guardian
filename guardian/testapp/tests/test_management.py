@@ -22,11 +22,11 @@ class TestGetAnonymousUser(TestCase):
 
         anon = mocked_get_init_anon.return_value = mock.Mock()
 
-        create_anonymous_user('sender')
+        create_anonymous_user('sender', using='default')
 
         mocked_get_init_anon.assert_called_once_with(User)
 
-        anon.save.assert_called_once_with()
+        anon.save.assert_called_once_with(using='default')
 
     @mock.patch('guardian.management.guardian_settings')
     @override_settings(AUTH_USER_MODEL='testapp.CustomUsernameUser')
@@ -37,9 +37,9 @@ class TestGetAnonymousUser(TestCase):
         User = get_user_model()
 
         anon = mocked_get_init_anon.return_value = mock.Mock()
-        create_anonymous_user('sender')
+        create_anonymous_user('sender', using='default')
         mocked_get_init_anon.assert_called_once_with(User)
-        anon.save.assert_called_once_with()
+        anon.save.assert_called_once_with(using='default')
 
     def test_get_anonymous_user(self):
         anon = get_anonymous_user()

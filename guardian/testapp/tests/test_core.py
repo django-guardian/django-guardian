@@ -24,7 +24,7 @@ User = get_user_model()
 class CustomUserTests(TestCase):
 
     def test_create_anonymous_user(self):
-        create_anonymous_user(object())
+        create_anonymous_user(object(), using='default')
         self.assertEqual(1, User.objects.all().count())
         anonymous = User.objects.all()[0]
         self.assertEqual(anonymous.username, guardian_settings.ANONYMOUS_USER_NAME)

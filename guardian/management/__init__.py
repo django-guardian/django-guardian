@@ -28,12 +28,12 @@ def create_anonymous_user(sender, **kwargs):
     User = get_user_model()
     try:
         lookup = {User.USERNAME_FIELD: guardian_settings.ANONYMOUS_USER_NAME}
-        User.objects.get(**lookup)
+        User.objects.using(kwargs['using']).get(**lookup)
     except User.DoesNotExist:
         retrieve_anonymous_function = import_string(
             guardian_settings.GET_INIT_ANONYMOUS_USER)
         user = retrieve_anonymous_function(User)
-        user.save()
+        user.save(using=kwargs['using'])
 
 # Only create an anonymous user if support is enabled.
 if guardian_settings.ANONYMOUS_USER_NAME is not None:
