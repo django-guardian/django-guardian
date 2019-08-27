@@ -4,6 +4,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.db.models.query import QuerySet
 from django.utils.encoding import force_text
+
+from guardian.conf import settings as guardian_settings
 from guardian.ctypes import get_content_type
 from guardian.utils import get_group_obj_perms_model, get_identity, get_user_obj_perms_model
 
@@ -144,9 +146,15 @@ class ObjectPermissionChecker:
         """
         if self.user and not self.user.is_active:
             return []
+
+        if guardian_settings.AUTO_PREFETCH:
+            self._prefetch_cache()
+
         ctype = get_content_type(obj)
         key = self.get_local_cache_key(obj)
         if key not in self._obj_perms_cache:
+            if guardian_settings.AUTO_PREFETCH:
+                return []
             if self.user and self.user.is_superuser:
                 perms = list(chain(*Permission.objects
                                    .filter(content_type=ctype)
@@ -255,3 +263,22 @@ class ObjectPermissionChecker:
             self._obj_perms_cache[key].append(perm.permission.codename)
 
         return True
+
+    def _init_user_cache(self):
+        from guardian.models import UserObjectPermission, GroupObjectPermission
+        cache = {}
+        user_qs = UserObjectPermission.objects.filter(user=self.user)
+        group_qs = GroupObjectPermission.objects.filter(group__user=self.user)
+        for qs in (group_qs, user_qs):
+            perms = qs.select_related('permission__codename').values_list('content_type_id', 'object_pk',
+                                                                          'permission__codename')
+            for p in perms:
+                if p[:2] not in cache:
+                    cache[p[:2]] = []
+                cache[p[:2]] += [p[2], ]
+        self.user._guardian_perms_cache = cache
+
+    def _prefetch_cache(self):
+        if self.user and not hasattr(self.user, '_guardian_perms_cache'):
+            self._init_user_cache()
+        self._obj_perms_cache = self.user._guardian_perms_cache
