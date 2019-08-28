@@ -27,3 +27,4 @@ def monkey_patch_user():
             lambda self, perm, obj: UserObjectPermission.objects.assign_perm(perm, self, obj))
     setattr(User, 'del_obj_perm',
             lambda self, perm, obj: UserObjectPermission.objects.remove_perm(perm, self, obj))
+    setattr(User, 'evict_obj_perm_cache', lambda self: delattr(self, '_guardian_perms_cache'))
