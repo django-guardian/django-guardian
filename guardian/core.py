@@ -153,7 +153,8 @@ class ObjectPermissionChecker:
         ctype = get_content_type(obj)
         key = self.get_local_cache_key(obj)
         if key not in self._obj_perms_cache:
-            if guardian_settings.AUTO_PREFETCH:
+            # For now we only enforce when a User is passed in
+            if self.user and guardian_settings.AUTO_PREFETCH:
                 return []
             if self.user and self.user.is_superuser:
                 perms = list(chain(*Permission.objects
@@ -279,6 +280,7 @@ class ObjectPermissionChecker:
         self.user._guardian_perms_cache = cache
 
     def _prefetch_cache(self):
-        if self.user and not hasattr(self.user, '_guardian_perms_cache'):
-            self._init_user_cache()
-        self._obj_perms_cache = self.user._guardian_perms_cache
+        if self.user:
+            if not hasattr(self.user, '_guardian_perms_cache'):
+                self._init_user_cache()
+            self._obj_perms_cache = self.user._guardian_perms_cache
