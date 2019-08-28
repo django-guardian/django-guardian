@@ -441,3 +441,93 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
             self.assertEqual(len(connection.queries), query_count)
         finally:
             settings.DEBUG = False
+
+    def test_autoprefetch_user_perms(self):
+        settings.DEBUG = True
+        guardian_settings.AUTO_PREFETCH = True
+        try:
+            from django.db import connection
+
+            ContentType.objects.clear_cache()
+            group1 = Group.objects.create(name='group1')
+            group2 = Group.objects.create(name='group2')
+            user = User.objects.create(username='active_user', is_active=True)
+            assign_groups = [self.group, group1]
+            for group in assign_groups:
+                assign_perm("change_group", user, group)
+            checker = ObjectPermissionChecker(user)
+
+            pre_query_count = len(connection.queries)
+            # Fill cache
+            checker._prefetch_cache()
+            query_count = len(connection.queries)
+
+            # Ensure two queries have been made
+            self.assertEqual(query_count - pre_query_count, 2)
+
+            # Check user as cache attribute
+            self.assertTrue(hasattr(user, '_guardian_perms_cache'))
+
+            # Checking cache is filled
+            self.assertEqual(
+                len(checker._obj_perms_cache),
+                len(assign_groups)
+            )
+
+            # Checking shouldn't spawn any queries
+            self.assertTrue(checker.has_perm("change_group", self.group))
+            self.assertEqual(len(connection.queries), query_count)
+
+            # Checking for other permission but for Group object again
+            # shouldn't spawn any query too
+            self.assertFalse(checker.has_perm("delete_group", self.group))
+            self.assertEqual(len(connection.queries), query_count)
+
+            # Checking for same model but other instance shouldn't spawn any queries
+            self.assertTrue(checker.has_perm("change_group", group1))
+            self.assertEqual(len(connection.queries), query_count)
+
+            # Checking for same model but other instance shouldn't spawn any queries
+            # Even though User doesn't have perms on Group2, we still should
+            #  not hit DB
+            self.assertFalse(checker.has_perm("change_group", group2))
+            self.assertEqual(len(connection.queries), query_count)
+        finally:
+            settings.DEBUG = False
+            guardian_settings.AUTO_PREFETCH = False
+
+    def test_autoprefetch_superuser_perms(self):
+        settings.DEBUG = True
+        guardian_settings.AUTO_PREFETCH = True
+        try:
+            from django.db import connection
+
+            ContentType.objects.clear_cache()
+            group1 = Group.objects.create(name='group1')
+            user = User.objects.create(username='active_superuser',
+                                       is_superuser=True, is_active=True)
+            assign_perm("change_group", user, self.group)
+            checker = ObjectPermissionChecker(user)
+
+            # Fill cache
+            checker._prefetch_cache()
+            query_count = len(connection.queries)
+
+            # Check user as cache attribute
+            self.assertTrue(hasattr(user, '_guardian_perms_cache'))
+
+            # Checking shouldn't spawn any queries
+            self.assertTrue(checker.has_perm("change_group", self.group))
+            self.assertEqual(len(connection.queries), query_count)
+
+            # Checking for other permission but for Group object again
+            # shouldn't spawn any query too
+            self.assertTrue(checker.has_perm("delete_group", self.group))
+            self.assertEqual(len(connection.queries), query_count)
+
+            # Checking for same model but other instance shouldn't spawn any queries
+            self.assertTrue(checker.has_perm("change_group", group1))
+            self.assertEqual(len(connection.queries), query_count)
+        finally:
+            settings.DEBUG = False
+            guardian_settings.AUTO_PREFETCH = False
