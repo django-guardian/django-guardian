@@ -162,7 +162,6 @@ def clean_orphan_obj_perms():
 def get_obj_perms_model(obj, base_cls, generic_cls):
     if isinstance(obj, Model):
         obj = obj.__class__
-    ctype = get_content_type(obj)
 
     fields = (f for f in obj._meta.get_fields()
                 if (f.one_to_many or f.one_to_one) and f.auto_created)
@@ -176,7 +175,7 @@ def get_obj_perms_model(obj, base_cls, generic_cls):
                 # make sure that content_object's content_type is same as
                 # the one of given obj
                 fk = model._meta.get_field('content_object')
-                if ctype == get_content_type(fk.remote_field.model):
+                if get_content_type(obj) == get_content_type(fk.remote_field.model):
                     return model
     return generic_cls
 
