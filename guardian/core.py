@@ -4,6 +4,8 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.db.models.query import QuerySet
 from django.utils.encoding import force_text
+
+from guardian.conf import settings as guardian_settings
 from guardian.ctypes import get_content_type
 from guardian.utils import get_group_obj_perms_model, get_identity, get_user_obj_perms_model
 
@@ -144,9 +146,16 @@ class ObjectPermissionChecker:
         """
         if self.user and not self.user.is_active:
             return []
+
+        if guardian_settings.AUTO_PREFETCH:
+            self._prefetch_cache()
+
         ctype = get_content_type(obj)
         key = self.get_local_cache_key(obj)
         if key not in self._obj_perms_cache:
+            # If auto-prefetching enabled, do not hit database
+            if guardian_settings.AUTO_PREFETCH:
+                return []
             if self.user and self.user.is_superuser:
                 perms = list(chain(*Permission.objects
                                    .filter(content_type=ctype)
@@ -255,3 +264,34 @@ class ObjectPermissionChecker:
             self._obj_perms_cache[key].append(perm.permission.codename)
 
         return True
+
+    @staticmethod
+    def _init_obj_prefetch_cache(obj, *querysets):
+        cache = {}
+        for qs in querysets:
+            perms = qs.select_related('permission__codename').values_list('content_type_id', 'object_pk',
+                                                                          'permission__codename')
+            for p in perms:
+                if p[:2] not in cache:
+                    cache[p[:2]] = []
+                cache[p[:2]] += [p[2], ]
+        obj._guardian_perms_cache = cache
+        return obj, cache
+
+    def _prefetch_cache(self):
+        from guardian.models import UserObjectPermission, GroupObjectPermission
+        if self.user:
+            obj = self.user
+            querysets = [
+                UserObjectPermission.objects.filter(user=obj),
+                GroupObjectPermission.objects.filter(group__user=obj)
+            ]
+        else:
+            obj = self.group
+            querysets = [
+                GroupObjectPermission.objects.filter(group=obj),
+            ]
+
+        if not hasattr(obj, '_guardian_perms_cache'):
+            obj, cache = self._init_obj_prefetch_cache(obj, *querysets)
+            self._obj_perms_cache = cache

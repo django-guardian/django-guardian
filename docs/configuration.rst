@@ -153,3 +153,17 @@ polymorphic models and the regular model ``ContentType`` for non-polymorphic
 classes.
 
 Defaults to ``"guardian.ctypes.get_default_content_type"``.
+
+GUARDIAN_AUTO_PREFETCH
+-------------------------
+
+.. versionadded:: 2.x.x
+
+For vanilla deployments using standard ``ContentType`` interfaces and default
+``UserObjectPermission`` or ``GroupObjectPermission`` models, Guardian can automatically
+prefetch all User permissions for all object types. This can be useful when manual prefetching
+is not feasible due to a large number of model types resulting in O(n) queries. This setting may
+not be compatible with non-standard deployments, and should only be used when non-prefetched
+invocations would result in a large number of queries or when latency is particularly important.
+
+Defaults to ``False``.
