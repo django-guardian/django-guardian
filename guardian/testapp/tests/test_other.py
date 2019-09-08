@@ -286,6 +286,7 @@ class TestMonkeyPatch(TestCase):
         self.assertFalse(getattr(CustomUserTestClass, 'get_anonymous', False))
         self.assertFalse(getattr(CustomUserTestClass, 'add_obj_perm', False))
         self.assertFalse(getattr(CustomUserTestClass, 'del_obj_perm', False))
+        self.assertFalse(getattr(CustomUserTestClass, 'evict_obj_perms_cache', False))
 
         # Monkey Patch
         guardian.monkey_patch_user()
@@ -293,3 +294,7 @@ class TestMonkeyPatch(TestCase):
         self.assertTrue(getattr(CustomUserTestClass, 'get_anonymous', False))
         self.assertTrue(getattr(CustomUserTestClass, 'add_obj_perm', False))
         self.assertTrue(getattr(CustomUserTestClass, 'del_obj_perm', False))
+        self.assertTrue(getattr(CustomUserTestClass, 'evict_obj_perms_cache', False))
+
+        user = CustomUserTestClass()
+        self.assertFalse(user.evict_obj_perms_cache())

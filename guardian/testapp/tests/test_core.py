@@ -14,6 +14,7 @@ from guardian.exceptions import NotUserNorGroup
 from guardian.models import UserObjectPermission, GroupObjectPermission
 from guardian.shortcuts import assign_perm
 from guardian.management import create_anonymous_user
+from guardian.utils import evict_obj_perms_cache
 
 from guardian.testapp.models import Project, ProjectUserObjectPermission, ProjectGroupObjectPermission
 
@@ -457,6 +458,13 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
             assign_groups = [self.group, group1]
             for group in assign_groups:
                 assign_perm("change_group", user, group)
+
+            # Faux monkeypatching
+            setattr(User, 'evict_obj_perms_cache', evict_obj_perms_cache)
+
+            # Try to evict non-existent cache, should return false
+            self.assertFalse(user.evict_obj_perms_cache())
+
             checker = ObjectPermissionChecker(user)
 
             pre_query_count = len(connection.queries)
@@ -494,6 +502,19 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
             #  not hit DB
             self.assertFalse(checker.has_perm("change_group", group2))
             self.assertEqual(len(connection.queries), query_count)
+
+            # Evict cache and verify that reloaded perms have changed
+            self.assertTrue(user.evict_obj_perms_cache())
+            self.assertFalse(hasattr(user, '_guardian_perms_cache'))
+            assign_perm("delete_group", user, self.group)
+            query_count = len(connection.queries)
+            # New checker object so that we reload perms from db
+            checker = ObjectPermissionChecker(user)
+            self.assertTrue(checker.has_perm("delete_group", self.group))
+            # Two more queries should have been executed
+            self.assertEqual(len(connection.queries), query_count + 2)
+
+
         finally:
             settings.DEBUG = False
             guardian_settings.AUTO_PREFETCH = False

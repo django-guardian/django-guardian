@@ -196,3 +196,10 @@ def get_group_obj_perms_model(obj):
     from guardian.models import GroupObjectPermissionBase
     from guardian.models import GroupObjectPermission
     return get_obj_perms_model(obj, GroupObjectPermissionBase, GroupObjectPermission)
+
+
+def evict_obj_perms_cache(obj):
+    if hasattr(obj, '_guardian_perms_cache'):
+        delattr(obj, '_guardian_perms_cache')
+        return True
+    return False
