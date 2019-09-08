@@ -6,10 +6,9 @@ from django.contrib import admin, messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse
+from django.urls import reverse, path
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import ugettext
-from guardian.compat import url
 from guardian.forms import GroupObjectPermissionsForm, UserObjectPermissionsForm
 from guardian.models import Group
 from guardian.shortcuts import (get_group_perms, get_groups_with_perms, get_perms_for_model, get_user_perms,
@@ -90,18 +89,18 @@ class GuardedModelAdminMixin:
         if self.include_object_permissions_urls:
             info = self.model._meta.app_label, self.model._meta.model_name
             myurls = [
-                url(r'^(?P<object_pk>.+)/permissions/$',
-                    view=self.admin_site.admin_view(
-                        self.obj_perms_manage_view),
-                    name='%s_%s_permissions' % info),
-                url(r'^(?P<object_pk>.+)/permissions/user-manage/(?P<user_id>\-?\d+)/$',
-                    view=self.admin_site.admin_view(
-                        self.obj_perms_manage_user_view),
-                    name='%s_%s_permissions_manage_user' % info),
-                url(r'^(?P<object_pk>.+)/permissions/group-manage/(?P<group_id>\-?\d+)/$',
-                    view=self.admin_site.admin_view(
-                        self.obj_perms_manage_group_view),
-                    name='%s_%s_permissions_manage_group' % info),
+                path('<object_pk>/permissions/',
+                     view=self.admin_site.admin_view(
+                         self.obj_perms_manage_view),
+                     name='%s_%s_permissions' % info),
+                path('<object_pk>/permissions/user-manage/<user_id>/',
+                     view=self.admin_site.admin_view(
+                         self.obj_perms_manage_user_view),
+                     name='%s_%s_permissions_manage_user' % info),
+                path('<object_pk>/permissions/group-manage/<group_id>/',
+                     view=self.admin_site.admin_view(
+                         self.obj_perms_manage_group_view),
+                     name='%s_%s_permissions_manage_group' % info),
             ]
             urls = myurls + urls
         return urls
@@ -158,8 +157,10 @@ class GuardedModelAdminMixin:
         )
 
         if request.method == 'POST' and 'submit_manage_user' in request.POST:
-            user_form = self.get_obj_perms_user_select_form(request)(request.POST)
-            group_form = self.get_obj_perms_group_select_form(request)(request.POST)
+            user_form = self.get_obj_perms_user_select_form(
+                request)(request.POST)
+            group_form = self.get_obj_perms_group_select_form(
+                request)(request.POST)
             info = (
                 self.admin_site.name,
                 self.model._meta.app_label,
@@ -173,8 +174,10 @@ class GuardedModelAdminMixin:
                 )
                 return redirect(url)
         elif request.method == 'POST' and 'submit_manage_group' in request.POST:
-            user_form = self.get_obj_perms_user_select_form(request)(request.POST)
-            group_form = self.get_obj_perms_group_select_form(request)(request.POST)
+            user_form = self.get_obj_perms_user_select_form(
+                request)(request.POST)
+            group_form = self.get_obj_perms_group_select_form(
+                request)(request.POST)
             info = (
                 self.admin_site.name,
                 self.model._meta.app_label,
@@ -280,7 +283,6 @@ class GuardedModelAdminMixin:
         default :form:`GroupManage` is returned.
         """
         return GroupManage
-
 
     def get_obj_perms_manage_user_form(self, request):
         """
