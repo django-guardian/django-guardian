@@ -18,7 +18,7 @@ def get_version():
 
 def monkey_patch_user():
     from django.contrib.auth import get_user_model
-    from .utils import get_anonymous_user
+    from .utils import get_anonymous_user, evict_obj_perms_cache
     from .models import UserObjectPermission
     User = get_user_model()
     # Prototype User and Group methods
@@ -27,4 +27,4 @@ def monkey_patch_user():
             lambda self, perm, obj: UserObjectPermission.objects.assign_perm(perm, self, obj))
     setattr(User, 'del_obj_perm',
             lambda self, perm, obj: UserObjectPermission.objects.remove_perm(perm, self, obj))
-    setattr(User, 'evict_obj_perm_cache', lambda self: delattr(self, '_guardian_perms_cache'))
+    setattr(User, 'evict_obj_perms_cache', evict_obj_perms_cache)
