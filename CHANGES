@@ -1,10 +1,18 @@
+Release 2.1.0 (September 9, 2019)
+=================================
+
+* Upgrade to use ```django.urls.path``` in routing
+    *  Add admin support for user primary key as UUID
+* Auto pre-fetching permission via ```GUARDIAN_AUTO_PREFETCH```
+* Add tests for missing migrations
+
 Release 2.0.0 (June 11, 2019)
-==========================
+=============================
 
 * Drop support for Python 2.7 & 3.4 and Django 1.11 & 2.0
 
 Release 1.5.1 (May 2, 2019)
-==========================
+===========================
 
 * Restore compatibility with Python 2.7
 
