@@ -294,4 +294,6 @@ class ObjectPermissionChecker:
 
         if not hasattr(obj, '_guardian_perms_cache'):
             obj, cache = self._init_obj_prefetch_cache(obj, *querysets)
-            self._obj_perms_cache = cache
+        else:
+            cache = obj._guardian_perms_cache
+        self._obj_perms_cache = cache

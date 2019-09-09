@@ -486,21 +486,25 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
 
             # Checking shouldn't spawn any queries
             self.assertTrue(checker.has_perm("change_group", self.group))
+            self.assertTrue(user.has_perm("change_group", self.group))
             self.assertEqual(len(connection.queries), query_count)
 
             # Checking for other permission but for Group object again
             # shouldn't spawn any query too
             self.assertFalse(checker.has_perm("delete_group", self.group))
+            self.assertFalse(user.has_perm("delete_group", self.group))
             self.assertEqual(len(connection.queries), query_count)
 
             # Checking for same model but other instance shouldn't spawn any queries
             self.assertTrue(checker.has_perm("change_group", group1))
+            self.assertTrue(user.has_perm("change_group", group1))
             self.assertEqual(len(connection.queries), query_count)
 
             # Checking for same model but other instance shouldn't spawn any queries
             # Even though User doesn't have perms on Group2, we still should
             #  not hit DB
             self.assertFalse(checker.has_perm("change_group", group2))
+            self.assertFalse(user.has_perm("change_group", group2))
             self.assertEqual(len(connection.queries), query_count)
 
             # Evict cache and verify that reloaded perms have changed
@@ -511,6 +515,7 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
             # New checker object so that we reload perms from db
             checker = ObjectPermissionChecker(user)
             self.assertTrue(checker.has_perm("delete_group", self.group))
+            self.assertTrue(user.has_perm("delete_group", self.group))
             # Two more queries should have been executed
             self.assertEqual(len(connection.queries), query_count + 2)
 
@@ -545,15 +550,18 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
 
             # Checking shouldn't spawn any queries
             self.assertTrue(checker.has_perm("change_group", self.group))
+            self.assertTrue(user.has_perm("change_group", self.group))
             self.assertEqual(len(connection.queries), query_count)
 
             # Checking for other permission but for Group object again
             # shouldn't spawn any query too
             self.assertTrue(checker.has_perm("delete_group", self.group))
+            self.assertTrue(user.has_perm("delete_group", self.group))
             self.assertEqual(len(connection.queries), query_count)
 
             # Checking for same model but other instance shouldn't spawn any queries
             self.assertTrue(checker.has_perm("change_group", group1))
+            self.assertTrue(user.has_perm("change_group", group1))
             self.assertEqual(len(connection.queries), query_count)
         finally:
             settings.DEBUG = False
