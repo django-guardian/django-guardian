@@ -11,7 +11,15 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Count, Q, QuerySet
 from django.shortcuts import _get_queryset
-
+from django.db.models.functions import Cast
+from django.db.models import (
+    IntegerField,
+    AutoField,
+    BigIntegerField,
+    PositiveIntegerField,
+    PositiveSmallIntegerField,
+    SmallIntegerField,
+)
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
 from guardian.exceptions import MixedContentTypeError, WrongAppError, MultipleIdentityAndObjectError
@@ -607,14 +615,27 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
         user_obj_perms_queryset = counts.filter(
             object_pk_count__gte=len(codenames))
 
-    values = user_obj_perms_queryset.values_list(user_fields[0], flat=True)
-    if user_model.objects.is_generic():
-        values = set(values)
+    is_cast_integer = _is_cast_integer_pk(queryset)
+
+    field_pk = user_field[0]
+    values = user_obj_perms_queryset
+    if is_cast_integer:
+        values = values.annotate(
+            obj_pk=Cast(field_pk, IntegerField())
+        )
+        field_pk = 'obj_pk'
+
+    values = values.values_list(field_pk, flat=True)
     q = Q(pk__in=values)
     if use_groups:
-        values = groups_obj_perms_queryset.values_list(group_fields[0], flat=True)
-        if group_model.objects.is_generic():
-            values = set(values)
+        field_pk = group_field[0]
+        values = groups_obj_perms_queryset
+        if is_cast_integer:
+            values = values.annotate(
+                obj_pk=Cast(field_pk, IntegerField())
+            )
+            field_pk = 'obj_pk'
+        values = values.values_list(field_pk, flat=True)
         q |= Q(pk__in=values)
 
     return queryset.filter(q)
@@ -760,7 +781,23 @@ def get_objects_for_group(group, perms, klass=None, any_perm=False, accept_globa
         objects = queryset.filter(pk__in=pk_list)
         return objects
 
-    values = groups_obj_perms_queryset.values_list(fields[0], flat=True)
-    if group_model.objects.is_generic():
-        values = list(values)
+    is_cast_integer = _is_cast_integer_pk(queryset)
+
+    field_pk = fields[0]
+    values = groups_obj_perms_queryset
+
+    if is_cast_integer:
+        values = values.annotate(
+            obj_pk=Cast(field_pk, IntegerField())
+        )
+        field_pk = 'obj_pk'
+
+    values = values.values_list(field_pk, flat=True)
     return queryset.filter(pk__in=values)
+
+
+def _is_cast_integer_pk(queryset):
+    return isinstance(queryset.model._meta.pk, (
+        IntegerField, AutoField, BigIntegerField,
+        PositiveIntegerField, PositiveSmallIntegerField,
+        SmallIntegerField))
