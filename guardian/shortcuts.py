@@ -617,7 +617,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
 
     is_cast_integer = _is_cast_integer_pk(queryset)
 
-    field_pk = user_field[0]
+    field_pk = user_fields[0]
     values = user_obj_perms_queryset
     if is_cast_integer:
         values = values.annotate(
@@ -628,7 +628,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
     values = values.values_list(field_pk, flat=True)
     q = Q(pk__in=values)
     if use_groups:
-        field_pk = group_field[0]
+        field_pk = group_fields[0]
         values = groups_obj_perms_queryset
         if is_cast_integer:
             values = values.annotate(
