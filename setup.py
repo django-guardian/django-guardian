@@ -13,7 +13,6 @@ setup(
     name='django-guardian',
     version=version,
     python_requires='>=3.5',
-    setup_requires=['pytest-runner', ],
     url='http://github.com/django-guardian/django-guardian',
     author='Lukasz Balcerzak',
     author_email='lukaszbalcerzak@gmail.com',
