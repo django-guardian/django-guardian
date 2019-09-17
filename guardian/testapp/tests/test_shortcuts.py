@@ -118,6 +118,15 @@ class AssignPermTest(ObjectPermissionTestCase):
         self.assertTrue(self.user.has_perm("contenttypes.change_contenttype"))
         self.assertTrue(isinstance(perm, Permission))
 
+    def test_assign_perm_with_dots(self):
+        Permission.objects.create(
+            codename="contenttype.reorder",
+            content_type=ContentType.objects.get_for_model(self.ctype)
+        )
+
+        assign_perm("contenttypes.contenttype.reorder", self.user, self.ctype)
+        self.assertTrue(self.user.has_perm("contenttypes.contenttype.reorder", self.ctype))
+
     def test_deprecation_warning(self):
         with warnings.catch_warnings(record=True) as warns:
             warnings.simplefilter('always')
