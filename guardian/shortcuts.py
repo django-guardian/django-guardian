@@ -89,7 +89,8 @@ def assign_perm(perm, user_or_group, obj=None):
             return perm
 
     if not isinstance(perm, Permission):
-        perm = perm.split('.')[-1]
+        if '.' in perm:
+            app_label, perm = perm.split(".", 1)
 
     if isinstance(obj, QuerySet):
         if isinstance(user_or_group, (QuerySet, list)):
