@@ -621,7 +621,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
     values = user_obj_perms_queryset
     if is_cast_integer:
         values = values.annotate(
-            obj_pk=Cast(field_pk, IntegerField())
+            obj_pk=Cast(field_pk, BigIntegerField())
         )
         field_pk = 'obj_pk'
 
@@ -632,7 +632,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
         values = groups_obj_perms_queryset
         if is_cast_integer:
             values = values.annotate(
-                obj_pk=Cast(field_pk, IntegerField())
+                obj_pk=Cast(field_pk, BigIntegerField())
             )
             field_pk = 'obj_pk'
         values = values.values_list(field_pk, flat=True)
@@ -788,7 +788,7 @@ def get_objects_for_group(group, perms, klass=None, any_perm=False, accept_globa
 
     if is_cast_integer:
         values = values.annotate(
-            obj_pk=Cast(field_pk, IntegerField())
+            obj_pk=Cast(field_pk, BigIntegerField())
         )
         field_pk = 'obj_pk'
 
