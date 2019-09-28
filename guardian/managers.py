@@ -1,3 +1,4 @@
+from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models import Q
 from guardian.core import ObjectPermissionChecker
@@ -15,14 +16,14 @@ class BaseObjectPermissionManager(models.Manager):
         try:
             self.model._meta.get_field('user')
             return 'user'
-        except models.fields.FieldDoesNotExist:
+        except FieldDoesNotExist:
             return 'group'
 
     def is_generic(self):
         try:
             self.model._meta.get_field('object_pk')
             return True
-        except models.fields.FieldDoesNotExist:
+        except FieldDoesNotExist:
             return False
 
     def assign_perm(self, perm, user_or_group, obj):
