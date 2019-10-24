@@ -15,6 +15,7 @@ notifications:
 templates:
   django21: &django21 DJANGO_VERSION=2.1.*
   django22: &django22 DJANGO_VERSION=2.2.*
+  django30: &django30 DJANGO_VERSION>=3.0b1
   djangomaster: &djangomaster DJANGO_VERSION=master
 
   postgres: &postgres DATABASE_URL=postgres://postgres@/django_guardian
@@ -43,6 +44,9 @@ matrix:
     - { python: 3.6, env: [*django22, *postgres], <<: *pgdb}
     - { python: 3.6, env: [*django22, *mysql], <<: *mariadb}
     - { python: 3.6, env: [*django22, *sqlite]}
+    - { python: 3.6, env: [*django30, *postgres], <<: *pgdb}
+    - { python: 3.6, env: [*django30, *mysql], <<: *mariadb}
+    - { python: 3.6, env: [*django30, *sqlite]}
     - { python: 3.6, env: [*djangomaster, *postgres], <<: *pgdb}
     - { python: 3.6, env: [*djangomaster, *mysql], <<: *mariadb}
     - { python: 3.6, env: [*djangomaster, *sqlite]}
@@ -53,6 +57,9 @@ matrix:
     - { python: 3.7, env: [*django22, *postgres], <<: *pgdb}
     - { python: 3.7, env: [*django22, *mysql], <<: *mariadb}
     - { python: 3.7, env: [*django22, *sqlite]}
+    - { python: 3.7, env: [*django30, *postgres], <<: *pgdb}
+    - { python: 3.7, env: [*django30, *mysql], <<: *mariadb}
+    - { python: 3.7, env: [*django30, *sqlite]}
     - { python: 3.7, env: [*djangomaster, *postgres], <<: *pgdb}
     - { python: 3.7, env: [*djangomaster, *mysql], <<: *mariadb}
     - { python: 3.7, env: [*djangomaster, *sqlite]}
