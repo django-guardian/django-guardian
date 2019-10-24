@@ -1,5 +1,5 @@
 language: python
-dist: xenial
+dist: bionic
 
 cache: pip
 
@@ -15,7 +15,7 @@ notifications:
 templates:
   django21: &django21 DJANGO_VERSION=2.1.*
   django22: &django22 DJANGO_VERSION=2.2.*
-  django30: &django30 DJANGO_VERSION>=3.0b1
+  django30: &django30 DJANGO_VERSION=3.0b1
   djangomaster: &djangomaster DJANGO_VERSION=master
 
   postgres: &postgres DATABASE_URL=postgres://postgres@/django_guardian
