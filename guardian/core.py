@@ -3,7 +3,7 @@ from itertools import chain
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.db.models.query import QuerySet
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 
 from guardian.conf import settings as guardian_settings
 from guardian.ctypes import get_content_type
@@ -18,7 +18,7 @@ def _get_pks_model_and_ctype(objects):
 
     if isinstance(objects, QuerySet):
         model = objects.model
-        pks = [force_text(pk) for pk in objects.values_list('pk', flat=True)]
+        pks = [force_str(pk) for pk in objects.values_list('pk', flat=True)]
         ctype = get_content_type(model)
     else:
         pks = []
