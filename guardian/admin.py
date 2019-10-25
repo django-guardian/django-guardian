@@ -7,8 +7,8 @@ from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, path
-from django.utils.translation import ugettext_lazy as _
-from django.utils.translation import ugettext
+from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext
 from guardian.forms import GroupObjectPermissionsForm, UserObjectPermissionsForm
 from guardian.models import Group
 from guardian.shortcuts import (get_group_perms, get_groups_with_perms, get_perms_for_model, get_user_perms,
@@ -234,7 +234,7 @@ class GuardedModelAdminMixin:
 
         if request.method == 'POST' and form.is_valid():
             form.save_obj_perms()
-            msg = ugettext("Permissions saved.")
+            msg = gettext("Permissions saved.")
             messages.success(request, msg)
             info = (
                 self.admin_site.name,
@@ -306,7 +306,7 @@ class GuardedModelAdminMixin:
 
         if request.method == 'POST' and form.is_valid():
             form.save_obj_perms()
-            msg = ugettext("Permissions saved.")
+            msg = gettext("Permissions saved.")
             messages.success(request, msg)
             info = (
                 self.admin_site.name,
