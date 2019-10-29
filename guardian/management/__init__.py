@@ -1,8 +1,7 @@
-import django
 from django.contrib.auth import get_user_model
 from django.db.models import signals
 from django.utils.module_loading import import_string
-
+from django.db import router
 from guardian.conf import settings as guardian_settings
 
 
@@ -26,6 +25,8 @@ def create_anonymous_user(sender, **kwargs):
     Creates anonymous User instance with id and username from settings.
     """
     User = get_user_model()
+    if not router.allow_migrate_model(kwargs['using'], User):
+        return
     try:
         lookup = {User.USERNAME_FIELD: guardian_settings.ANONYMOUS_USER_NAME}
         User.objects.using(kwargs['using']).get(**lookup)

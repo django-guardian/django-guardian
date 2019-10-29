@@ -1,4 +1,8 @@
+from copy import deepcopy
+
+from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.sessions.models import Session
 from django.test import TestCase, override_settings
 
 import mock
@@ -7,6 +11,26 @@ from guardian.utils import get_anonymous_user
 
 
 mocked_get_init_anon = mock.Mock()
+multi_db_dict = {
+    'default': deepcopy(settings.DATABASES['default']),
+    'session': deepcopy(settings.DATABASES['default']),
+}
+
+
+class SessionRouter:
+    @staticmethod
+    def db_for_write(model, **kwargs):
+        if model == Session:
+            return 'session'
+        else:
+            return None
+
+    @staticmethod
+    def allow_migrate(db, app_label, **kwargs):
+        if db == 'session':
+            return app_label == 'sessions'
+        else:
+            return None
 
 
 class TestGetAnonymousUser(TestCase):
@@ -45,3 +69,16 @@ class TestGetAnonymousUser(TestCase):
         anon = get_anonymous_user()
         self.assertFalse(anon.has_usable_password())
         self.assertEqual(anon.get_username(), "AnonymousUser")
+
+    @mock.patch('guardian.management.guardian_settings')
+    @override_settings(
+        DATABASE_ROUTERS=[SessionRouter()],
+        DATABASES=multi_db_dict
+    )
+    def test_non_migrated_db(self, guardian_settings):
+        mocked_get_init_anon.reset_mock()
+        guardian_settings.GET_INIT_ANONYMOUS_USER = 'guardian.testapp.tests.test_management.mocked_get_init_anon'
+
+        create_anonymous_user('sender', using='session')
+
+        mocked_get_init_anon.assert_not_called()
