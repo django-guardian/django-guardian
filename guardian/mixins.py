@@ -17,7 +17,7 @@ class LoginRequiredMixin:
     Due to parent class order traversal this mixin must be added as the left
     most mixin of a view.
 
-    The mixin has exaclty the same flow as `login_required` decorator:
+    The mixin has exactly the same flow as `login_required` decorator:
 
         If the user isn't logged in, redirect to ``settings.LOGIN_URL``, passing
         the current absolute path in the query string. Example:
@@ -247,7 +247,7 @@ class PermissionListMixin:
 
     ``PermissionListMixin.get_objects_for_user_extra_kwargs``
 
-        *Default*: ``{}``,  A extra params to pass for ```guardian.shorcuts.get_objects_for_user```
+        *Default*: ``{}``,  A extra params to pass for ```guardian.shortcuts.get_objects_for_user```
 
     """
     permission_required = None
