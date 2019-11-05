@@ -14,6 +14,12 @@ class BaseObjectPermission(models.Model):
     Abstract ObjectPermission class. Actual class should additionally define
     a ``content_object`` field and either ``user`` or ``group`` field.
     """
+    id = models.BigAutoField(
+        editable=False,
+        unique=True,
+        primary_key=True
+    )
+    
     permission = models.ForeignKey(Permission, on_delete=models.CASCADE)
 
     class Meta:
