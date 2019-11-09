@@ -143,10 +143,10 @@ class AdminTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
-        choices = set([c[0] for c in
-                       response.context['form'].fields['permissions'].choices])
+        choices = {c[0] for c in
+                       response.context['form'].fields['permissions'].choices}
         self.assertEqual(
-            set([p.codename for p in get_perms_for_model(self.obj)]),
+            {p.codename for p in get_perms_for_model(self.obj)},
             choices,
         )
 
@@ -247,10 +247,10 @@ class AdminTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
-        choices = set([c[0] for c in
-                       response.context['form'].fields['permissions'].choices])
+        choices = {c[0] for c in
+                       response.context['form'].fields['permissions'].choices}
         self.assertEqual(
-            set([p.codename for p in get_perms_for_model(self.obj)]),
+            {p.codename for p in get_perms_for_model(self.obj)},
             choices,
         )
 

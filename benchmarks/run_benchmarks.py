@@ -76,7 +76,7 @@ class Timed:
                 call.finish = datetime.datetime.now()
                 func.calls.append(call)
                 if self.action:
-                    print(" -> [%s] Done (Total time: %s)" % (self.action,
+                    print(" -> [{}] Done (Total time: {})".format(self.action,
                                                               call.delta()))
         return wrapper
 
