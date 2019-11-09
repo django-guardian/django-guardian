@@ -55,10 +55,10 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='articleuserobjectpermission',
-            unique_together=set([('user', 'permission', 'content_object')]),
+            unique_together={('user', 'permission', 'content_object')},
         ),
         migrations.AlterUniqueTogether(
             name='articlegroupobjectpermission',
-            unique_together=set([('group', 'permission', 'content_object')]),
+            unique_together={('group', 'permission', 'content_object')},
         ),
     ]

@@ -595,7 +595,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
             data = sorted(data, key=keyfunc)
             pk_list = []
             for pk, group in groupby(data, keyfunc):
-                obj_codenames = set((e[1] for e in group))
+                obj_codenames = {e[1] for e in group}
                 if codenames.issubset(obj_codenames):
                     pk_list.append(pk)
             objects = queryset.filter(pk__in=pk_list)
@@ -754,7 +754,7 @@ def get_objects_for_group(group, perms, klass=None, any_perm=False, accept_globa
         data = sorted(data, key=keyfunc)
         pk_list = []
         for pk, group in groupby(data, keyfunc):
-            obj_codenames = set((e[1] for e in group))
+            obj_codenames = {e[1] for e in group}
             if any_perm or codenames.issubset(obj_codenames):
                 pk_list.append(pk)
         objects = queryset.filter(pk__in=pk_list)
