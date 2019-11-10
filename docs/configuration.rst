@@ -167,14 +167,3 @@ not be compatible with non-standard deployments, and should only be used when no
 invocations would result in a large number of queries or when latency is particularly important.
 
 Defaults to ``False``.
-
-GUARDIAN_USE_BIG_ID
--------------------------
-
-.. versionadded:: 2.x.x
-
-For deployments requiring greater than 2^31 entries of ``UserObjectPermission`` or 
-``GroupObjectPermission`` models, setting True replaces the default id field with BigAutoField  
-raising the limit to 2^63 entries.  Initial set to True will require migration.
-
-Defaults to ``False``.
