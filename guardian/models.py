@@ -7,20 +7,18 @@ from django.utils.translation import ugettext_lazy as _
 from guardian.compat import user_model_label
 from guardian.ctypes import get_content_type
 from guardian.managers import GroupObjectPermissionManager, UserObjectPermissionManager
-from django.conf import settings
+
 
 class BaseObjectPermission(models.Model):
     """
     Abstract ObjectPermission class. Actual class should additionally define
     a ``content_object`` field and either ``user`` or ``group`` field.
     """
-    if getattr(settings, "GUARDIAN_USE_BIG_ID", False):
-        id = models.BigAutoField(
-            editable=False,
-            unique=True,
-            primary_key=True
-        )
-
+    id = models.BigAutoField(
+        editable=False,
+        unique=True,
+        primary_key=True
+    )
     
     permission = models.ForeignKey(Permission, on_delete=models.CASCADE)
 
