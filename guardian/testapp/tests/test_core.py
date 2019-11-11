@@ -11,7 +11,9 @@ from django.test import TestCase
 
 from guardian.core import ObjectPermissionChecker
 from guardian.exceptions import NotUserNorGroup
-from guardian.models import UserObjectPermission, GroupObjectPermission
+from guardian.utils import get_user_obj_perms_model, get_group_obj_perms_model
+UserObjectPermission = get_user_obj_perms_model()
+GroupObjectPermission = get_group_obj_perms_model()
 from guardian.shortcuts import assign_perm
 from guardian.management import create_anonymous_user
 from guardian.utils import evict_obj_perms_cache

@@ -9,9 +9,11 @@ from guardian.testapp.tests.test_core import ObjectPermissionTestCase
 from guardian.testapp.models import Project
 from guardian.testapp.models import ProjectUserObjectPermission
 from guardian.testapp.models import ProjectGroupObjectPermission
-from guardian.models import UserObjectPermission
+from guardian.utils import get_user_obj_perms_model
+UserObjectPermission = get_user_obj_perms_model()
 from guardian.models import UserObjectPermissionBase
-from guardian.models import GroupObjectPermission
+from guardian.utils import get_group_obj_perms_model
+GroupObjectPermission = get_group_obj_perms_model()
 from guardian.utils import get_anonymous_user
 from guardian.utils import get_identity
 from guardian.utils import get_user_obj_perms_model

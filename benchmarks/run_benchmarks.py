@@ -31,7 +31,8 @@ from django.contrib.auth.models import User, Group
 from django.utils.termcolors import colorize
 from benchmarks.models import TestModel
 from benchmarks.models import TestDirectModel
-from guardian.models import UserObjectPermission
+from guardian.utils import get_user_obj_perms_model
+UserObjectPermission = get_user_obj_perms_model()
 from django.contrib.contenttypes.models import ContentType
 
 USERS_COUNT = 50
