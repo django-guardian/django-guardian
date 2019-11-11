@@ -173,14 +173,15 @@ GUARDIAN_USER_OBJ_PERMS_USE
 
 .. versionadded:: 2.x.x
 
-Allows the default ``UserObjectPermission`` model to be overridden by a custom model.  The custom model needs to minimally inherit from ``UserObjectPermissionBase``.  This is only automatically supported when set at the start of a project. This is NOT supported after the start of a project.  If the dependent libraries do not call ``UserObjectPermission = get_user_obj_perms_model()`` for the model, then the dependent library does not support this feature.
+Allows the default ``UserObjectPermission`` model to be overridden by a custom model.  The custom model needs to minimally inherit from ``UserObjectPermissionAbstract``.  This is only automatically supported when set at the start of a project. This is NOT supported after the start of a project.  If the dependent libraries do not call ``UserObjectPermission = get_user_obj_perms_model()`` for the model, then the dependent library does not support this feature.
 
 Define a custom user object permission model
 ::
-   class BigUserObjectPermission(UserObjectPermission):
-       id = models.BigAutoField(editable=False, unique=True, primary_key=True)
-       class Meta(UserObjectPermission.Meta):
-           pass
+   from guardian.models import UserObjectPermissionAbstract
+   class BigGroupObjectPermission(GroupObjectPermissionAbstract):
+      id = models.BigAutoField(editable=False, unique=True, primary_key=True)
+      class Meta(GroupObjectPermissionAbstract.Meta):
+         abstract = False
 
 Configure guardian to use the custom model in `settings.py`
 ::
@@ -198,14 +199,15 @@ GUARDIAN_GROUP_OBJ_PERMS_USE
 
 .. versionadded:: 2.x.x
 
-Allows the default ``GroupObjectPermission`` model to be overridden by a custom model.  The custom model needs to minimally inherit from ``GroupObjectPermissionBase``.  This is only automatically supported when set at the start of a project. This is NOT supported after the start of a project.  If the dependent libraries do not call ``GroupObjectPermission = get_user_obj_perms_model()`` for the model, then the dependent library does not support this feature.
+Allows the default ``GroupObjectPermission`` model to be overridden by a custom model.  The custom model needs to minimally inherit from ``GroupObjectPermissionAbstract``.  This is only automatically supported when set at the start of a project. This is NOT supported after the start of a project.  If the dependent libraries do not call ``GroupObjectPermission = get_user_obj_perms_model()`` for the model, then the dependent library does not support this feature.
 
 Define a custom user object permission model
 ::
-   class BigGroupObjectPermission(GroupObjectPermission):
-       id = models.BigAutoField(editable=False, unique=True, primary_key=True)
-       class Meta(GroupObjectPermission.Meta):
-           pass
+   from guardian.models import GroupObjectPermissionAbstract
+   class BigUserObjectPermission(UserObjectPermissionAbstract):
+      id = models.BigAutoField(editable=False, unique=True, primary_key=True)
+       class Meta(UserObjectPermissionAbstract.Meta):
+          abstract = False
 
 Configure guardian to use the custom model in `settings.py`
 ::

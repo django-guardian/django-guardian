@@ -29,3 +29,14 @@ def monkey_patch_user():
     setattr(User, 'del_obj_perm',
             lambda self, perm, obj: UserObjectPermission.objects.remove_perm(perm, self, obj))
     setattr(User, 'evict_obj_perms_cache', evict_obj_perms_cache)
+
+def monkey_patch_group():
+    from django.contrib.auth.models import Group, Permission
+    from .utils import get_group_obj_perms_model
+    GroupObjectPermission = get_group_obj_perms_model()
+    # Prototype Group methods
+    setattr(Group, 'add_obj_perm',
+            lambda self, perm, obj: GroupObjectPermission.objects.assign_perm(perm, self, obj))
+    setattr(Group, 'del_obj_perm',
+            lambda self, perm, obj: GroupObjectPermission.objects.remove_perm(perm, self, obj))
+

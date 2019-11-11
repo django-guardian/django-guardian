@@ -1,4 +1,4 @@
-from . import monkey_patch_user
+from . import monkey_patch_user, monkey_patch_group
 from django.apps import AppConfig
 from guardian.conf import settings
 
@@ -7,5 +7,6 @@ class GuardianConfig(AppConfig):
     name = 'guardian'
 
     def ready(self):
+        monkey_patch_group()
         if settings.MONKEY_PATCH:
             monkey_patch_user()
