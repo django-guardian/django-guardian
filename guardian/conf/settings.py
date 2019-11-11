@@ -26,6 +26,8 @@ GET_CONTENT_TYPE = getattr(settings, 'GUARDIAN_GET_CONTENT_TYPE', 'guardian.ctyp
 
 AUTO_PREFETCH = getattr(settings, 'GUARDIAN_AUTO_PREFETCH', False)
 
+USER_OBJ_PERMS_USE = getattr(settings, 'GUARDIAN_USER_OBJ_PERMS_USE', 'guardian.UserObjectPermission')
+GROUP_OBJ_PERMS_USE = getattr(settings, 'GUARDIAN_GROUP_OBJ_PERMS_USE', 'guardian.GroupObjectPermission')
 
 def check_configuration():
     if RENDER_403 and RAISE_403:

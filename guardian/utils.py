@@ -133,6 +133,24 @@ def get_40x_or_None(request, perms, obj=None, login_url=None,
                                      redirect_field_name)
 
 
+from django.apps import apps as django_apps
+from django.core.exceptions import ImproperlyConfigured
+
+def get_obj_perm_model_by_conf(setting_name):
+    """
+    Return the model that matching the string.
+    """
+    try:
+        setting_value = getattr(guardian_settings, setting_name)
+        return django_apps.get_model(setting_value, require_ready=False)
+    except ValueError:
+        raise ImproperlyConfigured("%s must be of the form 'app_label.model_name'" % setting_value)
+    except LookupError:
+        raise ImproperlyConfigured(
+            "%s refers to model '%s' that has not been installed" % (setting_name, setting_value)
+        )
+
+
 def clean_orphan_obj_perms():
     """
     Seeks and removes all object permissions entries pointing at non-existing
@@ -140,8 +158,8 @@ def clean_orphan_obj_perms():
 
     Returns number of removed objects.
     """
-    from guardian.models import UserObjectPermission
-    from guardian.models import GroupObjectPermission
+    UserObjectPermission = get_user_obj_perms_model()
+    GroupObjectPermission = get_group_obj_perms_model()
 
     deleted = 0
     # TODO: optimise
@@ -160,6 +178,9 @@ def clean_orphan_obj_perms():
 # are defined
 
 def get_obj_perms_model(obj, base_cls, generic_cls):
+    if obj is None:
+        return generic_cls
+    
     if isinstance(obj, Model):
         obj = obj.__class__
 
@@ -180,21 +201,21 @@ def get_obj_perms_model(obj, base_cls, generic_cls):
     return generic_cls
 
 
-def get_user_obj_perms_model(obj):
+def get_user_obj_perms_model(obj = None):
     """
     Returns model class that connects given ``obj`` and User class.
     """
     from guardian.models import UserObjectPermissionBase
-    from guardian.models import UserObjectPermission
+    UserObjectPermission = get_obj_perm_model_by_conf('USER_OBJ_PERMS_USE')
     return get_obj_perms_model(obj, UserObjectPermissionBase, UserObjectPermission)
 
 
-def get_group_obj_perms_model(obj):
+def get_group_obj_perms_model(obj = None):
     """
     Returns model class that connects given ``obj`` and Group class.
     """
     from guardian.models import GroupObjectPermissionBase
-    from guardian.models import GroupObjectPermission
+    GroupObjectPermission = get_obj_perm_model_by_conf('GROUP_OBJ_PERMS_USE')
     return get_obj_perms_model(obj, GroupObjectPermissionBase, GroupObjectPermission)
 
 
