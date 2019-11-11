@@ -167,3 +167,53 @@ not be compatible with non-standard deployments, and should only be used when no
 invocations would result in a large number of queries or when latency is particularly important.
 
 Defaults to ``False``.
+
+GUARDIAN_USER_OBJ_PERMS_USE
+-------------------------
+
+.. versionadded:: 2.x.x
+
+Allows the default ``UserObjectPermission`` model to be overridden by a custom model.  The custom model needs to minimally inherit from ``UserObjectPermissionBase``.  This is only automatically supported when set at the start of a project. This is NOT supported after the start of a project.  If the dependent libraries do not call ``UserObjectPermission = get_user_obj_perms_model()`` for the model, then the dependent library does not support this feature.
+
+Define a custom user object permission model
+::
+   class BigUserObjectPermission(UserObjectPermission):
+       id = models.BigAutoField(editable=False, unique=True, primary_key=True)
+       class Meta(UserObjectPermission.Meta):
+           pass
+
+Configure guardian to use the custom model in `settings.py`
+::
+   GUARDIAN_USER_OBJ_PERMS_USE = 'myapp.BigUserObjectPermission'
+
+To access the model use ``get_user_obj_perms_model()`` with no parameters
+::
+   from guardian.utils import get_user_obj_perms_model
+   UserObjectPermission = get_user_obj_perms_model()
+
+Defaults to ``'guardian.UserObjectPermission'``.
+
+GUARDIAN_GROUP_OBJ_PERMS_USE
+-------------------------
+
+.. versionadded:: 2.x.x
+
+Allows the default ``GroupObjectPermission`` model to be overridden by a custom model.  The custom model needs to minimally inherit from ``GroupObjectPermissionBase``.  This is only automatically supported when set at the start of a project. This is NOT supported after the start of a project.  If the dependent libraries do not call ``GroupObjectPermission = get_user_obj_perms_model()`` for the model, then the dependent library does not support this feature.
+
+Define a custom user object permission model
+::
+   class BigGroupObjectPermission(GroupObjectPermission):
+       id = models.BigAutoField(editable=False, unique=True, primary_key=True)
+       class Meta(GroupObjectPermission.Meta):
+           pass
+
+Configure guardian to use the custom model in `settings.py`
+::
+   GUARDIAN_GROUP_OBJ_PERMS_USE = 'myapp.BigGroupObjectPermission'
+
+To access the model use ``get_user_obj_perms_model()`` with no parameters
+::
+   from guardian.utils import get_user_obj_perms_model
+   GroupObjectPermission = get_user_obj_perms_model()
+
+Defaults to ``'guardian.GroupObjectPermission'``.
