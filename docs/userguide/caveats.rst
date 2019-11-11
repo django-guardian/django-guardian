@@ -49,8 +49,9 @@ achieved by following snippet::
     from django.db.models import Q
     from django.db.models.signals import pre_delete
     from guardian.models import User
-    from guardian.models import UserObjectPermission
-    from guardian.models import GroupObjectPermission
+    from guardian.utils import get_user_obj_perms_model, get_group_obj_perms_model
+    UserObjectPermission = get_user_obj_perms_model()
+    GroupObjectPermission = get_group_obj_perms_model()
 
 
     def remove_obj_perms_connected_with_user(sender, instance, **kwargs):
