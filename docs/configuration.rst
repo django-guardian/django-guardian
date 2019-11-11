@@ -178,10 +178,10 @@ Allows the default ``UserObjectPermission`` model to be overridden by a custom m
 Define a custom user object permission model
 ::
    from guardian.models import UserObjectPermissionAbstract
-   class BigGroupObjectPermission(GroupObjectPermissionAbstract):
+   class BigUserObjectPermission(UserObjectPermissionAbstract):
       id = models.BigAutoField(editable=False, unique=True, primary_key=True)
-      class Meta(GroupObjectPermissionAbstract.Meta):
-         abstract = False
+       class Meta(UserObjectPermissionAbstract.Meta):
+          abstract = False
 
 Configure guardian to use the custom model in `settings.py`
 ::
@@ -204,10 +204,10 @@ Allows the default ``GroupObjectPermission`` model to be overridden by a custom 
 Define a custom user object permission model
 ::
    from guardian.models import GroupObjectPermissionAbstract
-   class BigUserObjectPermission(UserObjectPermissionAbstract):
+   class BigGroupObjectPermission(GroupObjectPermissionAbstract):
       id = models.BigAutoField(editable=False, unique=True, primary_key=True)
-       class Meta(UserObjectPermissionAbstract.Meta):
-          abstract = False
+      class Meta(GroupObjectPermissionAbstract.Meta):
+         abstract = False
 
 Configure guardian to use the custom model in `settings.py`
 ::
