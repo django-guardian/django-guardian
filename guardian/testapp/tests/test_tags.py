@@ -7,9 +7,7 @@ from django.test import TestCase
 
 from guardian.core import ObjectPermissionChecker
 from guardian.exceptions import NotUserNorGroup
-from guardian.utils import get_user_obj_perms_model, get_group_obj_perms_model
-UserObjectPermission = get_user_obj_perms_model()
-GroupObjectPermission = get_group_obj_perms_model()
+from guardian.models import UserObjectPermission, GroupObjectPermission
 
 User = get_user_model()
 
