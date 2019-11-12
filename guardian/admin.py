@@ -10,7 +10,7 @@ from django.urls import reverse, path
 from django.utils.translation import ugettext_lazy as _
 from django.utils.translation import ugettext
 from guardian.forms import GroupObjectPermissionsForm, UserObjectPermissionsForm
-from guardian.models import Group
+from django.contrib.auth.models import Group
 from guardian.shortcuts import (get_group_perms, get_groups_with_perms, get_perms_for_model, get_user_perms,
                                 get_users_with_perms)
 
