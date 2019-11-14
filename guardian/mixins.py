@@ -3,7 +3,8 @@ from collections.abc import Iterable
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, REDIRECT_FIELD_NAME
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
-from guardian.models import UserObjectPermission
+from guardian.utils import get_user_obj_perms_model
+UserObjectPermission = get_user_obj_perms_model()
 from guardian.utils import get_40x_or_None, get_anonymous_user
 from guardian.shortcuts import get_objects_for_user
 
