@@ -56,6 +56,13 @@ matrix:
     - { python: 3.7, env: [*djangomaster, *postgres], <<: *pgdb}
     - { python: 3.7, env: [*djangomaster, *mysql], <<: *mariadb}
     - { python: 3.7, env: [*djangomaster, *sqlite]}
+
+    - { python: 3.8, env: [*django22, *postgres], <<: *pgdb}
+    - { python: 3.8, env: [*django22, *mysql], <<: *mariadb}
+    - { python: 3.8, env: [*django22, *sqlite]}
+    - { python: 3.8, env: [*djangomaster, *postgres], <<: *pgdb}
+    - { python: 3.8, env: [*djangomaster, *mysql], <<: *mariadb}
+    - { python: 3.8, env: [*djangomaster, *sqlite]}
   allow_failures:
     - env: [*djangomaster, *postgres]
     - env: [*djangomaster, *mysql]

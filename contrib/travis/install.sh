@@ -15,13 +15,13 @@ fi;
 
 # Install database drivers
 if [[ $DATABASE_URL = postgres* ]]; then
-    PACKAGES+=('psycopg2==2.7.5');
+    PACKAGES+=('psycopg2-binary==2.8.4');
     psql -c 'create database django_guardian;' -U postgres;
     psql -c 'create database test_django_guardian;' -U postgres;
 fi;
 
 if [[ $DATABASE_URL = mysql* ]]; then
-    PACKAGES+=('mysqlclient==1.3.13');
+    PACKAGES+=('mysqlclient==1.4.5');
     mysql -e 'CREATE DATABASE django_guardian;';
     mysql -e 'CREATE DATABASE test_django_guardian;';
 fi;
