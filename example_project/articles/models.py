@@ -31,3 +31,26 @@ class ArticleUserObjectPermission(UserObjectPermissionBase):
 
 class ArticleGroupObjectPermission(GroupObjectPermissionBase):
     content_object = models.ForeignKey(Article, on_delete=models.CASCADE)
+
+
+from guardian.models import UserObjectPermissionAbstract, GroupObjectPermissionAbstract
+
+class BigUserObjectPermission(UserObjectPermissionAbstract):
+    id = models.BigAutoField(editable=False, unique=True, primary_key=True)
+    class Meta(UserObjectPermissionAbstract.Meta):
+        abstract = False
+        indexes = [
+            *UserObjectPermissionAbstract.Meta.indexes,
+            models.Index(fields=['content_type', 'object_pk', 'user']),
+        ]
+
+
+class BigGroupObjectPermission(GroupObjectPermissionAbstract):
+    id = models.BigAutoField(editable=False, unique=True, primary_key=True)
+    class Meta(GroupObjectPermissionAbstract.Meta):
+        abstract = False
+        indexes = [
+            *GroupObjectPermissionAbstract.Meta.indexes,
+            models.Index(fields=['content_type', 'object_pk', 'group']),
+        ]
+
