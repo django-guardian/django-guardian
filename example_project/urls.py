@@ -1,4 +1,4 @@
-from guardian.compat import include,  handler404, handler500
+from guardian.compat import include, handler404, handler500
 from django.conf import settings
 from django.urls import path
 from django.contrib import admin

@@ -1,4 +1,4 @@
-Django==2.1.*
+django>=2.2.*
 django-environ==0.4.5
 django-rosetta==0.9.3
 microsofttranslator==0.8
