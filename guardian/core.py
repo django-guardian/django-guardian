@@ -26,7 +26,7 @@ def _get_pks_model_and_ctype(objects):
             if not idx:
                 model = type(obj)
                 ctype = get_content_type(model)
-            pks.append(force_text(obj.pk))
+            pks.append(force_str(obj.pk))
 
     return pks, model, ctype
 
@@ -176,7 +176,7 @@ class ObjectPermissionChecker:
         Returns cache key for ``_obj_perms_cache`` dict.
         """
         ctype = get_content_type(obj)
-        return (ctype.id, force_text(obj.pk))
+        return (ctype.id, force_str(obj.pk))
 
     def prefetch_perms(self, objects):
         """
@@ -198,7 +198,7 @@ class ObjectPermissionChecker:
                 .values_list("codename")))
 
             for pk in pks:
-                key = (ctype.id, force_text(pk))
+                key = (ctype.id, force_str(pk))
                 self._obj_perms_cache[key] = perms
 
             return True
@@ -259,7 +259,7 @@ class ObjectPermissionChecker:
             if type(perm).objects.is_generic():
                 key = (ctype.id, perm.object_pk)
             else:
-                key = (ctype.id, force_text(perm.content_object_id))
+                key = (ctype.id, force_str(perm.content_object_id))
 
             self._obj_perms_cache[key].append(perm.permission.codename)
 

@@ -6,7 +6,6 @@ from django.contrib.auth.views import LogoutView
 
 __all__ = ['handler404', 'handler500']
 
-admin.autodiscover()
 
 urlpatterns = [
     path('admin/', admin.site.urls),
