@@ -84,7 +84,7 @@ class ObjectPermissionChecker:
         group_model = get_group_obj_perms_model(obj)
         group_rel_name = group_model.permission.field.related_query_name()
         if self.user:
-            fieldname = '%s__group__%s' % (
+            fieldname = '{}__group__{}'.format(
                 group_rel_name,
                 User.groups.field.related_query_name(),
             )
@@ -206,7 +206,7 @@ class ObjectPermissionChecker:
         group_model = get_group_obj_perms_model(model)
 
         if self.user:
-            fieldname = 'group__%s' % (
+            fieldname = 'group__{}'.format(
                 User.groups.field.related_query_name(),
             )
             group_filters = {fieldname: self.user}

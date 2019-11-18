@@ -20,7 +20,7 @@ class BaseObjectPermission(models.Model):
         abstract = True
 
     def __str__(self):
-        return '%s | %s | %s' % (
+        return '{} | {} | {}'.format(
             str(self.content_object),
             str(getattr(self, 'user', False) or self.group),
             str(self.permission.codename))

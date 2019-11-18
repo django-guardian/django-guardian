@@ -146,18 +146,18 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='reversemixeduserobjectpermission',
-            unique_together=set([('user', 'permission', 'content_object')]),
+            unique_together={('user', 'permission', 'content_object')},
         ),
         migrations.AlterUniqueTogether(
             name='projectuserobjectpermission',
-            unique_together=set([('user', 'permission', 'content_object')]),
+            unique_together={('user', 'permission', 'content_object')},
         ),
         migrations.AlterUniqueTogether(
             name='projectgroupobjectpermission',
-            unique_together=set([('group', 'permission', 'content_object')]),
+            unique_together={('group', 'permission', 'content_object')},
         ),
         migrations.AlterUniqueTogether(
             name='mixedgroupobjectpermission',
-            unique_together=set([('group', 'permission', 'content_object')]),
+            unique_together={('group', 'permission', 'content_object')},
         ),
     ]

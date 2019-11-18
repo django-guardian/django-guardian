@@ -106,7 +106,7 @@ class TestDirectUserPermissions(TestCase):
         assign_perm('change_project', self.joe, foo)
 
         result = self.joe.get_all_permissions(foo)
-        self.assertEqual(result, set(('add_project', 'change_project')))
+        self.assertEqual(result, {'add_project', 'change_project'})
 
     def test_get_all_permissions_no_object(self):
         foo = Project.objects.create(name='foo')

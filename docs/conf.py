@@ -52,8 +52,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'django-guardian'
-copyright = u'Lukasz Balcerzak'
+project = 'django-guardian'
+copyright = 'Lukasz Balcerzak'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -188,8 +188,8 @@ htmlhelp_basename = 'guardiandoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-    ('index', 'guardian.tex', u'guardian Documentation',
-     u'Lukasz Balcerzak', 'manual'),
+    ('index', 'guardian.tex', 'guardian Documentation',
+     'Lukasz Balcerzak', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -210,8 +210,8 @@ latex_documents = [
 #latex_use_modindex = True
 
 pdf_documents = [
-    ('index', u'django-guardian', u'Documentation for django-guardian',
-        u'Lukasz Balcerzak'),
+    ('index', 'django-guardian', 'Documentation for django-guardian',
+        'Lukasz Balcerzak'),
 ]
 pdf_stylesheets = ['sphinx', 'kerning', 'a4']
 pdf_break_level = 2
