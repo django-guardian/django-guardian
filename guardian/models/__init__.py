@@ -15,3 +15,13 @@ from guardian.utils import get_user_obj_perms_model, get_group_obj_perms_model
 UserObjectPermission = get_user_obj_perms_model()
 GroupObjectPermission = get_group_obj_perms_model()
 
+__all__ = [
+    'UserObjectPermissionBase',
+    'UserObjectPermissionAbstract',
+    'GroupObjectPermissionBase',
+    'GroupObjectPermissionAbstract',
+    'Permission',
+    'Group',
+    'UserObjectPermission',
+    'GroupObjectPermission'
+]
