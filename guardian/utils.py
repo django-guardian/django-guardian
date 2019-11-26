@@ -212,7 +212,7 @@ def get_user_obj_perms_model(obj = None):
     """
     Returns model class that connects given ``obj`` and User class.
     If obj is not specified, then user generic object permission model
-    returned is determined by the guardian setting 'USER_OBJ_PERMS_USE'
+    returned is determined by the guardian setting 'USER_OBJ_PERMS_MODEL'
     """
     from guardian.models import UserObjectPermissionBase
     UserObjectPermission = get_obj_perm_model_by_conf('USER_OBJ_PERMS_MODEL')
@@ -223,7 +223,7 @@ def get_group_obj_perms_model(obj = None):
     """
     Returns model class that connects given ``obj`` and Group class.
     If obj is not specified, then group generic object permission model
-    returned is determined byt the guardian setting 'GROUP_OBJ_PERMS_USE'.
+    returned is determined byt the guardian setting 'GROUP_OBJ_PERMS_MODEL'.
     """
     from guardian.models import GroupObjectPermissionBase
     GroupObjectPermission = get_obj_perm_model_by_conf('GROUP_OBJ_PERMS_MODEL')
