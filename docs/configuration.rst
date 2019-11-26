@@ -188,7 +188,7 @@ Define a custom user object permission model
          ]
 
 
-Configure guardian to use the custom model in `settings.py`
+Configure guardian to use the custom model in ``settings.py``
 ::
    GUARDIAN_USER_OBJ_PERMS_USE = 'myapp.BigUserObjectPermission'
 
@@ -229,4 +229,3 @@ To access the model use ``get_user_obj_perms_model()`` with no parameters
    GroupObjectPermission = get_user_obj_perms_model()
 
 Defaults to ``'guardian.GroupObjectPermission'``.
-
