@@ -143,12 +143,12 @@ def get_obj_perm_model_by_conf(setting_name):
     try:
         setting_value = getattr(guardian_settings, setting_name)
         return django_apps.get_model(setting_value, require_ready=False)
-    except ValueError:
-        raise ImproperlyConfigured("{} must be of the form 'app_label.model_name'".format(setting_value))
-    except LookupError:
+    except ValueError as e:
+        raise ImproperlyConfigured("{} must be of the form 'app_label.model_name'".format(setting_value)) from exc
+    except LookupError as e:
         raise ImproperlyConfigured(
             "{} refers to model '{}' that has not been installed".format(setting_name, setting_value)
-        )
+        ) from e
 
 
 def clean_orphan_obj_perms():
