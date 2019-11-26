@@ -215,7 +215,7 @@ def get_user_obj_perms_model(obj = None):
     returned is determined by the guardian setting 'USER_OBJ_PERMS_USE'
     """
     from guardian.models import UserObjectPermissionBase
-    UserObjectPermission = get_obj_perm_model_by_conf('USER_OBJ_PERMS_USE')
+    UserObjectPermission = get_obj_perm_model_by_conf('USER_OBJ_PERMS_MODEL')
     return get_obj_perms_model(obj, UserObjectPermissionBase, UserObjectPermission)
 
 
@@ -226,7 +226,7 @@ def get_group_obj_perms_model(obj = None):
     returned is determined byt the guardian setting 'GROUP_OBJ_PERMS_USE'.
     """
     from guardian.models import GroupObjectPermissionBase
-    GroupObjectPermission = get_obj_perm_model_by_conf('GROUP_OBJ_PERMS_USE')
+    GroupObjectPermission = get_obj_perm_model_by_conf('GROUP_OBJ_PERMS_MODEL')
     return get_obj_perms_model(obj, GroupObjectPermissionBase, GroupObjectPermission)
 
 

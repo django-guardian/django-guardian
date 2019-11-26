@@ -168,7 +168,7 @@ invocations would result in a large number of queries or when latency is particu
 
 Defaults to ``False``.
 
-GUARDIAN_USER_OBJ_PERMS_USE
+GUARDIAN_USER_OBJ_PERMS_MODEL
 -------------------------
 
 .. versionadded:: 2.x.x
@@ -190,7 +190,7 @@ Define a custom user object permission model
 
 Configure guardian to use the custom model in ``settings.py``
 ::
-   GUARDIAN_USER_OBJ_PERMS_USE = 'myapp.BigUserObjectPermission'
+   GUARDIAN_USER_OBJ_PERMS_MODEL = 'myapp.BigUserObjectPermission'
 
 To access the model use ``get_user_obj_perms_model()`` with no parameters
 ::
@@ -199,7 +199,7 @@ To access the model use ``get_user_obj_perms_model()`` with no parameters
 
 Defaults to ``'guardian.UserObjectPermission'``.
 
-GUARDIAN_GROUP_OBJ_PERMS_USE
+GUARDIAN_GROUP_OBJ_PERMS_MODEL
 -------------------------
 
 .. versionadded:: 2.x.x
@@ -221,7 +221,7 @@ Define a custom user object permission model
 
 Configure guardian to use the custom model in `settings.py`
 ::
-   GUARDIAN_GROUP_OBJ_PERMS_USE = 'myapp.BigGroupObjectPermission'
+   GUARDIAN_GROUP_OBJ_PERMS_MODEL = 'myapp.BigGroupObjectPermission'
 
 To access the model use ``get_user_obj_perms_model()`` with no parameters
 ::
