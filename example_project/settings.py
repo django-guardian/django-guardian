@@ -80,7 +80,8 @@ PASSWORD_HASHERS = (
 )
 
 AUTH_USER_MODEL = 'core.CustomUser'
-
+GUARDIAN_USER_OBJ_PERMS_MODEL = 'articles.BigUserObjectPermission'
+GUARDIAN_GROUP_OBJ_PERMS_MODEL = 'articles.BigGroupObjectPermission'
 
 TEMPLATES = [
     {

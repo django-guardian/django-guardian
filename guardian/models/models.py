@@ -59,10 +59,17 @@ class UserObjectPermissionBase(BaseObjectPermission):
         unique_together = ['user', 'permission', 'content_object']
 
 
-class UserObjectPermission(UserObjectPermissionBase, BaseGenericObjectPermission):
+class UserObjectPermissionAbstract(UserObjectPermissionBase, BaseGenericObjectPermission):
 
     class Meta(UserObjectPermissionBase.Meta, BaseGenericObjectPermission.Meta):
+        abstract = True
         unique_together = ['user', 'permission', 'object_pk']
+
+
+class UserObjectPermission(UserObjectPermissionAbstract):
+
+    class Meta(UserObjectPermissionAbstract.Meta):
+        abstract = False
 
 
 class GroupObjectPermissionBase(BaseObjectPermission):
@@ -78,13 +85,13 @@ class GroupObjectPermissionBase(BaseObjectPermission):
         unique_together = ['group', 'permission', 'content_object']
 
 
-class GroupObjectPermission(GroupObjectPermissionBase, BaseGenericObjectPermission):
+class GroupObjectPermissionAbstract(GroupObjectPermissionBase, BaseGenericObjectPermission):
 
     class Meta(GroupObjectPermissionBase.Meta, BaseGenericObjectPermission.Meta):
+        abstract = True
         unique_together = ['group', 'permission', 'object_pk']
 
+class GroupObjectPermission(GroupObjectPermissionAbstract):
 
-setattr(Group, 'add_obj_perm',
-        lambda self, perm, obj: GroupObjectPermission.objects.assign_perm(perm, self, obj))
-setattr(Group, 'del_obj_perm',
-        lambda self, perm, obj: GroupObjectPermission.objects.remove_perm(perm, self, obj))
+    class Meta(GroupObjectPermissionAbstract.Meta):
+        abstract = False
