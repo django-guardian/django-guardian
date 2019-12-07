@@ -1,4 +1,6 @@
 from .models import (
+    BaseObjectPermission,
+    BaseGenericObjectPermission,
     UserObjectPermissionBase,
     UserObjectPermissionAbstract,
     GroupObjectPermissionBase,
@@ -16,6 +18,8 @@ UserObjectPermission = get_user_obj_perms_model()
 GroupObjectPermission = get_group_obj_perms_model()
 
 __all__ = [
+    'BaseObjectPermission',
+    'BaseGenericObjectPermission',
     'UserObjectPermissionBase',
     'UserObjectPermissionAbstract',
     'GroupObjectPermissionBase',
