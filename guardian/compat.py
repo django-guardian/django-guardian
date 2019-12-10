@@ -9,7 +9,6 @@ __all__ = [
     'AnonymousUser',
     'get_user_model',
     'user_model_label',
-    'url',
     'include',
     'handler404',
     'handler500',
