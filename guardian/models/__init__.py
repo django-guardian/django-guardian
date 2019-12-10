@@ -3,8 +3,10 @@ from .models import (
     BaseGenericObjectPermission,
     UserObjectPermissionBase,
     UserObjectPermissionAbstract,
+    UserObjectPermission,
     GroupObjectPermissionBase,
     GroupObjectPermissionAbstract,
+    GroupObjectPermission,
     Permission,
     Group
 )
