@@ -1,6 +1,8 @@
 import copy
+import os
+import unittest
 
-from django import forms
+from django import VERSION as DJANGO_VERSION, forms
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import get_user_model
@@ -83,6 +85,9 @@ class AdminTests(TestCase):
                                                       'user_id': self.user.pk})
         self.assertEqual(response.request['PATH_INFO'], redirect_url)
 
+    @unittest.skipIf(DJANGO_VERSION >= (3, 0) and
+                     "mysql" in os.environ.get("DATABASE_URL", ""),
+                     "Negative ids no longer work in Django 3.0+ with MySQL.")
     def test_view_manage_negative_user_form(self):
         self._login_superuser()
         url = reverse('admin:%s_%s_permissions' % self.obj_info,
@@ -187,6 +192,9 @@ class AdminTests(TestCase):
                                self.obj_info, args=[self.obj.pk, self.group.id])
         self.assertEqual(response.request['PATH_INFO'], redirect_url)
 
+    @unittest.skipIf(DJANGO_VERSION >= (3, 0) and
+                     "mysql" in os.environ.get("DATABASE_URL", ""),
+                     "Negative ids no longer work in Django 3.0+ with MySQL.")
     def test_view_manage_negative_group_form(self):
         self._login_superuser()
         url = reverse('admin:%s_%s_permissions' % self.obj_info,
