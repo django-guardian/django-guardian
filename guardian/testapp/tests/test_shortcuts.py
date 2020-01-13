@@ -1191,7 +1191,7 @@ class GetObjectsForGroup(TestCase):
                                         ['contenttypes.change_contenttype',
                                          'contenttypes.delete_contenttype'], any_perm=True)
         self.assertTrue(isinstance(objects, QuerySet))
-        self.assertEqual([obj for obj in objects.order_by('app_label')],
+        self.assertEqual([obj for obj in objects.order_by('app_label', 'id')],
                          [self.obj1, self.obj3])
 
     def test_results_for_different_groups_are_correct(self):
