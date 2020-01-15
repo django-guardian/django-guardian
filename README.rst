@@ -25,7 +25,7 @@ Requirements
 * Python 3.5+
 * A supported version of Django (currently 2.1+)
 
-Travis CI tests on Django version 2.1, 2.2, and master.
+Travis CI tests on Django version 2.1, 2.2, 3.0, and master.
 
 Installation
 ------------
