@@ -78,7 +78,7 @@ comment, there were no tests for the changes etc.
 How to do a new release?
 ----------------------------
 
-To enroll a new relase you should perform the following task:
+To enroll a new release you should perform the following task:
 
 * Ensure file ``CHANGES`` reflects all important changes.
 * Ensure file ``CHANGES`` includes a new version identifier and current release date.
