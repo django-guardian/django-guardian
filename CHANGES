@@ -1,3 +1,17 @@
+Release 2.2.0 (January X, 2020)
+===============================
+
+* Add support for Django 3.0 and Python 3.8.
+* Add support for custom generic object permission models.
+* Don't initialise anonymous user on DB where it's not migrated.
+* Allow object permissions with dots.
+* Several performance improvements
+    * Improve performance of ``get_objects_for_user``
+    * Update ``get_users_with_perms`` to avoid a large join
+
+.. important::
+		The 2.2.x release line will be the last one that has support for Django 2.1.
+
 Release 2.1.0 (September 9, 2019)
 =================================
 
@@ -412,4 +426,3 @@ Release 0.1.0 (Jun 6, 2010)
 
 
 .. vim: ft=rst
-
