@@ -104,3 +104,16 @@ class CustomUsernameUser(AbstractBaseUser, GuardianUserMixin):
 
     def get_short_name(self):
         return self.email
+
+
+class ParentTestModel(models.Model):
+    created_on = models.DateTimeField(auto_now_add=True)
+
+
+class ChildTestModel(ParentTestModel):
+    parent_id = models.OneToOneField(
+        ParentTestModel,
+        on_delete=models.CASCADE,
+        parent_link=True
+    )
+    name = models.CharField(max_length=31)
