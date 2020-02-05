@@ -24,7 +24,7 @@ from guardian.exceptions import MixedContentTypeError
 from guardian.exceptions import NotUserNorGroup
 from guardian.exceptions import WrongAppError
 from guardian.exceptions import MultipleIdentityAndObjectError
-from guardian.testapp.models import NonIntPKModel
+from guardian.testapp.models import NonIntPKModel, ChildTestModel
 from guardian.testapp.tests.test_core import ObjectPermissionTestCase
 from guardian.models import Group, Permission
 
@@ -1027,6 +1027,18 @@ class GetObjectsForUser(TestCase):
         self.assertEqual(
             set(objects.values_list('pk', flat=True)),
             {obj_with_char_pk.pk})
+
+    def test_model_inheritance(self):
+        child_with_perm = ChildTestModel.objects.create(name="child1")
+        assign_perm('testapp.change_childtestmodel', self.user, child_with_perm)
+        child_without_perm = ChildTestModel.objects.create(name="child2")
+
+        children = get_objects_for_user(self.user, 'testapp.change_childtestmodel', ChildTestModel)
+
+        self.assertEqual(1, len(children))
+        self.assertIn(child_with_perm, children)
+        self.assertNotIn(child_without_perm, children)
+
 
     def test_exception_different_ctypes(self):
         self.assertRaises(MixedContentTypeError, get_objects_for_user,
