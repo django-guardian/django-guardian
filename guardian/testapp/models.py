@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 
 from django.db import models
@@ -83,12 +84,24 @@ class LogEntryWithGroup(LogEntry):
     objects = models.Manager()
 
 
-class NonIntPKModel(models.Model):
+class CharPKModel(models.Model):
     """
     Model for testing whether get_objects_for_user will work when the objects to
-    be returned have non-integer primary keys.
+    be returned have varchar primary keys.
     """
     char_pk = models.CharField(primary_key=True, max_length=128)
+
+
+class UUIDPKModel(models.Model):
+    """
+    Model for testing whether get_objects_for_user will work when the objects to
+    be returned have UUID primary keys.
+    """
+    uuid_pk = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+    )
 
 
 class CustomUser(AbstractUser, GuardianUserMixin):

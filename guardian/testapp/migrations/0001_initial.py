@@ -78,7 +78,7 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='NonIntPKModel',
+            name='CharPKModel',
             fields=[
                 ('char_pk', models.CharField(max_length=128, primary_key=True, serialize=False)),
             ],

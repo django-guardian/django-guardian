@@ -19,6 +19,7 @@ from django.db.models import (
     PositiveIntegerField,
     PositiveSmallIntegerField,
     SmallIntegerField,
+    UUIDField,
 )
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
@@ -617,28 +618,29 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
         user_obj_perms_queryset = counts.filter(
             object_pk_count__gte=len(codenames))
 
-    is_cast_integer = _is_cast_integer_pk(queryset)
-
     field_pk = user_fields[0]
     values = user_obj_perms_queryset
-    if is_cast_integer:
+
+    cast_pk_field = _cast_pk_field(queryset)
+
+    if cast_pk_field:
         values = values.annotate(
-            obj_pk=Cast(field_pk, BigIntegerField())
+            obj_pk=Cast(field_pk, cast_pk_field())
         )
         field_pk = 'obj_pk'
 
     values = values.values_list(field_pk, flat=True)
-    q = Q(pk__in=values)
+    q = Q(pk__in=list(values))
     if use_groups:
         field_pk = group_fields[0]
         values = groups_obj_perms_queryset
-        if is_cast_integer:
+        if cast_pk_field:
             values = values.annotate(
-                obj_pk=Cast(field_pk, BigIntegerField())
+                obj_pk=Cast(field_pk, cast_pk_field())
             )
             field_pk = 'obj_pk'
         values = values.values_list(field_pk, flat=True)
-        q |= Q(pk__in=values)
+        q |= Q(pk__in=list(values))
 
     return queryset.filter(q)
 
@@ -783,14 +785,14 @@ def get_objects_for_group(group, perms, klass=None, any_perm=False, accept_globa
         objects = queryset.filter(pk__in=pk_list)
         return objects
 
-    is_cast_integer = _is_cast_integer_pk(queryset)
-
     field_pk = fields[0]
     values = groups_obj_perms_queryset
 
-    if is_cast_integer:
+    cast_pk_field = _cast_pk_field(queryset)
+
+    if cast_pk_field:
         values = values.annotate(
-            obj_pk=Cast(field_pk, BigIntegerField())
+            obj_pk=Cast(field_pk, cast_pk_field())
         )
         field_pk = 'obj_pk'
 
@@ -798,8 +800,21 @@ def get_objects_for_group(group, perms, klass=None, any_perm=False, accept_globa
     return queryset.filter(pk__in=values)
 
 
-def _is_cast_integer_pk(queryset):
-    return isinstance(queryset.model._meta.pk, (
-        IntegerField, AutoField, BigIntegerField,
-        PositiveIntegerField, PositiveSmallIntegerField,
-        SmallIntegerField))
+def _cast_pk_field(queryset):
+    if isinstance(
+        queryset.model._meta.pk,
+        (
+            IntegerField,
+            AutoField,
+            BigIntegerField,
+            PositiveIntegerField,
+            PositiveSmallIntegerField,
+            SmallIntegerField,
+        ),
+    ):
+        return BigIntegerField
+
+    if isinstance(queryset.model._meta.pk, UUIDField):
+        return UUIDField
+
+    return None

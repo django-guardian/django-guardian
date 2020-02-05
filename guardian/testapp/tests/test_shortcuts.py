@@ -24,7 +24,7 @@ from guardian.exceptions import MixedContentTypeError
 from guardian.exceptions import NotUserNorGroup
 from guardian.exceptions import WrongAppError
 from guardian.exceptions import MultipleIdentityAndObjectError
-from guardian.testapp.models import NonIntPKModel
+from guardian.testapp.models import CharPKModel, UUIDPKModel
 from guardian.testapp.tests.test_core import ObjectPermissionTestCase
 from guardian.models import Group, Permission
 
@@ -972,34 +972,49 @@ class GetObjectsForUser(TestCase):
             set(objects.values_list('id', flat=True)),
             {ctypes[0].id, ctypes[1].id})
 
-    def test_non_integer_primary_key(self):
+    def test_varchar_primary_key(self):
         """
         Verify that the function works when the objects that should be returned
-        have non-integer primary keys.
+        have varchar primary keys.
         """
-        obj_with_char_pk = NonIntPKModel.objects.create(
+        obj_with_char_pk = CharPKModel.objects.create(
             char_pk='testprimarykey')
-        assign_perm('add_nonintpkmodel', self.user, obj_with_char_pk)
+        assign_perm('add_charpkmodel', self.user, obj_with_char_pk)
 
-        objects = get_objects_for_user(self.user, 'testapp.add_nonintpkmodel')
+        objects = get_objects_for_user(self.user, 'testapp.add_charpkmodel')
         self.assertEqual(len(objects), 1)
         self.assertTrue(isinstance(objects, QuerySet))
         self.assertEqual(
             set(objects.values_list('pk', flat=True)),
             {obj_with_char_pk.pk})
 
-    def test_non_integer_primary_key_with_any_perm(self):
+    def test_uuid_primary_key(self):
+        """
+        Verify that the function works when the objects that should be returned
+        have uuid primary keys.
+        """
+        obj_with_uuid_pk = UUIDPKModel.objects.create()
+        assign_perm('add_uuidpkmodel', self.user, obj_with_uuid_pk)
+
+        objects = get_objects_for_user(self.user, 'testapp.add_uuidpkmodel')
+        self.assertEqual(len(objects), 1)
+        self.assertTrue(isinstance(objects, QuerySet))
+        self.assertEqual(
+            set(objects.values_list('pk', flat=True)),
+            {obj_with_uuid_pk.pk})
+
+    def test_varchar_primary_key_with_any_perm(self):
         """
         Verify that the function works with any_perm set to True when the
-        objects that should be returned have non-integer primary keys.
+        objects that should be returned have varchar primary keys.
         """
-        obj_with_char_pk = NonIntPKModel.objects.create(
+        obj_with_char_pk = CharPKModel.objects.create(
             char_pk='testprimarykey')
-        assign_perm('add_nonintpkmodel', self.user, obj_with_char_pk)
+        assign_perm('add_charpkmodel', self.user, obj_with_char_pk)
 
         objects = get_objects_for_user(
             self.user,
-            ['testapp.add_nonintpkmodel', 'testapp.change_nonintpkmodel'],
+            ['testapp.add_charpkmodel', 'testapp.change_charpkmodel'],
             any_perm=True)
         self.assertEqual(len(objects), 1)
         self.assertTrue(isinstance(objects, QuerySet))
@@ -1007,26 +1022,64 @@ class GetObjectsForUser(TestCase):
             set(objects.values_list('pk', flat=True)),
             {obj_with_char_pk.pk})
 
-    def test_non_integer_primary_key_with_group_values(self):
+    def test_uuid_primary_key_with_any_perm(self):
+        """
+        Verify that the function works with any_perm set to True when the
+        objects that should be returned have uuid primary keys.
+        """
+        obj_with_uuid_pk = UUIDPKModel.objects.create()
+        assign_perm('add_uuidpkmodel', self.user, obj_with_uuid_pk)
+
+        objects = get_objects_for_user(
+            self.user,
+            ['testapp.add_uuidpkmodel', 'testapp.change_uuidpkmodel'],
+            any_perm=True)
+        self.assertEqual(len(objects), 1)
+        self.assertTrue(isinstance(objects, QuerySet))
+        self.assertEqual(
+            set(objects.values_list('pk', flat=True)),
+            {obj_with_uuid_pk.pk})
+
+    def test_varchar_primary_key_with_group_values(self):
         """
         Verify that the function works when the objects that should be returned
-        have non-integer primary keys, and those objects are due to the user's
+        have varchar primary keys, and those objects are due to the user's
         groups.
         """
-        obj_with_char_pk = NonIntPKModel.objects.create(
+        obj_with_char_pk = CharPKModel.objects.create(
             char_pk='testprimarykey')
-        assign_perm('add_nonintpkmodel', self.group, obj_with_char_pk)
+        assign_perm('add_charpkmodel', self.group, obj_with_char_pk)
         self.user.groups.add(self.group)
 
         objects = get_objects_for_user(
             self.user,
-            ['testapp.add_nonintpkmodel', 'testapp.change_nonintpkmodel'],
+            ['testapp.add_charpkmodel', 'testapp.change_charpkmodel'],
             any_perm=True)
         self.assertEqual(len(objects), 1)
         self.assertTrue(isinstance(objects, QuerySet))
         self.assertEqual(
             set(objects.values_list('pk', flat=True)),
             {obj_with_char_pk.pk})
+
+    def test_uuid_primary_key_with_group_values(self):
+        """
+        Verify that the function works when the objects that should be returned
+        have uuid primary keys, and those objects are due to the user's
+        groups.
+        """
+        obj_with_uuid_pk = UUIDPKModel.objects.create()
+        assign_perm('add_uuidpkmodel', self.group, obj_with_uuid_pk)
+        self.user.groups.add(self.group)
+
+        objects = get_objects_for_user(
+            self.user,
+            ['testapp.add_uuidpkmodel', 'testapp.change_uuidpkmodel'],
+            any_perm=True)
+        self.assertEqual(len(objects), 1)
+        self.assertTrue(isinstance(objects, QuerySet))
+        self.assertEqual(
+            set(objects.values_list('pk', flat=True)),
+            {obj_with_uuid_pk.pk})
 
     def test_exception_different_ctypes(self):
         self.assertRaises(MixedContentTypeError, get_objects_for_user,
