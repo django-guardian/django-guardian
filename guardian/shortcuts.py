@@ -19,6 +19,7 @@ from django.db.models import (
     PositiveIntegerField,
     PositiveSmallIntegerField,
     SmallIntegerField,
+    ForeignKey
 )
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
@@ -799,7 +800,12 @@ def get_objects_for_group(group, perms, klass=None, any_perm=False, accept_globa
 
 
 def _is_cast_integer_pk(queryset):
-    return isinstance(queryset.model._meta.pk, (
+    pk = queryset.model._meta.pk
+
+    if isinstance(pk, ForeignKey):
+        return _is_cast_integer_pk(pk.target_field)
+
+    return isinstance(pk, (
         IntegerField, AutoField, BigIntegerField,
         PositiveIntegerField, PositiveSmallIntegerField,
         SmallIntegerField))
