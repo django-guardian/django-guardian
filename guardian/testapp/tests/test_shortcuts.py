@@ -1,3 +1,4 @@
+import uuid
 import warnings
 
 import django
@@ -994,6 +995,7 @@ class GetObjectsForUser(TestCase):
         have uuid primary keys.
         """
         obj_with_uuid_pk = UUIDPKModel.objects.create()
+        obj_with_uuid_pk.refresh_from_db()
         assign_perm('add_uuidpkmodel', self.user, obj_with_uuid_pk)
 
         objects = get_objects_for_user(self.user, 'testapp.add_uuidpkmodel')
@@ -1028,6 +1030,7 @@ class GetObjectsForUser(TestCase):
         objects that should be returned have uuid primary keys.
         """
         obj_with_uuid_pk = UUIDPKModel.objects.create()
+        obj_with_uuid_pk.refresh_from_db()
         assign_perm('add_uuidpkmodel', self.user, obj_with_uuid_pk)
 
         objects = get_objects_for_user(
@@ -1068,6 +1071,7 @@ class GetObjectsForUser(TestCase):
         groups.
         """
         obj_with_uuid_pk = UUIDPKModel.objects.create()
+        obj_with_uuid_pk.refresh_from_db()
         assign_perm('add_uuidpkmodel', self.group, obj_with_uuid_pk)
         self.user.groups.add(self.group)
 
