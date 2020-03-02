@@ -1039,7 +1039,6 @@ class GetObjectsForUser(TestCase):
         self.assertIn(child_with_perm, children)
         self.assertNotIn(child_without_perm, children)
 
-
     def test_exception_different_ctypes(self):
         self.assertRaises(MixedContentTypeError, get_objects_for_user,
                           self.user, ['auth.change_permission', 'auth.change_group'])
