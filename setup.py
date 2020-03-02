@@ -6,7 +6,7 @@ from extras import RunFlakesCommand
 version = '2.2.0'
 
 readme_file = os.path.join(os.path.dirname(__file__), 'README.rst')
-with open(readme_file, 'r') as f:
+with open(readme_file) as f:
     long_description = f.read()
 
 setup(
