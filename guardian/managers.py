@@ -54,8 +54,11 @@ class BaseObjectPermissionManager(models.Manager):
         Bulk assigns permissions with given ``perm`` for an objects in ``queryset`` and
         ``user_or_group``.
         """
+        if isinstance(queryset, list):
+            ctype = get_content_type(queryset[0])
+        else:
+            ctype = get_content_type(queryset.model)
 
-        ctype = get_content_type(queryset.model)
         if not isinstance(perm, Permission):
             permission = Permission.objects.get(content_type=ctype, codename=perm)
         else:
