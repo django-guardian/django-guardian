@@ -43,8 +43,8 @@ def assign_perm(perm, user_or_group, obj=None):
       ``guardian.exceptions.NotUserNorGroup`` exception
 
     :param obj: persisted Django's ``Model`` instance or QuerySet of Django
-      ``Model`` instances or ``None`` if assigning global permission.
-      Default is ``None``.
+      ``Model`` instances or list of Django ``Model`` instances or ``None``
+      if assigning global permission. Default is ``None``.
 
     We can assign permission for ``Model`` instance for specific user:
 
@@ -100,14 +100,16 @@ def assign_perm(perm, user_or_group, obj=None):
         if '.' in perm:
             app_label, perm = perm.split(".", 1)
 
-    if isinstance(obj, QuerySet):
+    if isinstance(obj, (QuerySet, list)):
         if isinstance(user_or_group, (QuerySet, list)):
             raise MultipleIdentityAndObjectError("Only bulk operations on either users/groups OR objects supported")
         if user:
-            model = get_user_obj_perms_model(obj.model)
+            model = get_user_obj_perms_model(
+                    obj[0] if isinstance(obj, list) else obj.model)
             return model.objects.bulk_assign_perm(perm, user, obj)
         if group:
-            model = get_group_obj_perms_model(obj.model)
+            model = get_group_obj_perms_model(
+                    obj[0] if isinstance(obj, list) else obj.model)
             return model.objects.bulk_assign_perm(perm, group, obj)
 
     if isinstance(user_or_group, (QuerySet, list)):
