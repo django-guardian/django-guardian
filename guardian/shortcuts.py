@@ -100,14 +100,17 @@ def assign_perm(perm, user_or_group, obj=None):
         if '.' in perm:
             app_label, perm = perm.split(".", 1)
 
-    if isinstance(obj, QuerySet):
+    if isinstance(obj, (QuerySet, list)):
         if isinstance(user_or_group, (QuerySet, list)):
-            raise MultipleIdentityAndObjectError("Only bulk operations on either users/groups OR objects supported")
-        if user:
+            raise MultipleIdentityAndObjectError("Only bulk operations on either users/groups OR objects supported") 
+        if isinstance(obj, list):
+            model = get_user_obj_perms_model(obj[0])
+        else:
             model = get_user_obj_perms_model(obj.model)
+
+        if user:
             return model.objects.bulk_assign_perm(perm, user, obj)
         if group:
-            model = get_group_obj_perms_model(obj.model)
             return model.objects.bulk_assign_perm(perm, group, obj)
 
     if isinstance(user_or_group, (QuerySet, list)):
