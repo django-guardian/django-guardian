@@ -134,6 +134,34 @@ class AssignPermTest(ObjectPermissionTestCase):
             self.assertEqual(len(warns), 1)
             self.assertTrue(isinstance(warns[0].message, DeprecationWarning))
 
+    def test_user_assign_perm_list(self):
+        """
+        Test that one is able to assign permissions for a list of objects
+        to a user
+        """
+        assign_perm("add_contenttype", self.user, self.ctype_list)
+        assign_perm("change_contenttype", self.group, self.ctype_list)
+        assign_perm(self.get_permission("delete_contenttype"), self.user, self.ctype_list)
+        for obj in self.ctype_list:
+            self.assertTrue(self.user.has_perm("add_contenttype", obj))
+            self.assertTrue(self.user.has_perm("change_contenttype", obj))
+            self.assertTrue(self.user.has_perm("delete_contenttype", obj))
+
+    def test_group_assign_perm_list(self):
+        """
+        Test that one is able to assign permissions for a list of
+        objects to a group
+        """
+        assign_perm("add_contenttype", self.group, self.ctype_list)
+        assign_perm("change_contenttype", self.group, self.ctype_list)
+        assign_perm(self.get_permission("delete_contenttype"), self.group, self.ctype_list)
+
+        check = ObjectPermissionChecker(self.group)
+        for obj in self.ctype_list:
+            self.assertTrue(check.has_perm("add_contenttype", obj))
+            self.assertTrue(check.has_perm("change_contenttype", obj))
+            self.assertTrue(check.has_perm("delete_contenttype", obj)) 
+
 
 class MultipleIdentitiesOperationsTest(ObjectPermissionTestCase):
     """
