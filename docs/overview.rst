@@ -41,6 +41,6 @@ For instance, `django-authority`_ or
 .. _issue-tracker: http://github.com/lukaszb/django-guardian
 .. _grappelli: https://github.com/sehmaschine/django-grappelli
 
-.. [1] See http://docs.djangoproject.com/en/1.2/topics/auth/#handling-object-permissions
+.. [1] See https://docs.djangoproject.com/en/stable/topics/auth/customizing/#handling-object-permissions
    for more detail.
 
