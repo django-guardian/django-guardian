@@ -57,7 +57,7 @@ our *assign_task* permission would be added to default set of permissions.
    add ``default_permissions = ('add', 'change', 'delete')`` to ``Meta``.
 
 There is nothing new here since creation of permissions is 
-`handled by django <http://docs.djangoproject.com/en/2.2/topics/auth/#id1>`_.
+`handled by django <https://docs.djangoproject.com/en/stable/topics/auth/>`_.
 Now we can move to :ref:`assigning object permissions <assign-obj-perms>`.
 
 .. _assign-obj-perms:
