@@ -10,10 +10,6 @@ In order to install ``django-guardian`` simply use ``pip``::
 
    pip install django-guardian
 
-or ``easy_install``::
-
-   easy_install django-guardian
-
 This would be enough to run ``django-guardian``. However, in order to run tests
 or example application, there are some other requirements. See more
 details about the topics:
