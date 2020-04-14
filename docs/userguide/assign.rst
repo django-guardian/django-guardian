@@ -45,18 +45,13 @@ our *assign_task* permission would be added to default set of permissions.
    - *add_modelname*
    - *change_modelname*
    - *delete_modelname*
-   - *view_modelname* (since Django 2.1)
+   - *view_modelname*
 
    (where *modelname* is a simplified name of our model's class). See
    https://docs.djangoproject.com/en/stable/topics/auth/default/#default-permissions for
    more detail.
 
-.. note::
-   When upgrading to Django 2.1 custom created *view_modelname* permissions
-   clash with the newly built-in ones.  The simplest way to fix this is to
-   add ``default_permissions = ('add', 'change', 'delete')`` to ``Meta``.
-
-There is nothing new here since creation of permissions is 
+There is nothing new here since creation of permissions is
 `handled by django <https://docs.djangoproject.com/en/stable/topics/auth/>`_.
 Now we can move to :ref:`assigning object permissions <assign-obj-perms>`.
 
