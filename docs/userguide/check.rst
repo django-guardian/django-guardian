@@ -185,5 +185,5 @@ get_obj_perms
 .. autofunction:: guardian.templatetags.guardian_tags.get_obj_perms
    :noindex:
 
-.. _django-authority: http://bitbucket.org/jezdez/django-authority/
+.. _django-authority: https://github.com/jazzband/django-authority
 
