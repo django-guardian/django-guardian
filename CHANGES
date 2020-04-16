@@ -1,3 +1,8 @@
+Release 2.2.1 (January 16, 2020)
+===============================
+
+* Fix compatibility with UUIDField primary keys
+
 Release 2.2.0 (January 3, 2020)
 ===============================
 
