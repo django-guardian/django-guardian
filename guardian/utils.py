@@ -93,7 +93,8 @@ def get_identity(identity):
 
 def get_40x_or_None(request, perms, obj=None, login_url=None,
                     redirect_field_name=None, return_403=False,
-                    return_404=False, accept_global_perms=False):
+                    return_404=False, accept_global_perms=False,
+                    any_perm=False):
     login_url = login_url or settings.LOGIN_URL
     redirect_field_name = redirect_field_name or REDIRECT_FIELD_NAME
 
@@ -106,8 +107,12 @@ def get_40x_or_None(request, perms, obj=None, login_url=None,
         has_permissions = all(request.user.has_perm(perm) for perm in perms)
     # if still no permission granted, try obj perms
     if not has_permissions:
-        has_permissions = all(request.user.has_perm(perm, obj)
-                              for perm in perms)
+        if any_perm:
+            has_permissions = any(request.user.has_perm(perm, obj)
+                                for perm in perms)
+        else:
+            has_permissions = all(request.user.has_perm(perm, obj)
+                                for perm in perms)
 
     if not has_permissions:
         if return_403:
@@ -180,7 +185,7 @@ def clean_orphan_obj_perms():
 def get_obj_perms_model(obj, base_cls, generic_cls):
     """
     Return the matching object permission model for the obj class
-    Defaults to returning the generic object permission when 
+    Defaults to returning the generic object permission when
     no direct foreignkey is defined or obj is None
     """
     # Default to the generic object permission model
