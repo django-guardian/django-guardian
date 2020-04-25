@@ -175,15 +175,6 @@ class PermissionRequiredMixin:
         """
         obj = self.get_permission_object()
 
-        if self.any_perm:
-            is_permitted = any(
-                (
-                    request.user.has_perm(perm, obj)
-                    for perm in self.get_required_permissions(request)),
-            )
-            if is_permitted:
-                return None
-
         forbidden = get_40x_or_None(request,
                                     perms=self.get_required_permissions(
                                         request),
@@ -192,7 +183,8 @@ class PermissionRequiredMixin:
                                     redirect_field_name=self.redirect_field_name,
                                     return_403=self.return_403,
                                     return_404=self.return_404,
-                                    accept_global_perms=self.accept_global_perms
+                                    accept_global_perms=self.accept_global_perms,
+                                    any_perm=self.any_perm,
                                     )
         if forbidden:
             self.on_permission_check_fail(request, forbidden, obj=obj)
