@@ -126,6 +126,10 @@ class PermissionRequiredMixin:
          to ``self.get_permission_object()`` which return ``self.get_object()``
          or ``self.object`` by default.
 
+    ``PermissionRequiredMixin.any_perm``
+
+        *Default*: ``False``. if True, any of permission in sequence is accepted.
+
     """
     # default class view settings
     login_url = settings.LOGIN_URL
@@ -135,6 +139,7 @@ class PermissionRequiredMixin:
     return_404 = False
     raise_exception = False
     accept_global_perms = False
+    any_perm = False
 
     def get_required_permissions(self, request=None):
         """
@@ -169,6 +174,15 @@ class PermissionRequiredMixin:
         :param request: Original request.
         """
         obj = self.get_permission_object()
+
+        if self.any_perm:
+            is_permitted = any(
+                (
+                    request.user.has_perm(perm, obj)
+                    for perm in self.get_required_permissions(request)),
+            )
+            if is_permitted:
+                return None
 
         forbidden = get_40x_or_None(request,
                                     perms=self.get_required_permissions(
