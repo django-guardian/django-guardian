@@ -1,13 +1,14 @@
-Release 2.3.0 (January 16, 2020)
+Release 2.3.0 (May 6, 2020)
 ===============================
 
+* Drop support for Django 2.1
+* Fix compatibility with UUIDField primary keys
 * Fix formatting for pyupgrade
 * Fix error with get_objects_for_user on PostgreSQL
 * Modify 'assign_perm' shortcut to treat lists as a queryset
 * Updated links to Django documentation and django-authority repository
 * Removed reference to "easy_install" in the documentation
 * Run migrations check only if required version of django is installed
-* Fix compatibility with UUIDField primary keys
 
 Release 2.2.0 (January 3, 2020)
 ===============================
