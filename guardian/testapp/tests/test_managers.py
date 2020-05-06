@@ -1,6 +1,6 @@
 import warnings
 
-import mock
+from unittest import mock
 from django.test import TestCase
 from guardian.managers import UserObjectPermissionManager
 from guardian.managers import GroupObjectPermissionManager

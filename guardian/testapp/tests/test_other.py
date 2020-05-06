@@ -1,4 +1,4 @@
-import mock
+from unittest import mock
 import unittest
 
 from django.contrib.auth import get_user_model
