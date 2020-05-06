@@ -1,6 +1,6 @@
 from django.core.exceptions import ImproperlyConfigured
 from django.test import TestCase
-import mock
+from unittest import mock
 from guardian.conf import settings as guardian_settings
 from guardian.ctypes import get_content_type
 

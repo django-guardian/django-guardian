@@ -9,7 +9,7 @@ from django.views.generic import View
 from django.views.generic import ListView
 
 from guardian.shortcuts import assign_perm
-import mock
+from unittest import mock
 from guardian.mixins import LoginRequiredMixin
 from guardian.mixins import PermissionRequiredMixin
 from guardian.mixins import PermissionListMixin

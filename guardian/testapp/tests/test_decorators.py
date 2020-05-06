@@ -14,7 +14,7 @@ from django.test import TestCase
 
 from guardian.compat import get_user_model_path
 from guardian.compat import get_user_permission_full_codename
-import mock
+from unittest import mock
 from guardian.decorators import permission_required, permission_required_or_403, permission_required_or_404
 from guardian.exceptions import GuardianError
 from guardian.exceptions import WrongAppError
