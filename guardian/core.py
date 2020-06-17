@@ -157,9 +157,11 @@ class ObjectPermissionChecker:
             if guardian_settings.AUTO_PREFETCH:
                 return []
             if self.user and self.user.is_superuser:
-                perms = list(chain(*Permission.objects
-                                   .filter(content_type=ctype)
-                                   .values_list("codename")))
+                perms = list(
+                    chain.from_iterable(
+                        Permission.objects.filter(content_type=ctype).values_list("codename")
+                    )
+                )
             elif self.user:
                 # Query user and group permissions separately and then combine
                 # the results to avoid a slow query
@@ -192,10 +194,11 @@ class ObjectPermissionChecker:
         pks, model, ctype = _get_pks_model_and_ctype(objects)
 
         if self.user and self.user.is_superuser:
-            perms = list(chain(
-                *Permission.objects
-                .filter(content_type=ctype)
-                .values_list("codename")))
+            perms = list(
+                chain.from_iterable(
+                    Permission.objects.filter(content_type=ctype).values_list("codename")
+                )
+            )
 
             for pk in pks:
                 key = (ctype.id, force_str(pk))
@@ -245,9 +248,7 @@ class ObjectPermissionChecker:
             group_perms_qs = group_model.objects.filter(**group_filters).select_related('permission')
             perms = chain(user_perms_qs, group_perms_qs)
         else:
-            perms = chain(
-                *(group_model.objects.filter(**group_filters).select_related('permission'),)
-            )
+            perms = group_model.objects.filter(**group_filters).select_related('permission')
 
         # initialize entry in '_obj_perms_cache' for all prefetched objects
         for obj in objects:
