@@ -158,9 +158,7 @@ class ObjectPermissionChecker:
                 return []
             if self.user and self.user.is_superuser:
                 perms = list(
-                    chain.from_iterable(
-                        Permission.objects.filter(content_type=ctype).values_list("codename")
-                    )
+                    Permission.objects.filter(content_type=ctype).values_list("codename", flat=True)
                 )
             elif self.user:
                 # Query user and group permissions separately and then combine
@@ -195,9 +193,7 @@ class ObjectPermissionChecker:
 
         if self.user and self.user.is_superuser:
             perms = list(
-                chain.from_iterable(
-                    Permission.objects.filter(content_type=ctype).values_list("codename")
-                )
+                Permission.objects.filter(content_type=ctype).values_list("codename", flat=True)
             )
 
             for pk in pks:
