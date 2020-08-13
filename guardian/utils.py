@@ -109,10 +109,10 @@ def get_40x_or_None(request, perms, obj=None, login_url=None,
     if not has_permissions:
         if any_perm:
             has_permissions = any(request.user.has_perm(perm, obj)
-                                for perm in perms)
+                                  for perm in perms)
         else:
             has_permissions = all(request.user.has_perm(perm, obj)
-                                for perm in perms)
+                                  for perm in perms)
 
     if not has_permissions:
         if return_403:
