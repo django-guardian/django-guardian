@@ -109,7 +109,9 @@ class AssignPermTest(ObjectPermissionTestCase):
 
     def test_user_assign_perm_global(self):
         perm = assign_perm("contenttypes.change_contenttype", self.user)
+        assign_perm(self.get_permission("delete_contenttype"), self.group)
         self.assertTrue(self.user.has_perm("contenttypes.change_contenttype"))
+        self.assertTrue(self.user.has_perm("contenttypes.delete_contenttype"))
         self.assertTrue(isinstance(perm, Permission))
 
     def test_group_assign_perm_global(self):
@@ -160,7 +162,7 @@ class AssignPermTest(ObjectPermissionTestCase):
         for obj in self.ctype_list:
             self.assertTrue(check.has_perm("add_contenttype", obj))
             self.assertTrue(check.has_perm("change_contenttype", obj))
-            self.assertTrue(check.has_perm("delete_contenttype", obj)) 
+            self.assertTrue(check.has_perm("delete_contenttype", obj))
 
 
 class MultipleIdentitiesOperationsTest(ObjectPermissionTestCase):
@@ -272,9 +274,13 @@ class RemovePermTest(ObjectPermissionTestCase):
     def test_user_remove_perm_global(self):
         # assign perm first
         perm = "contenttypes.change_contenttype"
+        perm_obj = self.get_permission("delete_contenttype")
         assign_perm(perm, self.user)
+        assign_perm(perm_obj, self.user)
         remove_perm(perm, self.user)
+        remove_perm(perm_obj, self.user)
         self.assertFalse(self.user.has_perm(perm))
+        self.assertFalse(self.user.has_perm(perm_obj.codename))
 
     def test_group_remove_perm_global(self):
         # assign perm first
