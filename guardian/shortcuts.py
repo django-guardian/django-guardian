@@ -162,17 +162,18 @@ def remove_perm(perm, user_or_group=None, obj=None):
     """
     user, group = get_identity(user_or_group)
     if obj is None:
-        try:
-            app_label, codename = perm.split('.', 1)
-        except ValueError:
-            raise ValueError("For global permissions, first argument must be in"
-                             " format: 'app_label.codename' (is %r)" % perm)
-        perm = Permission.objects.get(content_type__app_label=app_label,
-                                      codename=codename)
+        if not isinstance(perm, Permission):
+            try:
+                app_label, codename = perm.split('.', 1)
+            except ValueError:
+                raise ValueError("For global permissions, first argument must be in"
+                                 " format: 'app_label.codename' (is %r)" % perm)
+            perm = Permission.objects.get(content_type__app_label=app_label,
+                                          codename=codename)
         if user:
             user.user_permissions.remove(perm)
             return
-        elif group:
+        if group:
             group.permissions.remove(perm)
             return
 
