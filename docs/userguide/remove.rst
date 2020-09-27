@@ -4,7 +4,7 @@ Remove object permissions
 =========================
 
 Removing object permissions is as easy as assigning them. Just instead of
-:func:`guardian.shortcuts.assign` we would use
+:func:`guardian.shortcuts.assign_perm` we would use
 :func:`guardian.shortcuts.remove_perm` function (it accepts same arguments).
 
 Example
