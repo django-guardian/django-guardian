@@ -61,6 +61,9 @@ We need to hook ``django-guardian`` into our project.
 
      python manage.py migrate
 
+4. Create superuser for viewing the admin page.
+     python manage.py createsuperuser
+
 Usage
 -----
 
