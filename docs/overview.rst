@@ -31,7 +31,7 @@ Alternate projects
 
 Django_ still *only* has the foundation for object permissions [1]_ and
 ``django-guardian`` makes use of new facilities and it is based on them.  There
-are some other pluggable applications which do *NOT* require Django_ version 1.2+. 
+are some other pluggable applications which do *NOT* require Django_ version 2.2+. 
 For instance, `django-authority`_ or
 `django-permissions`_ are great options available.
 
