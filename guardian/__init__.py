@@ -2,8 +2,10 @@
 Implementation of per object permissions for Django.
 """
 from . import checks
+import django
 
-default_app_config = 'guardian.apps.GuardianConfig'
+if django.VERSION < (3, 2):
+    default_app_config = 'guardian.apps.GuardianConfig'
 
 # PEP 396: The __version__ attribute's value SHOULD be a string.
 __version__ = '2.3.0'
