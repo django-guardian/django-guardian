@@ -4,6 +4,7 @@ from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.db.models import Model
 from django.db.models.base import ModelBase
 from django.db.models.query import QuerySet
+from django.http.request import HttpRequest
 from django.shortcuts import get_object_or_404
 from django.utils.functional import wraps
 from guardian.exceptions import GuardianError
@@ -85,7 +86,18 @@ def permission_required(perm, lookup_variables=None, **kwargs):
                             "'app_label.codename or a callable which return similar string'")
 
     def decorator(view_func):
-        def _wrapped_view(request, *args, **kwargs):
+        def _wrapped_view(*args, **kwargs):
+            # View functions take request as the first argument,
+            # but view methods take (self, request) as the first two arguments.
+            # This correctly identifies the request in either case, 
+            # and provides a meaningful error message if no request is found.
+            for arg in args[:2]:
+                if isinstance(arg, HttpRequest):
+                    request = arg
+                    break
+            else:
+                raise TypeError("%s() missing 1 required positional argument: "
+                                "'request'" % view_func.__name__)
             # if more than one parameter is passed to the decorator we try to
             # fetch object for which check would be made
             obj = None
@@ -121,7 +133,7 @@ def permission_required(perm, lookup_variables=None, **kwargs):
                                        return_403=return_403, return_404=return_404, accept_global_perms=accept_global_perms)
             if response:
                 return response
-            return view_func(request, *args, **kwargs)
+            return view_func(*args, **kwargs)
         return wraps(view_func)(_wrapped_view)
     return decorator
 
