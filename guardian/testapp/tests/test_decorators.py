@@ -399,3 +399,36 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
         # this should be '/account/login'
         self.assertRedirects(
             response, global_settings.LOGIN_URL + "?next=" + view_url)
+
+    def test_view_method(self):
+        perm = get_user_permission_full_codename('change')
+        joe, created = User.objects.get_or_create(username='joe')
+        assign_perm(perm, self.user, obj=joe)
+
+        request = self._get_request(self.user)
+
+        class DummyClass:
+            @permission_required_or_403(perm, (
+                user_model_path, 'username', 'username'))
+            def dummy_view(self, request, username):
+                return HttpResponse('dummy_view')
+
+        response = DummyClass().dummy_view(request, username='joe')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b'dummy_view')
+
+    def test_no_request_argument(self):
+        perm = get_user_permission_full_codename('change')
+        joe, created = User.objects.get_or_create(username='joe')
+        assign_perm(perm, self.user, obj=joe)
+
+        request = self._get_request(self.user)
+
+        @permission_required_or_403(perm, (
+            user_model_path, 'username', 'username'))
+        def dummy_view(request, username):
+            return HttpResponse('dummy_view')
+
+        with self.assertRaises(TypeError, msg="dummy_view() missing 1 required positional argument: 'request'"):
+            # A nice error message is thrown when request is not included
+            dummy_view(username='joe')
