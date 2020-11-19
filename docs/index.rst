@@ -9,7 +9,7 @@
 
 **Documentation**:
 
-.. image:: https://secure.travis-ci.org/django-guardian/django-guardian.png?branch=master
+.. image:: https://secure.travis-ci.org/django-guardian/django-guardian.svg?branch=master
   :target: http://travis-ci.org/django-guardian/django-guardian
 
 .. toctree::
