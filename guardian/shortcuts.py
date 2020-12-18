@@ -530,7 +530,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
         raise WrongAppError("Cannot determine content type")
     else:
         queryset = _get_queryset(klass)
-        if ctype.model_class() != queryset.model:
+        if ctype != get_content_type(queryset.model):
             raise MixedContentTypeError("Content type for given perms and "
                                         "klass differs")
 
