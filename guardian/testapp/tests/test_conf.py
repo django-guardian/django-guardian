@@ -22,7 +22,7 @@ class TestConfiguration(TestCase):
         with mock.patch('guardian.conf.settings.REGISTER_VARIABLE', True):
             guardian_settings.register_variable()
             from django.conf import settings
-            self.assertEqual(settings.ANONYMOUS_USER_NAME, 'AnonymousUser')
+            self.assertEqual(settings.ANONYMOUS_USER_NAME, guardian_settings.ANONYMOUS_USER_NAME)
 
 
 def get_test_content_type(obj):
