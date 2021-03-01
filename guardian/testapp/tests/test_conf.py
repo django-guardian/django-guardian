@@ -18,6 +18,12 @@ class TestConfiguration(TestCase):
         with mock.patch('guardian.conf.settings.GET_CONTENT_TYPE', 'guardian.testapp.tests.test_conf.get_test_content_type'):
             self.assertEqual(get_content_type(None), 'x')
 
+    def test_register_variable(self):
+        with mock.patch('guardian.conf.settings.REGISTER_VARIABLE', True):
+            guardian_settings.register_variable()
+            from django.conf import settings
+            self.assertEqual(settings.ANONYMOUS_USER_NAME, 'ANONYMOUS_USER_NAME')
+
 
 def get_test_content_type(obj):
     """ Used in TestConfiguration.test_get_content_type()."""
