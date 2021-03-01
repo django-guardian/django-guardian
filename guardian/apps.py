@@ -12,3 +12,5 @@ class GuardianConfig(AppConfig):
         monkey_patch_group()
         if settings.MONKEY_PATCH:
             monkey_patch_user()
+        if settings.REGISTER_VARIABLE:
+            settings.register_variable()

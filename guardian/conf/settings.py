@@ -30,10 +30,42 @@ AUTO_PREFETCH = getattr(settings, 'GUARDIAN_AUTO_PREFETCH', False)
 USER_OBJ_PERMS_MODEL = getattr(settings, 'GUARDIAN_USER_OBJ_PERMS_MODEL', 'guardian.UserObjectPermission')
 GROUP_OBJ_PERMS_MODEL = getattr(settings, 'GUARDIAN_GROUP_OBJ_PERMS_MODEL', 'guardian.GroupObjectPermission')
 
+REGISTER_VARIABLE = getattr(settings, 'GUARDIAN_REGISTER_VARIABLE', False)
+
+
+def register_variable():
+    if not hasattr(settings, 'ANONYMOUS_USER_NAME'):
+        setattr(settings, 'ANONYMOUS_USER_NAME', ANONYMOUS_USER_NAME)
+    if not hasattr(settings, 'GUARDIAN_RENDER_403'):
+        setattr(settings, 'GUARDIAN_RENDER_403', RENDER_403)
+    if not hasattr(settings, 'GUARDIAN_TEMPLATE_403'):
+        setattr(settings, 'GUARDIAN_TEMPLATE_403', TEMPLATE_403)
+    if not hasattr(settings, 'GUARDIAN_RAISE_403'):
+        setattr(settings, 'GUARDIAN_RAISE_403', RAISE_403)
+    if not hasattr(settings, 'GUARDIAN_RENDER_404'):
+        setattr(settings, 'GUARDIAN_RENDER_404', RENDER_404)
+    if not hasattr(settings, 'GUARDIAN_TEMPLATE_404'):
+        setattr(settings, 'GUARDIAN_TEMPLATE_404', TEMPLATE_404)
+    if not hasattr(settings, 'GUARDIAN_RAISE_404'):
+        setattr(settings, 'GUARDIAN_RAISE_404', RAISE_404)
+    if not hasattr(settings, 'GUARDIAN_GET_INIT_ANONYMOUS_USER'):
+        setattr(settings, 'GUARDIAN_GET_INIT_ANONYMOUS_USER', GET_INIT_ANONYMOUS_USER)
+    if not hasattr(settings, 'GUARDIAN_MONKEY_PATCH'):
+        setattr(settings, 'GUARDIAN_MONKEY_PATCH', MONKEY_PATCH)
+    if not hasattr(settings, 'GUARDIAN_GET_CONTENT_TYPE'):
+        setattr(settings, 'GUARDIAN_GET_CONTENT_TYPE', GET_CONTENT_TYPE)
+    if not hasattr(settings, 'GUARDIAN_AUTO_PREFETCH'):
+        setattr(settings, 'GUARDIAN_AUTO_PREFETCH', AUTO_PREFETCH)
+    if not hasattr(settings, 'GUARDIAN_USER_OBJ_PERMS_MODEL'):
+        setattr(settings, 'GUARDIAN_USER_OBJ_PERMS_MODEL', USER_OBJ_PERMS_MODEL)
+    if not hasattr(settings, 'GUARDIAN_GROUP_OBJ_PERMS_MODEL'):
+        setattr(settings, 'GUARDIAN_GROUP_OBJ_PERMS_MODEL', GROUP_OBJ_PERMS_MODEL)
+
 
 def check_configuration():
     if RENDER_403 and RAISE_403:
         raise ImproperlyConfigured("Cannot use both GUARDIAN_RENDER_403 AND "
                                    "GUARDIAN_RAISE_403 - only one of this config may be True")
+
 
 check_configuration()

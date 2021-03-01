@@ -229,3 +229,11 @@ To access the model use ``get_user_obj_perms_model()`` with no parameters
    GroupObjectPermission = get_user_obj_perms_model()
 
 Defaults to ``'guardian.GroupObjectPermission'``.
+
+GUARDIAN_REGISTER_VARIABLE
+-------------------------
+
+.. versionadded:: 2.4.0
+
+If set to ``True``, guardian would register all variables in this page into the
+``django.conf.settings`` so that you can use them anywhere. Defaults to ``False``.
