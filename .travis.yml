@@ -16,7 +16,7 @@ templates:
   django22: &django22 DJANGO_VERSION=2.2.*
   django30: &django30 DJANGO_VERSION=3.0.*
   django31: &django31 DJANGO_VERSION=3.1.*
-  djangomaster: &djangomaster DJANGO_VERSION=master
+  djangomain: &djangomain DJANGO_VERSION=main
 
   postgres: &postgres DATABASE_URL=postgres://postgres@/django_guardian
   mysql: &mysql DATABASE_URL=mysql://root:@localhost/django_guardian
@@ -64,17 +64,17 @@ matrix:
     - { python: 3.8, env: [*django31, *postgres], <<: *pgdb}
     - { python: 3.8, env: [*django31, *mysql], <<: *mariadb}
     - { python: 3.8, env: [*django31, *sqlite]}
-    - { python: 3.8, env: [*djangomaster, *postgres], <<: *pgdb}
-    - { python: 3.8, env: [*djangomaster, *mysql], <<: *mariadb}
-    - { python: 3.8, env: [*djangomaster, *sqlite]}
+    - { python: 3.8, env: [*djangomain, *postgres], <<: *pgdb}
+    - { python: 3.8, env: [*djangomain, *mysql], <<: *mariadb}
+    - { python: 3.8, env: [*djangomain, *sqlite]}
 
     - { python: 3.9-dev, env: [*django31, *postgres], <<: *pgdb}
     - { python: 3.9-dev, env: [*django31, *mysql], <<: *mariadb}
     - { python: 3.9-dev, env: [*django31, *sqlite]}
-    - { python: 3.9-dev, env: [*djangomaster, *postgres], <<: *pgdb}
-    - { python: 3.9-dev, env: [*djangomaster, *mysql], <<: *mariadb}
-    - { python: 3.9-dev, env: [*djangomaster, *sqlite]}
+    - { python: 3.9-dev, env: [*djangomain, *postgres], <<: *pgdb}
+    - { python: 3.9-dev, env: [*djangomain, *mysql], <<: *mariadb}
+    - { python: 3.9-dev, env: [*djangomain, *sqlite]}
   allow_failures:
-    - env: [*djangomaster, *postgres]
-    - env: [*djangomaster, *mysql]
-    - env: [*djangomaster, *sqlite]
+    - env: [*djangomain, *postgres]
+    - env: [*djangomain, *mysql]
+    - env: [*djangomain, *sqlite]

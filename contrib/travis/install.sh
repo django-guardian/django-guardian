@@ -7,9 +7,9 @@ pip install -U pip
 # Array of packages
 PACKAGES=('mock==1.0.1' 'pytest' 'pytest-django' 'pytest-cov' 'django-environ' 'setuptools_scm' 'pyupgrade')
 
-# Install django master or version
-if [[ "$DJANGO_VERSION" == 'master' ]]; then
-    PACKAGES+=('https://github.com/django/django/archive/master.tar.gz');
+# Install django main or version
+if [[ "$DJANGO_VERSION" == 'main' ]]; then
+    PACKAGES+=('https://github.com/django/django/archive/main.tar.gz');
 else
     PACKAGES+=("Django==$DJANGO_VERSION");
 fi;
