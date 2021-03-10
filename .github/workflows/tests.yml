@@ -51,7 +51,7 @@ jobs:
           python -m pip install --upgrade pip wheel setuptools
       - name: Install dependencies
         run: |
-          PACKAGES=('mock==1.0.1' 'pytest' 'pytest-django' 'pytest-cov' 'django-environ' 'setuptools_scm' 'pyupgrade' 'psycopg2-binary==2.8.4' 'mysqlclient==1.4.5')
+          PACKAGES=('mock' 'pytest' 'pytest-django' 'pytest-cov' 'django-environ' 'setuptools_scm' 'pyupgrade' 'psycopg2-binary' 'mysqlclient')
           if [[ "${{ matrix.django }}" == 'main' ]]; then
               PACKAGES+=('https://github.com/django/django/archive/main.tar.gz');
           else
