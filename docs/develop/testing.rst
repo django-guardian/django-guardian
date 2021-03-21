@@ -108,7 +108,7 @@ GitHub Actions
 .. image:: https://github.com/django-guardian/django-guardian/workflows/Tests/badge.svg?branch=devel
   :target: https://github.com/django-guardian/django-guardian/actions/workflows/tests.yml
 
-Recently we have added support for `GitHub Actions`_ so it is even more easy to follow
+We have support for `GitHub Actions`_ to make it easy to follow
 if test fails with new commits.
 
 
