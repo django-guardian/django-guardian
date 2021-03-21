@@ -1,3 +1,8 @@
+unreleased
+==========
+
+* Switch from Travis CI to `GitHub Actions`_
+
 Release 2.3.0 (June 6, 2020)
 ===============================
 
@@ -435,6 +440,7 @@ Release 0.1.0 (Jun 6, 2010)
 .. _grappelli: https://github.com/sehmaschine/django-grappelli
 .. _tox: http://tox.testrun.org/
 .. _travis: http://travis-ci.org/
+.. _GitHub Actions: https://github.com/django-guardian/django-guardian/actions
 
 
 .. vim: ft=rst
