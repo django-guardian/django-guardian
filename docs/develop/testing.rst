@@ -100,21 +100,20 @@ First time should take some time (it needs to create separate virtual
 environments and pull dependencies) but would ensure everything is fine.
 
 
-Travis CI
----------
+GitHub Actions
+--------------
 
-.. versionadded:: 1.0.4
+.. versionadded:: 2.4.0
 
-.. image:: https://secure.travis-ci.org/django-guardian/django-guardian.png?branch=master
-  :target: http://travis-ci.org/django-guardian/django-guardian
+.. image:: https://github.com/django-guardian/django-guardian/workflows/Tests/badge.svg?branch=devel
+  :target: https://github.com/django-guardian/django-guardian/actions/workflows/tests.yml
 
-Recently we have added support for Travis_, continuous integration server so it
-is even more easy to follow if test fails with new commits: http://travis-ci.org/#!/lukaszb/django-guardian.
+Recently we have added support for `GitHub Actions`_ so it is even more easy to follow
+if test fails with new commits.
 
 
 .. _owasp: http://www.owasp.org/
 .. _issue-tracker: http://github.com/lukaszb/django-guardian
 .. _coverage: http://nedbatchelder.com/code/coverage/
 .. _tox: http://pypi.python.org/pypi/tox
-.. _travis: http://travis-ci.org/
-
+.. _GitHub Actions: https://github.com/django-guardian/django-guardian/actions

@@ -2,8 +2,8 @@
 django-guardian
 ===============
 
-.. image:: https://travis-ci.org/django-guardian/django-guardian.svg?branch=devel
-  :target: https://travis-ci.org/django-guardian/django-guardian
+.. image:: https://github.com/django-guardian/django-guardian/workflows/Tests/badge.svg?branch=devel
+  :target: https://github.com/django-guardian/django-guardian/actions/workflows/tests.yml
 
 .. image:: https://img.shields.io/pypi/v/django-guardian.svg
     :target: https://pypi.python.org/pypi/django-guardian
@@ -25,7 +25,7 @@ Requirements
 * Python 3.5+
 * A supported version of Django (currently 2.2+)
 
-Travis CI tests on Django version 2.2, 3.0, 3.1, 3.2, and main.
+GitHub Actions run tests against Django versions 2.2, 3.0, 3.1, 3.2, and main.
 
 Installation
 ------------
