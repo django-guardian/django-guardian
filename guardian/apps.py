@@ -5,6 +5,7 @@ from guardian.conf import settings
 
 class GuardianConfig(AppConfig):
     name = 'guardian'
+    default_auto_field = 'django.db.models.AutoField'
 
     def ready(self):
         # Must patch Group here since generic
