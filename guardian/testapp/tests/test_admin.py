@@ -380,7 +380,7 @@ class GuardedModelAdminTests(TestCase):
         request = HttpRequest()
         request.user = joe
         qs = gma.get_queryset(request)
-        self.assertEqual(sorted([e.pk for e in qs]),
+        self.assertEqual(sorted(e.pk for e in qs),
                          sorted([joe_entry.pk, jane_entry.pk]))
 
     def test_user_can_access_owned_by_group_objects_only(self):
