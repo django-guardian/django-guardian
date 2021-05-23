@@ -1,6 +1,9 @@
-unreleased
-==========
+Release 2.4.0 (May 24, 2021)
+============================
 
+* Add support for Python 3.9
+* Add support for Django 3.1, Django 3.2
+* Add parameter `any_perm` to `PermissionRequiredMixin`
 * Switch from Travis CI to `GitHub Actions`_
 
 Release 2.3.0 (June 6, 2020)
