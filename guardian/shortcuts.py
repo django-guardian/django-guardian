@@ -577,9 +577,11 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
     # Now we should extract list of pk values for which we would filter
     # queryset
     user_model = get_user_obj_perms_model(queryset.model)
-    user_obj_perms_queryset = (user_model.objects
-                               .filter(user=user)
-                               .filter(permission__content_type=ctype))
+    user_obj_perms_queryset = filter_perms_queryset_by_objects(
+        user_model.objects
+        .filter(user=user)
+        .filter(permission__content_type=ctype),
+        klass)
     if len(codenames):
         user_obj_perms_queryset = user_obj_perms_queryset.filter(
             permission__codename__in=codenames)
@@ -600,7 +602,9 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
             group_filters.update({
                 'permission__codename__in': codenames,
             })
-        groups_obj_perms_queryset = group_model.objects.filter(**group_filters)
+        groups_obj_perms_queryset = filter_perms_queryset_by_objects(
+            group_model.objects.filter(**group_filters),
+            klass)
         if group_model.objects.is_generic():
             group_fields = generic_fields
         else:
@@ -764,9 +768,11 @@ def get_objects_for_group(group, perms, klass=None, any_perm=False, accept_globa
     # Now we should extract list of pk values for which we would filter
     # queryset
     group_model = get_group_obj_perms_model(queryset.model)
-    groups_obj_perms_queryset = (group_model.objects
-                                 .filter(group=group)
-                                 .filter(permission__content_type=ctype))
+    groups_obj_perms_queryset = filter_perms_queryset_by_objects(
+        group_model.objects
+        .filter(group=group)
+        .filter(permission__content_type=ctype),
+        klass)
     if len(codenames):
         groups_obj_perms_queryset = groups_obj_perms_queryset.filter(
             permission__codename__in=codenames)
@@ -830,3 +836,14 @@ def _handle_pk_field(queryset):
         )
 
     return None
+
+def filter_perms_queryset_by_objects(perms_queryset, objects):
+    if not isinstance(objects, QuerySet):
+        return perms_queryset
+    else:
+        field = 'content_object__pk'
+        if perms_queryset.model.objects.is_generic():
+            field = 'object_pk'
+        return perms_queryset.filter(
+            **{'{}__in'.format(field): list(objects.values_list(
+                'pk', flat=True).distinct().order_by())})
