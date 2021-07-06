@@ -156,7 +156,7 @@ def get_obj_perm_model_by_conf(setting_name):
         ) from e
 
 
-def clean_orphan_obj_perms():
+def clean_orphan_obj_perms() -> int:
     """
     Seeks and removes all object permissions entries pointing at non-existing
     targets.

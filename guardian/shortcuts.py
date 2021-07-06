@@ -5,10 +5,11 @@ import warnings
 from collections import defaultdict
 from functools import partial
 from itertools import groupby
+from typing import Union, List, Optional
 
 from django.apps import apps
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.models import Group, Permission, AnonymousUser, User
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.db.models import Count, Q, QuerySet
@@ -21,6 +22,7 @@ from django.db.models import (
     CharField,
     ForeignKey,
     IntegerField,
+    Model,
     PositiveIntegerField,
     PositiveSmallIntegerField,
     SmallIntegerField,
@@ -33,8 +35,22 @@ from guardian.utils import get_anonymous_user, get_group_obj_perms_model, get_id
 GroupObjectPermission = get_group_obj_perms_model()
 UserObjectPermission = get_user_obj_perms_model()
 
+UserOrGroupType = Union[
+    User,
+    AnonymousUser,
+    Group,
+    List[User],
+    List[Group],
+    QuerySet[User],
+    QuerySet[Group]
+]
 
-def assign_perm(perm, user_or_group, obj=None):
+
+def assign_perm(
+    perm: Union[str, Permission],
+    user_or_group: UserOrGroupType,
+    obj: Union[None, Model, QuerySet[Model], List[Model]] = None
+):
     """
     Assigns permission to user/group and object pair.
 
@@ -143,7 +159,7 @@ def assign(perm, user_or_group, obj=None):
     return assign_perm(perm, user_or_group, obj)
 
 
-def remove_perm(perm, user_or_group=None, obj=None):
+def remove_perm(perm: Union[str, Permission], user_or_group=None, obj=None):
     """
     Removes permission from user/group and object pair.
 

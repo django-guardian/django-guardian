@@ -258,7 +258,7 @@ class PermissionListMixin:
 
     """
     permission_required = None
-    get_objects_for_user_extra_kwargs = {}
+    get_objects_for_user_extra_kwargs = {}  # type: ignore
 
     def get_required_permissions(self, request=None):
         """
