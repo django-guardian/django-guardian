@@ -42,8 +42,7 @@ UserOrGroupType = Union[
     Group,
     List[User],
     List[Group],
-    QuerySet[User],
-    QuerySet[Group]
+    QuerySet
 ]
 PermsType = Union[str, List[str]]
 
@@ -51,7 +50,7 @@ PermsType = Union[str, List[str]]
 def assign_perm(
     perm: Union[str, Permission],
     user_or_group: UserOrGroupType,
-    obj: Union[None, Model, QuerySet[Model], List[Model]] = None
+    obj: Union[None, Model, QuerySet, List[Model]] = None
 ):
     """
     Assigns permission to user/group and object pair.
