@@ -13,6 +13,7 @@ from django.contrib.auth.models import Group, Permission, AnonymousUser, User
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.db.models import Count, Q, QuerySet
+from django.db.models.manager import Manager
 from django.shortcuts import _get_queryset
 from django.db.models.expressions import Value
 from django.db.models.functions import Cast, Replace
@@ -44,6 +45,7 @@ UserOrGroupType = Union[
     QuerySet[User],
     QuerySet[Group]
 ]
+PermsType = Union[str, List[str]]
 
 
 def assign_perm(
@@ -408,8 +410,15 @@ def get_groups_with_perms(obj, attach_perms=False):
         return dict(group_perms_mapping)
 
 
-def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=False,
-                         with_superuser=True, accept_global_perms=True):
+def get_objects_for_user(
+    user: Union[User, AnonymousUser],
+    perms: PermsType,
+    klass=None,
+    use_groups: bool = True,
+    any_perm: bool = False,
+    with_superuser: bool = True,
+    accept_global_perms: bool = True
+):
     """
     Returns queryset of objects for which a given ``user`` has *all*
     permissions present at ``perms``.
@@ -546,6 +555,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
         raise WrongAppError("Cannot determine content type")
     else:
         queryset = _get_queryset(klass)
+        assert ctype is not None  # TODO: is this guaranteed at this point?
         if ctype.model_class() != queryset.model:
             raise MixedContentTypeError("Content type for given perms and "
                                         "klass differs")
@@ -668,7 +678,13 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
     return queryset.filter(q)
 
 
-def get_objects_for_group(group, perms, klass=None, any_perm=False, accept_global_perms=True):
+def get_objects_for_group(
+    group: Group,
+    perms: PermsType,
+    klass: Union[None, Model, Manager, QuerySet] = None,
+    any_perm: bool = False,
+    accept_global_perms: bool = True
+):
     """
     Returns queryset of objects for which a given ``group`` has *all*
     permissions present at ``perms``.
@@ -762,6 +778,7 @@ def get_objects_for_group(group, perms, klass=None, any_perm=False, accept_globa
         raise WrongAppError("Cannot determine content type")
     else:
         queryset = _get_queryset(klass)
+        assert ctype is not None  # TODO: is this guaranteed at this point?
         if ctype.model_class() != queryset.model:
             raise MixedContentTypeError("Content type for given perms and "
                                         "klass differs")

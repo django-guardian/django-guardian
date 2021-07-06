@@ -55,7 +55,7 @@ class ObjectPermissionBackend:
     def authenticate(self, request, username=None, password=None):
         return None
 
-    def has_perm(self, user_obj, perm, obj=None):
+    def has_perm(self, user_obj, perm, obj=None) -> bool:
         """
         Returns ``True`` if given ``user_obj`` has ``perm`` for ``obj``. If no
         ``obj`` is given, ``False`` is returned.
