@@ -1,3 +1,21 @@
+Release 2.5.0 (August 15, 2021)
+================
+
+* Optimize get_objects_for_user/group if klass is a queryset
+* Add Django 3.2 to test matrix
+* Add check for permission to manage permission.
+
+.. important::
+    In this release we have fixed security issue. A requirement has been
+    introduced that the user must have global permission to manage permission
+    to modify object permissions and have object permission to change object. 
+    Until now, the permission management was only hidden in the user interface
+    and could be done with direct call.
+
+    Permission `guardian.change_userobjectpermission` or 
+    `guardian.change_groupobjectpermission` permissions should be granted to
+    users who should be able to manage object permissions. 
+
 Release 2.4.0 (May 24, 2021)
 ============================
 
