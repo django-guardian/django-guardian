@@ -133,10 +133,7 @@ class GuardedModelAdminMixin:
         shown. In order to add or manage user or group one should use links or
         forms presented within the page.
         """
-        if ( 
-            not self.has_change_permission(request, None)
-            or (not request.user.has_perm('guardian.view_userobjectpermission') and not request.user.has_perm('guardian.view_groupobjectpermission'))
-        ):
+        if not self.has_change_permission(request, None):
             post_url = reverse('admin:index', current_app=self.admin_site.name)
             return redirect(post_url)
 
@@ -226,7 +223,7 @@ class GuardedModelAdminMixin:
         """
         Manages selected users' permissions for current object.
         """
-        if not self.has_change_permission(request, None) or not request.user.has_perm('guardian.change_userobjectpermission'):
+        if not self.has_change_permission(request, None):
             post_url = reverse('admin:index', current_app=self.admin_site.name)
             return redirect(post_url)
 
@@ -298,7 +295,7 @@ class GuardedModelAdminMixin:
         """
         Manages selected groups' permissions for current object.
         """
-        if not self.has_change_permission(request, None) or not request.user.has_perm('guardian.change_groupobjectpermission'):
+        if not self.has_change_permission(request, None):
             post_url = reverse('admin:index', current_app=self.admin_site.name)
             return redirect(post_url)
 
