@@ -19,11 +19,11 @@ jobs:
         include:
           - python-version: "3.10"
             django: 3.2.0
-          - python-version: 3.8
+          - python-version: "3.8"
             django: main
-          - python-version: 3.9
+          - python-version: "3.9"
             django: main
-          - python-version: 3.10
+          - python-version: "3.10"
             django: main
 
     services:
