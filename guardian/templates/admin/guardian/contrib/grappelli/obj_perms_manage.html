@@ -53,6 +53,9 @@
                             {% for user, user_perms in users_perms.items %}
                             <tr class="grp-row {% cycle 'grp-row-even' 'grp-row-odd' %}">
                                 <td>{{ user }}</td>
+                                <td>
+                                    <a href="user-manage/{{ user.id|safe }}/">{% trans "Edit" %}</a>
+                                </td>
                                 {% for perm in model_perms %}
                                 <td>
                                     {% if perm.codename in user_perms %}
@@ -62,9 +65,6 @@
                                     {% endif %}
                                 </td>
                                 {% endfor %}
-                                <td>
-                                    <a href="user-manage/{{ user.id|safe }}/">{% trans "Edit" %}</a>
-                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -114,6 +114,9 @@
                             {% for group, group_perms in groups_perms.items %}
                             <tr class="grp-row {% cycle 'grp-row-even' 'grp-row-odd' %}">
                                 <td>{{ group }}</td>
+                                <td>
+                                    <a href="group-manage/{{ group.id|safe }}/">{% trans "Edit" %}</a>
+                                </td>
                                 {% for perm in model_perms %}
                                 <td>
                                     {% if perm.codename in group_perms %}
@@ -123,9 +126,6 @@
                                     {% endif %}
                                 </td>
                                 {% endfor %}
-                                <td>
-                                    <a href="group-manage/{{ group.id|safe }}/">{% trans "Edit" %}</a>
-                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
