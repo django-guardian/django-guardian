@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.backends import BaseBackend
 from django.db import models
 from guardian.conf import settings
 from guardian.core import ObjectPermissionChecker
@@ -47,13 +48,10 @@ def check_support(user_obj, obj):
     return obj_support and user_support, user_obj
 
 
-class ObjectPermissionBackend:
+class ObjectPermissionBackend(BaseBackend):
     supports_object_permissions = True
     supports_anonymous_user = True
     supports_inactive_user = True
-
-    def authenticate(self, request, username=None, password=None):
-        return None
 
     def has_perm(self, user_obj, perm, obj=None):
         """
