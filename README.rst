@@ -25,7 +25,7 @@ Requirements
 * Python 3.5+
 * A supported version of Django (currently 2.2+)
 
-GitHub Actions run tests against Django versions 2.2, 3.0, 3.1, 3.2, and main.
+GitHub Actions run tests against Django versions 2.2, 3.0, 3.1, 3.2, 4.0, and main.
 
 Installation
 ------------
