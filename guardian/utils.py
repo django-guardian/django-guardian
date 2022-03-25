@@ -8,10 +8,11 @@ they actual input parameters/output type may change in future releases.
 import logging
 import os
 from itertools import chain
+from typing import Union
 
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME, get_user_model
-from django.contrib.auth.models import AnonymousUser, Group
+from django.contrib.auth.models import AnonymousUser, Group, User
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db.models import Model, QuerySet
 from django.http import HttpResponseForbidden, HttpResponseNotFound
@@ -34,7 +35,7 @@ def get_anonymous_user():
     return User.objects.get(**lookup)
 
 
-def get_identity(identity):
+def get_identity(identity: Union[User, Group]):
     """
     Returns (user_obj, None) or (None, group_obj) tuple depending on what is
     given. Also accepts AnonymousUser instance but would return ``User``
@@ -141,7 +142,7 @@ def get_40x_or_None(request, perms, obj=None, login_url=None,
 from django.apps import apps as django_apps
 from django.core.exceptions import ImproperlyConfigured
 
-def get_obj_perm_model_by_conf(setting_name):
+def get_obj_perm_model_by_conf(setting_name: str):
     """
     Return the model that matches the guardian settings.
     """
@@ -156,7 +157,7 @@ def get_obj_perm_model_by_conf(setting_name):
         ) from e
 
 
-def clean_orphan_obj_perms():
+def clean_orphan_obj_perms() -> int:
     """
     Seeks and removes all object permissions entries pointing at non-existing
     targets.
@@ -235,7 +236,7 @@ def get_group_obj_perms_model(obj = None):
     return get_obj_perms_model(obj, GroupObjectPermissionBase, GroupObjectPermission)
 
 
-def evict_obj_perms_cache(obj):
+def evict_obj_perms_cache(obj) -> bool:
     if hasattr(obj, '_guardian_perms_cache'):
         delattr(obj, '_guardian_perms_cache')
         return True

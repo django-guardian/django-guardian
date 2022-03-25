@@ -7,7 +7,7 @@ class GuardianConfig(AppConfig):
     name = 'guardian'
     default_auto_field = 'django.db.models.AutoField'
 
-    def ready(self):
+    def ready(self) -> None:
         # Must patch Group here since generic
         # group permission model is definable
         monkey_patch_group()

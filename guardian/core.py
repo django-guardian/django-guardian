@@ -1,4 +1,5 @@
 from itertools import chain
+from typing import List
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
@@ -60,7 +61,7 @@ class ObjectPermissionChecker:
         self.user, self.group = get_identity(user_or_group)
         self._obj_perms_cache = {}
 
-    def has_perm(self, perm, obj):
+    def has_perm(self, perm, obj) -> bool:
         """
         Checks if user/group has given permission for object.
 
@@ -127,7 +128,7 @@ class ObjectPermissionChecker:
 
         return user_perms
 
-    def get_group_perms(self, obj):
+    def get_group_perms(self, obj) -> List[str]:
         ctype = get_content_type(obj)
 
         perms_qs = Permission.objects.filter(content_type=ctype)
@@ -137,7 +138,7 @@ class ObjectPermissionChecker:
 
         return group_perms
 
-    def get_perms(self, obj):
+    def get_perms(self, obj) -> List[str]:
         """
         Returns list of ``codename``'s of all permissions for given ``obj``.
 

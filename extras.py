@@ -53,7 +53,7 @@ class RunFlakesCommand(Command):
     Runs pyflakes against guardian codebase.
     """
     description = "Check sources with pyflakes"
-    user_options = []
+    user_options = []  # type: ignore
 
     def initialize_options(self):
         pass
