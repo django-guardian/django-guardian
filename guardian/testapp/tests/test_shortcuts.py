@@ -1,4 +1,5 @@
 import warnings
+from unittest import mock
 
 import django
 from django.contrib.auth import get_user_model
@@ -32,6 +33,10 @@ from guardian.models import Group, Permission
 User = get_user_model()
 user_app_label = User._meta.app_label
 user_module_name = User._meta.model_name
+
+
+def get_group_content_type(obj):
+    return ContentType.objects.get_for_model(Group)
 
 
 class ShortcutsTests(ObjectPermissionTestCase):
@@ -759,6 +764,10 @@ class GetObjectsForUser(TestCase):
         self.assertRaises(MixedContentTypeError, get_objects_for_user,
                           self.user, ['auth.change_group'], User)
 
+    def test_override_get_content_type(self):
+        with mock.patch('guardian.conf.settings.GET_CONTENT_TYPE', 'guardian.testapp.tests.test_shortcuts.get_group_content_type'):
+            get_objects_for_user(self.user, ['auth.change_group'], User)
+
     def test_no_app_label_nor_klass(self):
         self.assertRaises(WrongAppError, get_objects_for_user, self.user,
                           ['change_group'])
@@ -1204,6 +1213,10 @@ class GetObjectsForGroup(TestCase):
     def test_mixed_perms_and_klass(self):
         self.assertRaises(MixedContentTypeError, get_objects_for_group,
                           self.group1, ['auth.change_group'], User)
+
+    def test_override_get_content_type(self):
+        with mock.patch('guardian.conf.settings.GET_CONTENT_TYPE', 'guardian.testapp.tests.test_shortcuts.get_group_content_type'):
+            get_objects_for_group(self.group1, ['auth.change_group'], User)
 
     def test_no_app_label_nor_klass(self):
         self.assertRaises(WrongAppError, get_objects_for_group, self.group1,
