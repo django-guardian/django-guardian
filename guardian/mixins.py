@@ -115,6 +115,12 @@ class PermissionRequiredMixin:
         `permission_required` - the permission to check of form "<app_label>.<permission codename>"
                                 i.e. 'polls.can_vote' for a permission on a model in the polls application.
 
+
+    ``PermissionRequiredMixin.permission_denied_message``
+
+        *Default*: ``None``. A string to pass to the ``PermisssionDenied`` exception.
+            Will be available in the 403 template context as ``exception``.
+
     ``PermissionRequiredMixin.accept_global_perms``
 
         *Default*: ``False``,  If accept_global_perms would be set to True, then
@@ -138,6 +144,7 @@ class PermissionRequiredMixin:
     return_403 = False
     return_404 = False
     raise_exception = False
+    permission_denied_message = None
     accept_global_perms = False
     any_perm = False
 
@@ -159,6 +166,16 @@ class PermissionRequiredMixin:
                                        "'<app_label>.<permission codename>' but is set to '%s' instead"
                                        % self.permission_required)
         return perms
+
+    def get_permission_denied_message(self):
+        """
+        Returns the message to be passed to the ``PermissionDenied`` exception. By default,
+        it returns the value from the ``permission_denied_message`` attribute.
+        """
+        message = ""
+        if isinstance(self.permission_denied_message, str):
+            message = self.permission_denied_message
+        return message
 
     def get_permission_object(self):
         if hasattr(self, 'permission_object'):
@@ -185,11 +202,12 @@ class PermissionRequiredMixin:
                                     return_404=self.return_404,
                                     accept_global_perms=self.accept_global_perms,
                                     any_perm=self.any_perm,
+                                    permission_denied_message=self.get_permission_denied_message(),
                                     )
         if forbidden:
             self.on_permission_check_fail(request, forbidden, obj=obj)
         if forbidden and self.raise_exception:
-            raise PermissionDenied()
+            raise PermissionDenied(self.get_permission_denied_message())
         return forbidden
 
     def on_permission_check_fail(self, request, response, obj=None):
