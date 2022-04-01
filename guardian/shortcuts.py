@@ -548,13 +548,10 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
     if user.is_anonymous:
         user = get_anonymous_user()
 
-    global_perms = set()
     has_global_perms = False
     # a superuser has by default assigned global perms for any
     if accept_global_perms and with_superuser:
-        for code in codenames:
-            if user.has_perm(ctype.app_label + '.' + code):
-                global_perms.add(code)
+        global_perms = {code for code in codenames if user.has_perm(ctype.app_label + '.' + code)}
         for code in global_perms:
             codenames.remove(code)
         # prerequisite: there must be elements in global_perms otherwise just follow the procedure for
