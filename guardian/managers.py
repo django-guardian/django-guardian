@@ -27,7 +27,7 @@ class BaseObjectPermissionManager(models.Manager):
         except FieldDoesNotExist:
             return False
 
-    def _get_perms(self, ctype, perms):
+    def _retrieve_perms(self, ctype, perms):
         perms_to_get = []
         permissions = []
         for perm in perms:
@@ -107,7 +107,7 @@ class BaseObjectPermissionManager(models.Manager):
             raise ObjectNotPersisted("Object %s needs to be persisted first"
                                      % obj)
         ctype = self._get_content_type(obj)
-        permission = self._get_perms(ctype, [perm])[0]
+        permission = self._retrieve_perms(ctype, [perm])[0]
         kwargs = self._generate_create_kwargs(permission, ctype, obj=obj, user_or_group=user_or_group)
         obj_perm, _ = self.get_or_create(**kwargs)
         return obj_perm
@@ -138,7 +138,7 @@ class BaseObjectPermissionManager(models.Manager):
         Bulk assigns given ``perms`` for all objects ``obj`` to a set of users or a set of groups.
         """
         ctype = self._get_content_type(queryset)
-        permissions = self._get_perms(ctype, perms)
+        permissions = self._retrieve_perms(ctype, perms)
         objects = self._get_obj_list(queryset)
 
         to_add = []
