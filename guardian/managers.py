@@ -169,7 +169,7 @@ class BaseObjectPermissionManager(models.Manager):
             if self.is_generic():
                 filters &= Q(
                     # try using queryset instead of list comp
-                    object_pk__in=[str(pk) for pk in queryset.values_list("pk", flat=True)]
+                    object_pk__in=queryset.values_list("pk", flat=True)
                 )
             else:
                 filters &= Q(content_object__in=queryset)
