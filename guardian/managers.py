@@ -26,6 +26,34 @@ class BaseObjectPermissionManager(models.Manager):
         except FieldDoesNotExist:
             return False
 
+    def _get_perms(self, ctype, perms):
+        perms_to_get = []
+        permissions = []
+        for perm in perms:
+            if not isinstance(perm, Permission):
+                perms_to_get.append(perm)
+            else:
+                permissions.append(perm)
+
+        if len(perms_to_get):
+            permissions.extend(
+                list(
+                    Permission.objects.filter(
+                        content_type=ctype, codename__in=perms_to_get
+                    ).all()
+                )
+            )
+
+            # this is necessary to maintain the previous behaviour of raising a Permission.DoesNotExist exception
+            for perm_codename in perms_to_get:
+                for perm in permissions:
+                    if perm.codename == perm_codename:
+                        break
+                else:
+                    raise Permission.DoesNotExist
+
+        return permissions
+
     def assign_perm(self, perm, user_or_group, obj):
         """
         Assigns permission with given ``perm`` for an instance ``obj`` and
@@ -35,10 +63,7 @@ class BaseObjectPermissionManager(models.Manager):
             raise ObjectNotPersisted("Object %s needs to be persisted first"
                                      % obj)
         ctype = get_content_type(obj)
-        if not isinstance(perm, Permission):
-            permission = Permission.objects.get(content_type=ctype, codename=perm)
-        else:
-            permission = perm
+        permission = self._get_perms(ctype, [perm])[0]
 
         kwargs = {'permission': permission, self.user_or_group_field: user_or_group}
         if self.is_generic():
@@ -59,10 +84,7 @@ class BaseObjectPermissionManager(models.Manager):
         else:
             ctype = get_content_type(queryset.model)
 
-        if not isinstance(perm, Permission):
-            permission = Permission.objects.get(content_type=ctype, codename=perm)
-        else:
-            permission = perm
+        permission = self._get_perms(ctype, [perm])[0]
 
         checker = ObjectPermissionChecker(user_or_group)
         checker.prefetch_perms(queryset)
@@ -86,11 +108,7 @@ class BaseObjectPermissionManager(models.Manager):
         Bulk assigns given ``perm`` for the object ``obj`` to a set of users or a set of groups.
         """
         ctype = get_content_type(obj)
-        if not isinstance(perm, Permission):
-            permission = Permission.objects.get(content_type=ctype,
-                                                codename=perm)
-        else:
-            permission = perm
+        permission = self._get_perms(ctype, [perm])[0]
 
         kwargs = {'permission': permission}
         if self.is_generic():
