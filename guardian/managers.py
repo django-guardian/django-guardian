@@ -161,6 +161,53 @@ class BaseObjectPermissionManager(models.Manager):
         warnings.warn("UserObjectPermissionManager method 'assign' is being renamed to 'assign_perm'. Update your code accordingly as old name will be depreciated in 2.0 version.", DeprecationWarning)
         return self.assign_perm(perm, user_or_group, obj)
 
+    def _get_base_filters(self, users_or_groups, queryset_or_object):
+        filters = Q(**{"%s__in" % self.user_or_group_field: users_or_groups})
+
+        if isinstance(queryset_or_object, QuerySet):
+            queryset = queryset_or_object
+            if self.is_generic():
+                filters &= Q(
+                    # try using queryset instead of list comp
+                    object_pk__in=[str(pk) for pk in queryset.values_list("pk", flat=True)]
+                )
+            else:
+                filters &= Q(content_object__in=queryset)
+        else:
+            obj = queryset_or_object
+            if self.is_generic():
+                filters &= Q(object_pk=obj.pk)
+            else:
+                filters &= Q(content_object__pk=obj.pk)
+
+        return filters
+
+    def _get_filters_for_perm(self, perm, ctype, filters):
+        if isinstance(perm, Permission):
+            filters &= Q(permission=perm)
+        else:
+            filters &= Q(permission__codename=perm,
+                         permission__content_type=ctype)
+
+        return filters
+
+    def _remove_perms(self, perms, users_or_groups, queryset_or_object, ctype):
+        """
+        Note that while ctype is technically discoverable from queryset_or_object, we enforce passing it in, since
+        dynamically determing it goes against past behaviour of the exposed functions which call this method.
+        """
+        filters = self._get_base_filters(users_or_groups, queryset_or_object)
+        disjunction_cond = Q()
+
+        for perm in perms:
+            conjunction_cond = Q()
+            conjunction_cond = self._get_filters_for_perm(perm, ctype, conjunction_cond)
+            disjunction_cond |= conjunction_cond
+
+        filters &= disjunction_cond
+
+        return self.filter(filters).delete()
+
     def remove_perm(self, perm, user_or_group, obj):
         """
         Removes permission ``perm`` for an instance ``obj`` and given ``user_or_group``.
@@ -173,19 +220,7 @@ class BaseObjectPermissionManager(models.Manager):
             raise ObjectNotPersisted("Object %s needs to be persisted first"
                                      % obj)
 
-        filters = Q(**{self.user_or_group_field: user_or_group})
-
-        if isinstance(perm, Permission):
-            filters &= Q(permission=perm)
-        else:
-            filters &= Q(permission__codename=perm,
-                         permission__content_type=get_content_type(obj))
-
-        if self.is_generic():
-            filters &= Q(object_pk=obj.pk)
-        else:
-            filters &= Q(content_object__pk=obj.pk)
-        return self.filter(filters).delete()
+        return self._remove_perms([perm], [user_or_group], obj, get_content_type(obj))
 
     def bulk_remove_perm(self, perm, user_or_group, queryset):
         """
@@ -195,21 +230,9 @@ class BaseObjectPermissionManager(models.Manager):
         use ``Queryset.delete`` method for removing it. Main implication of this
         is that ``post_delete`` signals would NOT be fired.
         """
-        filters = Q(**{self.user_or_group_field: user_or_group})
+        return self._remove_perms([perm], [user_or_group], queryset, get_content_type(queryset.model))
 
-        if isinstance(perm, Permission):
-            filters &= Q(permission=perm)
-        else:
-            ctype = get_content_type(queryset.model)
-            filters &= Q(permission__codename=perm,
-                         permission__content_type=ctype)
 
-        if self.is_generic():
-            filters &= Q(object_pk__in=[str(pk) for pk in queryset.values_list('pk', flat=True)])
-        else:
-            filters &= Q(content_object__in=queryset)
-
-        return self.filter(filters).delete()
 
 
 class UserObjectPermissionManager(BaseObjectPermissionManager):
