@@ -54,6 +54,24 @@ class BaseObjectPermissionManager(models.Manager):
 
         return permissions
 
+    def _update_kwargs_with_obj_info(self, kwargs, ctype, obj):
+        if self.is_generic():
+            kwargs['content_type'] = ctype
+            kwargs['object_pk'] = obj.pk
+        else:
+            kwargs['content_object'] = obj
+
+        return kwargs
+
+    def _generate_create_kwargs(self, permission, ctype, obj=None, user_or_group=None):
+        kwargs = {'permission': permission}
+        if user_or_group:
+            kwargs[self.user_or_group_field] = user_or_group
+        if obj:
+            kwargs = self._update_kwargs_with_obj_info(kwargs, ctype, obj)
+
+        return kwargs
+
     def assign_perm(self, perm, user_or_group, obj):
         """
         Assigns permission with given ``perm`` for an instance ``obj`` and
@@ -64,13 +82,7 @@ class BaseObjectPermissionManager(models.Manager):
                                      % obj)
         ctype = get_content_type(obj)
         permission = self._get_perms(ctype, [perm])[0]
-
-        kwargs = {'permission': permission, self.user_or_group_field: user_or_group}
-        if self.is_generic():
-            kwargs['content_type'] = ctype
-            kwargs['object_pk'] = obj.pk
-        else:
-            kwargs['content_object'] = obj
+        kwargs = self._generate_create_kwargs(permission, ctype, obj=obj, user_or_group=user_or_group)
         obj_perm, _ = self.get_or_create(**kwargs)
         return obj_perm
 
@@ -90,15 +102,12 @@ class BaseObjectPermissionManager(models.Manager):
         checker.prefetch_perms(queryset)
 
         assigned_perms = []
+        kwargs = self._generate_create_kwargs(permission, ctype, user_or_group=user_or_group)
         for instance in queryset:
             if not checker.has_perm(permission.codename, instance):
-                kwargs = {'permission': permission, self.user_or_group_field: user_or_group}
-                if self.is_generic():
-                    kwargs['content_type'] = ctype
-                    kwargs['object_pk'] = instance.pk
-                else:
-                    kwargs['content_object'] = instance
-                assigned_perms.append(self.model(**kwargs))
+                assigned_perms.append(self.model(
+                    **self._update_kwargs_with_obj_info(kwargs.copy(), ctype, obj=instance)
+                ))
         self.model.objects.bulk_create(assigned_perms)
 
         return assigned_perms
@@ -110,13 +119,7 @@ class BaseObjectPermissionManager(models.Manager):
         ctype = get_content_type(obj)
         permission = self._get_perms(ctype, [perm])[0]
 
-        kwargs = {'permission': permission}
-        if self.is_generic():
-            kwargs['content_type'] = ctype
-            kwargs['object_pk'] = obj.pk
-        else:
-            kwargs['content_object'] = obj
-
+        kwargs = self._generate_create_kwargs(permission, ctype, obj=obj)
         to_add = []
         field = self.user_or_group_field
         for user in users_or_groups:
