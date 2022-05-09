@@ -1,6 +1,7 @@
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models import Q
+from django.db.models.query import QuerySet
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
 from guardian.exceptions import ObjectNotPersisted
@@ -72,6 +73,16 @@ class BaseObjectPermissionManager(models.Manager):
 
         return kwargs
 
+    def _get_content_type(self, queryset):
+        if isinstance(queryset, list):
+            ctype = get_content_type(queryset[0])
+        elif isinstance(queryset, QuerySet):
+            ctype = get_content_type(queryset.model)
+        else:
+            ctype = get_content_type(queryset)
+
+        return ctype
+
     def assign_perm(self, perm, user_or_group, obj):
         """
         Assigns permission with given ``perm`` for an instance ``obj`` and
@@ -80,7 +91,7 @@ class BaseObjectPermissionManager(models.Manager):
         if getattr(obj, 'pk', None) is None:
             raise ObjectNotPersisted("Object %s needs to be persisted first"
                                      % obj)
-        ctype = get_content_type(obj)
+        ctype = self._get_content_type(obj)
         permission = self._get_perms(ctype, [perm])[0]
         kwargs = self._generate_create_kwargs(permission, ctype, obj=obj, user_or_group=user_or_group)
         obj_perm, _ = self.get_or_create(**kwargs)
@@ -91,11 +102,7 @@ class BaseObjectPermissionManager(models.Manager):
         Bulk assigns permissions with given ``perm`` for an objects in ``queryset`` and
         ``user_or_group``.
         """
-        if isinstance(queryset, list):
-            ctype = get_content_type(queryset[0])
-        else:
-            ctype = get_content_type(queryset.model)
-
+        ctype = self._get_content_type(queryset)
         permission = self._get_perms(ctype, [perm])[0]
 
         checker = ObjectPermissionChecker(user_or_group)
@@ -116,7 +123,7 @@ class BaseObjectPermissionManager(models.Manager):
         """
         Bulk assigns given ``perm`` for the object ``obj`` to a set of users or a set of groups.
         """
-        ctype = get_content_type(obj)
+        ctype = self._get_content_type(obj)
         permission = self._get_perms(ctype, [perm])[0]
 
         kwargs = self._generate_create_kwargs(permission, ctype, obj=obj)
