@@ -232,7 +232,27 @@ class BaseObjectPermissionManager(models.Manager):
         """
         return self._remove_perms([perm], [user_or_group], queryset, get_content_type(queryset.model))
 
+    def bulk_remove_perms(self, perms, user_or_group_or_multiple, queryset_or_object):
+        """
+        Allows removing multiple perms for multiple users_or_groups for multiple objects.
+        Also supports passing in a single object for users_or_groups and for queryset_or_object
 
+        Please note that we do NOT fetch object permission from database - we
+        use ``Queryset.delete`` method for removing it. Main implication of this
+        is that ``post_delete`` signals would NOT be fired.
+        """
+
+        if isinstance(queryset_or_object, QuerySet):
+            ctype = get_content_type(queryset_or_object.model)
+        else:
+            ctype = get_content_type(queryset_or_object)
+
+        if isinstance(user_or_group_or_multiple, (list, QuerySet)):
+            users_or_groups = user_or_group_or_multiple
+        else:
+            users_or_groups = [user_or_group_or_multiple]
+
+        return self._remove_perms(perms, users_or_groups, queryset_or_object, ctype)
 
 
 class UserObjectPermissionManager(BaseObjectPermissionManager):
