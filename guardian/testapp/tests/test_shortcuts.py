@@ -1,13 +1,14 @@
 import warnings
 
 import django
+import pytest
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.query import QuerySet
 from django.test import TestCase
 
-from guardian.shortcuts import get_perms_for_model
+from guardian.shortcuts import get_perms_for_model, bulk_assign_perms, bulk_remove_perms, commit_object_perms
 from guardian.core import ObjectPermissionChecker
 from guardian.compat import get_user_permission_full_codename
 from guardian.shortcuts import assign
@@ -27,7 +28,7 @@ from guardian.exceptions import MultipleIdentityAndObjectError
 from guardian.testapp.models import CharPKModel, ChildTestModel, UUIDPKModel
 from guardian.testapp.tests.test_core import ObjectPermissionTestCase
 from guardian.models import Group, Permission
-
+from guardian.utils import get_identity
 
 User = get_user_model()
 user_app_label = User._meta.app_label
@@ -169,6 +170,7 @@ class MultipleIdentitiesOperationsTest(ObjectPermissionTestCase):
     """
     Tests assignment of permission to multiple users or groups
     """
+
     def setUp(self):
         super().setUp()
         self.users_list = jim, bob = [
@@ -217,6 +219,860 @@ class MultipleIdentitiesOperationsTest(ObjectPermissionTestCase):
             assign_perm("add_contenttype", self.users_list, self.ctype_qset)
         with self.assertRaises(MultipleIdentityAndObjectError):
             assign_perm("add_contenttype", self.users_qs, self.ctype_qset)
+
+
+class BulkPermTestBase(ObjectPermissionTestCase):
+    def setUp(self):
+        super().setUp()
+        self.extra_objs = [
+            ContentType.objects.create(model='extra%s' % i, app_label='fake-for-guardian-tests') for i in range(3)
+        ]
+        self.all_objects = [
+            self.ctype,
+            *self.extra_objs
+        ]
+        self.group_2, created = Group.objects.get_or_create(name='johnGroup')
+        self.user_2, created = User.objects.get_or_create(username='john')
+        self.user_2.groups.add(self.group_2)
+        self.all_auth_entities = set([self.group, self.user, self.group_2, self.user_2])
+
+    def clear_users_perms_caches(self, users):
+        for user in users:
+            for attr in ("_perm_cache", "_user_perm_cache", "_group_perm_cache"):
+                if hasattr(user, attr):
+                    delattr(user, attr)
+
+    def _get_unaffected_entities(self, affected_entities):
+        unaffected_entities = []
+        if self.group not in affected_entities:
+            if self.user in affected_entities:
+                unaffected_entities.append(self.group)
+            else:
+                unaffected_entities.append(self.user)
+                unaffected_entities.append(self.group)
+
+        if self.group_2 not in affected_entities:
+            if self.user_2 in affected_entities:
+                unaffected_entities.append(self.group_2)
+            else:
+                unaffected_entities.append(self.user_2)
+                unaffected_entities.append(self.group_2)
+
+        return unaffected_entities
+
+    def _check_auth_entities_perms_on_objs(self, auth_entities, objs, perms_iterable, have_perms):
+        assertion = self.assertTrue if have_perms else self.assertFalse
+        for auth_ent in auth_entities:
+            checker = ObjectPermissionChecker(auth_ent)
+            checker.prefetch_perms(objs)
+            for o in objs:
+                for perm in perms_iterable:
+                    assertion(
+                        checker.has_perm(perm, o)
+                    )
+
+
+class BulkAssignPermTest(BulkPermTestBase):
+    """
+    Tests the bulk_assign_perms shortcut.
+    Would be much easier to test using parametrize, but this is incompatible with unittest
+    """
+
+    def test_not_model(self):
+        self.assertRaises(NotUserNorGroup, bulk_assign_perms,
+                          perms="change_object",
+                          user_or_group="Not a Model",
+                          obj=self.ctype)
+
+    def test_global_wrong_perm(self):
+        self.assertRaises(ValueError, bulk_assign_perms,
+                          perms="change_site",  # for global permissions must provide app_label
+                          user_or_group=self.user)
+
+    def _test_bulk_add_global_perms(self, multiple_perms, multi_user_or_group, auth_type):
+        auth_entity_to_user = dict()
+        if auth_type == "user":
+            auth_entity_or_entities_iterable = [self.user]
+            auth_entity_to_user[self.user] = self.user
+            if multi_user_or_group:
+                user_2, created = User.objects.get_or_create(username='john')
+                auth_entity_or_entities_iterable.append(user_2)
+                auth_entity_to_user[user_2] = user_2
+        else:
+            auth_entity_or_entities_iterable = [self.group]
+            auth_entity_to_user[self.group] = self.user
+            if multi_user_or_group:
+                group_2, created = Group.objects.get_or_create(name='johnGroup')
+                user_2, created = User.objects.get_or_create(username='john')
+                user_2.groups.add(group_2)
+                auth_entity_or_entities_iterable.append(group_2)
+                auth_entity_to_user[group_2] = user_2
+
+        # we store this variable to test both cases, an iterable and a single object argument
+        if len(auth_entity_or_entities_iterable) > 1:
+            auth_entity_or_entities = auth_entity_or_entities_iterable
+        else:
+            auth_entity_or_entities = auth_entity_or_entities_iterable[0]
+
+        all_perms = ["contenttypes.add_contenttype", "contenttypes.change_contenttype",
+                     "contenttypes.delete_contenttype"]
+        # we store this variable to test both cases, an iterable and a single object argument
+        if multiple_perms:
+            perms = all_perms
+        else:
+            perms = "contenttypes.change_contenttype"
+
+        perms_iterable = perms if isinstance(perms, (list, QuerySet)) else [perms]
+        bulk_assign_perms(perms, auth_entity_or_entities)
+        for auth_ent in auth_entity_or_entities_iterable:
+            user = auth_entity_to_user[auth_ent]
+            for perm in perms_iterable:
+                self.assertTrue(
+                    user.has_perm(perm)
+                )
+
+    def test_assign_single_global_perm_from_single_user(self):
+        self._test_bulk_add_global_perms(False, False, "user")
+
+    def test_assign_single_global_perm_from_multiple_users(self):
+        self._test_bulk_add_global_perms(False, True, "user")
+
+    def test_assign_multiple_global_perms_from_single_user(self):
+        self._test_bulk_add_global_perms(True, False, "user")
+
+    def test_assign_multiple_global_perm_from_multiple_users(self):
+        self._test_bulk_add_global_perms(True, True, "user")
+
+    def test_assign_single_global_perm_from_single_group(self):
+        self._test_bulk_add_global_perms(False, False, "group")
+
+    def test_assign_single_global_perm_from_multiple_groups(self):
+        self._test_bulk_add_global_perms(False, True, "group")
+
+    def test_assign_multiple_global_perms_from_single_group(self):
+        self._test_bulk_add_global_perms(True, False, "group")
+
+    def test_assign_multiple_global_perm_from_multiple_groups(self):
+        self._test_bulk_add_global_perms(True, True, "group")
+
+    def _setup_bulk_assign_test(
+            self,
+            perms_to_add,
+            affected_auth_entities,
+            obj,
+    ):
+        if len(affected_auth_entities) > 1:
+            auth_entity_or_entities = affected_auth_entities.copy()
+        else:
+            auth_entity_or_entities = affected_auth_entities[0]
+
+        all_affected_auth_entities = affected_auth_entities.copy()
+        for auth_entity in affected_auth_entities:
+            user, group = get_identity(auth_entity)
+            if group:
+                all_affected_auth_entities.extend(list(group.user_set.all()))
+
+        obj_iterable = obj if isinstance(obj, (list, QuerySet)) else [obj]
+        perms_iterable = perms_to_add if isinstance(perms_to_add, (list, QuerySet)) else [perms_to_add]
+
+        return (
+            auth_entity_or_entities,
+            all_affected_auth_entities,
+            obj_iterable,
+            perms_iterable
+        )
+
+    def test_no_commit(self):
+        affected_auth_entities = [self.group]
+        unaffected_auth_entities = [self.group_2, self.user_2]
+        obj_iterable = [self.ctype, self.extra_objs[0]]
+        unaffected_extra_objs = self.extra_objs[1:]
+
+        all_contenttype_perms = ["view_contenttype", "add_contenttype", "change_contenttype", "delete_contenttype"]
+        perms_to_add_1 = all_contenttype_perms[:2]
+        perms_to_add_2 = all_contenttype_perms[2:3]
+        all_assigned_perms = perms_to_add_1 + perms_to_add_2
+        perms_not_assigned = all_contenttype_perms[3:]
+
+        uncommitted_perms = bulk_assign_perms(perms_to_add_1, affected_auth_entities, obj_iterable, commit=False)
+        uncommitted_perms.extend(
+            bulk_assign_perms(perms_to_add_2, affected_auth_entities, obj_iterable, commit=False)
+        )
+
+        self._check_auth_entities_perms_on_objs(
+            affected_auth_entities,
+            obj_iterable,
+            all_contenttype_perms,
+            have_perms=False
+        )
+
+        commit_object_perms(uncommitted_perms, for_groups=True, obj=obj_iterable)
+
+        self._check_auth_entities_perms_on_objs(
+            affected_auth_entities,
+            obj_iterable,
+            all_assigned_perms,
+            have_perms=True
+        )
+        self._check_auth_entities_perms_on_objs(
+            affected_auth_entities,
+            obj_iterable,
+            perms_not_assigned,
+            have_perms=False
+        )
+
+        self._check_auth_entities_perms_on_objs(
+            affected_auth_entities,
+            unaffected_extra_objs,
+            all_contenttype_perms,
+            have_perms=False
+        )
+
+        self._check_auth_entities_perms_on_objs(
+            unaffected_auth_entities,
+            [*obj_iterable, *unaffected_extra_objs],
+            all_contenttype_perms,
+            have_perms=False
+        )
+
+    def _test_bulk_add_object_perms(
+            self,
+            perms_to_add,
+            affected_auth_entities,
+            obj,
+            unaffected_extra_objs
+    ):
+        if len(affected_auth_entities) > 1:
+            auth_entity_or_entities = affected_auth_entities.copy()
+        else:
+            auth_entity_or_entities = affected_auth_entities[0]
+
+        all_affected_auth_entities = affected_auth_entities.copy()
+        for auth_entity in affected_auth_entities:
+            user, group = get_identity(auth_entity)
+            if group:
+                all_affected_auth_entities.extend(list(group.user_set.all()))
+
+        obj_iterable = obj if isinstance(obj, (list, QuerySet)) else [obj]
+
+        all_contenttype_perms = ["view_contenttype", "add_contenttype", "change_contenttype", "delete_contenttype"]
+        perms_to_add_iterable = perms_to_add if isinstance(perms_to_add, (list, QuerySet)) else [perms_to_add]
+        perms_not_assigned = list(set(all_contenttype_perms) - set(perms_to_add_iterable))
+
+        bulk_assign_perms(perms_to_add, auth_entity_or_entities, obj)
+        self._check_auth_entities_perms_on_objs(
+            affected_auth_entities,
+            obj_iterable,
+            perms_to_add_iterable,
+            have_perms=True
+        )
+        self._check_auth_entities_perms_on_objs(
+            affected_auth_entities,
+            obj_iterable,
+            perms_not_assigned,
+            have_perms=False
+        )
+
+        if unaffected_extra_objs:
+            self._check_auth_entities_perms_on_objs(
+                affected_auth_entities,
+                unaffected_extra_objs,
+                all_contenttype_perms,
+                have_perms=False
+            )
+
+        unaffected_auth_entities = self._get_unaffected_entities(affected_auth_entities)
+        self._check_auth_entities_perms_on_objs(
+            unaffected_auth_entities,
+            [*obj_iterable, *(unaffected_extra_objs or [])],
+            all_contenttype_perms,
+            have_perms=False
+        )
+
+    def test_assign_single_perm_from_single_user_for_single_obj(self):
+        self._test_bulk_add_object_perms(
+            perms_to_add="change_contenttype",
+            affected_auth_entities=[self.user],
+            obj=self.ctype,
+            unaffected_extra_objs=self.extra_objs,
+        )
+
+    def test_assign_single_perm_from_single_user_for_list(self):
+        self._test_bulk_add_object_perms(
+            perms_to_add="change_contenttype",
+            affected_auth_entities=[self.user],
+            obj=[self.ctype, self.extra_objs[0]],
+            unaffected_extra_objs=self.extra_objs[1:],
+        )
+
+    def test_assign_single_perm_from_single_user_for_queryset(self):
+        self._test_bulk_add_object_perms(
+            perms_to_add="change_contenttype",
+            affected_auth_entities=[self.user],
+            obj=self.ctype_qset,
+            unaffected_extra_objs=[],
+        )
+
+    def test_assign_single_perm_from_multiple_users_for_single_obj(self):
+        self._test_bulk_add_object_perms(
+            perms_to_add="change_contenttype",
+            affected_auth_entities=[self.user, self.user_2],
+            obj=self.ctype,
+            unaffected_extra_objs=self.extra_objs,
+        )
+
+    def test_assign_single_perm_from_multiple_users_for_list(self):
+        self._test_bulk_add_object_perms(
+            perms_to_add="change_contenttype",
+            affected_auth_entities=[self.user, self.user_2],
+            obj=[self.ctype, self.extra_objs[0]],
+            unaffected_extra_objs=self.extra_objs[1:],
+        )
+
+    def test_assign_single_perm_from_multiple_users_for_queryset(self):
+        self._test_bulk_add_object_perms(
+            perms_to_add="change_contenttype",
+            affected_auth_entities=[self.user, self.user_2],
+            obj=self.ctype_qset,
+            unaffected_extra_objs=[],
+        )
+
+    def test_assign_single_perm_from_single_group_for_single_obj(self):
+        self._test_bulk_add_object_perms(
+            perms_to_add="change_contenttype",
+            affected_auth_entities=[self.group],
+            obj=self.ctype,
+            unaffected_extra_objs=self.extra_objs,
+        )
+
+    def test_assign_single_perm_from_single_group_for_list(self):
+        self._test_bulk_add_object_perms(
+            perms_to_add="change_contenttype",
+            affected_auth_entities=[self.group],
+            obj=[self.ctype, self.extra_objs[0]],
+            unaffected_extra_objs=self.extra_objs[1:],
+        )
+
+    def test_assign_single_perm_from_single_group_for_queryset(self):
+        self._test_bulk_add_object_perms(
+            perms_to_add="change_contenttype",
+            affected_auth_entities=[self.group],
+            obj=self.ctype_qset,
+            unaffected_extra_objs=[],
+        )
+
+    def test_assign_single_perm_from_multiple_groups_for_single_obj(self):
+        self._test_bulk_add_object_perms(
+            perms_to_add="change_contenttype",
+            affected_auth_entities=[self.group, self.group_2],
+            obj=self.ctype,
+            unaffected_extra_objs=self.extra_objs,
+        )
+
+    def test_assign_single_perm_from_multiple_groups_for_list(self):
+        self._test_bulk_add_object_perms(
+            perms_to_add="change_contenttype",
+            affected_auth_entities=[self.group, self.group_2],
+            obj=[self.ctype, self.extra_objs[0]],
+            unaffected_extra_objs=self.extra_objs[1:],
+        )
+
+    def test_assign_single_perm_from_multiple_groups_for_queryset(self):
+        self._test_bulk_add_object_perms(
+            perms_to_add="change_contenttype",
+            affected_auth_entities=[self.group, self.group_2],
+            obj=self.ctype_qset,
+            unaffected_extra_objs=[],
+        )
+
+    def test_assign_multiple_perms_from_single_user_for_single_obj(self):
+        self._test_bulk_add_object_perms(
+            perms_to_add=["add_contenttype", "change_contenttype"],
+            affected_auth_entities=[self.user],
+            obj=self.ctype,
+            unaffected_extra_objs=self.extra_objs,
+        )
+
+    def test_assign_multiple_perms_from_single_user_for_list(self):
+        self._test_bulk_add_object_perms(
+            perms_to_add=["add_contenttype", "change_contenttype"],
+            affected_auth_entities=[self.user],
+            obj=[self.ctype, self.extra_objs[0]],
+            unaffected_extra_objs=self.extra_objs[1:],
+        )
+
+    def test_assign_multiple_perms_from_single_user_for_queryset(self):
+        self._test_bulk_add_object_perms(
+            perms_to_add=["add_contenttype", "change_contenttype"],
+            affected_auth_entities=[self.user],
+            obj=self.ctype_qset,
+            unaffected_extra_objs=[],
+        )
+
+    def test_assign_multiple_perms_from_multiple_users_for_single_obj(self):
+        self._test_bulk_add_object_perms(
+            perms_to_add=["add_contenttype", "change_contenttype"],
+            affected_auth_entities=[self.user, self.user_2],
+            obj=self.ctype,
+            unaffected_extra_objs=self.extra_objs,
+        )
+
+    def test_assign_multiple_perms_from_multiple_users_for_list(self):
+        self._test_bulk_add_object_perms(
+            perms_to_add=["add_contenttype", "change_contenttype"],
+            affected_auth_entities=[self.user, self.user_2],
+            obj=[self.ctype, self.extra_objs[0]],
+            unaffected_extra_objs=self.extra_objs[1:],
+        )
+
+    def test_assign_multiple_perms_from_multiple_users_for_queryset(self):
+        self._test_bulk_add_object_perms(
+            perms_to_add=["add_contenttype", "change_contenttype"],
+            affected_auth_entities=[self.user, self.user_2],
+            obj=self.ctype_qset,
+            unaffected_extra_objs=[],
+        )
+
+    def test_assign_multiple_perms_from_single_group_for_single_obj(self):
+        self._test_bulk_add_object_perms(
+            perms_to_add=["add_contenttype", "change_contenttype"],
+            affected_auth_entities=[self.group],
+            obj=self.ctype,
+            unaffected_extra_objs=self.extra_objs,
+        )
+
+    def test_assign_multiple_perms_from_single_group_for_list(self):
+        self._test_bulk_add_object_perms(
+            perms_to_add=["add_contenttype", "change_contenttype"],
+            affected_auth_entities=[self.group],
+            obj=[self.ctype, self.extra_objs[0]],
+            unaffected_extra_objs=self.extra_objs[1:],
+        )
+
+    def test_assign_multiple_perms_from_single_group_for_queryset(self):
+        self._test_bulk_add_object_perms(
+            perms_to_add=["add_contenttype", "change_contenttype"],
+            affected_auth_entities=[self.group],
+            obj=self.ctype_qset,
+            unaffected_extra_objs=[],
+        )
+
+    def test_assign_multiple_perms_from_multiple_groups_for_single_obj(self):
+        self._test_bulk_add_object_perms(
+            perms_to_add=["add_contenttype", "change_contenttype"],
+            affected_auth_entities=[self.group, self.group_2],
+            obj=self.ctype,
+            unaffected_extra_objs=self.extra_objs,
+        )
+
+    def test_assign_multiple_perms_from_multiple_groups_for_list(self):
+        self._test_bulk_add_object_perms(
+            perms_to_add=["add_contenttype", "change_contenttype"],
+            affected_auth_entities=[self.group, self.group_2],
+            obj=[self.ctype, self.extra_objs[0]],
+            unaffected_extra_objs=self.extra_objs[1:],
+        )
+
+    def test_assign_multiple_perms_from_multiple_groups_for_queryset(self):
+        self._test_bulk_add_object_perms(
+            perms_to_add=["add_contenttype", "change_contenttype"],
+            affected_auth_entities=[self.group, self.group_2],
+            obj=self.ctype_qset,
+            unaffected_extra_objs=[],
+        )
+
+
+class BulkRemovePermTest(BulkPermTestBase):
+    """
+    Tests the bulk_remove_perms shortcut.
+    Would be much easier to test using parametrize, but this is incompatible with unittest
+    """
+
+    def test_not_model(self):
+        self.assertRaises(NotUserNorGroup, bulk_remove_perms,
+                          perms="change_object",
+                          user_or_group_or_iterable="Not a Model",
+                          obj=self.ctype)
+
+    def test_global_wrong_perm(self):
+        self.assertRaises(ValueError, bulk_remove_perms,
+                          perms="change_site",  # for global permissions must provide app_label
+                          user_or_group_or_iterable=self.user)
+
+    def _test_bulk_remove_global_perms(self, multiple_perms, multi_user_or_group, auth_type):
+        auth_entity_to_user = dict()
+        if auth_type == "user":
+            auth_entity_or_entities_iterable = [self.user]
+            auth_entity_to_user[self.user] = self.user
+            if multi_user_or_group:
+                user_2, created = User.objects.get_or_create(username='john')
+                auth_entity_or_entities_iterable.append(user_2)
+                auth_entity_to_user[user_2] = user_2
+        else:
+            auth_entity_or_entities_iterable = [self.group]
+            auth_entity_to_user[self.group] = self.user
+            if multi_user_or_group:
+                group_2, created = Group.objects.get_or_create(name='johnGroup')
+                user_2, created = User.objects.get_or_create(username='john')
+                user_2.groups.add(group_2)
+                auth_entity_or_entities_iterable.append(group_2)
+                auth_entity_to_user[group_2] = user_2
+
+        # we store this variable to test both cases, an iterable and a single object argument
+        if len(auth_entity_or_entities_iterable) > 1:
+            auth_entity_or_entities = auth_entity_or_entities_iterable
+        else:
+            auth_entity_or_entities = auth_entity_or_entities_iterable[0]
+
+        all_perms = ["contenttypes.add_contenttype", "contenttypes.change_contenttype",
+                     "contenttypes.delete_contenttype"]
+        bulk_assign_perms(all_perms, auth_entity_or_entities)
+        for auth_ent in auth_entity_or_entities_iterable:
+            user = auth_entity_to_user[auth_ent]
+            for perm in all_perms:
+                self.assertTrue(
+                    user.has_perm(perm)
+                )
+
+        # we store this variable to test both cases, an iterable and a single object argument
+        if multiple_perms:
+            perms = all_perms
+        else:
+            perms = "contenttypes.change_contenttype"
+
+        self.clear_users_perms_caches(auth_entity_to_user.values())
+        bulk_remove_perms(perms, auth_entity_or_entities)
+        for auth_ent in auth_entity_or_entities_iterable:
+            user = auth_entity_to_user[auth_ent]
+            for perm in perms if isinstance(perms, (list, QuerySet)) else [perms]:
+                self.assertFalse(
+                    user.has_perm(perm)
+                )
+
+    def test_remove_single_global_perm_from_single_user(self):
+        self._test_bulk_remove_global_perms(False, False, "user")
+
+    def test_remove_single_global_perm_from_multiple_users(self):
+        self._test_bulk_remove_global_perms(False, True, "user")
+
+    def test_remove_multiple_global_perms_from_single_user(self):
+        self._test_bulk_remove_global_perms(True, False, "user")
+
+    def test_remove_multiple_global_perm_from_multiple_users(self):
+        self._test_bulk_remove_global_perms(True, True, "user")
+
+    def test_remove_single_global_perm_from_single_group(self):
+        self._test_bulk_remove_global_perms(False, False, "group")
+
+    def test_remove_single_global_perm_from_multiple_groups(self):
+        self._test_bulk_remove_global_perms(False, True, "group")
+
+    def test_remove_multiple_global_perms_from_single_group(self):
+        self._test_bulk_remove_global_perms(True, False, "group")
+
+    def test_remove_multiple_global_perm_from_multiple_groups(self):
+        self._test_bulk_remove_global_perms(True, True, "group")
+
+    def test_no_commit(self):
+        perms_to_remove = "change_contenttype"
+        affected_auth_entities = [self.user]
+        obj = [self.ctype, self.extra_objs[0]]
+        unaffected_extra_objs = self.extra_objs[1:]
+
+        auth_entity_or_entities, all_affected_auth_entities, obj_iterable, perms_iterable = self._setup_bulk_remove_test(
+            perms_to_remove,
+            affected_auth_entities,
+            obj,
+        )
+
+        # Test bulk remove.
+        removed_perms = bulk_remove_perms(perms_to_remove, auth_entity_or_entities, obj, commit=False)
+
+        # still have perms
+        self._check_auth_entities_perms_on_objs(
+            all_affected_auth_entities,
+            obj_iterable,
+            perms_iterable,
+            have_perms=True
+        )
+
+        removed_perms.delete()
+
+        self._check_auth_entities_perms_on_objs(
+            all_affected_auth_entities,
+            obj_iterable,
+            perms_iterable,
+            have_perms=False
+        )
+
+        if unaffected_extra_objs:
+            self._check_auth_entities_perms_on_objs(
+                all_affected_auth_entities,
+                unaffected_extra_objs,
+                perms_iterable,
+                have_perms=True
+            )
+
+    def _setup_bulk_remove_test(
+            self,
+            perms_to_remove,
+            affected_auth_entities,
+            obj,
+    ):
+        if len(affected_auth_entities) > 1:
+            auth_entity_or_entities = affected_auth_entities.copy()
+        else:
+            auth_entity_or_entities = affected_auth_entities[0]
+
+        all_affected_auth_entities = affected_auth_entities.copy()
+        for auth_entity in affected_auth_entities:
+            user, group = get_identity(auth_entity)
+            if group:
+                all_affected_auth_entities.extend(list(group.user_set.all()))
+
+        obj_iterable = obj if isinstance(obj, (list, QuerySet)) else [obj]
+        perms_iterable = perms_to_remove if isinstance(perms_to_remove, (list, QuerySet)) else [perms_to_remove]
+        all_assigned_perms = ["add_contenttype", "change_contenttype", "delete_contenttype"]
+
+        # set up test by assigning all perms to affected_auth_entities for everything
+        # and sanity check that perms have indeed been correctly assigned
+        bulk_assign_perms(all_assigned_perms, affected_auth_entities, self.all_objects)
+        self._check_auth_entities_perms_on_objs(
+            all_affected_auth_entities,
+            self.all_objects,
+            all_assigned_perms,
+            have_perms=True
+        )
+
+        return (
+            auth_entity_or_entities,
+            all_affected_auth_entities,
+            obj_iterable,
+            perms_iterable
+        )
+
+    def _test_remove_object_perms(
+            self,
+            perms_to_remove,
+            affected_auth_entities,
+            obj,
+            unaffected_extra_objs
+    ):
+        auth_entity_or_entities, all_affected_auth_entities, obj_iterable, perms_iterable = self._setup_bulk_remove_test(
+            perms_to_remove,
+            affected_auth_entities,
+            obj,
+        )
+
+        # Test bulk remove.
+        bulk_remove_perms(perms_to_remove, auth_entity_or_entities, obj)
+
+        self._check_auth_entities_perms_on_objs(
+            all_affected_auth_entities,
+            obj_iterable,
+            perms_iterable,
+            have_perms=False
+        )
+
+        if unaffected_extra_objs:
+            self._check_auth_entities_perms_on_objs(
+                all_affected_auth_entities,
+                unaffected_extra_objs,
+                perms_iterable,
+                have_perms=True
+            )
+
+    def test_remove_single_perm_from_single_user_for_single_obj(self):
+        self._test_remove_object_perms(
+            perms_to_remove="change_contenttype",
+            affected_auth_entities=[self.user],
+            obj=self.ctype,
+            unaffected_extra_objs=self.extra_objs,
+        )
+
+    def test_remove_single_perm_from_single_user_for_list(self):
+        self._test_remove_object_perms(
+            perms_to_remove="change_contenttype",
+            affected_auth_entities=[self.user],
+            obj=[self.ctype, self.extra_objs[0]],
+            unaffected_extra_objs=self.extra_objs[1:],
+        )
+
+    def test_remove_single_perm_from_single_user_for_queryset(self):
+        self._test_remove_object_perms(
+            perms_to_remove="change_contenttype",
+            affected_auth_entities=[self.user],
+            obj=self.ctype_qset,
+            unaffected_extra_objs=[],
+        )
+
+    def test_remove_single_perm_from_multiple_users_for_single_obj(self):
+        self._test_remove_object_perms(
+            perms_to_remove="change_contenttype",
+            affected_auth_entities=[self.user, self.user_2],
+            obj=self.ctype,
+            unaffected_extra_objs=self.extra_objs,
+        )
+
+    def test_remove_single_perm_from_multiple_users_for_list(self):
+        self._test_remove_object_perms(
+            perms_to_remove="change_contenttype",
+            affected_auth_entities=[self.user, self.user_2],
+            obj=[self.ctype, self.extra_objs[0]],
+            unaffected_extra_objs=self.extra_objs[1:],
+        )
+
+    def test_remove_single_perm_from_multiple_users_for_queryset(self):
+        self._test_remove_object_perms(
+            perms_to_remove="change_contenttype",
+            affected_auth_entities=[self.user, self.user_2],
+            obj=self.ctype_qset,
+            unaffected_extra_objs=[],
+        )
+
+    def test_remove_single_perm_from_single_group_for_single_obj(self):
+        self._test_remove_object_perms(
+            perms_to_remove="change_contenttype",
+            affected_auth_entities=[self.group],
+            obj=self.ctype,
+            unaffected_extra_objs=self.extra_objs,
+        )
+
+    def test_remove_single_perm_from_single_group_for_list(self):
+        self._test_remove_object_perms(
+            perms_to_remove="change_contenttype",
+            affected_auth_entities=[self.group],
+            obj=[self.ctype, self.extra_objs[0]],
+            unaffected_extra_objs=self.extra_objs[1:],
+        )
+
+    def test_remove_single_perm_from_single_group_for_queryset(self):
+        self._test_remove_object_perms(
+            perms_to_remove="change_contenttype",
+            affected_auth_entities=[self.group],
+            obj=self.ctype_qset,
+            unaffected_extra_objs=[],
+        )
+
+    def test_remove_single_perm_from_multiple_groups_for_single_obj(self):
+        self._test_remove_object_perms(
+            perms_to_remove="change_contenttype",
+            affected_auth_entities=[self.group, self.group_2],
+            obj=self.ctype,
+            unaffected_extra_objs=self.extra_objs,
+        )
+
+    def test_remove_single_perm_from_multiple_groups_for_list(self):
+        self._test_remove_object_perms(
+            perms_to_remove="change_contenttype",
+            affected_auth_entities=[self.group, self.group_2],
+            obj=[self.ctype, self.extra_objs[0]],
+            unaffected_extra_objs=self.extra_objs[1:],
+        )
+
+    def test_remove_single_perm_from_multiple_groups_for_queryset(self):
+        self._test_remove_object_perms(
+            perms_to_remove="change_contenttype",
+            affected_auth_entities=[self.group, self.group_2],
+            obj=self.ctype_qset,
+            unaffected_extra_objs=[],
+        )
+
+    def test_remove_multiple_perms_from_single_user_for_single_obj(self):
+        self._test_remove_object_perms(
+            perms_to_remove=["add_contenttype", "change_contenttype"],
+            affected_auth_entities=[self.user],
+            obj=self.ctype,
+            unaffected_extra_objs=self.extra_objs,
+        )
+
+    def test_remove_multiple_perms_from_single_user_for_list(self):
+        self._test_remove_object_perms(
+            perms_to_remove=["add_contenttype", "change_contenttype"],
+            affected_auth_entities=[self.user],
+            obj=[self.ctype, self.extra_objs[0]],
+            unaffected_extra_objs=self.extra_objs[1:],
+        )
+
+    def test_remove_multiple_perms_from_single_user_for_queryset(self):
+        self._test_remove_object_perms(
+            perms_to_remove=["add_contenttype", "change_contenttype"],
+            affected_auth_entities=[self.user],
+            obj=self.ctype_qset,
+            unaffected_extra_objs=[],
+        )
+
+    def test_remove_multiple_perms_from_multiple_users_for_single_obj(self):
+        self._test_remove_object_perms(
+            perms_to_remove=["add_contenttype", "change_contenttype"],
+            affected_auth_entities=[self.user, self.user_2],
+            obj=self.ctype,
+            unaffected_extra_objs=self.extra_objs,
+        )
+
+    def test_remove_multiple_perms_from_multiple_users_for_list(self):
+        self._test_remove_object_perms(
+            perms_to_remove=["add_contenttype", "change_contenttype"],
+            affected_auth_entities=[self.user, self.user_2],
+            obj=[self.ctype, self.extra_objs[0]],
+            unaffected_extra_objs=self.extra_objs[1:],
+        )
+
+    def test_remove_multiple_perms_from_multiple_users_for_queryset(self):
+        self._test_remove_object_perms(
+            perms_to_remove=["add_contenttype", "change_contenttype"],
+            affected_auth_entities=[self.user, self.user_2],
+            obj=self.ctype_qset,
+            unaffected_extra_objs=[],
+        )
+
+    def test_remove_multiple_perms_from_single_group_for_single_obj(self):
+        self._test_remove_object_perms(
+            perms_to_remove=["add_contenttype", "change_contenttype"],
+            affected_auth_entities=[self.group],
+            obj=self.ctype,
+            unaffected_extra_objs=self.extra_objs,
+        )
+
+    def test_remove_multiple_perms_from_single_group_for_list(self):
+        self._test_remove_object_perms(
+            perms_to_remove=["add_contenttype", "change_contenttype"],
+            affected_auth_entities=[self.group],
+            obj=[self.ctype, self.extra_objs[0]],
+            unaffected_extra_objs=self.extra_objs[1:],
+        )
+
+    def test_remove_multiple_perms_from_single_group_for_queryset(self):
+        self._test_remove_object_perms(
+            perms_to_remove=["add_contenttype", "change_contenttype"],
+            affected_auth_entities=[self.group],
+            obj=self.ctype_qset,
+            unaffected_extra_objs=[],
+        )
+
+    def test_remove_multiple_perms_from_multiple_groups_for_single_obj(self):
+        self._test_remove_object_perms(
+            perms_to_remove=["add_contenttype", "change_contenttype"],
+            affected_auth_entities=[self.group, self.group_2],
+            obj=self.ctype,
+            unaffected_extra_objs=self.extra_objs,
+        )
+
+    def test_remove_multiple_perms_from_multiple_groups_for_list(self):
+        self._test_remove_object_perms(
+            perms_to_remove=["add_contenttype", "change_contenttype"],
+            affected_auth_entities=[self.group, self.group_2],
+            obj=[self.ctype, self.extra_objs[0]],
+            unaffected_extra_objs=self.extra_objs[1:],
+        )
+
+    def test_remove_multiple_perms_from_multiple_groups_for_queryset(self):
+        self._test_remove_object_perms(
+            perms_to_remove=["add_contenttype", "change_contenttype"],
+            affected_auth_entities=[self.group, self.group_2],
+            obj=self.ctype_qset,
+            unaffected_extra_objs=[],
+        )
 
 
 class RemovePermTest(ObjectPermissionTestCase):
@@ -377,7 +1233,8 @@ class GetUsersWithPermsTest(TestCase):
         assign_perm("delete_contenttype", self.group2, self.obj1)
         assign_perm("add_contenttype", self.group3, self.obj2)
 
-        result = get_users_with_perms(self.obj1, only_with_perms_in=('change_contenttype', 'delete_contenttype'), with_group_users=True)
+        result = get_users_with_perms(self.obj1, only_with_perms_in=('change_contenttype', 'delete_contenttype'),
+                                      with_group_users=True)
         result_vals = result.values_list('username', flat=True)
 
         self.assertEqual(
@@ -398,7 +1255,8 @@ class GetUsersWithPermsTest(TestCase):
         # assign perms to user
         assign_perm("change_contenttype", self.user2, self.obj1)
 
-        result = get_users_with_perms(self.obj1, only_with_perms_in=('change_contenttype', 'delete_contenttype'), with_group_users=False)
+        result = get_users_with_perms(self.obj1, only_with_perms_in=('change_contenttype', 'delete_contenttype'),
+                                      with_group_users=False)
         result_vals = result.values_list('username', flat=True)
 
         self.assertEqual(
@@ -413,7 +1271,7 @@ class GetUsersWithPermsTest(TestCase):
         assign_perm("delete_contenttype", self.user3, self.obj2)
 
         result = get_users_with_perms(self.obj1, only_with_perms_in=('delete_contenttype',),
-            attach_perms=True)
+                                      attach_perms=True)
 
         expected = {self.user2: ('change_contenttype', 'delete_contenttype')}
         self.assertEqual(result.keys(), expected.keys())
@@ -573,12 +1431,12 @@ class GetUsersWithPermsTest(TestCase):
         if django.VERSION >= (2, 1):
             expected[admin].append("view_contenttype")
         result = get_users_with_perms(self.obj1, attach_perms=True,
-            with_superusers=False, with_group_users=True)
+                                      with_superusers=False, with_group_users=True)
         self.assertEqual(result.keys(), expected.keys())
         for key, perms in result.items():
             self.assertEqual(set(perms), set(expected[key]))
         result = get_users_with_perms(self.obj1, attach_perms=True,
-            with_superusers=False, with_group_users=False)
+                                      with_superusers=False, with_group_users=False)
         expected = {self.user1: ["change_contenttype"],
                     admin: ["delete_contenttype"]}
         self.assertEqual(result, expected)
@@ -1001,7 +1859,8 @@ class GetObjectsForUser(TestCase):
 
         objects = get_objects_for_user(self.user,
                                        ['contenttypes.change_contenttype',
-                                        'contenttypes.delete_contenttype', 'contenttypes.add_contenttype'], accept_global_perms=True)
+                                        'contenttypes.delete_contenttype', 'contenttypes.add_contenttype'],
+                                       accept_global_perms=True)
         self.assertEqual(
             set(objects.values_list('id', flat=True)),
             {ctypes[0].id, ctypes[1].id})
@@ -1309,25 +2168,25 @@ class GetObjectsForGroup(TestCase):
         objects = get_objects_for_group(
             self.group1, ['contenttypes.change_contenttype'])
         self.assertEqual(set(objects),
-                          set(ContentType.objects.all()))
+                         set(ContentType.objects.all()))
 
     def test_has_global_permission_and_object_based_permission(self):
         assign_perm('contenttypes.change_contenttype', self.group1)
         assign_perm('contenttypes.delete_contenttype', self.group1, self.obj1)
 
         objects = get_objects_for_group(self.group1, [
-                                        'contenttypes.change_contenttype', 'contenttypes.delete_contenttype'], any_perm=False)
+            'contenttypes.change_contenttype', 'contenttypes.delete_contenttype'], any_perm=False)
         self.assertEqual(set(objects),
-                          {self.obj1})
+                         {self.obj1})
 
     def test_has_global_permission_and_object_based_permission_any_perm(self):
         assign_perm('contenttypes.change_contenttype', self.group1)
         assign_perm('contenttypes.delete_contenttype', self.group1, self.obj1)
 
         objects = get_objects_for_group(self.group1, [
-                                        'contenttypes.change_contenttype', 'contenttypes.delete_contenttype'], any_perm=True)
+            'contenttypes.change_contenttype', 'contenttypes.delete_contenttype'], any_perm=True)
         self.assertEqual(set(objects),
-                          set(ContentType.objects.all()))
+                         set(ContentType.objects.all()))
 
     def test_has_global_permission_and_object_based_permission_3perms(self):
         assign_perm('contenttypes.change_contenttype', self.group1)
@@ -1335,9 +2194,10 @@ class GetObjectsForGroup(TestCase):
         assign_perm('contenttypes.add_contenttype', self.group1, self.obj2)
 
         objects = get_objects_for_group(self.group1, [
-                                        'contenttypes.change_contenttype', 'contenttypes.delete_contenttype', 'contenttypes.add_contenttype'], any_perm=False)
+            'contenttypes.change_contenttype', 'contenttypes.delete_contenttype', 'contenttypes.add_contenttype'],
+                                        any_perm=False)
         self.assertEqual(set(objects),
-                          set())
+                         set())
 
     def test_exception_different_ctypes(self):
         self.assertRaises(MixedContentTypeError, get_objects_for_group,

@@ -73,13 +73,13 @@ class BaseObjectPermissionManager(models.Manager):
 
         return kwargs
 
-    def _get_content_type(self, queryset):
-        if isinstance(queryset, list):
-            ctype = get_content_type(queryset[0])
-        elif isinstance(queryset, QuerySet):
-            ctype = get_content_type(queryset.model)
+    def _get_content_type(self, iterable_or_object):
+        if isinstance(iterable_or_object, list):
+            ctype = get_content_type(iterable_or_object[0])
+        elif isinstance(iterable_or_object, QuerySet):
+            ctype = get_content_type(iterable_or_object.model)
         else:
-            ctype = get_content_type(queryset)
+            ctype = get_content_type(iterable_or_object)
 
         return ctype
 
@@ -133,7 +133,7 @@ class BaseObjectPermissionManager(models.Manager):
             obj
         )
 
-    def assign_perms_to_many_for_many(self, perms, users_or_groups, queryset):
+    def assign_perms_to_many_for_many(self, perms, users_or_groups, queryset, commit=True):
         """
         Bulk assigns given ``perms`` for all objects ``obj`` to a set of users or a set of groups.
         """
@@ -154,27 +154,29 @@ class BaseObjectPermissionManager(models.Manager):
                             **self._update_kwargs_with_obj_info(kwargs.copy(), ctype, obj=obj)
                         ))
 
-        return self.model.objects.bulk_create(to_add)
+        if commit:
+            return self.model.objects.bulk_create(to_add)
+        else:
+            return to_add
 
     def assign(self, perm, user_or_group, obj):
         """ Depreciated function name left in for compatibility"""
         warnings.warn("UserObjectPermissionManager method 'assign' is being renamed to 'assign_perm'. Update your code accordingly as old name will be depreciated in 2.0 version.", DeprecationWarning)
         return self.assign_perm(perm, user_or_group, obj)
 
-    def _get_base_filters(self, users_or_groups, queryset_or_object):
+    def _get_base_filters(self, users_or_groups, iterable_or_object):
         filters = Q(**{"%s__in" % self.user_or_group_field: users_or_groups})
 
-        if isinstance(queryset_or_object, QuerySet):
-            queryset = queryset_or_object
+        if isinstance(iterable_or_object, (list, QuerySet)):
+            queryset = iterable_or_object
             if self.is_generic():
                 filters &= Q(
-                    # try using queryset instead of list comp
-                    object_pk__in=queryset.values_list("pk", flat=True)
+                    object_pk__in=queryset.values_list("pk", flat=True) if isinstance(queryset, QuerySet) else [obj.pk for obj in queryset]
                 )
             else:
                 filters &= Q(content_object__in=queryset)
         else:
-            obj = queryset_or_object
+            obj = iterable_or_object
             if self.is_generic():
                 filters &= Q(object_pk=obj.pk)
             else:
@@ -191,12 +193,12 @@ class BaseObjectPermissionManager(models.Manager):
 
         return filters
 
-    def _remove_perms(self, perms, users_or_groups, queryset_or_object, ctype):
+    def _remove_perms(self, perms, users_or_groups, iterable_or_object, ctype, commit=True):
         """
         Note that while ctype is technically discoverable from queryset_or_object, we enforce passing it in, since
         dynamically determing it goes against past behaviour of the exposed functions which call this method.
         """
-        filters = self._get_base_filters(users_or_groups, queryset_or_object)
+        filters = self._get_base_filters(users_or_groups, iterable_or_object)
         disjunction_cond = Q()
 
         for perm in perms:
@@ -206,7 +208,10 @@ class BaseObjectPermissionManager(models.Manager):
 
         filters &= disjunction_cond
 
-        return self.filter(filters).delete()
+        if commit:
+            return self.filter(filters).delete()
+        else:
+            return self.filter(filters).all()
 
     def remove_perm(self, perm, user_or_group, obj):
         """
@@ -232,7 +237,7 @@ class BaseObjectPermissionManager(models.Manager):
         """
         return self._remove_perms([perm], [user_or_group], queryset, get_content_type(queryset.model))
 
-    def bulk_remove_perms(self, perms, user_or_group_or_multiple, queryset_or_object):
+    def bulk_remove_perms(self, perms, user_or_group_or_iterable, iterable_or_object, commit=True):
         """
         Allows removing multiple perms for multiple users_or_groups for multiple objects.
         Also supports passing in a single object for users_or_groups and for queryset_or_object
@@ -242,17 +247,13 @@ class BaseObjectPermissionManager(models.Manager):
         is that ``post_delete`` signals would NOT be fired.
         """
 
-        if isinstance(queryset_or_object, QuerySet):
-            ctype = get_content_type(queryset_or_object.model)
+        ctype = self._get_content_type(iterable_or_object)
+        if isinstance(user_or_group_or_iterable, (list, QuerySet)):
+            users_or_groups = user_or_group_or_iterable
         else:
-            ctype = get_content_type(queryset_or_object)
+            users_or_groups = [user_or_group_or_iterable]
 
-        if isinstance(user_or_group_or_multiple, (list, QuerySet)):
-            users_or_groups = user_or_group_or_multiple
-        else:
-            users_or_groups = [user_or_group_or_multiple]
-
-        return self._remove_perms(perms, users_or_groups, queryset_or_object, ctype)
+        return self._remove_perms(perms, users_or_groups, iterable_or_object, ctype, commit=commit)
 
 
 class UserObjectPermissionManager(BaseObjectPermissionManager):
