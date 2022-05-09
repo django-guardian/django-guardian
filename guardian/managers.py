@@ -83,10 +83,25 @@ class BaseObjectPermissionManager(models.Manager):
 
         return ctype
 
+    def _get_obj_list(self, queryset):
+        if isinstance(queryset, list):
+            objs = queryset
+        elif isinstance(queryset, QuerySet):
+            objs = list(queryset)
+        else:
+            objs = [queryset]
+
+        return objs
+
     def assign_perm(self, perm, user_or_group, obj):
         """
         Assigns permission with given ``perm`` for an instance ``obj`` and
         ``user``.
+
+        Note this has not been refactored to use self.assign_perms_to_many_for_many, since it behaves differently in
+        tests. Essentially, due to the fact that it uses get_or_create, rather than bulk_create, here we sometimes
+        create guardian permissions for users who already "have the permission" (eg. superusers, who have permissions
+        without needing to be assigned them).
         """
         if getattr(obj, 'pk', None) is None:
             raise ObjectNotPersisted("Object %s needs to be persisted first"
@@ -102,38 +117,42 @@ class BaseObjectPermissionManager(models.Manager):
         Bulk assigns permissions with given ``perm`` for an objects in ``queryset`` and
         ``user_or_group``.
         """
-        ctype = self._get_content_type(queryset)
-        permission = self._get_perms(ctype, [perm])[0]
-
-        checker = ObjectPermissionChecker(user_or_group)
-        checker.prefetch_perms(queryset)
-
-        assigned_perms = []
-        kwargs = self._generate_create_kwargs(permission, ctype, user_or_group=user_or_group)
-        for instance in queryset:
-            if not checker.has_perm(permission.codename, instance):
-                assigned_perms.append(self.model(
-                    **self._update_kwargs_with_obj_info(kwargs.copy(), ctype, obj=instance)
-                ))
-        self.model.objects.bulk_create(assigned_perms)
-
-        return assigned_perms
+        return self.assign_perms_to_many_for_many(
+            [perm],
+            [user_or_group],
+            queryset
+        )
 
     def assign_perm_to_many(self, perm, users_or_groups, obj):
         """
         Bulk assigns given ``perm`` for the object ``obj`` to a set of users or a set of groups.
         """
-        ctype = self._get_content_type(obj)
-        permission = self._get_perms(ctype, [perm])[0]
+        return self.assign_perms_to_many_for_many(
+            [perm],
+            users_or_groups,
+            obj
+        )
 
-        kwargs = self._generate_create_kwargs(permission, ctype, obj=obj)
+    def assign_perms_to_many_for_many(self, perms, users_or_groups, queryset):
+        """
+        Bulk assigns given ``perms`` for all objects ``obj`` to a set of users or a set of groups.
+        """
+        ctype = self._get_content_type(queryset)
+        permissions = self._get_perms(ctype, perms)
+        objects = self._get_obj_list(queryset)
+
         to_add = []
-        field = self.user_or_group_field
-        for user in users_or_groups:
-            kwargs[field] = user
-            to_add.append(
-                self.model(**kwargs)
-            )
+        for user_or_group in users_or_groups:
+            checker = ObjectPermissionChecker(user_or_group)
+            checker.prefetch_perms(objects)
+
+            for permission in permissions:
+                kwargs = self._generate_create_kwargs(permission, ctype, user_or_group=user_or_group)
+                for obj in objects:
+                    if not checker.has_perm(permission.codename, obj):
+                        to_add.append(self.model(
+                            **self._update_kwargs_with_obj_info(kwargs.copy(), ctype, obj=obj)
+                        ))
 
         return self.model.objects.bulk_create(to_add)
 
