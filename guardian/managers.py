@@ -1,6 +1,7 @@
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, CharField
+from django.db.models.functions import Cast
 from django.db.models.query import QuerySet
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
@@ -171,7 +172,12 @@ class BaseObjectPermissionManager(models.Manager):
             queryset = iterable_or_object
             if self.is_generic():
                 filters &= Q(
-                    object_pk__in=queryset.values_list("pk", flat=True) if isinstance(queryset, QuerySet) else [obj.pk for obj in queryset]
+                    # we have to do this cast, otherwise postgres errors
+                    object_pk__in=queryset.annotate(
+                        pk_as_char=Cast("pk", CharField())
+                    ).values_list("pk_as_char", flat=True)
+                    if isinstance(queryset, QuerySet)
+                    else [obj.pk for obj in queryset]
                 )
             else:
                 filters &= Q(content_object__in=queryset)
