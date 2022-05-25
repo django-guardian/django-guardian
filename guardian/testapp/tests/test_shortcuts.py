@@ -25,7 +25,7 @@ from guardian.exceptions import MixedContentTypeError
 from guardian.exceptions import NotUserNorGroup
 from guardian.exceptions import WrongAppError
 from guardian.exceptions import MultipleIdentityAndObjectError
-from guardian.testapp.models import CharPKModel, ChildTestModel, UUIDPKModel
+from guardian.testapp.models import CharPKModel, ChildTestModel, UUIDPKModel, Project, Post
 from guardian.testapp.tests.test_core import ObjectPermissionTestCase
 from guardian.models import Group, Permission
 from guardian.utils import get_identity
@@ -681,6 +681,40 @@ class BulkAssignPermTest(BulkPermTestBase):
             unaffected_extra_objs=[],
         )
 
+    def test_add_when_multiple_models_with_same_perm(self):
+        """
+        The reason this is tested is because there was a bug in this case.
+        The scenario is that we have a permission with a certain name (here "add_post") that exists on two models in
+        the same app.
+        """
+        assert ContentType.objects.get(model="post")
+        project_ctype = ContentType.objects.get(model="project")
+        Permission.objects.create(
+            codename='add_post',
+            name='Can add post',
+            content_type=project_ctype
+        )
+        post = Post.objects.create(title='Post1')
+        project = Project.objects.create(name='Project1')
+        auth_entities = [self.group, self.group_2]
+        perms_to_add = ["add_post"]
+
+        self._test_bulk_add_object_perms(
+            perms_to_add=perms_to_add,
+            affected_auth_entities=auth_entities,
+            obj=[project],
+            unaffected_extra_objs=[],
+        )
+
+        # in addition to the checks done above, test that auth_entities do not have add_post on the post object (since
+        # bulk_assign_perms was called on the project)
+        self._check_auth_entities_perms_on_objs(
+            auth_entities,
+            [post],
+            perms_to_add,
+            have_perms=False
+        )
+
 
 class BulkRemovePermTest(BulkPermTestBase):
     """
@@ -1072,6 +1106,57 @@ class BulkRemovePermTest(BulkPermTestBase):
             affected_auth_entities=[self.group, self.group_2],
             obj=self.ctype_qset,
             unaffected_extra_objs=[],
+        )
+
+    def test_remove_when_multiple_models_with_same_perm(self):
+        """
+        The reason this is tested is because there was a bug in this case.
+        The scenario is that we have a permission with a certain name (here "add_post") that exists on two models in
+        the same app.
+        """
+        assert ContentType.objects.get(model="post")
+        project_ctype = ContentType.objects.get(model="project")
+        Permission.objects.create(
+            codename='add_post',
+            name='Can add post',
+            content_type=project_ctype
+        )
+        post = Post.objects.create(title='Post1')
+        project = Project.objects.create(name='Project1')
+        auth_entities = [self.group, self.group_2]
+        perms_iterable = ["add_post"]
+
+        # assign the same-named perm to both objects, and check the auth_entities have that perm on those objects
+        bulk_assign_perms(perms_iterable, auth_entities, [post])
+        bulk_assign_perms(perms_iterable, auth_entities, [project])
+        for obj in [post, project]:
+            self._check_auth_entities_perms_on_objs(
+                auth_entities,
+                [obj],
+                perms_iterable,
+                have_perms=True
+            )
+
+        bulk_remove_perms(
+            perms_iterable,
+            auth_entities,
+            [post]
+        )
+
+        # check that perms on post have been removed, but not on project
+
+        self._check_auth_entities_perms_on_objs(
+            auth_entities,
+            [post],
+            perms_iterable,
+            have_perms=False
+        )
+
+        self._check_auth_entities_perms_on_objs(
+            auth_entities,
+            [project],
+            perms_iterable,
+            have_perms=True
         )
 
 

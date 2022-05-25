@@ -4,7 +4,7 @@ from django.db.models import Q, CharField
 from django.db.models.functions import Cast
 from django.db.models.query import QuerySet
 from guardian.core import ObjectPermissionChecker
-from guardian.ctypes import get_content_type
+from guardian.ctypes import get_content_type, get_content_type_from_iterable_or_object
 from guardian.exceptions import ObjectNotPersisted
 from django.contrib.auth.models import Permission
 
@@ -74,16 +74,6 @@ class BaseObjectPermissionManager(models.Manager):
 
         return kwargs
 
-    def _get_content_type(self, iterable_or_object):
-        if isinstance(iterable_or_object, list):
-            ctype = get_content_type(iterable_or_object[0])
-        elif isinstance(iterable_or_object, QuerySet):
-            ctype = get_content_type(iterable_or_object.model)
-        else:
-            ctype = get_content_type(iterable_or_object)
-
-        return ctype
-
     def _get_obj_list(self, queryset):
         if isinstance(queryset, list):
             objs = queryset
@@ -107,7 +97,7 @@ class BaseObjectPermissionManager(models.Manager):
         if getattr(obj, 'pk', None) is None:
             raise ObjectNotPersisted("Object %s needs to be persisted first"
                                      % obj)
-        ctype = self._get_content_type(obj)
+        ctype = get_content_type_from_iterable_or_object(obj)
         permission = self._retrieve_perms(ctype, [perm])[0]
         kwargs = self._generate_create_kwargs(permission, ctype, obj=obj, user_or_group=user_or_group)
         obj_perm, _ = self.get_or_create(**kwargs)
@@ -138,7 +128,7 @@ class BaseObjectPermissionManager(models.Manager):
         """
         Bulk assigns given ``perms`` for all objects ``obj`` to a set of users or a set of groups.
         """
-        ctype = self._get_content_type(queryset)
+        ctype = get_content_type_from_iterable_or_object(queryset)
         permissions = self._retrieve_perms(ctype, perms)
         objects = self._get_obj_list(queryset)
 
@@ -253,7 +243,7 @@ class BaseObjectPermissionManager(models.Manager):
         is that ``post_delete`` signals would NOT be fired.
         """
 
-        ctype = self._get_content_type(iterable_or_object)
+        ctype = get_content_type_from_iterable_or_object(iterable_or_object)
         if isinstance(user_or_group_or_iterable, (list, QuerySet)):
             users_or_groups = user_or_group_or_iterable
         else:

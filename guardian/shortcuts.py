@@ -27,7 +27,7 @@ from django.db.models import (
     UUIDField,
 )
 from guardian.core import ObjectPermissionChecker
-from guardian.ctypes import get_content_type
+from guardian.ctypes import get_content_type, get_content_type_from_iterable_or_object
 from guardian.exceptions import MixedContentTypeError, WrongAppError, MultipleIdentityAndObjectError
 from guardian.utils import get_anonymous_user, get_group_obj_perms_model, get_identity, get_user_obj_perms_model
 GroupObjectPermission = get_group_obj_perms_model()
@@ -135,12 +135,13 @@ def assign_perm(perm, user_or_group, obj=None):
         return model.objects.assign_perm(perm, group, obj)
 
 
-def _get_perms_objs(perms, are_global=False):
+def _get_perms_objs(perms, obj=None):
     filters_to_or = []
     permissions = []
+    ctype = get_content_type_from_iterable_or_object(obj) if obj else None
     for perm in perms:
         if not isinstance(perm, Permission):
-            if are_global:
+            if not ctype:
                 try:
                     app_label, codename = perm.split(".", 1)
                 except ValueError:
@@ -152,11 +153,11 @@ def _get_perms_objs(perms, are_global=False):
                     Q(content_type__app_label=app_label) & Q(codename=codename)
                 )
             else:
+                codename = perm
                 if "." in perm:
-                    app_label, codename = perm.split(".", 1)
-                    filter = Q(content_type__app_label=app_label) & Q(codename=codename)
-                else:
-                    filter = Q(codename=perm)
+                    app_label, codename = codename.split(".", 1)
+
+                filter = Q(content_type=ctype) & Q(codename=codename)
                 filters_to_or.append(filter)
         else:
             permissions.append(perm)
@@ -188,7 +189,7 @@ def bulk_assign_perms(perms, user_or_group, obj=None, commit=True):
                 "committing them, since the reference to the user or group is not part of the permissions returned."
             )
 
-        perms = _get_perms_objs(perms, are_global=True)
+        perms = _get_perms_objs(perms, obj=None)
 
         if user:
             if isinstance(user, (QuerySet, list)):
@@ -205,7 +206,7 @@ def bulk_assign_perms(perms, user_or_group, obj=None, commit=True):
                 group.permissions.add(*perms)
             return perms
 
-    perms = _get_perms_objs(perms)
+    perms = _get_perms_objs(perms, obj=obj)
 
     if isinstance(obj, (QuerySet, list)):
         if user:
@@ -338,7 +339,7 @@ def bulk_remove_perms(perms, user_or_group_or_iterable=None, obj=None, commit=Tr
                 "committing them, since the reference to the user or group is not part of the permissions returned."
             )
 
-        perms = _get_perms_objs(perms, are_global=True)
+        perms = _get_perms_objs(perms, obj=None)
 
         if user:
             if isinstance(user, (QuerySet, list)):
@@ -355,7 +356,7 @@ def bulk_remove_perms(perms, user_or_group_or_iterable=None, obj=None, commit=Tr
                 group.permissions.remove(*perms)
             return perms
 
-    perms = _get_perms_objs(perms)
+    perms = _get_perms_objs(perms, obj=obj)
 
     if isinstance(obj, (QuerySet, list)):
         if user:
