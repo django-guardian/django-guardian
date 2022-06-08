@@ -202,7 +202,8 @@ class BaseObjectPermissionManager(models.Manager):
             conjunction_cond = self._get_filters_for_perm(perm, ctype, conjunction_cond)
             disjunction_cond |= conjunction_cond
 
-        filters &= disjunction_cond
+        if disjunction_cond:
+            filters &= disjunction_cond
 
         if commit:
             return self.filter(filters).delete()

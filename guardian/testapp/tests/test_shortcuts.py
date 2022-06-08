@@ -25,7 +25,7 @@ from guardian.exceptions import MixedContentTypeError
 from guardian.exceptions import NotUserNorGroup
 from guardian.exceptions import WrongAppError
 from guardian.exceptions import MultipleIdentityAndObjectError
-from guardian.testapp.models import CharPKModel, ChildTestModel, UUIDPKModel, Project, Post
+from guardian.testapp.models import CharPKModel, ChildTestModel, UUIDPKModel, Project, Post, ModelWithBinaryField
 from guardian.testapp.tests.test_core import ObjectPermissionTestCase
 from guardian.models import Group, Permission
 from guardian.utils import get_identity
@@ -1107,6 +1107,33 @@ class BulkRemovePermTest(BulkPermTestBase):
             obj=self.ctype_qset,
             unaffected_extra_objs=[],
         )
+
+    def test_remove_perms_for_model_with_binary_field(self):
+        model_with_binary_field = ModelWithBinaryField.objects.create()
+        auth_entities = [self.group, self.group_2]
+        perms_iterable = ["add_modelwithbinaryfield", "change_modelwithbinaryfield"]
+        bulk_assign_perms(perms_iterable, auth_entities, [model_with_binary_field])
+        self._check_auth_entities_perms_on_objs(
+            auth_entities,
+            [model_with_binary_field],
+            perms_iterable,
+            have_perms=True
+        )
+
+        bulk_remove_perms(
+            perms_iterable,
+            auth_entities,
+            [model_with_binary_field]
+        )
+
+        # check that perms on post have been removed
+        self._check_auth_entities_perms_on_objs(
+            auth_entities,
+            [model_with_binary_field],
+            perms_iterable,
+            have_perms=False
+        )
+
 
     def test_remove_when_multiple_models_with_same_perm(self):
         """
