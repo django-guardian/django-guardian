@@ -40,7 +40,7 @@ TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 ROOT_URLCONF = 'guardian.testapp.tests.urls'
 SITE_ID = 1
 
-SECRET_KEY = ''.join([random.choice(string.ascii_letters) for x in range(40)])
+SECRET_KEY = ''.join(random.choice(string.ascii_letters) for x in range(40))
 
 # Database specific
 

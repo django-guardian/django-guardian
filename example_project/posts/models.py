@@ -1,9 +1,7 @@
 from django.db import models
 from django.urls import reverse
-from django.utils.six import python_2_unicode_compatible
 
 
-@python_2_unicode_compatible
 class Post(models.Model):
     title = models.CharField('title', max_length=64)
     slug = models.SlugField(max_length=64)

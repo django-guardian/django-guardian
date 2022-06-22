@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.test import TestCase
@@ -108,7 +106,7 @@ class TestDirectUserPermissions(TestCase):
         assign_perm('change_project', self.joe, foo)
 
         result = self.joe.get_all_permissions(foo)
-        self.assertEqual(result, set(('add_project', 'change_project')))
+        self.assertEqual(result, {'add_project', 'change_project'})
 
     def test_get_all_permissions_no_object(self):
         foo = Project.objects.create(name='foo')

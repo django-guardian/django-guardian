@@ -1,7 +1,5 @@
-from __future__ import unicode_literals
-
 from django.conf import settings
-from django.conf.urls import handler404, handler500, include, url
+from django.conf.urls import handler404, handler500, include
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, Group, Permission
 
@@ -11,7 +9,6 @@ __all__ = [
     'AnonymousUser',
     'get_user_model',
     'user_model_label',
-    'url',
     'include',
     'handler404',
     'handler500',
@@ -41,7 +38,7 @@ def get_user_permission_full_codename(perm):
     """
     User = get_user_model()
     model_name = User._meta.model_name
-    return '%s.%s_%s' % (User._meta.app_label, perm, model_name)
+    return '{}.{}_{}'.format(User._meta.app_label, perm, model_name)
 
 
 def get_user_permission_codename(perm):
@@ -51,12 +48,3 @@ def get_user_permission_codename(perm):
     ``myapp.CustomUser`` is used it would return ``change_customuser``.
     """
     return get_user_permission_full_codename(perm).split('.')[1]
-
-
-# Python 3
-try:
-    unicode = unicode  # pyflakes:ignore
-    basestring = basestring  # pyflakes:ignore
-    str = str  # pyflakes:ignore
-except NameError:
-    basestring = unicode = str = str

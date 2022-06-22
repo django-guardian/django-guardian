@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from django.apps import apps as django_apps
 auth_app = django_apps.get_app_config("auth")
 
@@ -45,7 +43,7 @@ class OrphanedObjectPermissionsTest(TestCase):
             self.target_obj1: ["change_contenttype", "delete_contenttype"],
             self.target_obj2: ["change_contenttype"],
         }
-        obj_perms_count = sum([len(val) for key, val in target_perms.items()])
+        obj_perms_count = sum(len(val) for key, val in target_perms.items())
         for target, perms in target_perms.items():
             target.__old_pk = target.pk  # Store pkeys
             for perm in perms:

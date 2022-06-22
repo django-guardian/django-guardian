@@ -1,10 +1,10 @@
-from __future__ import unicode_literals
+from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models import Q
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
 from guardian.exceptions import ObjectNotPersisted
-from guardian.models import Permission
+from django.contrib.auth.models import Permission
 
 import warnings
 
@@ -16,14 +16,14 @@ class BaseObjectPermissionManager(models.Manager):
         try:
             self.model._meta.get_field('user')
             return 'user'
-        except models.fields.FieldDoesNotExist:
+        except FieldDoesNotExist:
             return 'group'
 
     def is_generic(self):
         try:
             self.model._meta.get_field('object_pk')
             return True
-        except models.fields.FieldDoesNotExist:
+        except FieldDoesNotExist:
             return False
 
     def assign_perm(self, perm, user_or_group, obj):
@@ -54,8 +54,11 @@ class BaseObjectPermissionManager(models.Manager):
         Bulk assigns permissions with given ``perm`` for an objects in ``queryset`` and
         ``user_or_group``.
         """
+        if isinstance(queryset, list):
+            ctype = get_content_type(queryset[0])
+        else:
+            ctype = get_content_type(queryset.model)
 
-        ctype = get_content_type(queryset.model)
         if not isinstance(perm, Permission):
             permission = Permission.objects.get(content_type=ctype, codename=perm)
         else:

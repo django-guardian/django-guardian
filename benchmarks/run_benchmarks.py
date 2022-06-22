@@ -43,7 +43,7 @@ def random_string(length=25, chars=string.ascii_letters + string.digits):
     return ''.join(random.choice(chars) for i in range(length))
 
 
-class Call(object):
+class Call:
 
     def __init__(self, args, kwargs, start=None, finish=None):
         self.args = args
@@ -55,7 +55,7 @@ class Call(object):
         return self.finish - self.start
 
 
-class Timed(object):
+class Timed:
 
     def __init__(self, action=None):
         self.action = action
@@ -76,12 +76,12 @@ class Timed(object):
                 call.finish = datetime.datetime.now()
                 func.calls.append(call)
                 if self.action:
-                    print(" -> [%s] Done (Total time: %s)" % (self.action,
+                    print(" -> [{}] Done (Total time: {})".format(self.action,
                                                               call.delta()))
         return wrapper
 
 
-class Benchmark(object):
+class Benchmark:
 
     def __init__(self, name, users_count, objects_count,
                  objects_with_perms_count, model, subquery):

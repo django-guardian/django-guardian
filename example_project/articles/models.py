@@ -1,14 +1,10 @@
-from __future__ import unicode_literals
-
 from django.db import models
 from django.urls import reverse
-from django.utils.six import python_2_unicode_compatible
 
 
 from guardian.models import GroupObjectPermissionBase, UserObjectPermissionBase
 
 
-@python_2_unicode_compatible
 class Article(models.Model):
     title = models.CharField('title', max_length=64)
     slug = models.SlugField(max_length=64)
@@ -35,3 +31,26 @@ class ArticleUserObjectPermission(UserObjectPermissionBase):
 
 class ArticleGroupObjectPermission(GroupObjectPermissionBase):
     content_object = models.ForeignKey(Article, on_delete=models.CASCADE)
+
+
+from guardian.models import UserObjectPermissionAbstract, GroupObjectPermissionAbstract
+
+class BigUserObjectPermission(UserObjectPermissionAbstract):
+    id = models.BigAutoField(editable=False, unique=True, primary_key=True)
+    class Meta(UserObjectPermissionAbstract.Meta):
+        abstract = False
+        indexes = [
+            *UserObjectPermissionAbstract.Meta.indexes,
+            models.Index(fields=['content_type', 'object_pk', 'user']),
+        ]
+
+
+class BigGroupObjectPermission(GroupObjectPermissionAbstract):
+    id = models.BigAutoField(editable=False, unique=True, primary_key=True)
+    class Meta(GroupObjectPermissionAbstract.Meta):
+        abstract = False
+        indexes = [
+            *GroupObjectPermissionAbstract.Meta.indexes,
+            models.Index(fields=['content_type', 'object_pk', 'group']),
+        ]
+

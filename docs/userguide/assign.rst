@@ -40,24 +40,19 @@ After we call management commands ``makemigrations`` and ``migrate``
 our *assign_task* permission would be added to default set of permissions.
 
 .. note::
-   By default, Django adds 3 permissions for each registered model:
+   By default, Django adds 4 permissions for each registered model:
 
    - *add_modelname*
    - *change_modelname*
    - *delete_modelname*
-   - *view_modelname* (since Django 2.1)
+   - *view_modelname*
 
    (where *modelname* is a simplified name of our model's class). See
-   https://docs.djangoproject.com/en/dev/topics/auth/default/#default-permissions for
+   https://docs.djangoproject.com/en/stable/topics/auth/default/#default-permissions for
    more detail.
 
-.. note::
-   When upgrading to Django 2.1 custom created *view_modelname* permissions
-   clash with the newly built-in ones.  The simplest way to fix this is to
-   add ``default_permissions = ('add', 'change', 'delete')`` to ``Meta``.
-
-There is nothing new here since creation of permissions is 
-`handled by django <http://docs.djangoproject.com/en/1.2/topics/auth/#id1>`_.
+There is nothing new here since creation of permissions is
+`handled by django <https://docs.djangoproject.com/en/stable/topics/auth/>`_.
 Now we can move to :ref:`assigning object permissions <assign-obj-perms>`.
 
 .. _assign-obj-perms:
@@ -117,26 +112,26 @@ Another example:
     >>> from django.contrib.auth.models import User, Group
     >>> from guardian.shortcuts import assign_perm
     # fictional companies
-    >>> companyA = Company.objects.create(name="Company A")
-    >>> companyB = Company.objects.create(name="Company B")
+    >>> company_a = Company.objects.create(name="Company A")
+    >>> company_b = Company.objects.create(name="Company B")
     # create groups
-    >>> companyUserGroupA = Group.objects.create(name="Company User Group A")
-    >>> companyUserGroupB = Group.objects.create(name="Company User Group B")
+    >>> company_user_group_a = Group.objects.create(name="Company User Group A")
+    >>> company_user_group_b = Group.objects.create(name="Company User Group B")
     # assign object specific permissions to groups
-    >>> assign_perm('change_company', companyUserGroupA, companyA)
-    >>> assign_perm('change_company', companyUserGroupB, companyB)
+    >>> assign_perm('change_company', company_user_group_a, company_a)
+    >>> assign_perm('change_company', company_user_group_b, company_b)
     # create user and add it to one group for testing
-    >>> userA = User.objects.create(username="User A")
-    >>> userA.groups.add(companyUserGroupA)
-    >>> userA.has_perm('change_company', companyA)
+    >>> user_a = User.objects.create(username="User A")
+    >>> user_a.groups.add(company_user_group_a)
+    >>> user_a.has_perm('change_company', company_a)
     True
-    >>> userA.has_perm('change_company', companyB)
+    >>> user_a.has_perm('change_company', company_b)
     False
-    >>> userB = User.objects.create(username="User B")
-    >>> userB.groups.add(companyUserGroupB)
-    >>> userB.has_perm('change_company', companyA)
+    >>> user_b = User.objects.create(username="User B")
+    >>> user_b.groups.add(company_user_group_b)
+    >>> user_b.has_perm('change_company', company_a)
     False
-    >>> userB.has_perm('change_company', companyB)
+    >>> user_b.has_perm('change_company', company_b)
     True
 
 Assigning Permissions inside Signals

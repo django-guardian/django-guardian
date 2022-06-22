@@ -2,8 +2,14 @@
 django-guardian
 ===============
 
-.. image:: https://travis-ci.org/django-guardian/django-guardian.svg?branch=devel
-  :target: https://travis-ci.org/django-guardian/django-guardian
+.. image:: https://github.com/django-guardian/django-guardian/workflows/Tests/badge.svg?branch=devel
+  :target: https://github.com/django-guardian/django-guardian/actions/workflows/tests.yml
+
+.. image:: https://img.shields.io/pypi/v/django-guardian.svg
+    :target: https://pypi.python.org/pypi/django-guardian
+
+.. image:: https://img.shields.io/pypi/pyversions/django-guardian.svg
+    :target: https://pypi.python.org/pypi/django-guardian
 
 ``django-guardian`` is an implementation of per object permissions [1]_ on top
 of Django's authorization backend
@@ -16,10 +22,10 @@ Online documentation is available at https://django-guardian.readthedocs.io/.
 Requirements
 ------------
 
-* Python 2.7 or 3.4+
-* A supported version of Django (currently 1.11+)
+* Python 3.5+
+* A supported version of Django (currently 2.2+)
 
-Travis CI tests on Django version 1.11, 2.0, and master.
+GitHub Actions run tests against Django versions 2.2, 3.0, 3.1, 3.2, 4.0, and main.
 
 Installation
 ------------
@@ -111,4 +117,3 @@ For example:
 .. [1] Great paper about this feature is available at `djangoadvent articles <https://github.com/djangoadvent/djangoadvent-articles/blob/master/1.2/06_object-permissions.rst>`_.
 
 .. _Django: http://www.djangoproject.com/
-

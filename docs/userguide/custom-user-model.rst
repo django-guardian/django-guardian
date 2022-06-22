@@ -27,7 +27,7 @@ in your settings.py and subclass ``guardian.mixins.GuardianUserMixin`` in your c
 
 
 .. seealso:: Read more about customizing User model
-   here: https://docs.djangoproject.com/en/2.1/topics/auth/customizing/#substituting-a-custom-user-model.
+   here: https://docs.djangoproject.com/en/stable/topics/auth/customizing/#substituting-a-custom-user-model.
 
 
 .. _custom-user-model-anonymous:

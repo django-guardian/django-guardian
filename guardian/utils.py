@@ -5,8 +5,6 @@ Functions defined within this module should be considered as django-guardian's
 internal functionality. They are **not** guaranteed to be stable - which means
 they actual input parameters/output type may change in future releases.
 """
-from __future__ import unicode_literals
-
 import logging
 import os
 from itertools import chain
@@ -95,7 +93,8 @@ def get_identity(identity):
 
 def get_40x_or_None(request, perms, obj=None, login_url=None,
                     redirect_field_name=None, return_403=False,
-                    return_404=False, accept_global_perms=False):
+                    return_404=False, accept_global_perms=False,
+                    any_perm=False):
     login_url = login_url or settings.LOGIN_URL
     redirect_field_name = redirect_field_name or REDIRECT_FIELD_NAME
 
@@ -108,8 +107,12 @@ def get_40x_or_None(request, perms, obj=None, login_url=None,
         has_permissions = all(request.user.has_perm(perm) for perm in perms)
     # if still no permission granted, try obj perms
     if not has_permissions:
-        has_permissions = all(request.user.has_perm(perm, obj)
-                              for perm in perms)
+        if any_perm:
+            has_permissions = any(request.user.has_perm(perm, obj)
+                                  for perm in perms)
+        else:
+            has_permissions = all(request.user.has_perm(perm, obj)
+                                  for perm in perms)
 
     if not has_permissions:
         if return_403:
@@ -135,6 +138,24 @@ def get_40x_or_None(request, perms, obj=None, login_url=None,
                                      redirect_field_name)
 
 
+from django.apps import apps as django_apps
+from django.core.exceptions import ImproperlyConfigured
+
+def get_obj_perm_model_by_conf(setting_name):
+    """
+    Return the model that matches the guardian settings.
+    """
+    try:
+        setting_value = getattr(guardian_settings, setting_name)
+        return django_apps.get_model(setting_value, require_ready=False)
+    except ValueError as e:
+        raise ImproperlyConfigured("{} must be of the form 'app_label.model_name'".format(setting_value)) from e
+    except LookupError as e:
+        raise ImproperlyConfigured(
+            "{} refers to model '{}' that has not been installed".format(setting_name, setting_value)
+        ) from e
+
+
 def clean_orphan_obj_perms():
     """
     Seeks and removes all object permissions entries pointing at non-existing
@@ -142,8 +163,8 @@ def clean_orphan_obj_perms():
 
     Returns number of removed objects.
     """
-    from guardian.models import UserObjectPermission
-    from guardian.models import GroupObjectPermission
+    UserObjectPermission = get_user_obj_perms_model()
+    GroupObjectPermission = get_group_obj_perms_model()
 
     deleted = 0
     # TODO: optimise
@@ -162,9 +183,18 @@ def clean_orphan_obj_perms():
 # are defined
 
 def get_obj_perms_model(obj, base_cls, generic_cls):
+    """
+    Return the matching object permission model for the obj class
+    Defaults to returning the generic object permission when
+    no direct foreignkey is defined or obj is None
+    """
+    # Default to the generic object permission model
+    # when None obj is provided
+    if obj is None:
+        return generic_cls
+
     if isinstance(obj, Model):
         obj = obj.__class__
-    ctype = get_content_type(obj)
 
     fields = (f for f in obj._meta.get_fields()
                 if (f.one_to_many or f.one_to_one) and f.auto_created)
@@ -178,24 +208,35 @@ def get_obj_perms_model(obj, base_cls, generic_cls):
                 # make sure that content_object's content_type is same as
                 # the one of given obj
                 fk = model._meta.get_field('content_object')
-                if ctype == get_content_type(fk.remote_field.model):
+                if get_content_type(obj) == get_content_type(fk.remote_field.model):
                     return model
     return generic_cls
 
 
-def get_user_obj_perms_model(obj):
+def get_user_obj_perms_model(obj = None):
     """
     Returns model class that connects given ``obj`` and User class.
+    If obj is not specified, then user generic object permission model
+    returned is determined by the guardian setting 'USER_OBJ_PERMS_MODEL'
     """
     from guardian.models import UserObjectPermissionBase
-    from guardian.models import UserObjectPermission
+    UserObjectPermission = get_obj_perm_model_by_conf('USER_OBJ_PERMS_MODEL')
     return get_obj_perms_model(obj, UserObjectPermissionBase, UserObjectPermission)
 
 
-def get_group_obj_perms_model(obj):
+def get_group_obj_perms_model(obj = None):
     """
     Returns model class that connects given ``obj`` and Group class.
+    If obj is not specified, then group generic object permission model
+    returned is determined byt the guardian setting 'GROUP_OBJ_PERMS_MODEL'.
     """
     from guardian.models import GroupObjectPermissionBase
-    from guardian.models import GroupObjectPermission
+    GroupObjectPermission = get_obj_perm_model_by_conf('GROUP_OBJ_PERMS_MODEL')
     return get_obj_perms_model(obj, GroupObjectPermissionBase, GroupObjectPermission)
+
+
+def evict_obj_perms_cache(obj):
+    if hasattr(obj, '_guardian_perms_cache'):
+        delattr(obj, '_guardian_perms_cache')
+        return True
+    return False

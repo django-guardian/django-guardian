@@ -1,7 +1,8 @@
-from __future__ import unicode_literals
 import copy
+import os
+import unittest
 
-from django import forms
+from django import VERSION as DJANGO_VERSION, forms
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import get_user_model
@@ -12,7 +13,6 @@ from django.test.client import Client
 from django.urls import reverse
 
 from guardian.admin import GuardedModelAdmin
-from guardian.compat import str
 from guardian.shortcuts import get_perms
 from guardian.shortcuts import get_perms_for_model
 from guardian.models import Group
@@ -85,6 +85,9 @@ class AdminTests(TestCase):
                                                       'user_id': self.user.pk})
         self.assertEqual(response.request['PATH_INFO'], redirect_url)
 
+    @unittest.skipIf(DJANGO_VERSION >= (3, 0) and
+                     "mysql" in os.environ.get("DATABASE_URL", ""),
+                     "Negative ids no longer work in Django 3.0+ with MySQL.")
     def test_view_manage_negative_user_form(self):
         self._login_superuser()
         url = reverse('admin:%s_%s_permissions' % self.obj_info,
@@ -145,10 +148,10 @@ class AdminTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
-        choices = set([c[0] for c in
-                       response.context['form'].fields['permissions'].choices])
+        choices = {c[0] for c in
+                       response.context['form'].fields['permissions'].choices}
         self.assertEqual(
-            set([p.codename for p in get_perms_for_model(self.obj)]),
+            {p.codename for p in get_perms_for_model(self.obj)},
             choices,
         )
 
@@ -189,6 +192,9 @@ class AdminTests(TestCase):
                                self.obj_info, args=[self.obj.pk, self.group.id])
         self.assertEqual(response.request['PATH_INFO'], redirect_url)
 
+    @unittest.skipIf(DJANGO_VERSION >= (3, 0) and
+                     "mysql" in os.environ.get("DATABASE_URL", ""),
+                     "Negative ids no longer work in Django 3.0+ with MySQL.")
     def test_view_manage_negative_group_form(self):
         self._login_superuser()
         url = reverse('admin:%s_%s_permissions' % self.obj_info,
@@ -249,10 +255,10 @@ class AdminTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
 
-        choices = set([c[0] for c in
-                       response.context['form'].fields['permissions'].choices])
+        choices = {c[0] for c in
+                       response.context['form'].fields['permissions'].choices}
         self.assertEqual(
-            set([p.codename for p in get_perms_for_model(self.obj)]),
+            {p.codename for p in get_perms_for_model(self.obj)},
             choices,
         )
 
@@ -374,7 +380,7 @@ class GuardedModelAdminTests(TestCase):
         request = HttpRequest()
         request.user = joe
         qs = gma.get_queryset(request)
-        self.assertEqual(sorted([e.pk for e in qs]),
+        self.assertEqual(sorted(e.pk for e in qs),
                          sorted([joe_entry.pk, jane_entry.pk]))
 
     def test_user_can_access_owned_by_group_objects_only(self):

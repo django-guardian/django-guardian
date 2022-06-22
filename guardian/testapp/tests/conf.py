@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 import unittest
 from guardian.conf import settings as guardian_settings
 from django.conf import settings
@@ -12,10 +11,10 @@ def skipUnlessTestApp(obj):
                                'app %r must be installed to run this test' % app)(obj)
 
 
-class TestDataMixin(object):
+class TestDataMixin:
 
     def setUp(self):
-        super(TestDataMixin, self).setUp()
+        super().setUp()
         from django.contrib.auth.models import Group
         from django.contrib.auth import get_user_model
         User = get_user_model()
@@ -27,7 +26,7 @@ class TestDataMixin(object):
         jack.groups.add(jack_group)
 
 
-class override_settings(object):
+class override_settings:
     """
     Acts as either a decorator, or a context manager. If it's a decorator it
     takes a function and returns a wrapped function. If it's a contextmanager
