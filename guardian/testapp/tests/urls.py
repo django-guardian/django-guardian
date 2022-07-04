@@ -12,7 +12,6 @@ admin.autodiscover()
 class TestClassRedirectView(PermissionRequiredMixin, View):
     permission_required = 'testapp.change_project'
 
-
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/login/', LoginView.as_view(template_name='blank.html')),
