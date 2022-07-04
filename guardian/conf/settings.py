@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 import warnings
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
@@ -24,6 +23,12 @@ GET_INIT_ANONYMOUS_USER = getattr(settings, 'GUARDIAN_GET_INIT_ANONYMOUS_USER',
 MONKEY_PATCH = getattr(settings, 'GUARDIAN_MONKEY_PATCH', True)
 
 GET_CONTENT_TYPE = getattr(settings, 'GUARDIAN_GET_CONTENT_TYPE', 'guardian.ctypes.get_default_content_type')
+
+AUTO_PREFETCH = getattr(settings, 'GUARDIAN_AUTO_PREFETCH', False)
+
+# Default to using guardian supplied generic object permission models
+USER_OBJ_PERMS_MODEL = getattr(settings, 'GUARDIAN_USER_OBJ_PERMS_MODEL', 'guardian.UserObjectPermission')
+GROUP_OBJ_PERMS_MODEL = getattr(settings, 'GUARDIAN_GROUP_OBJ_PERMS_MODEL', 'guardian.GroupObjectPermission')
 
 
 def check_configuration():

@@ -2,7 +2,6 @@ import os
 import random
 import string
 import environ
-import django
 
 env = environ.Env()
 
@@ -29,7 +28,6 @@ AUTHENTICATION_BACKENDS = (
     'guardian.backends.ObjectPermissionBackend',
 )
 
-# this fixes warnings in django 1.10
 MIDDLEWARE = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -37,15 +35,12 @@ MIDDLEWARE = (
     'django.contrib.messages.middleware.MessageMiddleware',
 )
 
-if django.VERSION < (1, 10):
-    MIDDLEWARE_CLASSES = MIDDLEWARE
-
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
 ROOT_URLCONF = 'guardian.testapp.tests.urls'
 SITE_ID = 1
 
-SECRET_KEY = ''.join([random.choice(string.ascii_letters) for x in range(40)])
+SECRET_KEY = ''.join(random.choice(string.ascii_letters) for x in range(40))
 
 # Database specific
 
@@ -72,6 +67,3 @@ TEMPLATES = [
         },
     },
 ]
-
-if django.VERSION < (1, 8):
-    TEMPLATE_DIRS = TEMPLATES[0]['DIRS']

@@ -1,12 +1,6 @@
 #!/usr/bin/env python
-import django
 import os
 import sys
-
-if django.VERSION < (1, 5):
-    sys.stderr.write("ERROR: guardian's example project must be run with "
-                     "Django 1.8 or later!\n")
-    sys.exit(1)
 
 
 if __name__ == "__main__":

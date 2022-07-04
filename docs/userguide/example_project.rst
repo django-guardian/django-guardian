@@ -28,3 +28,8 @@ You should also create a user who can login to the admin site::
 
 Project is really basic and shows almost nothing but eventually it should
 expose some ``django-guardian`` functionality.
+
+To try out `django-grappelli`_ integration, set the ``GRAPPELLI`` environment
+variable before launching ``runserver``.
+
+.. _django-grappelli: https://django-grappelli.readthedocs.io/en/latest/

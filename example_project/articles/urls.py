@@ -1,20 +1,17 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
-from django.conf.urls import url
+from django.urls import path
 from . import views
 
 
 app_name = 'articles'
 urlpatterns = [
-    url(r'^$', views.ArticleListView.as_view(),
+    path('', views.ArticleListView.as_view(),
         name="list"),
-    url(r'^~create$', views.ArticleCreateView.as_view(),
+    path('~create', views.ArticleCreateView.as_view(),
         name="create"),
-    url(r'^(?P<slug>[\w-]+)$', views.ArticleDetailView.as_view(),
+    path('<slug:slug>', views.ArticleDetailView.as_view(),
         name="details"),
-    url(r'^(?P<slug>[\w-]+)/~update$', views.ArticleUpdateView.as_view(),
+    path('<slug:slug>/~update', views.ArticleUpdateView.as_view(),
         name="update"),
-    url(r'^(?P<slug>[\w-]+)/~delete$', views.ArticleDeleteView.as_view(),
+    path('<slug:slug>/~delete', views.ArticleDeleteView.as_view(),
         name="delete"),
 ]

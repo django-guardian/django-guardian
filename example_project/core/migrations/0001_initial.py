@@ -1,17 +1,8 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 import django
 from django.db import migrations, models
 import django.utils.timezone
 import django.core.validators
 import django.contrib.auth.models
-
-if django.VERSION >= (1, 8):
-    django_version_depend = {'managers': [
-                ('objects', django.contrib.auth.models.UserManager()),
-            ]}
-else:
-    django_version_depend = {}
 
 
 class Migration(migrations.Migration):
@@ -57,6 +48,8 @@ class Migration(migrations.Migration):
                 'verbose_name': 'user',
                 'verbose_name_plural': 'users',
             },
-            **django_version_depend
+            managers=[
+                ('objects', django.contrib.auth.models.UserManager()),
+            ],
         ),
     ]

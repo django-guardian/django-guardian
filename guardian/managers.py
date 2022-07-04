@@ -1,10 +1,10 @@
-from __future__ import unicode_literals
+from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models import Q
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
 from guardian.exceptions import ObjectNotPersisted
-from guardian.models import Permission
+from django.contrib.auth.models import Permission
 
 import warnings
 
@@ -16,14 +16,14 @@ class BaseObjectPermissionManager(models.Manager):
         try:
             self.model._meta.get_field('user')
             return 'user'
-        except models.fields.FieldDoesNotExist:
+        except FieldDoesNotExist:
             return 'group'
 
     def is_generic(self):
         try:
             self.model._meta.get_field('object_pk')
             return True
-        except models.fields.FieldDoesNotExist:
+        except FieldDoesNotExist:
             return False
 
     def assign_perm(self, perm, user_or_group, obj):
@@ -54,8 +54,11 @@ class BaseObjectPermissionManager(models.Manager):
         Bulk assigns permissions with given ``perm`` for an objects in ``queryset`` and
         ``user_or_group``.
         """
+        if isinstance(queryset, list):
+            ctype = get_content_type(queryset[0])
+        else:
+            ctype = get_content_type(queryset.model)
 
-        ctype = get_content_type(queryset.model)
         if not isinstance(perm, Permission):
             permission = Permission.objects.get(content_type=ctype, codename=perm)
         else:
@@ -77,6 +80,34 @@ class BaseObjectPermissionManager(models.Manager):
         self.model.objects.bulk_create(assigned_perms)
 
         return assigned_perms
+
+    def assign_perm_to_many(self, perm, users_or_groups, obj):
+        """
+        Bulk assigns given ``perm`` for the object ``obj`` to a set of users or a set of groups.
+        """
+        ctype = get_content_type(obj)
+        if not isinstance(perm, Permission):
+            permission = Permission.objects.get(content_type=ctype,
+                                                codename=perm)
+        else:
+            permission = perm
+
+        kwargs = {'permission': permission}
+        if self.is_generic():
+            kwargs['content_type'] = ctype
+            kwargs['object_pk'] = obj.pk
+        else:
+            kwargs['content_object'] = obj
+
+        to_add = []
+        field = self.user_or_group_field
+        for user in users_or_groups:
+            kwargs[field] = user
+            to_add.append(
+                self.model(**kwargs)
+            )
+
+        return self.model.objects.bulk_create(to_add)
 
     def assign(self, perm, user_or_group, obj):
         """ Depreciated function name left in for compatibility"""
@@ -127,7 +158,7 @@ class BaseObjectPermissionManager(models.Manager):
                          permission__content_type=ctype)
 
         if self.is_generic():
-            filters &= Q(object_pk__in = [str(pk) for pk in queryset.values_list('pk', flat=True)])
+            filters &= Q(object_pk__in=[str(pk) for pk in queryset.values_list('pk', flat=True)])
         else:
             filters &= Q(content_object__in=queryset)
 

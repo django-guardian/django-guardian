@@ -9,8 +9,8 @@
 
 **Documentation**:
 
-.. image:: https://secure.travis-ci.org/django-guardian/django-guardian.png?branch=master
-  :target: http://travis-ci.org/django-guardian/django-guardian
+.. image:: https://github.com/django-guardian/django-guardian/workflows/Tests/badge.svg?branch=devel
+  :target: https://github.com/django-guardian/django-guardian/actions/workflows/tests.yml
 
 .. toctree::
     :maxdepth: 2
@@ -30,4 +30,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

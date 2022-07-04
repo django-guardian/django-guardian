@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 from django.db import models, migrations
 from django.conf import settings
 
@@ -46,10 +43,10 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterUniqueTogether(
             name='userobjectpermission',
-            unique_together=set([('user', 'permission', 'object_pk')]),
+            unique_together={('user', 'permission', 'object_pk')},
         ),
         migrations.AlterUniqueTogether(
             name='groupobjectpermission',
-            unique_together=set([('group', 'permission', 'object_pk')]),
+            unique_together={('group', 'permission', 'object_pk')},
         ),
     ]

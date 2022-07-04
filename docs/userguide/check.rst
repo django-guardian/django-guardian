@@ -62,7 +62,7 @@ can use lower level ``ObjectPermissionChecker`` class which is described in
 the next section.
 
 There is also ``get_user_perms`` to get permissions assigned directly to the user
-(and not inherited from its superuser status or group membership.
+(and not inherited from its superuser status or group membership).
 Similarly, ``get_group_perms`` returns only permissions which are inferred
 through user's group membership.
 ``get_user_perms`` and ``get_group_perms`` are useful when you care what permissions
@@ -80,14 +80,14 @@ could be easily achieved using :shortcut:`get_objects_for_user`:
 
 .. code-block:: python
 
-    from django.shortcuts import render_to_response
+    from django.shortcuts import render
     from django.template import RequestContext
     from projects.models import Project
     from guardian.shortcuts import get_objects_for_user
 
     def user_dashboard(request, template_name='projects/dashboard.html'):
         projects = get_objects_for_user(request.user, 'projects.view_project')
-        return render_to_response(template_name, {'projects': projects},
+        return render(request, template_name, {'projects': projects},
             RequestContext(request))
 
 It is also possible to provide list of permissions rather than single string,
@@ -185,5 +185,5 @@ get_obj_perms
 .. autofunction:: guardian.templatetags.guardian_tags.get_obj_perms
    :noindex:
 
-.. _django-authority: http://bitbucket.org/jezdez/django-authority/
+.. _django-authority: https://github.com/jazzband/django-authority
 
