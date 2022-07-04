@@ -2,8 +2,7 @@ import os
 from setuptools import setup
 from extras import RunFlakesCommand
 
-
-version = '2.4.0'
+version = '2.3.9'
 
 readme_file = os.path.join(os.path.dirname(__file__), 'README.rst')
 with open(readme_file) as f:
