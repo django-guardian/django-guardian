@@ -1,6 +1,6 @@
+from django.urls import reverse_lazy
 from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
                                   UpdateView)
-from guardian.compat import reverse_lazy
 from guardian.mixins import PermissionRequiredMixin, PermissionListMixin
 from guardian.shortcuts import assign_perm
 from articles.models import Article
@@ -23,7 +23,7 @@ class ArticleCreateView(PermissionRequiredMixin, CreateView):
     fields = ['title', 'slug', 'content']
 
     def form_valid(self, *args, **kwargs):
-        resp = super(ArticleCreateView, self).form_valid(*args, **kwargs)
+        resp = super().form_valid(*args, **kwargs)
         assign_perm('view_article', self.request.user, self.object)
         assign_perm('change_article', self.request.user, self.object)
         assign_perm('delete_article', self.request.user, self.object)

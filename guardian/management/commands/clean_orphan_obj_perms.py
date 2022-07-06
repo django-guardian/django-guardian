@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 from django.core.management.base import BaseCommand
 
 from guardian.utils import clean_orphan_obj_perms

@@ -1,17 +1,15 @@
-from __future__ import unicode_literals
+import uuid
 from datetime import datetime
 
 from django.db import models
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import AbstractUser, AbstractBaseUser
-from django.utils.encoding import python_2_unicode_compatible
 
 from guardian.mixins import GuardianUserMixin
 from guardian.models import UserObjectPermissionBase
 from guardian.models import GroupObjectPermissionBase
 
 
-@python_2_unicode_compatible
 class Post(models.Model):
     title = models.CharField('title', max_length=64)
 
@@ -19,7 +17,7 @@ class Post(models.Model):
         return self.title
 
 
-class DynamicAccessor(object):
+class DynamicAccessor:
 
     def __init__(self):
         pass
@@ -54,7 +52,6 @@ class MixedGroupObjectPermission(GroupObjectPermissionBase):
     content_object = models.ForeignKey('Mixed', on_delete=models.CASCADE)
 
 
-@python_2_unicode_compatible
 class Mixed(models.Model):
     """
     Model for tests obj perms checks with generic user object permissions model
@@ -70,7 +67,6 @@ class ReverseMixedUserObjectPermission(UserObjectPermissionBase):
     content_object = models.ForeignKey('ReverseMixed', on_delete=models.CASCADE)
 
 
-@python_2_unicode_compatible
 class ReverseMixed(models.Model):
     """
     Model for tests obj perms checks with generic group object permissions model
@@ -88,12 +84,24 @@ class LogEntryWithGroup(LogEntry):
     objects = models.Manager()
 
 
-class NonIntPKModel(models.Model):
+class CharPKModel(models.Model):
     """
     Model for testing whether get_objects_for_user will work when the objects to
-    be returned have non-integer primary keys.
+    be returned have varchar primary keys.
     """
     char_pk = models.CharField(primary_key=True, max_length=128)
+
+
+class UUIDPKModel(models.Model):
+    """
+    Model for testing whether get_objects_for_user will work when the objects to
+    be returned have UUID primary keys.
+    """
+    uuid_pk = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+    )
 
 
 class CustomUser(AbstractUser, GuardianUserMixin):
@@ -109,3 +117,16 @@ class CustomUsernameUser(AbstractBaseUser, GuardianUserMixin):
 
     def get_short_name(self):
         return self.email
+
+
+class ParentTestModel(models.Model):
+    created_on = models.DateTimeField(auto_now_add=True)
+
+
+class ChildTestModel(ParentTestModel):
+    parent_id = models.OneToOneField(
+        ParentTestModel,
+        on_delete=models.CASCADE,
+        parent_link=True
+    )
+    name = models.CharField(max_length=31)

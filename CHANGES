@@ -1,3 +1,63 @@
+Release 2.4.0 (May 24, 2021)
+============================
+
+* Add support for Python 3.9
+* Add support for Django 3.1, Django 3.2
+* Add parameter `any_perm` to `PermissionRequiredMixin`
+* Switch from Travis CI to `GitHub Actions`_
+
+Release 2.3.0 (June 6, 2020)
+===============================
+
+* Drop support for Django 2.1
+* Fix compatibility with UUIDField primary keys
+* Fix formatting for pyupgrade
+* Fix error with get_objects_for_user on PostgreSQL
+* Modify 'assign_perm' shortcut to treat lists as a queryset
+* Updated links to Django documentation and django-authority repository
+* Removed reference to "easy_install" in the documentation
+* Run migrations check only if required version of django is installed
+
+Release 2.2.0 (January 3, 2020)
+===============================
+
+* Add support for Django 3.0 and Python 3.8.
+* Add support for custom generic object permission models.
+* Don't initialise anonymous user on DB where it's not migrated.
+* Allow object permissions with dots.
+* Several performance improvements
+    * Improve performance of ``get_objects_for_user``
+    * Update ``get_users_with_perms`` to avoid a large join
+
+.. important::
+		The 2.2.x release line will be the last one that has support for Django 2.1.
+
+Release 2.1.0 (September 9, 2019)
+=================================
+
+* Upgrade to use ```django.urls.path``` in routing
+    *  Add admin support for user primary key as UUID
+* Auto pre-fetching permission via ```GUARDIAN_AUTO_PREFETCH```
+* Add tests for missing migrations
+
+Release 2.0.0 (June 11, 2019)
+=============================
+
+* Drop support for Python 2.7 & 3.4 and Django 1.11 & 2.0
+
+Release 1.5.1 (May 2, 2019)
+===========================
+
+* Restore compatibility with Python 2.7
+
+.. important::
+		The 1.5.x release line will be the last one that has support for Python 2.7.
+
+Release 1.5.0 (Jan 31, 2019)
+==========================
+
+* Updates for compatibility with latest Python and Django versions.
+
 Release 1.4.9 (Jul 01, 2017)
 ============================
 
@@ -45,7 +105,7 @@ Release 1.4.5 (Aug 09, 2016)
 * Moved queryset support in remove_perms to its own function
 * Consolidated {User,Group}ObjectPermissionManager, move logic of bulk_*_perm
   to managers
-* `assign_perm` and `remove_perm` shortcuts accept `Permission` 
+* `assign_perm` and `remove_perm` shortcuts accept `Permission`
   instance as `perm` and `QuerySet` as `obj` too.
 * Consolidated bulk_assign_perm to assign_perm and bulk_remove_perm to remove_perm
 * Upgraded Grappelli templates breadcrumbs block to new Django 1.9 and
@@ -383,7 +443,7 @@ Release 0.1.0 (Jun 6, 2010)
 .. _grappelli: https://github.com/sehmaschine/django-grappelli
 .. _tox: http://tox.testrun.org/
 .. _travis: http://travis-ci.org/
+.. _GitHub Actions: https://github.com/django-guardian/django-guardian/actions
 
 
 .. vim: ft=rst
-

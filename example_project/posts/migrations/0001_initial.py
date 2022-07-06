@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-
 from django.db import migrations, models
 
 
@@ -23,6 +20,7 @@ class Migration(migrations.Migration):
             ],
             options={
                 'get_latest_by': 'created_at',
+                'default_permissions': ('add', 'change', 'delete'),
                 'permissions': (('view_post', 'Can view post'),),
             },
         ),

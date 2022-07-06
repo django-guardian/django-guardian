@@ -1,11 +1,8 @@
-from __future__ import unicode_literals
-
-import django
+from django.contrib.auth import get_user_model
 from django.db.models import signals
-
+from django.utils.module_loading import import_string
+from django.db import router
 from guardian.conf import settings as guardian_settings
-from guardian.compat import get_user_model
-from guardian.compat import import_string
 
 
 def get_init_anonymous_user(User):
@@ -28,18 +25,19 @@ def create_anonymous_user(sender, **kwargs):
     Creates anonymous User instance with id and username from settings.
     """
     User = get_user_model()
+    if not router.allow_migrate_model(kwargs['using'], User):
+        return
     try:
         lookup = {User.USERNAME_FIELD: guardian_settings.ANONYMOUS_USER_NAME}
-        User.objects.get(**lookup)
+        User.objects.using(kwargs['using']).get(**lookup)
     except User.DoesNotExist:
         retrieve_anonymous_function = import_string(
             guardian_settings.GET_INIT_ANONYMOUS_USER)
         user = retrieve_anonymous_function(User)
-        user.save()
+        user.save(using=kwargs['using'])
 
 # Only create an anonymous user if support is enabled.
 if guardian_settings.ANONYMOUS_USER_NAME is not None:
-    # Django 1.7+ uses post_migrate signal
     from django.apps import apps
     guardian_app = apps.get_app_config('guardian')
     signals.post_migrate.connect(create_anonymous_user, sender=guardian_app,

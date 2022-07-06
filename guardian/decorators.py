@@ -1,4 +1,3 @@
-from __future__ import unicode_literals
 from django.apps import apps
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
@@ -7,7 +6,6 @@ from django.db.models.base import ModelBase
 from django.db.models.query import QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils.functional import wraps
-from guardian.compat import basestring
 from guardian.exceptions import GuardianError
 from guardian.utils import get_40x_or_None
 
@@ -82,7 +80,7 @@ def permission_required(perm, lookup_variables=None, **kwargs):
 
     # Check if perm is given as string in order not to decorate
     # view function itself which makes debugging harder
-    if not isinstance(perm, basestring):
+    if not isinstance(perm, str):
         raise GuardianError("First argument must be in format: "
                             "'app_label.codename or a callable which return similar string'")
 
@@ -94,7 +92,7 @@ def permission_required(perm, lookup_variables=None, **kwargs):
             if lookup_variables:
                 model, lookups = lookup_variables[0], lookup_variables[1:]
                 # Parse model
-                if isinstance(model, basestring):
+                if isinstance(model, str):
                     splitted = model.split('.')
                     if len(splitted) != 2:
                         raise GuardianError("If model should be looked up from "

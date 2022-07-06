@@ -1,8 +1,7 @@
 from django.db import models
-from django.utils.six import python_2_unicode_compatible
+from django.urls import reverse
 
 
-@python_2_unicode_compatible
 class Post(models.Model):
     title = models.CharField('title', max_length=64)
     slug = models.SlugField(max_length=64)
@@ -10,6 +9,7 @@ class Post(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
     class Meta:
+        default_permissions = ('add', 'change', 'delete')
         permissions = (
             ('view_post', 'Can view post'),
         )
@@ -18,6 +18,5 @@ class Post(models.Model):
     def __str__(self):
         return self.title
 
-    @models.permalink
     def get_absolute_url(self):
-        return ('posts_post_detail', (), {'slug': self.slug})
+        return reverse('posts_post_detail', args=(), kwargs={'slug': self.slug})

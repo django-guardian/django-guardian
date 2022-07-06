@@ -1,5 +1,6 @@
-from __future__ import unicode_literals
-from django.conf import settings, global_settings
+import django
+from django.conf import global_settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, AnonymousUser
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db.models.base import ModelBase
@@ -12,30 +13,26 @@ from django.shortcuts import get_object_or_404
 from django.template import TemplateDoesNotExist
 from django.test import TestCase
 
-from guardian.compat import get_user_model
 from guardian.compat import get_user_model_path
 from guardian.compat import get_user_permission_full_codename
-import mock
+from unittest import mock
 from guardian.decorators import permission_required, permission_required_or_403, permission_required_or_404
 from guardian.exceptions import GuardianError
 from guardian.exceptions import WrongAppError
 from guardian.shortcuts import assign_perm
-from guardian.testapp.tests.conf import TEST_SETTINGS
 from guardian.testapp.tests.conf import TestDataMixin
 from guardian.testapp.tests.conf import override_settings
 from guardian.testapp.tests.conf import skipUnlessTestApp
-from django import get_version as django_get_version
 
 User = get_user_model()
 user_model_path = get_user_model_path()
 
 
-@override_settings(**TEST_SETTINGS)
 @skipUnlessTestApp
 class PermissionRequiredTest(TestDataMixin, TestCase):
 
     def setUp(self):
-        super(PermissionRequiredTest, self).setUp()
+        super().setUp()
         self.anon = AnonymousUser()
         self.user = User.objects.get_or_create(username='jack')[0]
         self.group = Group.objects.get_or_create(name='jackGroup')[0]
@@ -387,16 +384,16 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
             pass
         response = dummy_view(request, project_name='foobar')
         self.assertTrue(isinstance(response, HttpResponseRedirect))
-        self.assertTrue(response._headers['location'][1].startswith(
-            '/foobar/'))
+        if django.VERSION >= (3, 2):
+            self.assertTrue(response.headers['location'].startswith(
+                '/foobar/'))
+        else:
+            self.assertTrue(response._headers['location'][1].startswith(
+                '/foobar/'))
 
     @override_settings(LOGIN_URL='django.contrib.auth.views.login')
     def test_redirection_class(self):
         view_url = '/permission_required/'
-
-        if django_get_version() < "1.5":
-            # skip this test for django versions < 1.5
-            return
 
         response = self.client.get(view_url)
         # this should be '/account/login'

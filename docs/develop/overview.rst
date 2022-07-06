@@ -78,7 +78,7 @@ comment, there were no tests for the changes etc.
 How to do a new release?
 ----------------------------
 
-To enroll a new relase you should perform the following task:
+To enroll a new release you should perform the following task:
 
 * Ensure file ``CHANGES`` reflects all important changes.
 * Ensure file ``CHANGES`` includes a new version identifier and current release date.
@@ -86,4 +86,5 @@ To enroll a new relase you should perform the following task:
 * Commit changes of codebase, e.g. ``git commit -m "Release 1.4.8" -a``.
 * Tag a new release, e.g. ``git tag "v1.4.8"``.
 * Push new tag to repo - ``git push origin --tags``.
-* Push a new release to PyPI - ``python setup.py sdist bdist_wheel upload``.
+* Build a new release - ``python3 setup.py sdist bdist_wheel``
+* Push a new release to PyPI - ``twine upload``.
