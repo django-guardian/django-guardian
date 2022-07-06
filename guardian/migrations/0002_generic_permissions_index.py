@@ -7,6 +7,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('guardian', '0001_initial'),
+        ('guardian', '0004_auto_20220628_0702'),
     ]
 
     operations = [
