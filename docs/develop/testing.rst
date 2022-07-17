@@ -7,7 +7,7 @@ Introduction
 ------------
 
 ``django-guardian`` is extending capabilities of Django's authorization
-facilities and as so, it changes it's security somehow. It is extremaly
+facilities and as so, it changes it's security somehow. It is extremely
 important to provide as simplest :ref:`api` as possible.
 
 According to OWASP_, `broken authentication
@@ -26,7 +26,7 @@ library), please **DO NOT** create a public issue but contact me directly
 Running tests
 -------------
 
-Tests are run by Django's buildin test runner. To call it simply run::
+Tests are run by Django's building test runner. To call it simply run::
 
     $ python setup.py test
 
@@ -45,7 +45,7 @@ Coverage_ is a tool for measuring code coverage of Python programs. It is great
 for tests and we use it as a backup - we try to cover 100% of the code used by
 ``django-guardian``. This of course does *NOT* mean that if all of the codebase
 is covered by tests we can be sure there is no bug (as specification of almost
-all applications requries some unique scenarios to be tested). On the other hand
+all applications requires some unique scenarios to be tested). On the other hand
 it definitely helps to track missing parts.
 
 To run tests with coverage_ support and show the report after we have provided
