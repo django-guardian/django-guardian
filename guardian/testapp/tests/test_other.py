@@ -249,7 +249,7 @@ class ObjectPermissionBackendTests(TestCase):
         UserObjectPermission.objects.assign_perm(perm, user, ctype)
         self.assertTrue(self.backend.has_perm(user, perm, ctype))
         user.is_active = False
-        user.save()
+        user.save(update_fields=["is_active"])
         self.assertFalse(self.backend.has_perm(user, perm, ctype))
 
 
