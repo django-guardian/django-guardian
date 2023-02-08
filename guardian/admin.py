@@ -431,44 +431,8 @@ class GuardedModelAdmin(GuardedModelAdminMixin, admin.ModelAdmin):
 
 
 class UserManage(forms.Form):
-    user = forms.CharField(label=_("User identification"),
-                           max_length=200,
-                           error_messages={'does_not_exist': _(
-                               "This user does not exist")},
-                           help_text=_(
-                               'Enter a value compatible with User.USERNAME_FIELD')
-                           )
-
-    def clean_user(self):
-        """
-        Returns ``User`` instance based on the given identification.
-        """
-        identification = self.cleaned_data['user']
-        user_model = get_user_model()
-        try:
-            username_field = user_model.USERNAME_FIELD
-        except AttributeError:
-            username_field = 'username'
-        try:
-            user = user_model.objects.get(**{username_field: identification})
-            return user
-        except user_model.DoesNotExist:
-            raise forms.ValidationError(
-                self.fields['user'].error_messages['does_not_exist'])
+    user = forms.ModelChoiceField(queryset=get_user_model().objects.all())
 
 
 class GroupManage(forms.Form):
-    group = forms.CharField(max_length=80, error_messages={'does_not_exist':
-                                                           _("This group does not exist")})
-
-    def clean_group(self):
-        """
-        Returns ``Group`` instance based on the given group name.
-        """
-        name = self.cleaned_data['group']
-        try:
-            group = Group.objects.get(name=name)
-            return group
-        except Group.DoesNotExist:
-            raise forms.ValidationError(
-                self.fields['group'].error_messages['does_not_exist'])
+    group = forms.ModelChoiceField(queryset=Group.objects.all())
