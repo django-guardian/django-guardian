@@ -72,7 +72,7 @@ our settings module::
 
 
 If the field type of the our custom User class is not a CharField, we need to 
-override the default value that the anonymous is instantiated with. We can override 
+override the default value that the anonymous user is instantiated with. We can override 
 this value by setting :setting:`ANONYMOUS_DEFAULT_USERNAME_VALUE` to a proper non-string 
 default value, in our settings module::
 
