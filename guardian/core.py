@@ -18,7 +18,7 @@ def _get_pks_model_and_ctype(objects):
 
     if isinstance(objects, QuerySet):
         model = objects.model
-        pks = [force_str(pk) for pk in objects.values_list('pk', flat=True)]
+        pks = [str(obj._meta.get_field('id').get_prep_value(obj.id)) for obj in objects.only('id')]
         ctype = get_content_type(model)
     else:
         pks = []
@@ -26,7 +26,7 @@ def _get_pks_model_and_ctype(objects):
             if not idx:
                 model = type(obj)
                 ctype = get_content_type(model)
-            pks.append(force_str(obj.pk))
+            pks.append(str(obj._meta.get_field('id').get_prep_value(obj.id)))
 
     return pks, model, ctype
 
@@ -94,7 +94,7 @@ class ObjectPermissionChecker:
         if group_model.objects.is_generic():
             group_filters.update({
                 '%s__content_type' % group_rel_name: ctype,
-                '%s__object_pk' % group_rel_name: obj.pk,
+                '%s__object_pk' % group_rel_name: obj._meta.get_field('id').get_prep_value(obj.id),
             })
         else:
             group_filters['%s__content_object' % group_rel_name] = obj
@@ -110,7 +110,7 @@ class ObjectPermissionChecker:
         if model.objects.is_generic():
             user_filters.update({
                 '%s__content_type' % related_name: ctype,
-                '%s__object_pk' % related_name: obj.pk,
+                '%s__object_pk' % related_name: obj._meta.get_field('id').get_prep_value(obj.id),
             })
         else:
             user_filters['%s__content_object' % related_name] = obj
@@ -176,7 +176,7 @@ class ObjectPermissionChecker:
         Returns cache key for ``_obj_perms_cache`` dict.
         """
         ctype = get_content_type(obj)
-        return (ctype.id, force_str(obj.pk))
+        return (ctype.id, force_str(obj._meta.get_field('id').get_prep_value(obj.id)))
 
     def prefetch_perms(self, objects):
         """
