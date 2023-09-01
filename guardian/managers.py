@@ -43,7 +43,7 @@ class BaseObjectPermissionManager(models.Manager):
         kwargs = {'permission': permission, self.user_or_group_field: user_or_group}
         if self.is_generic():
             kwargs['content_type'] = ctype
-            kwargs['object_pk'] = obj.pk
+            kwargs['object_pk'] = obj._meta.get_field('id').get_prep_value(obj.id)
         else:
             kwargs['content_object'] = obj
         obj_perm, _ = self.get_or_create(**kwargs)
@@ -73,7 +73,7 @@ class BaseObjectPermissionManager(models.Manager):
                 kwargs = {'permission': permission, self.user_or_group_field: user_or_group}
                 if self.is_generic():
                     kwargs['content_type'] = ctype
-                    kwargs['object_pk'] = instance.pk
+                    kwargs['object_pk'] = instance._meta.get_field('id').get_prep_value(instance.id)
                 else:
                     kwargs['content_object'] = instance
                 assigned_perms.append(self.model(**kwargs))
@@ -95,7 +95,7 @@ class BaseObjectPermissionManager(models.Manager):
         kwargs = {'permission': permission}
         if self.is_generic():
             kwargs['content_type'] = ctype
-            kwargs['object_pk'] = obj.pk
+            kwargs['object_pk'] = obj._meta.get_field('id').get_prep_value(obj.id)
         else:
             kwargs['content_object'] = obj
 
@@ -135,7 +135,7 @@ class BaseObjectPermissionManager(models.Manager):
                          permission__content_type=get_content_type(obj))
 
         if self.is_generic():
-            filters &= Q(object_pk=obj.pk)
+            filters &= Q(object_pk=obj._meta.get_field('id').get_prep_value(obj.id))
         else:
             filters &= Q(content_object__pk=obj.pk)
         return self.filter(filters).delete()
@@ -158,7 +158,7 @@ class BaseObjectPermissionManager(models.Manager):
                          permission__content_type=ctype)
 
         if self.is_generic():
-            filters &= Q(object_pk__in=[str(pk) for pk in queryset.values_list('pk', flat=True)])
+            filters &= Q(object_pk__in=[obj._meta.get_field('id').get_prep_value(obj.id) for obj in queryset.only('id')])
         else:
             filters &= Q(content_object__in=queryset)
 
