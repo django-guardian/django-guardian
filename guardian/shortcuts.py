@@ -291,7 +291,7 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
         if user_model.objects.is_generic():
             user_filters = {
                 '%s__content_type' % related_name: ctype,
-                '%s__object_pk' % related_name: obj.pk,
+                '%s__object_pk' % related_name: obj._meta.get_field('id').get_prep_value(obj.id),
             }
         else:
             user_filters = {'%s__content_object' % related_name: obj}
@@ -306,7 +306,7 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
             if group_model.objects.is_generic():
                 group_obj_perm_filters = {
                     'content_type': ctype,
-                    'object_pk': obj.pk,
+                    'object_pk': obj._meta.get_field('id').get_prep_value(obj.id),
                 }
             else:
                 group_obj_perm_filters = {
@@ -373,7 +373,7 @@ def get_groups_with_perms(obj, attach_perms=False):
         if group_model.objects.is_generic():
             group_filters = {
                 '%s__content_type' % group_rel_name: ctype,
-                '%s__object_pk' % group_rel_name: obj.pk,
+                '%s__object_pk' % group_rel_name: obj._meta.get_field('id').get_prep_value(obj.id),
             }
         else:
             group_filters = {'%s__content_object' % group_rel_name: obj}
@@ -383,7 +383,7 @@ def get_groups_with_perms(obj, attach_perms=False):
         groups_with_perms = get_groups_with_perms(obj)
         qs = group_model.objects.filter(group__in=groups_with_perms).prefetch_related('group', 'permission')
         if group_model is GroupObjectPermission:
-            qs = qs.filter(object_pk=obj.pk, content_type=ctype)
+            qs = qs.filter(object_pk=obj._meta.get_field('id').get_prep_value(obj.id), content_type=ctype)
         else:
             qs = qs.filter(content_object_id=obj.pk)
 
