@@ -3,7 +3,7 @@ Convenient shortcuts to manage or check object permissions.
 """
 import warnings
 from collections import defaultdict
-from functools import partial
+from functools import partial, lru_cache
 from itertools import groupby
 
 from django.apps import apps
@@ -32,6 +32,15 @@ from guardian.exceptions import MixedContentTypeError, WrongAppError, MultipleId
 from guardian.utils import get_anonymous_user, get_group_obj_perms_model, get_identity, get_user_obj_perms_model
 GroupObjectPermission = get_group_obj_perms_model()
 UserObjectPermission = get_user_obj_perms_model()
+
+
+@lru_cache(None)
+def _get_ct_cached(app_label, codename):
+    """
+    Caches ``ContentType`` instances like its ``QuerySet`` does.
+    """
+    return ContentType.objects.get(app_label=app_label,
+                                                permission__codename=codename)
 
 
 def assign_perm(perm, user_or_group, obj=None):
@@ -512,8 +521,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
             codename = perm
         codenames.add(codename)
         if app_label is not None:
-            new_ctype = ContentType.objects.get(app_label=app_label,
-                                                permission__codename=codename)
+            new_ctype = new_ctype = _get_ct_cached(app_label, codename)
             if ctype is not None and ctype != new_ctype:
                 raise MixedContentTypeError("ContentType was once computed "
                                             "to be %s and another one %s" % (ctype, new_ctype))
@@ -728,8 +736,7 @@ def get_objects_for_group(group, perms, klass=None, any_perm=False, accept_globa
             codename = perm
         codenames.add(codename)
         if app_label is not None:
-            new_ctype = ContentType.objects.get(app_label=app_label,
-                                                permission__codename=codename)
+            new_ctype = _get_ct_cached(app_label, codename)
             if ctype is not None and ctype != new_ctype:
                 raise MixedContentTypeError("ContentType was once computed "
                                             "to be %s and another one %s" % (ctype, new_ctype))
