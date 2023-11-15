@@ -1,15 +1,16 @@
+from asgiref.sync import async_to_sync
+from django import VERSION as DJANGO_VERSION
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ImproperlyConfigured
 from django.core.exceptions import PermissionDenied
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.test import TestCase
 from django.test.client import RequestFactory
-from django.views.generic import View
-from django.views.generic import ListView
+from django.views.generic import DetailView, ListView, View
 
 from guardian.shortcuts import assign_perm
-from unittest import mock
+from unittest import mock, skipIf
 from guardian.mixins import LoginRequiredMixin
 from guardian.mixins import PermissionRequiredMixin
 from guardian.mixins import PermissionListMixin
@@ -45,6 +46,169 @@ class PostPermissionListView(PermissionListMixin, ListView):
     model = Post
     permission_required = 'testapp.change_post'
     template_name = 'list.html'
+
+
+class TestDetailView(PermissionRequiredMixin, DetailView):
+    model = Post
+    permission_required = 'testapp.change_post'
+    template_name = 'blank.html'
+    raise_exception = True
+
+
+class TestDetailPermissionObjView(TestDetailView):
+    def get_permission_object(self):
+        return Post.objects.get(title='foo-post-title')
+
+    def dispatch(self, request, *args, **kwargs):
+        if self.request.user.is_superuser:
+            return HttpResponseRedirect('new-url')
+        return super().dispatch(request, *args, **kwargs)
+
+
+class BaseAsyncView(PermissionRequiredMixin, View):
+    permission_required = 'testapp.change_post'
+    raise_exception = True
+
+    async def get(self, request, *args, **kwargs):
+        return 'some html'
+
+
+def check_fail_handler(obj):
+    pass
+
+
+class AsyncView(BaseAsyncView):
+    async def get_permission_object(self):
+        return await Post.objects.aget(title='foo-post-title')
+
+    async def on_permission_check_fail(self, request, response, obj=None):
+        check_fail_handler(obj)
+
+
+class AsyncPermissionRequiredMixinTests(TestCase):
+    @classmethod
+    def setUpTestData(self):
+        super().setUpTestData()
+        self.post = Post.objects.create(title='foo-post-title')
+        self.factory = RequestFactory()
+        self.user = get_user_model().objects.create_user('bc', 'bc@nr.com', 'nr')
+        self.super_user = get_user_model().objects.create_user('super', 'super@u.com', 'su', is_superuser=True)
+
+    @skipIf(DJANGO_VERSION < (4, 1, 2), 'Django introduced asynchronous support in 4.1')
+    def test_authorized_user_can_access_async_view(self):
+        request = self.factory.get('/')
+        request.user = self.user
+        request.user.add_obj_perm('change_post', self.post)
+        view = AsyncView()
+        view.setup(request)
+        response = async_to_sync(view.dispatch)(request)
+        self.assertEqual(response, 'some html')
+
+    @skipIf(DJANGO_VERSION < (4, 1, 2), 'Django introduced asynchronous support in 4.1')
+    def test_authorized_user_can_access_async_view_get_object(self):
+        class AsyncViewGetObj(BaseAsyncView):
+            async def get_object(self):
+                return await Post.objects.aget(title='foo-post-title')
+
+        request = self.factory.get('/')
+        request.user = self.user
+        request.user.add_obj_perm('change_post', self.post)
+        view = AsyncViewGetObj()
+        view.setup(request)
+        response = async_to_sync(view.dispatch)(request)
+        self.assertEqual(response, 'some html')
+
+    @skipIf(DJANGO_VERSION < (4, 1, 2), 'Django introduced asynchronous support in 4.1')
+    @mock.patch('guardian.testapp.tests.test_mixins.check_fail_handler')
+    def test_unauthorized_user_cannot_access_async_view(self, _check_fail):
+        request = self.factory.get('/')
+        request.user = self.user
+        view = AsyncView()
+        view.setup(request)
+        with self.assertRaises(PermissionDenied):
+            async_to_sync(view.dispatch)(request)
+        _check_fail.assert_called_once_with(self.post)
+
+    @skipIf(DJANGO_VERSION < (4, 1, 2), 'Django introduced asynchronous support in 4.1')
+    def test_disallowed_http_method_works_in_async_view(self):
+        request = self.factory.post('/')
+        request.user = self.user
+        request.user.add_obj_perm('change_post', self.post)
+        view = AsyncView()
+        view.setup(request)
+        response = async_to_sync(view.dispatch)(request)
+        self.assertEqual(response.status_code, 405)
+
+    def test_sync_view_works_without_any_async_intervention(self):
+        request = self.factory.get('/')
+        request.user = self.user
+        request.user.add_obj_perm('change_post', self.post)
+        view = TestView()
+        view.object = self.post
+        view.setup(request)
+        with self.assertRaises(DatabaseRemovedError):
+            view.dispatch(request)
+
+    def test_sync_detail_view_works_without_any_async_intervention(self):
+        request = self.factory.get('/')
+        request.user = self.user
+        request.user.add_obj_perm('change_post', self.post)
+        view = TestDetailView()
+        view.setup(request)
+        view.object = self.post
+        response = view.dispatch(request, pk=self.post.pk)
+        self.assertEqual(response.rendered_content, '\n')  # blank.html content
+
+    def test_disallowed_http_method_works_without_any_async_intervention(self):
+        request = self.factory.post('/')
+        request.user = self.user
+        request.user.add_obj_perm('change_post', self.post)
+        view = TestDetailView()
+        view.setup(request)
+        view.object = self.post
+        response = view.dispatch(request, pk=self.post.pk)
+        self.assertEqual(response.status_code, 405)
+
+    def test_unauthorized_user_can_get_redirected_on_sync_detail_view(self):
+        request = self.factory.get('/')
+        request.user = self.user
+        view = TestDetailView()
+        view.setup(request)
+        view.raise_exception = False
+        response = view.dispatch(request, pk=self.post.pk)
+        self.assertEqual(response.status_code, 302)
+
+    @skipIf(DJANGO_VERSION < (4, 1, 2), 'Django introduced asynchronous support in 4.1')
+    def test_unauthorized_user_can_get_redirected_on_async_view(self):
+        request = self.factory.get('/')
+        request.user = self.user
+        view = AsyncView()
+        view.setup(request)
+        view.raise_exception = False
+        response = async_to_sync(view.dispatch)(request)
+        self.assertEqual(response.status_code, 302)
+
+    def test_sync_get_permission_object_works_without_any_async_intervention(self):
+        request = self.factory.get('/')
+        request.user = self.user
+        view = TestDetailPermissionObjView()
+        view.setup(request)
+        view.object = self.post
+        with self.assertRaises(PermissionDenied):
+            view.dispatch(request, pk=self.post.pk)
+        request.user.add_obj_perm('change_post', self.post)
+        response = view.dispatch(request, pk=self.post.pk)
+        self.assertEqual(response.rendered_content, '\n')  # blank.html content
+
+    def test_sync_dispatch_can_be_overridden_without_any_async_intervention(self):
+        request = self.factory.get('/')
+        request.user = self.super_user
+        request.user.add_obj_perm('change_post', self.post)
+        view = TestDetailPermissionObjView()
+        view.setup(request)
+        view.object = self.post
+        response = view.dispatch(request, pk=self.post.pk)
+        self.assertEqual(response.url, 'new-url')  # HttpResponseRedirect
 
 
 class TestViewMixins(TestCase):
