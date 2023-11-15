@@ -5,10 +5,12 @@ Functions defined within this module should be considered as django-guardian's
 internal functionality. They are **not** guaranteed to be stable - which means
 they actual input parameters/output type may change in future releases.
 """
+import asyncio
 import logging
 import os
 from itertools import chain
 
+from asgiref.sync import sync_to_async
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME, get_user_model
 from django.contrib.auth.models import AnonymousUser, Group
@@ -240,3 +242,16 @@ def evict_obj_perms_cache(obj):
         delattr(obj, '_guardian_perms_cache')
         return True
     return False
+
+
+async def maybe_async(fn, *args, **kwargs):
+    """Checks if a given function/method is async and calls it accordingly.
+       To be used inside async functions/methods, prepended with "await"."""
+    try:
+        fn = sync_to_async(fn)
+    except TypeError:
+        pass
+    obj = fn(*args, **kwargs)
+    if asyncio.iscoroutine(obj):
+        obj = await obj
+    return obj
