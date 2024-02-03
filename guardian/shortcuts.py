@@ -845,5 +845,5 @@ def filter_perms_queryset_by_objects(perms_queryset, objects):
         if perms_queryset.model.objects.is_generic():
             field = 'object_pk'
         return perms_queryset.filter(
-            **{'{}__in'.format(field): list(objects.values_list(
-                'pk', flat=True).distinct().order_by())})
+            **{'{}__in'.format(field): objects.values_list(
+                'pk', flat=True).distinct().order_by()})
