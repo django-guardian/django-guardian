@@ -23,11 +23,11 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.admin',
     'django.contrib.messages',
+    'django.contrib.staticfiles',
     'guardian',
     'posts',
     'articles',
     'core',
-    'django.contrib.staticfiles',
 )
 
 if 'GRAPPELLI' in os.environ:
@@ -76,7 +76,6 @@ GUARDIAN_GET_INIT_ANONYMOUS_USER = 'core.models.get_custom_anon_user'
 
 PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.MD5PasswordHasher',
-    'django.contrib.auth.hashers.SHA1PasswordHasher',
 )
 
 AUTH_USER_MODEL = 'core.CustomUser'
@@ -109,3 +108,5 @@ TEMPLATES = [
         },
     },
 ]
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
