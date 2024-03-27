@@ -14,13 +14,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
-        django: ["3.2", "4.1", "4.2", "main"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        django: ["3.2", "4.1", "4.2", "5.0", "main"]
         exclude:
+          - python-version: "3.12"
+            django: "4.2" # Python 3.12 is supported since Django 4.2.8.
+          - python-version: "3.12"
+            django: "4.1"
+          - python-version: "3.12"
+            django: "3.2"
           - python-version: "3.11"
             django: "3.2"
           - python-version: "3.9"
+            django: 5.0
+          - python-version: "3.9"
             django: main
+          - python-version: "3.8"
+            django: 5.0
           - python-version: "3.8"
             django: main
 
