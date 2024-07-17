@@ -295,12 +295,15 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
             }
         else:
             user_filters = {'%s__content_object' % related_name: obj}
-        qset = Q(**user_filters)
+        qset_filters = Q(**user_filters)
         if only_with_perms_in is not None:
             permission_ids = Permission.objects.filter(content_type=ctype, codename__in=only_with_perms_in).values_list('id', flat=True)
-            qset &= Q(**{
+            qset_filters &= Q(**{
                 '%s__permission_id__in' % related_name: permission_ids,
                 })
+        if with_superusers:
+            qset_filters = qset_filters | Q(is_superuser=True)
+        qset = get_user_model().objects.filter(qset_filters).distinct()
         if with_group_users:
             group_model = get_group_obj_perms_model(obj)
             if group_model.objects.is_generic():
@@ -316,11 +319,9 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
                 group_obj_perm_filters.update({
                     'permission_id__in': permission_ids,
                     })
-            group_ids = set(group_model.objects.filter(**group_obj_perm_filters).values_list('group_id', flat=True).distinct())
-            qset = qset | Q(groups__in=group_ids)
-        if with_superusers:
-            qset = qset | Q(is_superuser=True)
-        return get_user_model().objects.filter(qset).distinct()
+            group_ids = group_model.objects.filter(**group_obj_perm_filters).values_list('group_id', flat=True).distinct()
+            qset = qset.union(get_user_model().objects.filter(groups__in=group_ids).distinct())
+        return qset
     else:
         # TODO: Do not hit db for each user!
         users = {}
@@ -845,5 +846,5 @@ def filter_perms_queryset_by_objects(perms_queryset, objects):
         if perms_queryset.model.objects.is_generic():
             field = 'object_pk'
         return perms_queryset.filter(
-            **{'{}__in'.format(field): list(objects.values_list(
-                'pk', flat=True).distinct().order_by())})
+            **{'{}__in'.format(field): objects.values_list(
+                'pk', flat=True).distinct().order_by()})
