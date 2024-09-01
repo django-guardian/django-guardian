@@ -8,8 +8,6 @@ from guardian.utils import get_user_obj_perms_model, get_group_obj_perms_model
 from guardian.utils import get_40x_or_None, get_anonymous_user
 from guardian.shortcuts import get_objects_for_user
 
-UserObjectPermission = get_user_obj_perms_model()
-GroupObjectPermission = get_group_obj_perms_model()
 
 class LoginRequiredMixin:
     """
@@ -222,18 +220,22 @@ class GuardianUserMixin:
         return get_anonymous_user()
 
     def add_obj_perm(self, perm, obj):
+        UserObjectPermission = get_user_obj_perms_model()
         return UserObjectPermission.objects.assign_perm(perm, self, obj)
 
     def del_obj_perm(self, perm, obj):
+        UserObjectPermission = get_user_obj_perms_model()
         return UserObjectPermission.objects.remove_perm(perm, self, obj)
 
 
 class GuardianGroupMixin:
 
     def add_obj_perm(self, perm, obj):
+        GroupObjectPermission = get_group_obj_perms_model()
         return GroupObjectPermission.objects.assign_perm(perm, self, obj)
 
     def del_obj_perm(self, perm, obj):
+        GroupObjectPermission = get_group_obj_perms_model()
         return GroupObjectPermission.objects.remove_perm(perm, self, obj)
 
 
