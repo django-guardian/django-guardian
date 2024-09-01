@@ -26,12 +26,11 @@ from django.db.models import (
     SmallIntegerField,
     UUIDField,
 )
+from guardian.models import GroupObjectPermission
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
 from guardian.exceptions import MixedContentTypeError, WrongAppError, MultipleIdentityAndObjectError
 from guardian.utils import get_anonymous_user, get_group_obj_perms_model, get_identity, get_user_obj_perms_model
-GroupObjectPermission = get_group_obj_perms_model()
-UserObjectPermission = get_user_obj_perms_model()
 
 
 @lru_cache(None)
