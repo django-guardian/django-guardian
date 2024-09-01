@@ -15,7 +15,7 @@ By default django-guardian monkey patches the user model to add some needed
 functionality. This can result in errors if guardian is imported into the models.py
 of the same app where the custom user model lives.
 
-To fix this, it is recommended to add the setting ``GUARDIAN_MONKEY_PATCH = False``
+To fix this, it is recommended to add the setting ``GUARDIAN_MONKEY_PATCH_USER = False``
 in your settings.py and subclass ``guardian.mixins.GuardianUserMixin`` in your custom user model.
 
 .. important::
