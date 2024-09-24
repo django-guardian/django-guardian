@@ -385,7 +385,8 @@ def get_groups_with_perms(obj, attach_perms=False):
             }
         else:
             group_filters = {'%s__content_object' % group_rel_name: obj}
-        return Group.objects.filter(**group_filters).distinct()
+        group_rel_model = group_model.group.field.related_model
+        return group_rel_model.objects.filter(**group_filters).distinct()
     else:
         group_perms_mapping = defaultdict(list)
         groups_with_perms = get_groups_with_perms(obj)
