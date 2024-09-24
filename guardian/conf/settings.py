@@ -20,7 +20,7 @@ RAISE_404 = getattr(settings, 'GUARDIAN_RAISE_404', False)
 GET_INIT_ANONYMOUS_USER = getattr(settings, 'GUARDIAN_GET_INIT_ANONYMOUS_USER',
                                   'guardian.management.get_init_anonymous_user')
 
-MONKEY_PATCH_USER = getattr(settings, "GUARDIAN_MONKEY_PATCH_GROUP", True)
+MONKEY_PATCH_USER = getattr(settings, "GUARDIAN_MONKEY_PATCH_USER", True)
 if MONKEY_PATCH_USER not in [True, False]:
     raise ImproperlyConfigured("GUARDIAN_MONKEY_PATCH_USER must be either True or False")
 setattr(settings, "GUARDIAN_MONKEY_PATCH_USER", MONKEY_PATCH_USER)
