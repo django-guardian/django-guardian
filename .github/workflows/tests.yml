@@ -34,7 +34,7 @@ jobs:
 
     services:
       mariadb:
-        image: mariadb:10.2
+        image: mariadb:10.5
         env:
           MYSQL_ROOT_PASSWORD: mariadb
         ports:
