@@ -40,7 +40,7 @@ jobs:
         ports:
           - 3306:3306
       postgres:
-        image: postgres:10-alpine
+        image: postgres:14-alpine
         env:
           POSTGRES_PASSWORD: postgres
         options: >-
