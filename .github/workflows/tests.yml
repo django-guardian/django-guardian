@@ -42,6 +42,7 @@ jobs:
       postgres:
         image: postgres:14-alpine
         env:
+          PGUSER: postgres
           POSTGRES_PASSWORD: postgres
         options: >-
           --health-cmd pg_isready
