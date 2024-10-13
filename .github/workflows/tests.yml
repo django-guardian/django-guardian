@@ -25,23 +25,20 @@ jobs:
             django: 4.0.0
           - python-version: "3.10"
             django: 4.0.0
-          - python-version: "3.8"
-            django: main
-          - python-version: "3.9"
-            django: main
           - python-version: "3.10"
             django: main
 
     services:
       mariadb:
-        image: mariadb:10.2
+        image: mariadb:10.5
         env:
           MYSQL_ROOT_PASSWORD: mariadb
         ports:
           - 3306:3306
       postgres:
-        image: postgres:10-alpine
+        image: postgres:14-alpine
         env:
+          PGUSER: postgres
           POSTGRES_PASSWORD: postgres
         options: >-
           --health-cmd pg_isready
