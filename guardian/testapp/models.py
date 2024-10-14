@@ -17,6 +17,10 @@ class Post(models.Model):
         return self.title
 
 
+class ModelWithBinaryField(models.Model):
+    content = models.BinaryField(null=True)
+
+
 class DynamicAccessor:
 
     def __init__(self):
