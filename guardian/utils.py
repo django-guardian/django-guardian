@@ -94,7 +94,7 @@ def get_identity(identity):
 def get_40x_or_None(request, perms, obj=None, login_url=None,
                     redirect_field_name=None, return_403=False,
                     return_404=False, accept_global_perms=False,
-                    any_perm=False):
+                    any_perm=False, permission_denied_message=""):
     login_url = login_url or settings.LOGIN_URL
     redirect_field_name = redirect_field_name or REDIRECT_FIELD_NAME
 
@@ -121,7 +121,7 @@ def get_40x_or_None(request, perms, obj=None, login_url=None,
                 response.status_code = 403
                 return response
             elif guardian_settings.RAISE_403:
-                raise PermissionDenied
+                raise PermissionDenied(permission_denied_message)
             return HttpResponseForbidden()
         if return_404:
             if guardian_settings.RENDER_404:
