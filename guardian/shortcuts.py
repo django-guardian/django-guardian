@@ -5,13 +5,15 @@ import warnings
 from collections import defaultdict
 from functools import partial
 from itertools import groupby
+from typing import Union, List, Optional
 
 from django.apps import apps
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.models import Group, Permission, AnonymousUser, User
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.db.models import Count, Q, QuerySet
+from django.db.models.manager import Manager
 from django.shortcuts import _get_queryset
 from django.db.models.expressions import Value
 from django.db.models.functions import Cast, Replace
@@ -21,6 +23,7 @@ from django.db.models import (
     CharField,
     ForeignKey,
     IntegerField,
+    Model,
     PositiveIntegerField,
     PositiveSmallIntegerField,
     SmallIntegerField,
@@ -33,8 +36,22 @@ from guardian.utils import get_anonymous_user, get_group_obj_perms_model, get_id
 GroupObjectPermission = get_group_obj_perms_model()
 UserObjectPermission = get_user_obj_perms_model()
 
+UserOrGroupType = Union[
+    User,
+    AnonymousUser,
+    Group,
+    List[User],
+    List[Group],
+    QuerySet
+]
+PermsType = Union[str, List[str]]
 
-def assign_perm(perm, user_or_group, obj=None):
+
+def assign_perm(
+    perm: Union[str, Permission],
+    user_or_group: UserOrGroupType,
+    obj: Union[None, Model, QuerySet, List[Model]] = None
+):
     """
     Assigns permission to user/group and object pair.
 
@@ -143,7 +160,7 @@ def assign(perm, user_or_group, obj=None):
     return assign_perm(perm, user_or_group, obj)
 
 
-def remove_perm(perm, user_or_group=None, obj=None):
+def remove_perm(perm: Union[str, Permission], user_or_group=None, obj=None):
     """
     Removes permission from user/group and object pair.
 
@@ -392,8 +409,15 @@ def get_groups_with_perms(obj, attach_perms=False):
         return dict(group_perms_mapping)
 
 
-def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=False,
-                         with_superuser=True, accept_global_perms=True):
+def get_objects_for_user(
+    user: Union[User, AnonymousUser],
+    perms: PermsType,
+    klass=None,
+    use_groups: bool = True,
+    any_perm: bool = False,
+    with_superuser: bool = True,
+    accept_global_perms: bool = True
+):
     """
     Returns queryset of objects for which a given ``user`` has *all*
     permissions present at ``perms``.
@@ -530,6 +554,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
         raise WrongAppError("Cannot determine content type")
     else:
         queryset = _get_queryset(klass)
+        assert ctype is not None  # TODO: is this guaranteed at this point?
         if ctype.model_class() != queryset.model:
             raise MixedContentTypeError("Content type for given perms and "
                                         "klass differs")
@@ -652,7 +677,13 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
     return queryset.filter(q)
 
 
-def get_objects_for_group(group, perms, klass=None, any_perm=False, accept_global_perms=True):
+def get_objects_for_group(
+    group: Group,
+    perms: PermsType,
+    klass: Union[None, Model, Manager, QuerySet] = None,
+    any_perm: bool = False,
+    accept_global_perms: bool = True
+):
     """
     Returns queryset of objects for which a given ``group`` has *all*
     permissions present at ``perms``.
@@ -746,6 +777,7 @@ def get_objects_for_group(group, perms, klass=None, any_perm=False, accept_globa
         raise WrongAppError("Cannot determine content type")
     else:
         queryset = _get_queryset(klass)
+        assert ctype is not None  # TODO: is this guaranteed at this point?
         if ctype.model_class() != queryset.model:
             raise MixedContentTypeError("Content type for given perms and "
                                         "klass differs")

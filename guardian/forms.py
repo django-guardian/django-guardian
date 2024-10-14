@@ -59,7 +59,7 @@ class BaseObjectPermissionsForm(forms.Form):
         choices = [(p.codename, p.name) for p in get_perms_for_model(self.obj)]
         return choices
 
-    def get_obj_perms_field_initial(self):
+    def get_obj_perms_field_initial(self) -> list:
         """
         Returns initial object permissions management field choices. Default:
         ``[]`` (empty list).
@@ -80,7 +80,7 @@ class BaseObjectPermissionsForm(forms.Form):
         """
         return forms.SelectMultiple
 
-    def are_obj_perms_required(self):
+    def are_obj_perms_required(self) -> bool:
         """
         Indicates if at least one object permission should be required. Default:
         ``False``.
@@ -124,7 +124,7 @@ class UserObjectPermissionsForm(BaseObjectPermissionsForm):
         perms = get_user_perms(self.user, self.obj)
         return perms
 
-    def save_obj_perms(self):
+    def save_obj_perms(self) -> None:
         """
         Saves selected object permissions by creating new ones and removing
         those which were not selected but already exists.
@@ -172,7 +172,7 @@ class GroupObjectPermissionsForm(BaseObjectPermissionsForm):
         perms = get_group_perms(self.group, self.obj)
         return perms
 
-    def save_obj_perms(self):
+    def save_obj_perms(self) -> None:
         """
         Saves selected object permissions by creating new ones and removing
         those which were not selected but already exists.
