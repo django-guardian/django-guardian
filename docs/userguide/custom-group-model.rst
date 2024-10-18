@@ -79,8 +79,7 @@ To access the ``CustomGroupObjectPermission`` model, the function ``get_group_ob
 
 .. important::
     When using an custom :model:`GroupObjectPermission` model, do not import the :model:`GroupObjectPermission` model
-    directly in your code, always use the ``get_group_obj_perms_model`` function
-    (see :ref:`guardian-group-obj-perms-model`).
+    directly in your code, always use the ``get_group_obj_perms_model`` function.
 
 By default django-guardian monkey patches the group model to add some needed
 functionality. This can result in errors if guardian is imported into the ``models.py``
