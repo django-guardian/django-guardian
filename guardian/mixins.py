@@ -1,9 +1,10 @@
 from collections.abc import Iterable
 
+from asgiref.sync import async_to_sync, sync_to_async
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, REDIRECT_FIELD_NAME
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
-from guardian.utils import get_user_obj_perms_model
+from guardian.utils import get_user_obj_perms_model, maybe_async
 UserObjectPermission = get_user_obj_perms_model()
 from guardian.utils import get_40x_or_None, get_anonymous_user
 from guardian.shortcuts import get_objects_for_user
@@ -160,34 +161,28 @@ class PermissionRequiredMixin:
                                        % self.permission_required)
         return perms
 
-    def get_permission_object(self):
+    async def get_permission_object(self):
         if hasattr(self, 'permission_object'):
             return self.permission_object
-        return (hasattr(self, 'get_object') and self.get_object() or
+        return (hasattr(self, 'get_object') and await maybe_async(self.get_object) or
                 getattr(self, 'object', None))
 
-    def check_permissions(self, request):
+    async def check_permissions(self, request):
         """
         Checks if *request.user* has all permissions returned by
         *get_required_permissions* method.
 
         :param request: Original request.
         """
-        obj = self.get_permission_object()
-
-        forbidden = get_40x_or_None(request,
-                                    perms=self.get_required_permissions(
-                                        request),
-                                    obj=obj,
-                                    login_url=self.login_url,
-                                    redirect_field_name=self.redirect_field_name,
-                                    return_403=self.return_403,
-                                    return_404=self.return_404,
-                                    accept_global_perms=self.accept_global_perms,
-                                    any_perm=self.any_perm,
-                                    )
+        obj = await maybe_async(self.get_permission_object)
+        perms = await sync_to_async(self.get_required_permissions)(request)
+        forbidden = await sync_to_async(get_40x_or_None)(
+            request, perms=perms, obj=obj, login_url=self.login_url, redirect_field_name=self.redirect_field_name,
+            return_403=self.return_403, return_404=self.return_404, accept_global_perms=self.accept_global_perms,
+            any_perm=self.any_perm,
+        )
         if forbidden:
-            self.on_permission_check_fail(request, forbidden, obj=obj)
+            await maybe_async(self.on_permission_check_fail, request, forbidden, obj=obj)
         if forbidden and self.raise_exception:
             raise PermissionDenied()
         return forbidden
@@ -207,10 +202,16 @@ class PermissionRequiredMixin:
         self.request = request
         self.args = args
         self.kwargs = kwargs
-        response = self.check_permissions(request)
-        if response:
+        if getattr(self, 'view_is_async', False):
+            return self.adispatch(request, *args, **kwargs)
+        if response := async_to_sync(self.check_permissions)(request):
             return response
         return super().dispatch(request, *args, **kwargs)
+
+    async def adispatch(self, request, *args, **kwargs):
+        if response := await self.check_permissions(request):
+            return response
+        return await super().dispatch(request, *args, **kwargs)
 
 
 class GuardianUserMixin:
