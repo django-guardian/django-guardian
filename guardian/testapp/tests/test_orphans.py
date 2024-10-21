@@ -21,7 +21,7 @@ user_module_name = User._meta.model_name
 class OrphanedObjectPermissionsTest(TestCase):
 
     def setUp(self):
-        # Create objects for which we would assing obj perms
+        # Create objects for which we would assign obj perms
         self.target_user1 = User.objects.create(username='user1')
         self.target_group1 = Group.objects.create(name='group1')
         self.target_obj1 = ContentType.objects.create(
