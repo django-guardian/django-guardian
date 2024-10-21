@@ -12,6 +12,7 @@ User Guide
     remove
     admin-integration
     custom-user-model
+    custom-group-model
     performance
     caveats
     

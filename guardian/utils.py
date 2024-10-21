@@ -11,7 +11,7 @@ from itertools import chain
 
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME, get_user_model
-from django.contrib.auth.models import AnonymousUser, Group
+from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db.models import Model, QuerySet
 from django.http import HttpResponseForbidden, HttpResponseNotFound
@@ -67,6 +67,8 @@ def get_identity(identity):
     """
     if isinstance(identity, AnonymousUser):
         identity = get_anonymous_user()
+
+    Group = get_group_obj_perms_model().group.field.related_model
 
     # get identity from queryset model type
     if isinstance(identity, QuerySet):
