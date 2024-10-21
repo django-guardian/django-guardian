@@ -336,7 +336,7 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
         return users
 
 
-def get_groups_with_perms(obj, attach_perms=False):
+def get_groups_with_perms(obj, attach_perms=False, only_with_perms_in=None):
     """
     Returns queryset of all ``Group`` objects with *any* object permissions for
     the given ``obj``.
@@ -346,6 +346,10 @@ def get_groups_with_perms(obj, attach_perms=False):
     :param attach_perms: Default: ``False``. If set to ``True`` result would be
       dictionary of ``Group`` instances with permissions' codenames list as
       values. This would fetch groups eagerly!
+
+    :param only_with_perms_in: Default: ``None``. If set to an iterable of
+      permission strings then only groups with those permissions would be
+      returned.
 
     Example::
 
@@ -377,10 +381,15 @@ def get_groups_with_perms(obj, attach_perms=False):
             }
         else:
             group_filters = {'%s__content_object' % group_rel_name: obj}
+        if only_with_perms_in is not None:
+            permission_ids = Permission.objects.filter(content_type=ctype, codename__in=only_with_perms_in).values_list('id', flat=True)
+            group_filters.update({
+                '%s__permission_id__in' % group_rel_name: permission_ids,
+            })
         return Group.objects.filter(**group_filters).distinct()
     else:
         group_perms_mapping = defaultdict(list)
-        groups_with_perms = get_groups_with_perms(obj)
+        groups_with_perms = get_groups_with_perms(obj, only_with_perms_in=only_with_perms_in)
         qs = group_model.objects.filter(group__in=groups_with_perms).prefetch_related('group', 'permission')
         if group_model is GroupObjectPermission:
             qs = qs.filter(object_pk=obj.pk, content_type=ctype)
