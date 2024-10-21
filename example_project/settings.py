@@ -23,11 +23,11 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.admin',
     'django.contrib.messages',
+    'django.contrib.staticfiles',
     'guardian',
     'posts',
     'articles',
     'core',
-    'django.contrib.staticfiles',
 )
 
 if 'GRAPPELLI' in os.environ:
@@ -108,3 +108,5 @@ TEMPLATES = [
         },
     },
 ]
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

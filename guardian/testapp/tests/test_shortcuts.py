@@ -550,8 +550,7 @@ class GetUsersWithPermsTest(TestCase):
         self.assertEqual(set(get_group_perms(self.group2, self.obj1)), set())
         self.assertEqual(set(get_group_perms(admin, self.obj1)), set())
         expected_permissions = ['add_contenttype', 'change_contenttype', 'delete_contenttype']
-        if django.VERSION >= (2, 1):
-            expected_permissions.append('view_contenttype')
+        expected_permissions.append('view_contenttype')
         self.assertEqual(set(get_perms(admin, self.obj1)), set(expected_permissions))
         self.assertEqual(set(get_perms(self.user1, self.obj1)), {'change_contenttype', 'delete_contenttype'})
         self.assertEqual(set(get_perms(self.user2, self.obj1)), {'delete_contenttype'})
@@ -570,8 +569,7 @@ class GetUsersWithPermsTest(TestCase):
             admin: ["add_contenttype", "change_contenttype", "delete_contenttype"],
             self.user2: ["delete_contenttype"]
         }
-        if django.VERSION >= (2, 1):
-            expected[admin].append("view_contenttype")
+        expected[admin].append("view_contenttype")
         result = get_users_with_perms(self.obj1, attach_perms=True,
             with_superusers=False, with_group_users=True)
         self.assertEqual(result.keys(), expected.keys())
