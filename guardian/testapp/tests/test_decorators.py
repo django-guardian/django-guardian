@@ -240,7 +240,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
 
     def test_user_has_access_on_model_with_metaclass(self):
         """
-        Test to the fix issues of comparaison made via type()
+        Test to the fix issues of comparison made via type()
         in the decorator. In the case of a `Model` implementing
         a custom metaclass, the decorator fail because type
         doesn't return `ModelBase`

@@ -103,7 +103,7 @@ From now on, ``guardian`` will figure out that ``Project`` model has direct
 relation for user/group object permissions and will use those models. It is
 also possible to use only user or only group-based direct relation, however it
 is discouraged (it's not consistent and might be a quick road to hell from the
-maintainence point of view, especially).
+maintenance point of view, especially).
 
 To temporarily disable the detection of this direct relation model, add
 ``enabled = False`` to the object permission model classes. This is useful to
