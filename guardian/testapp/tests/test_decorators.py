@@ -384,12 +384,8 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
             pass
         response = dummy_view(request, project_name='foobar')
         self.assertTrue(isinstance(response, HttpResponseRedirect))
-        if django.VERSION >= (3, 2):
-            self.assertTrue(response.headers['location'].startswith(
-                '/foobar/'))
-        else:
-            self.assertTrue(response._headers['location'][1].startswith(
-                '/foobar/'))
+        self.assertTrue(response.headers['location'].startswith(
+            '/foobar/'))
 
     @override_settings(LOGIN_URL='django.contrib.auth.views.login')
     def test_redirection_class(self):
