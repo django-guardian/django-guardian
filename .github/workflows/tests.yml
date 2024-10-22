@@ -18,19 +18,19 @@ jobs:
         django: ["3.2.25", "4.1.13", "4.2.16", "5.0.9", "main"]
         exclude:
           - python-version: "3.12"
-            django: "4.1"
+            django: "4.1.13"
           - python-version: "3.12"
-            django: "3.2"
+            django: "3.2.25"
           - python-version: "3.11"
-            django: "3.2"
+            django: "3.2.25"
           - python-version: "3.9"
-            django: 5.0
+            django: "5.0.9"
           - python-version: "3.9"
-            django: main
+            django: "main"
           - python-version: "3.8"
-            django: 5.0
+            django: "5.0.9"
           - python-version: "3.8"
-            django: main
+            django: "main"
 
     services:
       mariadb:
