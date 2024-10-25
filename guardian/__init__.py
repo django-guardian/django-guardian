@@ -6,7 +6,7 @@ import django
 
 
 # PEP 396: The __version__ attribute's value SHOULD be a string.
-__version__ = '2.4.0'
+__version__ = '2.4.1'
 
 # Compatibility to eg. django-rest-framework
 VERSION = tuple(int(x) for x in __version__.split('.')[:3])
