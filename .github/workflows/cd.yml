@@ -26,16 +26,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
+        if: ${{ github.event_name != 'workflow_dispatch' }}
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
 
       - name: Install python
+        if: ${{ github.event_name != 'workflow_dispatch' }}
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
       - name: Get package version
+        if: ${{ github.event_name != 'workflow_dispatch' }}
         id: version
         run: echo "::set-output name=package_version::$(python setup.py --version)"
 
