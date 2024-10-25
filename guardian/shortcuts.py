@@ -27,7 +27,7 @@ from django.db.models import (
     UUIDField,
 )
 from guardian.core import ObjectPermissionChecker
-from guardian.ctypes import get_content_type
+from guardian.ctypes import get_content_type, get_content_type_from_iterable_or_object
 from guardian.exceptions import MixedContentTypeError, WrongAppError, MultipleIdentityAndObjectError
 from guardian.utils import get_anonymous_user, get_group_obj_perms_model, get_identity, get_user_obj_perms_model
 GroupObjectPermission = get_group_obj_perms_model()
@@ -135,6 +135,119 @@ def assign_perm(perm, user_or_group, obj=None):
         return model.objects.assign_perm(perm, group, obj)
 
 
+def _get_perms_objs(perms, obj=None):
+    filters_to_or = []
+    permissions = []
+    ctype = get_content_type_from_iterable_or_object(obj) if obj else None
+    for perm in perms:
+        if not isinstance(perm, Permission):
+            if not ctype:
+                try:
+                    app_label, codename = perm.split(".", 1)
+                except ValueError:
+                    raise ValueError(
+                        "For global permissions, first argument must be in"
+                        " format: 'app_label.codename' (is %r)" % perm
+                    )
+                filters_to_or.append(
+                    Q(content_type__app_label=app_label) & Q(codename=codename)
+                )
+            else:
+                codename = perm
+                if "." in perm:
+                    app_label, codename = codename.split(".", 1)
+
+                filter = Q(content_type=ctype) & Q(codename=codename)
+                filters_to_or.append(filter)
+        else:
+            permissions.append(perm)
+
+    if len(filters_to_or):
+        filter = filters_to_or[0]
+        for f in filters_to_or[1:]:
+            filter |= f
+        permissions.extend(list(Permission.objects.filter(filter).all()))
+
+    return permissions
+
+
+def bulk_assign_perms(perms, user_or_group, obj=None, commit=True):
+    """
+    perms can be a single object or multiple (either a list or a queryset)
+    user_or_group can be a single object or multiple (either a list or a queryset)
+    obj can be a single object or multiple (either a list or a queryset)
+    """
+    if not isinstance(perms, (QuerySet, list)):
+        perms = [perms]
+
+    user, group = get_identity(user_or_group)
+    # If obj is None we try to operate on global permissions
+    if obj is None:
+        if commit is False:
+            raise Exception(
+                "It does not really make sense to use this function for bulk assigning global permissions without "
+                "committing them, since the reference to the user or group is not part of the permissions returned."
+            )
+
+        perms = _get_perms_objs(perms, obj=None)
+
+        if user:
+            if isinstance(user, (QuerySet, list)):
+                for u in user:
+                    u.user_permissions.add(*perms)
+            else:
+                user.user_permissions.add(*perms)
+            return perms
+        if group:
+            if isinstance(group, (QuerySet, list)):
+                for g in group:
+                    g.permissions.add(*perms)
+            else:
+                group.permissions.add(*perms)
+            return perms
+
+    perms = _get_perms_objs(perms, obj=obj)
+
+    if isinstance(obj, (QuerySet, list)):
+        if user:
+            model = get_user_obj_perms_model(
+                obj[0] if isinstance(obj, list) else obj.model
+            )
+        if group:
+            model = get_group_obj_perms_model(
+                obj[0] if isinstance(obj, list) else obj.model
+            )
+        if isinstance(user_or_group, (QuerySet, list)):
+            if user:
+                return model.objects.assign_perms_to_many_for_many(
+                    perms, user, obj, commit=commit
+                )
+            if group:
+                return model.objects.assign_perms_to_many_for_many(
+                    perms, group, obj, commit=commit
+                )
+        if user:
+            return model.objects.assign_perms_to_many_for_many(perms, [user], obj, commit=commit)
+        if group:
+            return model.objects.assign_perms_to_many_for_many(perms, [group], obj, commit=commit)
+
+    if isinstance(user_or_group, (QuerySet, list)):
+        if user:
+            model = get_user_obj_perms_model(obj)
+            return model.objects.assign_perms_to_many_for_many(perms, user, [obj], commit=commit)
+        if group:
+            model = get_group_obj_perms_model(obj)
+            return model.objects.assign_perms_to_many_for_many(perms, group, [obj], commit=commit)
+
+    if user:
+        model = get_user_obj_perms_model(obj)
+        return model.objects.assign_perms_to_many_for_many(perms, [user], [obj], commit=commit)
+
+    if group:
+        model = get_group_obj_perms_model(obj)
+        return model.objects.assign_perms_to_many_for_many(perms, [group], [obj], commit=commit)
+
+
 def assign(perm, user_or_group, obj=None):
     """ Depreciated function name left in for compatibility"""
     warnings.warn(
@@ -195,6 +308,91 @@ def remove_perm(perm, user_or_group=None, obj=None):
     if group:
         model = get_group_obj_perms_model(obj)
         return model.objects.remove_perm(perm, group, obj)
+
+
+def bulk_remove_perms(perms, user_or_group_or_iterable=None, obj=None, commit=True):
+    """
+    Removes permissions from users/groups for objs.
+
+    :param perms: proper permission for given ``obj``, as string (in format:
+      ``app_label.codename`` or ``codename``). May also be an iterable. If ``obj`` is not given, must
+      be in format ``app_label.codename``.
+
+    :param user_or_group_or_iterable: instance of ``User``, ``AnonymousUser`` or ``Group``, or
+      iterable of ``User``s or ``Group``s.
+      passing any other objects raises
+      ``guardian.exceptions.NotUserNorGroup`` exception
+
+    :param obj: persisted Django's ``Model`` instance or iterable of Django
+      ``Model`` instances or ``None`` if assigning global permission.
+      Default is ``None``.
+
+    """
+    if not isinstance(perms, (list, QuerySet)):
+        perms = [perms]
+
+    user, group = get_identity(user_or_group_or_iterable)
+    if obj is None:
+        if commit is False:
+            raise Exception(
+                "It does not really make sense to use this function for bulk removing global permissions without "
+                "committing them, since the reference to the user or group is not part of the permissions returned."
+            )
+
+        perms = _get_perms_objs(perms, obj=None)
+
+        if user:
+            if isinstance(user, (QuerySet, list)):
+                for u in user:
+                    u.user_permissions.remove(*perms)
+            else:
+                user.user_permissions.remove(*perms)
+            return perms
+        if group:
+            if isinstance(group, (QuerySet, list)):
+                for g in group:
+                    g.permissions.remove(*perms)
+            else:
+                group.permissions.remove(*perms)
+            return perms
+
+    perms = _get_perms_objs(perms, obj=obj)
+
+    if isinstance(obj, (QuerySet, list)):
+        if user:
+            model = get_user_obj_perms_model(
+                obj[0] if isinstance(obj, list) else obj.model
+            )
+        else:
+            model = get_group_obj_perms_model(
+                obj[0] if isinstance(obj, list) else obj.model
+            )
+    else:
+        if user:
+            model = get_user_obj_perms_model(obj)
+        else:
+            model = get_group_obj_perms_model(obj)
+
+    return model.objects.bulk_remove_perms(perms, user_or_group_or_iterable, obj, commit=commit)
+
+
+def commit_object_perms(perms, for_groups=True, obj=None):
+    if isinstance(obj, (QuerySet, list)):
+        if not for_groups:
+            model = get_user_obj_perms_model(
+                obj[0] if isinstance(obj, list) else obj.model
+            )
+        if for_groups:
+            model = get_group_obj_perms_model(
+                obj[0] if isinstance(obj, list) else obj.model
+            )
+    else:
+        if not for_groups:
+            model = get_user_obj_perms_model(obj)
+        if for_groups:
+            model = get_group_obj_perms_model(obj)
+
+    model.objects.bulk_create(perms)
 
 
 def get_perms(user_or_group, obj):
