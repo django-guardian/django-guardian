@@ -14,7 +14,7 @@ PROJECT_ROOT = abspath(os.path.dirname(__file__))
 GUARDIAN_MODULE_PATH = abspath(PROJECT_ROOT, '..')
 sys.path.insert(0, GUARDIAN_MODULE_PATH)
 
-DATABASES = {'default': env.db(default="sqlite://./example.db")}
+DATABASES = {'default': env.db(default="sqlite:///example.db")}
 
 INSTALLED_APPS = (
     'django.contrib.auth',
