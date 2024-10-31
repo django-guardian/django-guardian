@@ -65,10 +65,8 @@ class GuardedModelAdminMixin:
             filters = {self.user_owned_objects_field: request.user}
             qs = qs.filter(**filters)
         if self.user_can_access_owned_by_group_objects_only:
-            User = get_user_model()
-            user_rel_name = User.groups.field.related_query_name()
-            qs_key = '{}__{}'.format(self.group_owned_objects_field, user_rel_name)
-            filters = {qs_key: request.user}
+            qs_key = f'{self.group_owned_objects_field}__in'
+            filters = {qs_key: request.user.groups.all()}
             qs = qs.filter(**filters)
         return qs
 

@@ -601,7 +601,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
         group_model = get_group_obj_perms_model(queryset.model)
         group_filters = {
             'permission__content_type': ctype,
-            'group__%s' % get_user_model().groups.field.related_query_name(): user,
+            'group__in': user.groups.all(),
         }
         if len(codenames):
             group_filters.update({
