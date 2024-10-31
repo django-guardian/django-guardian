@@ -1,0 +1,15 @@
+{% extends "base_1col.html" %}
+
+{% block col-single-title %}Home{% endblock %}
+
+{% block col-single-content %}
+<div class="richblock">
+    <h1>Pages</h1>
+    <ul class="nav-vertical">
+        {% for flatpage in flatpage_list %}
+        <li><a href="{{ flatpage.url }}">{{ flatpage.title }}</a></li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}
+

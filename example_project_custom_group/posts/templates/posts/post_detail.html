@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% load guardian_tags %}
+
+{% block content %}
+<div class="row">
+    <div class="span3">
+        <a href="{% url "posts_post_list" %}">Back to posts list</a>
+        <h4>User permissions</h4>
+        <div class="well sidebar-nav">
+            <ul class="nav nav-list">
+                {% for user in users %}
+                {% comment %}
+                Do NOT do this in your project - we are just showing all the
+                permissions, however this span query for all users (at view)
+                and for each user there is another query for the permissions
+                (templatetag)
+                {% endcomment %}
+                <li class="nav-header">{{ user }}{% if user.is_superuser %} <span class="badge badge-info">admin</span>{% endif %}</li>
+                {% if request.user.is_authenticated %}
+                <li><a href="{% url "admin:posts_post_permissions_manage_user" post.pk user.pk %}">Manage permissions</a></li>
+                {% endif %}
+                {% get_obj_perms user for post as "perms" %}
+                {% for perm in perms %}
+                <li>{{ perm }}</li>
+                {% endfor %}
+                {% endfor %}
+            </ul>
+        </div><!--/.well -->
+    </div>
+    
+    <div class="span9">
+        <h1 name="{{ post.id }}">{{ post.title }}</h1>
+        <h5>at {{ post.created_at }}</h5>
+        <hr/>
+        {{ post.content|safe }}
+    </div>
+</div>
+
+{% endblock %}
+

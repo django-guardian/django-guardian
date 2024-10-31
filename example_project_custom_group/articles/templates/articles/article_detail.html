@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% load guardian_tags %}
+
+
+{% block content %}
+{% get_obj_perms request.user for object as 'object_perms' %}
+<div class="row">
+    <div class="span3">
+        <a href="{% url "articles:list" %}">Back to article list</a>
+    </div>
+
+
+    <div class="span9">
+    {% if "change_article" in object_perms %}
+    <a href="{% url 'articles:update' slug=object.slug%}" class="btn btn-primary">Update</a>
+    {% endif %}
+    {% if "delete_article" in object_perms %}
+    <a href="{% url 'articles:delete' slug=object.slug%}" class="btn btn-primary">Delete</a>
+    {% endif %}
+        <h1 name="{{ object.id }}">{{ object.title }}</h1>
+        <h5>at {{ object.created_at }}</h5>
+        <hr/>
+        {{ object.content|safe }}
+    </div>
+</div>
+{% endblock %}
+
