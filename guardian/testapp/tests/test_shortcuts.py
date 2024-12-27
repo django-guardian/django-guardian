@@ -1,6 +1,7 @@
 import warnings
 
 import django
+import mock
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
@@ -24,7 +25,8 @@ from guardian.exceptions import MixedContentTypeError
 from guardian.exceptions import NotUserNorGroup
 from guardian.exceptions import WrongAppError
 from guardian.exceptions import MultipleIdentityAndObjectError
-from guardian.testapp.models import CharPKModel, ChildTestModel, UUIDPKModel
+from guardian.testapp.models import CharPKModel, ChildTestModel, UUIDPKModel, ProjectGroupObjectPermission
+from guardian.testapp.tests.conf import override_settings
 from guardian.testapp.tests.test_core import ObjectPermissionTestCase
 from guardian.models import Group, Permission
 
@@ -690,6 +692,20 @@ class GetGroupsWithPerms(TestCase):
         self.assertEqual(result.keys(), expected.keys())
         for key, perms in result.items():
             self.assertEqual(set(perms), set(expected[key]))
+
+    def test_custom(self):
+        with mock.patch("guardian.conf.settings.GROUP_OBJ_PERMS_MODEL", "testapp.ProjectGroupObjectPermission"):
+            assign_perm("change_contenttype", self.group1, self.obj1)
+            result = get_groups_with_perms(self.obj1)
+            self.assertEqual(len(result), 1)
+            self.assertEqual(result[0], self.group1)
+
+    def test_custom_attach_perms(self):
+        with mock.patch("guardian.conf.settings.GROUP_OBJ_PERMS_MODEL", "testapp.ProjectGroupObjectPermission"):
+            assign_perm("change_contenttype", self.group1, self.obj1)
+            result = get_groups_with_perms(self.obj1, attach_perms=True)
+            expected = {self.group1: ["change_contenttype"]}
+            self.assertEqual(result, expected)
 
 
 class GetObjectsForUser(TestCase):
