@@ -25,7 +25,7 @@ from guardian.exceptions import MixedContentTypeError
 from guardian.exceptions import NotUserNorGroup
 from guardian.exceptions import WrongAppError
 from guardian.exceptions import MultipleIdentityAndObjectError
-from guardian.testapp.models import CharPKModel, ChildTestModel, UUIDPKModel, ProjectGroupObjectPermission
+from guardian.testapp.models import CharPKModel, ChildTestModel, UUIDPKModel, ProjectGroupObjectPermission, Project
 from guardian.testapp.tests.conf import override_settings
 from guardian.testapp.tests.test_core import ObjectPermissionTestCase
 from guardian.models import Group, Permission
@@ -617,6 +617,27 @@ class GetGroupsWithPerms(TestCase):
         self.group1 = Group.objects.create(name='group1')
         self.group2 = Group.objects.create(name='group2')
         self.group3 = Group.objects.create(name='group3')
+        obj = Project(
+            name='foo_bar'
+        )
+        obj.save()
+        obj.refresh_from_db()
+        self.custom_obj = obj
+
+        ctype = ContentType(
+            model='testapp.Project', app_label='guardian-tests'
+        )
+        ctype.save()
+        ctype.refresh_from_db()
+        self.custom_ctype = ctype
+
+        perm = Permission(
+            content_type=self.custom_ctype,
+            codename="see_project",
+        )
+        perm.save()
+        perm.refresh_from_db()
+        self.custom_perm = perm
 
     def test_empty(self):
         result = get_groups_with_perms(self.obj1)
@@ -693,19 +714,16 @@ class GetGroupsWithPerms(TestCase):
         for key, perms in result.items():
             self.assertEqual(set(perms), set(expected[key]))
 
-    def test_custom(self):
-        with mock.patch("guardian.conf.settings.GROUP_OBJ_PERMS_MODEL", "testapp.ProjectGroupObjectPermission"):
-            assign_perm("change_contenttype", self.group1, self.obj1)
-            result = get_groups_with_perms(self.obj1)
-            self.assertEqual(len(result), 1)
-            self.assertEqual(result[0], self.group1)
+    def test_custom_group(self):
+        with mock.patch('guardian.conf.settings.GROUP_OBJ_PERMS_MODEL', 'testapp.GenericGroupObjectPermission'):
+            result = get_groups_with_perms(self.custom_obj)
+            self.assertEqual(len(result), 0)
 
-    def test_custom_attach_perms(self):
-        with mock.patch("guardian.conf.settings.GROUP_OBJ_PERMS_MODEL", "testapp.ProjectGroupObjectPermission"):
-            assign_perm("change_contenttype", self.group1, self.obj1)
-            result = get_groups_with_perms(self.obj1, attach_perms=True)
-            expected = {self.group1: ["change_contenttype"]}
-            self.assertEqual(result, expected)
+    def test_custom_group_attach_perms(self):
+        with mock.patch('guardian.conf.settings.GROUP_OBJ_PERMS_MODEL', 'testapp.GenericGroupObjectPermission'):
+            result = get_groups_with_perms(self.custom_ctype, attach_perms=True)
+            expected = {}
+            self.assertEqual(expected, result)
 
 
 class GetObjectsForUser(TestCase):

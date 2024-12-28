@@ -5,7 +5,7 @@ import environ
 
 env = environ.Env()
 
-DEBUG = False
+DEBUG = True
 
 ANONYMOUS_USER_NAME = "AnonymousUser"
 

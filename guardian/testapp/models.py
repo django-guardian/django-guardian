@@ -8,6 +8,7 @@ from django.contrib.auth.models import AbstractUser, AbstractBaseUser
 from guardian.mixins import GuardianUserMixin
 from guardian.models import UserObjectPermissionBase
 from guardian.models import GroupObjectPermissionBase
+from guardian.models import GroupObjectPermissionAbstract
 
 
 class Post(models.Model):
@@ -32,6 +33,11 @@ class ProjectUserObjectPermission(UserObjectPermissionBase):
 
 class ProjectGroupObjectPermission(GroupObjectPermissionBase):
     content_object = models.ForeignKey('Project', on_delete=models.CASCADE)
+
+class GenericGroupObjectPermission(GroupObjectPermissionAbstract):
+
+    class Meta(GroupObjectPermissionAbstract.Meta):
+        abstract = False
 
 
 class Project(models.Model):
