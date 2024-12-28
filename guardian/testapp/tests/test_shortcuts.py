@@ -25,8 +25,7 @@ from guardian.exceptions import MixedContentTypeError
 from guardian.exceptions import NotUserNorGroup
 from guardian.exceptions import WrongAppError
 from guardian.exceptions import MultipleIdentityAndObjectError
-from guardian.testapp.models import CharPKModel, ChildTestModel, UUIDPKModel, ProjectGroupObjectPermission, Project
-from guardian.testapp.tests.conf import override_settings
+from guardian.testapp.models import CharPKModel, ChildTestModel, UUIDPK
 from guardian.testapp.tests.test_core import ObjectPermissionTestCase
 from guardian.models import Group, Permission
 
@@ -694,12 +693,12 @@ class GetGroupsWithPerms(TestCase):
             self.assertEqual(set(perms), set(expected[key]))
 
     def test_custom_group_model(self):
-        with mock.patch('guardian.conf.settings.GROUP_OBJ_PERMS_MODEL', 'testapp.GenericGroupObjectPermission'):
+        with mock.patch("guardian.conf.settings.GROUP_OBJ_PERMS_MODEL", "testapp.GenericGroupObjectPermission"):
             result = get_groups_with_perms(self.obj1)
             self.assertEqual(len(result), 0)
 
     def test_custom_group_model_attach_perms(self):
-        with mock.patch('guardian.conf.settings.GROUP_OBJ_PERMS_MODEL', 'testapp.GenericGroupObjectPermission'):
+        with mock.patch("guardian.conf.settings.GROUP_OBJ_PERMS_MODEL", "testapp.GenericGroupObjectPermission"):
             result = get_groups_with_perms(self.obj1, attach_perms=True)
             expected = {}
             self.assertEqual(expected, result)
