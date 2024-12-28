@@ -617,27 +617,6 @@ class GetGroupsWithPerms(TestCase):
         self.group1 = Group.objects.create(name='group1')
         self.group2 = Group.objects.create(name='group2')
         self.group3 = Group.objects.create(name='group3')
-        obj = Project(
-            name='foo_bar'
-        )
-        obj.save()
-        obj.refresh_from_db()
-        self.custom_obj = obj
-
-        ctype = ContentType(
-            model='testapp.Project', app_label='guardian-tests'
-        )
-        ctype.save()
-        ctype.refresh_from_db()
-        self.custom_ctype = ctype
-
-        perm = Permission(
-            content_type=self.custom_ctype,
-            codename="see_project",
-        )
-        perm.save()
-        perm.refresh_from_db()
-        self.custom_perm = perm
 
     def test_empty(self):
         result = get_groups_with_perms(self.obj1)
@@ -714,14 +693,14 @@ class GetGroupsWithPerms(TestCase):
         for key, perms in result.items():
             self.assertEqual(set(perms), set(expected[key]))
 
-    def test_custom_group(self):
+    def test_custom_group_model(self):
         with mock.patch('guardian.conf.settings.GROUP_OBJ_PERMS_MODEL', 'testapp.GenericGroupObjectPermission'):
-            result = get_groups_with_perms(self.custom_obj)
+            result = get_groups_with_perms(self.obj1)
             self.assertEqual(len(result), 0)
 
-    def test_custom_group_attach_perms(self):
+    def test_custom_group_model_attach_perms(self):
         with mock.patch('guardian.conf.settings.GROUP_OBJ_PERMS_MODEL', 'testapp.GenericGroupObjectPermission'):
-            result = get_groups_with_perms(self.custom_ctype, attach_perms=True)
+            result = get_groups_with_perms(self.obj1, attach_perms=True)
             expected = {}
             self.assertEqual(expected, result)
 
