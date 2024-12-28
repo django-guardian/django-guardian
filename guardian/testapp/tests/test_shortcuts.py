@@ -25,7 +25,7 @@ from guardian.exceptions import MixedContentTypeError
 from guardian.exceptions import NotUserNorGroup
 from guardian.exceptions import WrongAppError
 from guardian.exceptions import MultipleIdentityAndObjectError
-from guardian.testapp.models import CharPKModel, ChildTestModel, UUIDPK
+from guardian.testapp.models import CharPKModel, ChildTestModel, UUIDPKModel
 from guardian.testapp.tests.test_core import ObjectPermissionTestCase
 from guardian.models import Group, Permission
 
