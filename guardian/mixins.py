@@ -204,13 +204,17 @@ class PermissionRequiredMixin:
         """
 
     def dispatch(self, request, *args, **kwargs):
+        dispatch_response = super().dispatch(request, *args, **kwargs)
+        
         self.request = request
         self.args = args
         self.kwargs = kwargs
+
         response = self.check_permissions(request)
         if response:
             return response
-        return super().dispatch(request, *args, **kwargs)
+
+        return dispatch_response
 
 
 class GuardianUserMixin:
