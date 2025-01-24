@@ -2,4 +2,5 @@ Django>=4.2
 django-environ
 bumpversion
 mock
-sphinx_rtd_theme==3.0.2
+mkdocs-material==9.5.50
+mkdocs-material-extensions==1.3.1
