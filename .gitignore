@@ -28,3 +28,6 @@ example_project/conf/*.py
 .DAV
 .project
 .pydevproject
+
+# Local virtual environments
+.venv

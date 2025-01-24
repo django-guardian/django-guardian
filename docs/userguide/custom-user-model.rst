@@ -69,3 +69,11 @@ and put it at ``myapp/models.py``. Last step is to set proper configuration in
 our settings module::
 
     GUARDIAN_GET_INIT_ANONYMOUS_USER = 'myapp.models.get_anonymous_user_instance'
+
+
+If the field type of the our custom User class is not a CharField, we need to 
+override the default value that the anonymous user is instantiated with. We can override 
+this value by setting :setting:`ANONYMOUS_DEFAULT_USERNAME_VALUE` to a proper non-string 
+default value, in our settings module::
+
+    ANONYMOUS_DEFAULT_USERNAME_VALUE = <non-string object value>

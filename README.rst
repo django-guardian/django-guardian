@@ -2,8 +2,8 @@
 django-guardian
 ===============
 
-.. image:: https://travis-ci.org/django-guardian/django-guardian.svg?branch=devel
-  :target: https://travis-ci.org/django-guardian/django-guardian
+.. image:: https://github.com/django-guardian/django-guardian/workflows/Tests/badge.svg?branch=devel
+  :target: https://github.com/django-guardian/django-guardian/actions/workflows/tests.yml
 
 .. image:: https://img.shields.io/pypi/v/django-guardian.svg
     :target: https://pypi.python.org/pypi/django-guardian
@@ -22,10 +22,10 @@ Online documentation is available at https://django-guardian.readthedocs.io/.
 Requirements
 ------------
 
-* Python 3.5+
-* A supported version of Django (currently 2.2+)
+* Python 3.8+
+* A supported version of Django (currently 3.2+)
 
-Travis CI tests on Django version 2.2, 3.0, 3.1, and master.
+GitHub Actions run tests against Django versions 3.2, 4.1, 4.2, 5.0 and main.
 
 Installation
 ------------
@@ -76,8 +76,8 @@ Lets start really quickly:
       >>> admins = Group.objects.create(name='admins')
       >>> jack.has_perm('change_group', admins)
       False
-      >>> from guardian.models import UserObjectPermission
-      >>> UserObjectPermission.objects.assign_perm('change_group', jack, obj=admins)
+      >>> from guardian.shortcuts import assign_perm
+      >>> assign_perm('change_group', jack, obj=admins)
       <UserObjectPermission: admins | jack | change_group>
       >>> jack.has_perm('change_group', admins)
       True
