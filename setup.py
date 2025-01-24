@@ -1,9 +1,8 @@
-import os
 from setuptools import setup
-from extras import RunFlakesCommand
 
+import os
 
-version = '2.4.1'
+version = '3.0.0.rc1'
 
 readme_file = os.path.join(os.path.dirname(__file__), 'README.rst')
 with open(readme_file) as f:
@@ -50,6 +49,5 @@ setup(
                  'Programming Language :: Python :: 3.11',
                  'Programming Language :: Python :: 3.12',
                  ],
-    test_suite='tests.main',
-    cmdclass={'flakes': RunFlakesCommand},
+    test_suite='tests.main'
 )
