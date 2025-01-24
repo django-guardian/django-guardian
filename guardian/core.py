@@ -81,13 +81,11 @@ class ObjectPermissionChecker:
         model = get_group_obj_perms_model(obj)
         related_name = model.permission.field.related_query_name()
 
-        # generate filters
         if self.user:
             group_filters = {f'{related_name}__group__in': self.user.groups.all()}
         else:
             group_filters = {f'{related_name}__group': self.group}
 
-        # check for generic model
         if model.objects.is_generic():
             group_filters.update({
                 '%s__content_type' % related_name: ctype,
@@ -103,10 +101,8 @@ class ObjectPermissionChecker:
         model = get_user_obj_perms_model(obj)
         related_name = model.permission.field.related_query_name()
 
-        # generate filters
         user_filters = {f'{related_name}__user': self.user}
 
-        # check for generic model
         if model.objects.is_generic():
             user_filters.update({
                 '%s__content_type' % related_name: ctype,
