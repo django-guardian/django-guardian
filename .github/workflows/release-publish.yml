@@ -1,6 +1,6 @@
 # Release the package on GitHub and publish it to PyPI.
 
-name: cd
+name: Release and Publish
 
 on:
   workflow_dispatch:
