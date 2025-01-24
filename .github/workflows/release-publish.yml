@@ -51,6 +51,18 @@ jobs:
             echo "is_candidate=true" >> $GITHUB_OUTPUT
           fi
 
+      - name: Validate candidate branch
+        id: candidate-branch
+        run: |
+          if [ "${{ steps.candidate.outputs.is_candidate }}" = "true" ] && [ "${{ github.ref_name }}" = "main" ]; then
+            echo "Error: Candidate versions must NOT be released from 'main' branch"
+            exit 1
+          fi
+          if [ "${{ steps.candidate.outputs.is_candidate }}" != "true" ] && [ "${{ github.ref_name }}" != "main" ]; then
+            echo "Error: Non-candidate versions must be released from 'main' branch only"
+            exit 1
+          fi
+
       - name: Verify given tag matches package version
         # Since we trigger releases manually, this cross-checks the user's intention
         id: verify-tag
