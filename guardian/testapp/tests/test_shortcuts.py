@@ -1,6 +1,7 @@
 import warnings
 
 import django
+from unittest import mock
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
@@ -690,6 +691,17 @@ class GetGroupsWithPerms(TestCase):
         self.assertEqual(result.keys(), expected.keys())
         for key, perms in result.items():
             self.assertEqual(set(perms), set(expected[key]))
+
+    def test_custom_group_model(self):
+        with mock.patch("guardian.conf.settings.GROUP_OBJ_PERMS_MODEL", "testapp.GenericGroupObjectPermission"):
+            result = get_groups_with_perms(self.obj1)
+            self.assertEqual(len(result), 0)
+
+    def test_custom_group_model_attach_perms(self):
+        with mock.patch("guardian.conf.settings.GROUP_OBJ_PERMS_MODEL", "testapp.GenericGroupObjectPermission"):
+            result = get_groups_with_perms(self.obj1, attach_perms=True)
+            expected = {}
+            self.assertEqual(expected, result)
 
 
 class GetObjectsForUser(TestCase):
