@@ -1,14 +1,8 @@
-# Release the package on GitHub and publish it to PyPI. Runs on merge of a pull request into main or when manually
-# triggered.
+# Release the package on GitHub and publish it to PyPI.
 
 name: cd
 
 on:
-  pull_request:
-    types: [closed]
-    branches:
-      - main
-
   workflow_dispatch:
     inputs:
       ref:
@@ -16,44 +10,59 @@ on:
         type: string
         required: true
       tag:
-        description: "Tag for release"
+        description: "Tag  to apply"
         type: string
         required: true
 
 jobs:
   release:
-    if: "${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}"
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
-        if: ${{ github.event_name != 'workflow_dispatch' }}
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.ref }}
 
       - name: Install python
-        if: ${{ github.event_name != 'workflow_dispatch' }}
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Get package version
-        if: ${{ github.event_name != 'workflow_dispatch' }}
         id: version
-        run: echo "::set-output name=package_version::$(python setup.py --version)"
+        run: |
+          VERSION=$(python setup.py --version)
+          echo "package_version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Create release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, no need to create your own.
+      - name: Determine if version is a candidate (prerelease)
+        id: candidate
+        run: |
+          VERSION="${{ steps.version.outputs.package_version }}"
+          # Test against the regex
+          if [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "is_candidate=false" >> $GITHUB_OUTPUT
+          else
+            echo "is_candidate=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Verify given tag matches package version
+        # Since we trigger releases manually, this cross-checks the user's intention
+        id: verify-tag
+        run: |
+          if [ "${{ steps.version.outputs.package_version }}" != "${{ inputs.tag }}" ]; then
+            echo "::error ::Provided tag ('${{ inputs.tag }}') does not match the package version ('${{ steps.version.outputs.package_version }}')."
+            exit 1
+          fi
+
+      - uses: ncipollo/release-action@v1
         with:
-          commitish: ${{ inputs.ref }}
-          tag_name: ${{ inputs.tag || steps.version.outputs.package_version }}
-          release_name: ${{ github.event.pull_request.title }}
-          body: ${{ github.event.pull_request.body }}
           draft: false
-          prerelease: false
-
+          generateReleaseNotes: true
+          commit: ${{ inputs.ref }}
+          tag: ${{ inputs.tag || steps.version.outputs.package_version }}
+          prerelease: ${{ steps.candidate.outputs.is_candidate }}
 
   publish:
     runs-on: ubuntu-latest
@@ -67,7 +76,7 @@ jobs:
       - name: Install python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: Install `build`
         run: python -m pip install --upgrade build
@@ -76,4 +85,4 @@ jobs:
         run: python -m build
 
       - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.8.10
+        uses: pypa/gh-action-pypi-publish@v1.12.4
