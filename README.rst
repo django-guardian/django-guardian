@@ -76,8 +76,8 @@ Lets start really quickly:
       >>> admins = Group.objects.create(name='admins')
       >>> jack.has_perm('change_group', admins)
       False
-      >>> from guardian.models import UserObjectPermission
-      >>> UserObjectPermission.objects.assign_perm('change_group', jack, obj=admins)
+      >>> from guardian.shortcuts import assign_perm
+      >>> assign_perm('change_group', jack, obj=admins)
       <UserObjectPermission: admins | jack | change_group>
       >>> jack.has_perm('change_group', admins)
       True
