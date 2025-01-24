@@ -6,6 +6,11 @@ Unreleased
 * Drop support for Django 2.2, 3.0, 3.1 & 4.0
 * Drop support for Python 3.5, 3.6 & 3.7
 
+Release 2.4.1 (TBC)
+============================
+
+* Add GitHub Actions workflow publishing package to PyPI
+
 Release 2.4.0 (May 24, 2021)
 ============================
 
