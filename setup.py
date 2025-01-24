@@ -2,7 +2,7 @@ from setuptools import setup
 
 import os
 
-version = '3.0.0.rc1'
+version = '3.0.0rc1'
 
 readme_file = os.path.join(os.path.dirname(__file__), 'README.rst')
 with open(readme_file) as f:
