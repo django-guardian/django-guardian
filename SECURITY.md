@@ -12,4 +12,4 @@ Instead, please prepare a demo and description of the explout and visit the [sec
 
 ## How we manage vulnerabilities
 
-Th emaintainers will review the vulnerability, and use GitHub's security settings to publish an advisory whilst issuing a release to fix the problem.
+The maintainers will review the vulnerability, and use GitHub's security settings to publish an advisory whilst issuing a release to fix the problem.
