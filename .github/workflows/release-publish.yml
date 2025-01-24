@@ -30,6 +30,10 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install `setuptools`
+        # TODO Remove this legacy step by shifting to pyproject.toml and using a better packaging tool like uv
+        run: python -m pip install --upgrade setuptools
+
       - name: Get package version
         id: version
         run: |
