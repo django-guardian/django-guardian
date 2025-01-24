@@ -67,6 +67,7 @@ jobs:
           commit: ${{ inputs.ref }}
           tag: ${{ inputs.tag || steps.version.outputs.package_version }}
           prerelease: ${{ steps.candidate.outputs.is_candidate }}
+          skipIfReleaseExists: true
 
   publish:
     runs-on: ubuntu-latest
