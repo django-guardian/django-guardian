@@ -30,6 +30,10 @@ if MONKEY_PATCH_GROUP not in [True, False]:
     raise ImproperlyConfigured("GUARDIAN_MONKEY_PATCH_GROUP must be either True or False")
 setattr(settings, "GUARDIAN_MONKEY_PATCH_GROUP", MONKEY_PATCH_GROUP)
 
+# check for deprecated monkey patch setting
+if hasattr(settings, 'GUARDIAN_MONKEY_PATCH'):
+    raise ImproperlyConfigured("GUARDIAN_MONKEY_PATCH is deprecated. Use GUARDIAN_MONKEY_PATCH_USER instead.")
+
 GET_CONTENT_TYPE = getattr(settings, 'GUARDIAN_GET_CONTENT_TYPE', 'guardian.ctypes.get_default_content_type')
 
 AUTO_PREFETCH = getattr(settings, 'GUARDIAN_AUTO_PREFETCH', False)
