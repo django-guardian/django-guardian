@@ -68,7 +68,9 @@ LOGIN_REDIRECT_URL = '/'
 TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 
 AUTHENTICATION_BACKENDS = (
-    'django.contrib.auth.backends.ModelBackend',
+    # This custom backend is needed as long as https://github.com/django/django/commit/d4e4520efb553d2bfcc68ac8cf007c0c402d4845
+    # is not added to a Django release, after that we can just enable it for the relevant versions (>5.1.2).
+    'core.backends.CustomModelBackend',
     'guardian.backends.ObjectPermissionBackend',
 )
 
@@ -81,6 +83,10 @@ PASSWORD_HASHERS = (
 AUTH_USER_MODEL = 'core.CustomUser'
 GUARDIAN_USER_OBJ_PERMS_MODEL = 'articles.BigUserObjectPermission'
 GUARDIAN_GROUP_OBJ_PERMS_MODEL = 'articles.BigGroupObjectPermission'
+
+GUARDIAN_MONKEY_PATCH_USER = False
+GUARDIAN_MONKEY_PATCH_GROUP = False
+
 
 TEMPLATES = [
     {

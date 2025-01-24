@@ -20,7 +20,19 @@ RAISE_404 = getattr(settings, 'GUARDIAN_RAISE_404', False)
 GET_INIT_ANONYMOUS_USER = getattr(settings, 'GUARDIAN_GET_INIT_ANONYMOUS_USER',
                                   'guardian.management.get_init_anonymous_user')
 
-MONKEY_PATCH = getattr(settings, 'GUARDIAN_MONKEY_PATCH', True)
+MONKEY_PATCH_USER = getattr(settings, "GUARDIAN_MONKEY_PATCH_USER", True)
+if MONKEY_PATCH_USER not in [True, False]:
+    raise ImproperlyConfigured("GUARDIAN_MONKEY_PATCH_USER must be either True or False")
+setattr(settings, "GUARDIAN_MONKEY_PATCH_USER", MONKEY_PATCH_USER)
+
+MONKEY_PATCH_GROUP = getattr(settings, "GUARDIAN_MONKEY_PATCH_GROUP", True)
+if MONKEY_PATCH_GROUP not in [True, False]:
+    raise ImproperlyConfigured("GUARDIAN_MONKEY_PATCH_GROUP must be either True or False")
+setattr(settings, "GUARDIAN_MONKEY_PATCH_GROUP", MONKEY_PATCH_GROUP)
+
+# check for deprecated monkey patch setting
+if hasattr(settings, 'GUARDIAN_MONKEY_PATCH'):
+    raise ImproperlyConfigured("GUARDIAN_MONKEY_PATCH is deprecated. Use GUARDIAN_MONKEY_PATCH_USER instead.")
 
 GET_CONTENT_TYPE = getattr(settings, 'GUARDIAN_GET_CONTENT_TYPE', 'guardian.ctypes.get_default_content_type')
 

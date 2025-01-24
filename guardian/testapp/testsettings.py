@@ -10,7 +10,7 @@ DEBUG = False
 ANONYMOUS_USER_NAME = "AnonymousUser"
 
 AUTH_USER_MODEL = "testapp.CustomUser"
-GUARDIAN_MONKEY_PATCH = False
+GUARDIAN_MONKEY_PATCH_USER = False
 
 INSTALLED_APPS = (
     'django.contrib.auth',

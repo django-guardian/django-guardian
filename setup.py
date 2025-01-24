@@ -12,7 +12,7 @@ setup(
     name='django-guardian',
     version=version,
     python_requires='>=3.8',
-    url='http://github.com/django-guardian/django-guardian',
+    url='https://github.com/django-guardian/django-guardian',
     author='Lukasz Balcerzak',
     author_email='lukaszbalcerzak@gmail.com',
     download_url='https://github.com/django-guardian/django-guardian/tags',

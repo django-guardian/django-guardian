@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
 from django.test import TestCase
 from django.test.client import RequestFactory
 
@@ -8,6 +7,8 @@ from guardian.shortcuts import assign_perm
 from articles.models import Article
 from articles.views import (ArticleCreateView, ArticleDeleteView, ArticleDetailView,
                             ArticleListView, ArticleUpdateView)
+
+from core.models import CustomGroup
 
 
 class ViewUserTestCase(TestCase):
@@ -109,7 +110,7 @@ class ViewGroupTestCase(TestCase):
         self.factory = RequestFactory()
         self.user = get_user_model().objects.create_user(
             'joe', 'joe@doe.com', 'doe')
-        self.group = Group.objects.create(name='test-group')
+        self.group = CustomGroup.objects.create(name='test-group')
         self.user.groups.add(self.group)
         self.client.login(username='joe', password='doe')
 

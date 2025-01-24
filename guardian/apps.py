@@ -1,6 +1,7 @@
-from . import monkey_patch_user, monkey_patch_group
 from django.apps import AppConfig
-from guardian.conf import settings
+from django.conf import settings
+
+from . import monkey_patch_user, monkey_patch_group
 
 
 class GuardianConfig(AppConfig):
@@ -8,8 +9,7 @@ class GuardianConfig(AppConfig):
     default_auto_field = 'django.db.models.AutoField'
 
     def ready(self):
-        # Must patch Group here since generic
-        # group permission model is definable
-        monkey_patch_group()
-        if settings.MONKEY_PATCH:
+        if settings.GUARDIAN_MONKEY_PATCH_GROUP:
+            monkey_patch_group()
+        if settings.GUARDIAN_MONKEY_PATCH_USER:
             monkey_patch_user()

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% load guardian_tags %}
+
+{% block content %}
+<div class="row">
+    <div class="span12">
+        <h1>{% if object %}
+            <a href="{{ object.get_absolute_url }}" name="{{ object.id }}">Back to "{{ object.title }}"</a>
+        {% else %}
+            <a href="{% url "articles:list" %}">Back to article list</a>
+        {% endif %}</h1>
+        <form method="post">{% csrf_token %} {{ form.as_p }}
+            <input type="submit" value="Save" class="btn btn-primary" />
+        </form>
+    </div>
+</div>
+{% endblock %}

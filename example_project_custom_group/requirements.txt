@@ -1,0 +1,5 @@
+Django~=3.2.20
+django-environ==0.10.0
+django-rosetta==0.9.9
+microsofttranslator==0.8
+polib==1.2.0

@@ -9,10 +9,11 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, path
 from django.utils.translation import gettext_lazy as _
 from django.utils.translation import gettext
+
 from guardian.forms import GroupObjectPermissionsForm, UserObjectPermissionsForm
-from django.contrib.auth.models import Group
 from guardian.shortcuts import (get_group_perms, get_groups_with_perms, get_perms_for_model, get_user_perms,
                                 get_users_with_perms)
+from guardian.utils import get_group_obj_perms_model
 
 
 class AdminUserObjectPermissionsForm(UserObjectPermissionsForm):
@@ -65,10 +66,8 @@ class GuardedModelAdminMixin:
             filters = {self.user_owned_objects_field: request.user}
             qs = qs.filter(**filters)
         if self.user_can_access_owned_by_group_objects_only:
-            User = get_user_model()
-            user_rel_name = User.groups.field.related_query_name()
-            qs_key = '{}__{}'.format(self.group_owned_objects_field, user_rel_name)
-            filters = {qs_key: request.user}
+            qs_key = f'{self.group_owned_objects_field}__in'
+            filters = {qs_key: request.user.groups.all()}
             qs = qs.filter(**filters)
         return qs
 
@@ -299,7 +298,8 @@ class GuardedModelAdminMixin:
             post_url = reverse('admin:index', current_app=self.admin_site.name)
             return redirect(post_url)
 
-        group = get_object_or_404(Group, id=group_id)
+        GroupModel = get_group_obj_perms_model().group.field.related_model
+        group = get_object_or_404(GroupModel, id=group_id)
         obj = get_object_or_404(self.get_queryset(request), pk=object_pk)
         form_class = self.get_obj_perms_manage_group_form(request)
         form = form_class(group, obj, request.POST or None)
@@ -466,9 +466,10 @@ class GroupManage(forms.Form):
         Returns ``Group`` instance based on the given group name.
         """
         name = self.cleaned_data['group']
+        GroupModel = get_group_obj_perms_model().group.field.related_model
         try:
-            group = Group.objects.get(name=name)
+            group = GroupModel.objects.get(name=name)
             return group
-        except Group.DoesNotExist:
+        except GroupModel.DoesNotExist:
             raise forms.ValidationError(
                 self.fields['group'].error_messages['does_not_exist'])

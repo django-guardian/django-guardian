@@ -8,7 +8,7 @@ from itertools import groupby
 
 from django.apps import apps
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.db.models import Count, Q, QuerySet
@@ -26,12 +26,11 @@ from django.db.models import (
     SmallIntegerField,
     UUIDField,
 )
+from guardian.models import GroupObjectPermission
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
 from guardian.exceptions import MixedContentTypeError, WrongAppError, MultipleIdentityAndObjectError
 from guardian.utils import get_anonymous_user, get_group_obj_perms_model, get_identity, get_user_obj_perms_model
-GroupObjectPermission = get_group_obj_perms_model()
-UserObjectPermission = get_user_obj_perms_model()
 
 
 @lru_cache(None)
@@ -386,7 +385,8 @@ def get_groups_with_perms(obj, attach_perms=False):
             }
         else:
             group_filters = {'%s__content_object' % group_rel_name: obj}
-        return Group.objects.filter(**group_filters).distinct()
+        group_rel_model = group_model.group.field.related_model
+        return group_rel_model.objects.filter(**group_filters).distinct()
     else:
         group_perms_mapping = defaultdict(list)
         groups_with_perms = get_groups_with_perms(obj)
@@ -601,7 +601,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
         group_model = get_group_obj_perms_model(queryset.model)
         group_filters = {
             'permission__content_type': ctype,
-            'group__%s' % get_user_model().groups.field.related_query_name(): user,
+            'group__in': user.groups.all(),
         }
         if len(codenames):
             group_filters.update({
