@@ -1,11 +1,10 @@
-# Assign object permissions {#assign}
+# Assign object permissions 
 
-Assigning object permissions should be very simple once permissions are
-created for models.
+Assigning object permissions is simple once permissions are created for models.
 
 ## Prepare permissions
 
-Let\'s assume we have following model:
+Take the below example model:
 
 ``` python
 class Task(models.Model):
@@ -15,9 +14,9 @@ class Task(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 ```
 
-\... and we want to be able to set custom permission *assign_task*. We
-let Django know to do so by adding `permissions` tuple to `Meta` class
-and our final model could look like:
+... and we want to be able to set custom permission *assign_task*.
+We can let Django know about our custom permissions by adding a `permissions` 
+tuple to `Meta` class and our final model could look like:
 
 ``` python
 class Task(models.Model):
@@ -35,34 +34,27 @@ class Task(models.Model):
 After we call management commands `makemigrations` and `migrate` our
 *assign_task* permission would be added to default set of permissions.
 
-::: note
-::: title
-Note
-:::
+!!! note
 
-By default, Django adds 4 permissions for each registered model:
+    By default, Django adds 4 permissions for each registered model:
 
--   *add_modelname*
--   *change_modelname*
--   *delete_modelname*
--   *view_modelname*
+    -   *add_modelname*
+    -   *change_modelname*
+    -   *delete_modelname*
+    -   *view_modelname*
 
-(where *modelname* is a simplified name of our model\'s class). See
-<https://docs.djangoproject.com/en/stable/topics/auth/default/#default-permissions>
-for more detail.
-:::
+    (where *modelname* is a simplified name of our model's class). See
+    [https://docs.djangoproject.com/en/stable/topics/auth/default/#default-permissions](https://docs.djangoproject.com/en/stable/topics/auth/default/#default-permissions)
+    for more detail.
 
-There is nothing new here since creation of permissions is [handled by
-django](https://docs.djangoproject.com/en/stable/topics/auth/). Now we
-can move to
-`assigning object permissions <assign-obj-perms>`{.interpreted-text
-role="ref"}.
+    There is nothing new here since creation of permissions is [handled by
+    django](https://docs.djangoproject.com/en/stable/topics/auth/). Now we
+    can move to `assigning object permissions <assign-obj-perms>`
 
-## Assign object permissions {#assign-obj-perms}
+## Assign object permissions 
 
-We can assign permissions for any user/group and object pairs using
-same, convenient function:
-`guardian.shortcuts.assign_perm`{.interpreted-text role="func"}.
+We can assign permissions for any user or group and object pairs
+using the convenient function: `guardian.shortcuts.assign_perm()`
 
 ### For user
 
@@ -88,8 +80,8 @@ True
 
 ### For group
 
-This case doesn\'t really differ from user permissions assignment. The
-only difference is we have to pass `Group` instance rather than `User`.
+This case doesn't really differ from user permissions assignment. 
+The only difference is we have to pass `Group` instance rather than `User`.
 
 ``` python
 >>> from django.contrib.auth.models import Group

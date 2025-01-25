@@ -1,17 +1,25 @@
 # django-guardian - per object permissions for Django
 
-[![image](https://github.com/django-guardian/django-guardian/workflows/Tests/badge.svg?branch=devel)](https://github.com/django-guardian/django-guardian/actions/workflows/tests.yml)
-
 `django-guardian` is an implementation of object permissions for [Django](http://www.djangoproject.com/) providing an extra *authentication backend*.
 
-## Features
+<div style="display: flex;">
+    <div style="flex: 1;">
+        <h2>Features</h2>
+        <ul>
+            <li>Object permissions for <a href="https://www.djangoproject.com/">Django</a></li>
+            <li>AnonymousUser support</li>
+            <li>High level API</li>
+            <li>Heavily tested</li>
+            <li>Django's admin integration</li>
+            <li>Decorators</li>
+        </ul>
+    </div>
+    <div style="flex: 1; display: flex; justify-content: center; align-items: center;">
+        <img alt="A black knights shield" style="max-width: 60%; min-width: 150px; margin-top: 10%;" src="./assets/logo.svg"/>
+    </div>
+</div>
 
--   Object permissions for [Django](http://www.djangoproject.com/)
--   AnonymousUser support
--   High level API
--   Heavily tested
--   Django's admin integration
--   Decorators
+`django-guardian` supports Python 3.9+ and Django 4.2+.
 
 ## Incoming
 

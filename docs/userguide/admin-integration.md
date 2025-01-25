@@ -1,19 +1,18 @@
 # Admin integration
 
-Django comes with excellent and widely used *Admin* application.
-Basically, it provides content management for Django applications. User
-with access to admin panel can manage users, groups, permissions and
+Django comes with an excellent and widely used *Admin* application.
+Basically, it provides content management for Django applications. 
+Users with access to admin panel can manage users, groups, permissions and
 other data provided by system.
 
 `django-guardian` comes with simple object permissions management
-integration for Django\'s admin application.
+integration for Django's admin application.
 
 ## Usage
 
-It is very easy to use admin integration. Simply use
-`GuardedModelAdmin`{.interpreted-text role="admin"} instead of standard
+It is easy to use admin integration. Simply use `GuardedModelAdmin` instead of standard
 `django.contrib.admin.ModelAdmin` class for registering models within
-the admin. In example, look at following model:
+the admin. In example, look at the following model:
 
 ``` python
 from django.db import models
@@ -83,11 +82,5 @@ And thats it. We can now navigate to **change** post page and just next
 to the *history* link we can click *Object permissions* button to manage
 row level permissions.
 
-::: note
-::: title
-Note
-:::
-
-Example above is shipped with `django-guardian` package with the example
-project.
-:::
+!!! note 
+    Example above is shipped with `django-guardian` package with the example project.

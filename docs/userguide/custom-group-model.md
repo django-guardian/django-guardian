@@ -1,19 +1,13 @@
-::: {#custom-group-model}
-Custom Group model =================
-:::
+# Custom Group Model
 
-::: versionadded
-2.6
-:::
+!!! note "Added in 2.6"
 
 Django does not provide the same ability to create a custom `auth.Group`
 model as the `AbstractUser` model and probably never will:
 <https://code.djangoproject.com/ticket/29748>.
 
-In order to use guardian with a custom group model as it is done with a
-custom user model (see `custom-user-model`{.interpreted-text
-role="ref"}), a custom `GroupObjectPermission`{.interpreted-text
-role="model"} model can be used.
+To use guardian with a custom group model as it is done with a
+custom user model (see `custom-user-model`), a custom `GroupObjectPermission` model can be used.
 
 Here is an example of using a custom group model with guardian:
 
@@ -82,19 +76,14 @@ def return_all_group_obj_perms():
     return GroupObjectPermission.objects.all()
 ```
 
-::: important
-::: title
-Important
-:::
+!!! danger "Important"
 
-When using an custom `GroupObjectPermission`{.interpreted-text
-role="model"} model, do not import the
-`GroupObjectPermission`{.interpreted-text role="model"} model directly
-in your code, always use the `get_group_obj_perms_model` function.
-:::
+    When using an custom `GroupObjectPermission` model, do not import the
+    `GroupObjectPermission` model directly
+    in your code, always use the `get_group_obj_perms_model` function.
 
-By default django-guardian monkey patches the group model to add some
-needed functionality. This can result in errors if guardian is imported
+By default, django-guardian monkey patches the group model to add some necessary functionality. 
+This can result in errors if guardian is imported
 into the `models.py` of the same app where the custom group model lives.
 
 To fix this, it is recommended to add the setting

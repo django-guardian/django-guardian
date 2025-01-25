@@ -1,17 +1,16 @@
-# Performance tuning {#performance}
+# Performance tuning 
 
 It is important to remember that by default `django-guardian` uses
 generic foreign keys to retain relation with any Django model. For most
-cases, it\'s probably good enough, however if we have a lot of queries
+cases, it's probably good enough, however if we have a lot of queries
 being spanned and our database seems to be choking it might be a good
-choice to use *direct* foreign keys. Let\'s start with quick overview of
+choice to use *direct* foreign keys. Let's start with quick overview of
 how generic solution work and then we will move on to the tuning part.
 
 ## Default, generic solution
 
-`django-guardian` comes with two models:
-`UserObjectPermission`{.interpreted-text role="model"} and
-`GroupObjectPermission`{.interpreted-text role="model"}. They both have
+`django-guardian` comes with two models: 
+`UserObjectPermission` and `GroupObjectPermission`. They both have
 same, generic way of pointing to other models:
 
 -   `content_type` field telling what table (model class) target
@@ -22,11 +21,10 @@ same, generic way of pointing to other models:
     simply a proxy that can retrieve proper model instance being
     targeted by two previous fields
 
-::: seealso
-<https://docs.djangoproject.com/en/stable/ref/contrib/contenttypes/#generic-relations>
-:::
+!!! info "See Also"
+    [Django generic relations](https://docs.djangoproject.com/en/stable/ref/contrib/contenttypes/#generic-relations)
 
-Let\'s consider following model:
+Let's consider following model:
 
 ``` python
 class Project(models.Model):
@@ -34,7 +32,7 @@ class Project(models.Model):
 ```
 
 In order to add a *change_project* permission for *joe* user we would
-use `api-shortcuts-assign`{.interpreted-text role="ref"} shortcut:
+use `api-shortcuts-assign` shortcut:
 
 ``` python
 >>> from guardian.shortcuts import assign_perm
@@ -44,7 +42,7 @@ use `api-shortcuts-assign`{.interpreted-text role="ref"} shortcut:
 ```
 
 What it really does is: create an instance of
-`UserObjectPermission`{.interpreted-text role="model"}. Something
+`UserObjectPermission`. Something
 similar to:
 
 ``` python
@@ -57,15 +55,13 @@ similar to:
 
 As there are no real foreign keys pointing at the target model, this
 solution might not be enough for all cases. For example, if we try to
-build an issues tracking service and we\'d like to be able to support
+build an issues tracking service and we'd like to be able to support
 thousands of users and their project/tickets, object level permission
 checks can be slow with this generic solution.
 
-## Direct foreign keys {#performance-direct-fk}
+## Direct foreign keys 
 
-::: versionadded
-1.1
-:::
+!!! note "Added in 1.1"
 
 In order to make our permission checks faster we can use direct foreign
 key solution. It actually is very simple to setup - we need to declare
@@ -86,19 +82,15 @@ class ProjectGroupObjectPermission(GroupObjectPermissionBase):
     content_object = models.ForeignKey(Project, on_delete=models.CASCADE)
 ```
 
-::: important
-::: title
-Important
-:::
+!!! danger "Important"
 
-Name of the `ForeignKey` field is important and it should be
-`content_object` as underlying queries depends on it.
-:::
+    Name of the `ForeignKey` field is important and it should be
+    `content_object` as underlying queries depends on it.
 
 From now on, `guardian` will figure out that `Project` model has direct
 relation for user/group object permissions and will use those models. It
 is also possible to use only user or only group-based direct relation,
-however it is discouraged (it\'s not consistent and might be a quick
+however it is discouraged (it's not consistent and might be a quick
 road to hell from the maintenance point of view, especially).
 
 To temporarily disable the detection of this direct relation model, add
@@ -106,20 +98,13 @@ To temporarily disable the detection of this direct relation model, add
 to allow the ORM to create the tables for you and for you to migrate
 data from the generic model tables before using the direct models.
 
-::: note
-::: title
-Note
-:::
+!!! note
+    By defining direct relation models we can also tweak that object
+    permission model, i.e. by adding some fields.
 
-By defining direct relation models we can also tweak that object
-permission model, i.e. by adding some fields.
-:::
+## Prefetching permissions
 
-## Prefetching permissions {#performance-prefetch}
-
-::: versionadded
-1.4.3
-:::
+!!! note "Added in 1.4.3"
 
 Naively looping through objects and checking permissions on each one
 using `has_perms` results in a permissions lookup in the database for
