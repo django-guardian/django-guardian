@@ -1,0 +1,32 @@
+site_name: Django Guardian
+site_description: django-guardian - per object permissions for Django - Django Guardian
+site_url: !ENV READTHEDOCS_CANONICAL_URL
+repo_url: https://github.com/django-guardian/django-guardian
+edit_uri: /blob/main/docs/
+plugins:
+  - privacy:
+  - search:
+  - mkdocstrings
+theme:
+  name: material
+#  name: readthedocs
+  # https://squidfunk.github.io/mkdocs-material/customization/
+  custom_dir: docs/overrides
+extra_javascript:
+    - javascript/readthedocs.js
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - API:
+      - Admin: api/admin.md
+      - Backends: api/backends.md
+      - Core: api/core.md
+      - Decorators: api/decorators.md
+      - Forms: api/forms.md
+      - Management Commands: api/management.md
+      - Managers: api/managers.md
+      - Mixins: api/mixins.md
+      - Models: api/models.md
+      - Shortcuts: api/shortcuts.md
+      - Template Tags: api/templatetags.md
+      - Utilities: api/utils.md

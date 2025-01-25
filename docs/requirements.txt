@@ -1,0 +1,5 @@
+# https://docs.readthedocs.com/platform/stable/guides/reproducible-builds.html
+mkdocs-material==9.5.50
+mkdocs-material-extensions==1.3.1
+mkdocstrings==0.27.0
+mkdocstrings-python==1.13.0
