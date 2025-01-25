@@ -14,9 +14,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
-        django: ["3.2.25", "4.1.13", "4.2.16", "5.0.9", "main"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        django: ["3.2.25", "4.1.13", "4.2.16", "5.0.9", "5.1.5", "main"]
         exclude:
+          - python-version: "3.13"
+            django: "5.0.9"
+          - python-version: "3.13"
+            django: "4.2.16"
+          - python-version: "3.13"
+            django: "4.1.13"
+          - python-version: "3.13"
+            django: "3.2.25"
           - python-version: "3.12"
             django: "4.1.13"
           - python-version: "3.12"
