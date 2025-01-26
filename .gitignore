@@ -38,3 +38,7 @@ example_project_custom_group/conf/*.py
 
 # Documentation
 site*/
+
+# Common IDEs
+.idea*
+.vscode*
