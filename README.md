@@ -104,3 +104,15 @@ For example:
 
     admin.site.register(Author, AuthorAdmin)
 ```
+
+## For Developers
+
+To develop on guardian, you need to install `uv`, which is the package manager we use. It's very good, [you can find it here](https://docs.astral.sh/uv/).
+
+Once you're set up with `uv`, you can do:
+
+```bash
+uv sync --all-groups
+```
+
+Which will install development dependencies.
