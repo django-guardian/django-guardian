@@ -6,7 +6,13 @@ edit_uri: /blob/main/docs/
 plugins:
   - privacy:
   - search:
-  - mkdocstrings
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_root_heading: true
+            show_root_full_path: false
 theme:
   features:
     - content.code.copy
@@ -64,3 +70,6 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.highlight:
   - pymdownx.superfences
+
+watch:
+  - guardian
