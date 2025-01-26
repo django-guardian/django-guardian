@@ -1,3 +1,8 @@
+---
+title: Group Model
+description: Using a custom group model with django-guardian.
+---
+
 # Custom Group Model
 
 !!! note "Added in 2.6"

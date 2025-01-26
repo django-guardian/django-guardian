@@ -1,4 +1,12 @@
+---
+title: Caveats
+description: Things to be aware of when using django-guardian.
+---
+
 # Caveats
+
+There are a few things to be aware of when using django-guardian to manage object permissions.
+If ignored, they can lead to unexpected behavior and potential security issues.
 
 ## Orphaned object permissions
 

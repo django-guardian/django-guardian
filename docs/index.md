@@ -1,3 +1,7 @@
+---
+description: django-guardian documentation. Per-object permissions for Django.
+---
+
 # django-guardian - per object permissions for Django
 
 `django-guardian` is an implementation of object permissions for [Django](http://www.djangoproject.com/) providing an extra *authentication backend*.

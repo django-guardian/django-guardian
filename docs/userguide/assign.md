@@ -1,6 +1,11 @@
-# Assign object permissions 
+---
+title: Object Permissions
+description: How to assign object permissions.
+---
 
-Assigning object permissions is simple once permissions are created for models.
+# Assigning Object Permissions 
+
+Django Guardian makes assigning object permissions simple once permissions are created for models.
 
 ## Prepare permissions
 

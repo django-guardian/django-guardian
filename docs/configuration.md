@@ -1,3 +1,8 @@
+---
+title: Configuration
+description: Configuration options and django settings for django-guardian.
+---
+
 # Configuration
 
 After [installation](./installation.md), we can prepare our project for object permissions handling.

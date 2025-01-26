@@ -1,3 +1,8 @@
+---
+title: Custom User Model
+description: Using a custom user model with django-guardian.
+---
+
 # Custom User model
 
 !!! note "Added in 1.1"

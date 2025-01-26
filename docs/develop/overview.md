@@ -1,29 +1,43 @@
-# Overview 
+---
+title: Contributing
+description: Frequently Asked Questions about how to contribute to the django-guardian.
+---
 
-This document contains the FAQs about the development process.
+# Contributing FAQ
 
-## Why devel is default branch?
+Django Guardian is an open-source project, and we welcome contributions from the community.
+However, since Guardian is a security-focused project, there are additional guidelines and rules 
+for contributors that may be a little different from other open-source projects.
 
-Since version 1.2 we try to make `master` in a production-ready state.
-It does NOT mean it is production ready, but it SHOULD be. In example,
-tests at `master` should always pass. Actually, whole tox suite should
-pass. And it's test coverage should be at 100% level.
+## Why is `devel` the default branch?
 
-`devel` branch, on the other hand, can break. It shouldn't but it is
-acceptable. As a user, you should NEVER use non-master branches at
-production. All the changes are pushed from `devel` to `master` before
-next release. It might happen more frequently.
+Since version 1.2 we make sure that trunk (i.e., `main`, `master`) is always in a production-ready state.
+This means that:
+1. The Guardian team tries to keep trunk in a state that it can be released.
+2. trunk test coverage is always at 100% (the whole tox suite should pass).
 
-## How to file a ticket/bug/feedback/feature request?
+We do not advise that you use trunk in production; production environments should always use a stable release.
+
+On the other hand, it is acceptable for the `devel` branch to *"break"*. 
+Client packages and teams should NEVER use non-stable release in production.
+
+## How to file a ticket?
+
+Have a bug, feature request, or question?
 
 Create a ticket in [The repo issue tracker](https://github.com/django-guardian/django-guardian/issues)
 
+If you would like to contribute, 
+it's important to make sure that your ideas are in line with the project goals before you start working.
+Describe your bug, feature request, or question with enough details and context to allow the team to understand your request.
+
 ## How do I get involved?
 
-You are cordially invited to contribute to Django Guardian! 
-
+You are cordially invited to contribute to the Django Guardian project!
 Django Guardian welcomes all types of contributions, from bug reports to, documentation. 
-Start by [forking the project on GitHub](https://github.com/django-guardian/django-guardian),
+
+Start by [filing a ticket](#how-to-file-a-ticket) in the issue tracker.
+After that, [fork the project on GitHub](https://github.com/django-guardian/django-guardian),
 create a separate branch, hack on it, publish changes at your fork and create a pull request.
 
 Here is the process in steps:
@@ -62,13 +76,14 @@ Here is the process in steps:
 
 ## Why was my issue/pull request closed?
 
-We usually put an explanation while we close issue or PR. It might be
-for various reasons, i.e., there was no reply for over a month after our
-last comment, there were no tests for the changes etc.
+We usually put an explanation while we close issue or PR. 
+It might be for various reasons 
+(e.g., there was no reply for an extended period of time after the last comment,
+or the issue is a duplicate).
 
-## How to do a new release?
+## How to create a new release?
 
-To enroll a new release you should perform the following task:
+To create a new release, you should perform the following task:
 
 -   Ensure file `CHANGES` reflects all important changes.
 -   Ensure file `CHANGES` includes a new version identifier and current release date.
@@ -83,22 +98,22 @@ To enroll a new release you should perform the following task:
 ## How do I update the documentation?
 
 Documentation is stored in `docs` folder.
-To update the documentation, you can edit the markdown files directly. 
+To update the documentation, you can edit the Markdown files directly. 
 If you need to add new pages, or view the documentation locally, you can use the following steps:
 
-Install the required packages:
+1. Install the required packages:
 
-```shell
-pip install -r docs/requirements.txt
-```
+    ```shell
+    pip install -r docs/requirements.txt
+    ```
 
-Run the documentation server:
+2. Run the documentation server:
 
-```shell
-mkdocs serve
-```
+    ```shell
+    mkdocs serve
+    ```
 
-The search functionality may act differently than how they will when deployed to ReadTheDocs.
-However, it is enough to get a sense of how the documentation will look.
-In addition, the version dropdown and flyout menu will not work 
-until the documentation is built and deployed to ReadTheDocs.
+The CLI will provide you a link to view the documentation running locally (usually `http://127.0.0.1:8000`).
+
+See the [ReadTheDocs' documentation on using MkDocs](https://docs.readthedocs.com/platform/stable/intro/mkdocs.html) 
+for more information.

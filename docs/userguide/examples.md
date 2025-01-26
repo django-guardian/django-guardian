@@ -1,4 +1,9 @@
-# Example project
+---
+title: Examples
+description: Examples on how to use django-guardian to manage object permissions.
+---
+
+# Example Projects
 
 Example project should be bundled with archive and be available at
 `example_project`. Before you can run it, some requirements have to be

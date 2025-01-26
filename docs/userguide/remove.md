@@ -1,4 +1,9 @@
-# Remove object permissions
+---
+title: Removing Object Permissions
+description: Removing object permissions from users and objects with django-guardian.
+---
+
+# Removing Object Permissions
 
 Removing object permissions is as easy as assigning them. Just instead
 of `guardian.shortcuts.assign_perm` we

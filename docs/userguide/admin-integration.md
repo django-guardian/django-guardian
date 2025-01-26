@@ -1,4 +1,9 @@
-# Admin integration
+---
+title: Admin 
+description: How to use django-guardian with Django's admin interface.
+---
+
+# Django Admin Integration
 
 Django comes with an excellent and widely used *Admin* application.
 Basically, it provides content management for Django applications. 

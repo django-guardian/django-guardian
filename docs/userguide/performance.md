@@ -1,4 +1,9 @@
-# Performance tuning 
+---
+title: Performance
+description: Performance implications and optimizations when using django-guardian.
+---
+
+# Performance Tuning 
 
 It is important to remember that by default `django-guardian` uses
 generic foreign keys to retain relation with any Django model. For most

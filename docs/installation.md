@@ -1,3 +1,8 @@
+---
+title: Install
+description: Getting started with django-guardian.
+---
+
 # Installation
 
 This application requires [Django](http://www.djangoproject.com/) 3.2 or higher.

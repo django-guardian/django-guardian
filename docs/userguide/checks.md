@@ -1,3 +1,8 @@
+---
+title: Checking
+description: How to check object-level permissions using django-guardian.
+---
+
 # Check object permissions
 
 Once we have `assigned some permissions <assign>` we can get into detail 
