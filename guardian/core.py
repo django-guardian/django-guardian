@@ -31,41 +31,38 @@ def _get_pks_model_and_ctype(objects):
 
 
 class ObjectPermissionChecker:
-    """
-    Generic object permissions checker class being the heart of
-    ``django-guardian``.
+    """Generic object permissions checker class being the heart of `django-guardian`.
 
-    .. note::
+    Note:
        Once checked for single object, permissions are stored and we don't hit
        database again if another check is called for this object. This is great
        for templates, views or other request based checks (assuming we don't
        have hundreds of permissions on a single object as we fetch all
        permissions for checked object).
 
-       On the other hand, if we call ``has_perm`` for perm1/object1, then we
-       change permission state and call ``has_perm`` again for same
+       On the other hand, if we call `has_perm` for perm1/object1, then we
+       change permission state and call `has_perm` again for same
        perm1/object1 on same instance of ObjectPermissionChecker we won't see a
        difference as permissions are already fetched and stored within cache
        dictionary.
     """
 
     def __init__(self, user_or_group=None):
-        """
-        Constructor for ObjectPermissionChecker.
+        """Constructor for ObjectPermissionChecker.
 
-        :param user_or_group: should be an ``User``, ``AnonymousUser`` or
-          ``Group`` instance
+        Parameters:
+            user_or_group (User, AnonymousUser, Group): The user or group to check permissions for.
         """
         self.user, self.group = get_identity(user_or_group)
         self._obj_perms_cache = {}
 
     def has_perm(self, perm, obj):
-        """
-        Checks if user/group has given permission for object.
+        """Checks if user/group has the specified permission for the given object.
 
-        :param perm: permission as string, may or may not contain app_label
-          prefix (if not prefixed, we grab app_label from ``obj``)
-        :param obj: Django model instance for which permission should be checked
+        Parameters:
+            perm (str): permission as string, may or may not contain app_label
+                prefix (if not prefixed, we grab app_label from `obj`)
+            obj (Model): Django model instance for which permission should be checked
 
         """
         if self.user and not self.user.is_active:
@@ -134,11 +131,15 @@ class ObjectPermissionChecker:
         return group_perms
 
     def get_perms(self, obj):
-        """
-        Returns list of ``codename``'s of all permissions for given ``obj``.
+        """Get a list of permissions for the given object.
 
-        :param obj: Django model instance for which permission should be checked
+        Get the list of permissions for the given object.
 
+        Parameters:
+            obj (Model): Django model instance for which permission should be checked.
+
+        Returns:
+            codenames (list): list of codenames for all permissions for given `obj`.
         """
         if self.user and not self.user.is_active:
             return []
@@ -168,18 +169,16 @@ class ObjectPermissionChecker:
         return self._obj_perms_cache[key]
 
     def get_local_cache_key(self, obj):
-        """
-        Returns cache key for ``_obj_perms_cache`` dict.
-        """
+        """Returns cache key for `_obj_perms_cache` dict.
+       """
         ctype = get_content_type(obj)
         return (ctype.id, force_str(obj.pk))
 
     def prefetch_perms(self, objects):
-        """
-        Prefetches the permissions for objects in ``objects`` and puts them in the cache.
+        """Prefetches the permissions for objects in `objects` and puts them in the cache.
 
-        :param objects: Iterable of Django model objects
-
+        Parameters:
+            objects (list[Model]): Iterable of Django model objects.
         """
         if self.user and not self.user.is_active:
             return []

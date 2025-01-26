@@ -1,3 +1,3 @@
 # Core
 
-::: guardian.core
+::: guardian.core.ObjectPermissionChecker

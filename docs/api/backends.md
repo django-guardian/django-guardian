@@ -1,3 +1,3 @@
 # Backends
 
-::: guardian.backends
+::: guardian.backends.ObjectPermissionBackend

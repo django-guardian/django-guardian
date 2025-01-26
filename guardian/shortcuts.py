@@ -36,59 +36,57 @@ from guardian.utils import get_anonymous_user, get_group_obj_perms_model, get_id
 @lru_cache(None)
 def _get_ct_cached(app_label, codename):
     """
-    Caches ``ContentType`` instances like its ``QuerySet`` does.
+    Caches `ContentType` instances like its `QuerySet` does.
     """
     return ContentType.objects.get(app_label=app_label,
                                                 permission__codename=codename)
 
 
 def assign_perm(perm, user_or_group, obj=None):
-    """
-    Assigns permission to user/group and object pair.
+    """Assigns permission to user/group and object pair.
 
-    :param perm: proper permission for given ``obj``, as string (in format:
-      ``app_label.codename`` or ``codename``) or ``Permission`` instance.
-      If ``obj`` is not given, must be in format ``app_label.codename`` or
-      ``Permission`` instance.
+    Parameters:
+        perm (str | Permission): permission to assign for the given `obj`,
+            in format: `app_label.codename` or `codename` or `Permission` instance.
+            If `obj` is not given, must be in format `app_label.codename` or `Permission` instance.
+        user_or_group (User | AnaonymousUser | Group | list | QuerySet):
+            instance of `User`, `AnonymousUser`, `Group`,
+            list of `User` or `Group`, or queryset of `User` or `Group`;
+            passing any other object would raise a`guardian.exceptions.NotUserNorGroup` exception
+        obj (Model | QuerySet): Django's `Model` instance or QuerySet or
+            a list of Django `Model` instances or `None` if assigning global permission.
+            *Default* is `None`.
 
-    :param user_or_group: instance of ``User``, ``AnonymousUser``, ``Group``,
-      list of ``User`` or ``Group``, or queryset of ``User`` or ``Group``;
-      passing any other object would raise
-      ``guardian.exceptions.NotUserNorGroup`` exception
+    Example:
+        ```shell
+        >>> from django.contrib.sites.models import Site
+        >>> from guardian.models import User
+        >>> from guardian.shortcuts import assign_perm
+        >>> site = Site.objects.get_current()
+        >>> user = User.objects.create(username='joe')
+        >>> assign_perm("change_site", user, site)
+        <UserObjectPermission: example.com | joe | change_site>
+        >>> user.has_perm("change_site", site)
+        True
 
-    :param obj: persisted Django's ``Model`` instance or QuerySet of Django
-      ``Model`` instances or list of Django ``Model`` instances or ``None``
-      if assigning global permission. Default is ``None``.
+        # or we can assign permission for group:
 
-    We can assign permission for ``Model`` instance for specific user:
+        >>> group = Group.objects.create(name='joe-group')
+        >>> user.groups.add(group)
+        >>> assign_perm("delete_site", group, site)
+        <GroupObjectPermission: example.com | joe-group | delete_site>
+        >>> user.has_perm("delete_site", site)
+        True
+        ```
 
-    >>> from django.contrib.sites.models import Site
-    >>> from guardian.models import User
-    >>> from guardian.shortcuts import assign_perm
-    >>> site = Site.objects.get_current()
-    >>> user = User.objects.create(username='joe')
-    >>> assign_perm("change_site", user, site)
-    <UserObjectPermission: example.com | joe | change_site>
-    >>> user.has_perm("change_site", site)
-    True
+    Note: Global permissions
+        This function may also be used to assign standard, *global* permissions if
+        `obj` parameter is omitted. Added Permission would be returned in that
 
-    ... or we can assign permission for group:
-
-    >>> group = Group.objects.create(name='joe-group')
-    >>> user.groups.add(group)
-    >>> assign_perm("delete_site", group, site)
-    <GroupObjectPermission: example.com | joe-group | delete_site>
-    >>> user.has_perm("delete_site", site)
-    True
-
-    **Global permissions**
-
-    This function may also be used to assign standard, *global* permissions if
-    ``obj`` parameter is omitted. Added Permission would be returned in that
-    case:
-
-    >>> assign_perm("sites.change_site", user)
-    <Permission: sites | site | Can change site>
+        ```shell
+        >>> assign_perm("sites.change_site", user)
+        <Permission: sites | site | Can change site>
+        ```
 
     """
     user, group = get_identity(user_or_group)
@@ -152,21 +150,15 @@ def assign(perm, user_or_group, obj=None):
 
 
 def remove_perm(perm, user_or_group=None, obj=None):
-    """
-    Removes permission from user/group and object pair.
+    """Removes permission from user/group and object pair.
 
-    :param perm: proper permission for given ``obj``, as string (in format:
-      ``app_label.codename`` or ``codename``). If ``obj`` is not given, must
-      be in format ``app_label.codename``.
-
-    :param user_or_group: instance of ``User``, ``AnonymousUser`` or ``Group``;
-      passing any other object would raise
-      ``guardian.exceptions.NotUserNorGroup`` exception
-
-    :param obj: persisted Django's ``Model`` instance or QuerySet of Django
-      ``Model`` instances or ``None`` if assigning global permission.
-      Default is ``None``.
-
+    Parameters:
+        perm (str): Permission for `obj`, in format `app_label.codename` or `codename`.
+            If `obj` is not given, must be in format `app_label.codename`.
+        user_or_group (User | AnonymousUser | Group): The user or group to remove the permission from.
+            passing any other object would raise`guardian.exceptions.NotUserNorGroup` exception
+        obj (Model | QuerySet | None): Django `Model` instance or QuerySet.
+            Use `None` if assigning global permission.
     """
     user, group = get_identity(user_or_group)
     if obj is None:
@@ -206,36 +198,45 @@ def remove_perm(perm, user_or_group=None, obj=None):
 
 
 def get_perms(user_or_group, obj):
-    """
-    Returns permissions for given user/group and object pair, as list of
-    strings.
+    """Gets the permissions for given user/group and object pair,
+
+    Returns:
+        permissions (list[str]): List of permissions for the given user/group and object pair.
     """
     check = ObjectPermissionChecker(user_or_group)
     return check.get_perms(obj)
 
 
 def get_user_perms(user, obj):
-    """
-    Returns permissions for given user and object pair, as list of
-    strings, only those assigned directly for the user.
+    """Get permissions for given a User-object pair.
+
+     Unlike `get_perms`, this function only returns permissions assigned directly to the user.
+
+    Returns:
+        permissions (list[str]): List of permissions for the given user and object pair.
     """
     check = ObjectPermissionChecker(user)
     return check.get_user_perms(obj)
 
 
 def get_group_perms(user_or_group, obj):
-    """
-    Returns permissions for given user/group and object pair, as list of
-    strings. It returns only those which are inferred through groups.
+    """Get permissions for a given group and object pair.
+
+    Unlike `get_perms`, this function only returns permissions assigned directly to the group.
+
+    Returns:
+        permissions (list[str]): List of permissions for the given group and object pair.
     """
     check = ObjectPermissionChecker(user_or_group)
     return check.get_group_perms(obj)
 
 
 def get_perms_for_model(cls):
-    """
-    Returns queryset of all Permission objects for the given class. It is
-    possible to pass Model as class or instance.
+    """Get all permissions for a given model class.
+
+    Returns:
+        permissions (QuerySet): QuerySet of all Permission objects for the given class.
+            It is possible to pass Model as class or instance.
     """
     if isinstance(cls, str):
         app_label, model_name = cls.split('.')
@@ -248,29 +249,19 @@ def get_perms_for_model(cls):
 
 def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
                          with_group_users=True, only_with_perms_in=None):
-    """
-    Returns queryset of all ``User`` objects with *any* object permissions for
-    the given ``obj``.
+    """Get all users with *any* object permissions for the given `obj`.
 
-    :param obj: persisted Django's ``Model`` instance
-
-    :param attach_perms: Default: ``False``. If set to ``True`` result would be
-      dictionary of ``User`` instances with permissions' codenames list as
-      values. This would fetch users eagerly!
-
-    :param with_superusers: Default: ``False``. If set to ``True`` result would
-      contain all superusers.
-
-    :param with_group_users: Default: ``True``. If set to ``False`` result would
-      **not** contain those users who have only group permissions for given
-      ``obj``.
-
-    :param only_with_perms_in: Default: ``None``. If set to an iterable of
-      permission strings then only users with those permissions would be
-      returned.
-
-    Example::
-
+    Parameters:
+        obj (Model): Instance of a Django `Model`.
+        attach_perms (bool): If `True`, return a dictionary of `User` instances
+            with the permissions' codename as a list of values.
+            This fetches users eagerly!
+        with_superusers (bool): Wether results should contain superusers.
+        with_group_users (bool): Whether results should contain users who
+            have only group permissions for given `obj`.
+        only_with_perms_in (list[str]): Only return users with these permissions.
+    Example:
+        ```shell
         >>> from django.contrib.flatpages.models import FlatPage
         >>> from django.contrib.auth.models import User
         >>> from guardian.shortcuts import assign_perm, get_users_with_perms
@@ -288,7 +279,7 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
         {<User: joe>: [u'change_flatpage'], <User: dan>: [u'delete_flatpage']}
         >>> get_users_with_perms(page, only_with_perms_in=['change_flatpage'])
         [<User: joe>]
-
+        ```
     """
     ctype = get_content_type(obj)
     if not attach_perms:
@@ -345,18 +336,19 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
 
 
 def get_groups_with_perms(obj, attach_perms=False):
-    """
-    Returns queryset of all ``Group`` objects with *any* object permissions for
-    the given ``obj``.
+    """Get all groups with *any* object permissions for the given `obj`.
 
-    :param obj: persisted Django's ``Model`` instance
+    Parameters:
+        obj (Model): persisted Django `Model` instance.
+        attach_perms (bool): Whether to return result as a dict of `Group` instances
+            with permissions' codenames list of values.
+            This would fetch groups eagerly!
 
-    :param attach_perms: Default: ``False``. If set to ``True`` result would be
-      dictionary of ``Group`` instances with permissions' codenames list as
-      values. This would fetch groups eagerly!
+    Returns:
+        groups (QuerySet): All `Group` objects with *any* object permissions for the given `obj`.
 
-    Example::
-
+    Example:
+        ```shell
         >>> from django.contrib.flatpages.models import FlatPage
         >>> from guardian.shortcuts import assign_perm, get_groups_with_perms
         >>> from guardian.models import Group
@@ -370,7 +362,7 @@ def get_groups_with_perms(obj, attach_perms=False):
         >>>
         >>> get_groups_with_perms(page, attach_perms=True)
         {<Group: admins>: [u'change_flatpage']}
-
+        ```
     """
     ctype = get_content_type(obj)
     group_model = get_group_obj_perms_model(obj)
@@ -403,40 +395,35 @@ def get_groups_with_perms(obj, attach_perms=False):
 
 def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=False,
                          with_superuser=True, accept_global_perms=True):
-    """
-    Returns queryset of objects for which a given ``user`` has *all*
-    permissions present at ``perms``.
+    """Get objects that a user has *all* the supplied permissions for.
 
-    :param user: ``User`` or ``AnonymousUser`` instance for which objects would
-      be returned.
-    :param perms: single permission string, or sequence of permission strings
-      which should be checked.
-      If ``klass`` parameter is not given, those should be full permission
-      names rather than only codenames (i.e. ``auth.change_user``). If more than
-      one permission is present within sequence, their content type **must** be
-      the same or ``MixedContentTypeError`` exception would be raised.
-    :param klass: may be a Model, Manager or QuerySet object. If not given
-      this parameter would be computed based on given ``params``.
-    :param use_groups: if ``False``, wouldn't check user's groups object
-      permissions. Default is ``True``.
-    :param any_perm: if True, any of permission in sequence is accepted. Default is ``False``.
-    :param with_superuser: if ``True`` and if ``user.is_superuser`` is set,
-      returns the entire queryset. Otherwise will only return objects the user
-      has explicit permissions. This must be ``True`` for the accept_global_perms
-      parameter to have any affect. Default is ``True``.
-    :param accept_global_perms: if ``True`` takes global permissions into account.
-      Object based permissions are taken into account if more than one permission is handed in in perms and at least
-      one of these perms is not globally set. If any_perm is set to false then the intersection of matching object
-      is returned. Note, that if with_superuser is False, accept_global_perms will be ignored, which means that only
-      object permissions will be checked! Default is ``True``.
+    Parameters:
+        user (User | AnonymousUser): user to check for permissions.
+        perms (str | list[str]): permission(s) to be checked.
+            If `klass` parameter is not given, those should be full permission
+            names rather than only codenames (i.e. `auth.change_user`).
+            If more than one permission is present within sequence, their content type **must** be
+            the same or `MixedContentTypeError` exception would be raised.
+        klass (Modal | Manager | QuerySet): If not provided, this parameter would be
+            computed based on given `params`.
+        use_groups (bool): Whether to check user's groups object permissions.
+        any_perm (bool): Whether any of the provided permissions in sequence is accepted.
+        with_superuser (bool): if `user.is_superuser`, whether to return the entire queryset.
+            Otherwise will only return objects the user has explicit permissions.
+            This must be `True` for the `accept_global_perms` parameter to have any affect.
+        accept_global_perms (bool): Whether global permissions are taken into account.
+            Object based permissions are taken into account if more than one permission is
+            provided in in perms and at least one of these perms is not globally set.
+            If `any_perm` is `False` then the intersection of matching object is returned.
+            Note, that if `with_superuser` is `False`, `accept_global_perms` will be ignored,
+            which means that only object permissions will be checked!
 
-    :raises MixedContentTypeError: when computed content type for ``perms``
-      and/or ``klass`` clashes.
-    :raises WrongAppError: if cannot compute app label for given ``perms``/
-      ``klass``.
+    Raises:
+        MixedContentTypeError: when computed content type for `perms` and/or `klass` clashes.
+        WrongAppError: if cannot compute app label for given `perms` or `klass`.
 
-    Example::
-
+    Example:
+        ```shell
         >>> from django.contrib.auth.models import User
         >>> from guardian.shortcuts import get_objects_for_user
         >>> joe = User.objects.get(username='joe')
@@ -448,8 +435,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
         >>> get_objects_for_user(joe, 'auth.change_group')
         [<Group some group>]
 
-
-    The permission string can also be an iterable. Continuing with the previous example:
+        # The permission string can also be an iterable. Continuing with the previous example:
 
         >>> get_objects_for_user(joe, ['auth.change_group', 'auth.delete_group'])
         []
@@ -459,7 +445,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
         >>> get_objects_for_user(joe, ['auth.change_group', 'auth.delete_group'])
         [<Group some group>]
 
-    Take global permissions into account:
+        # Take global permissions into account:
 
         >>> jack = User.objects.get(username='jack')
         >>> assign_perm('auth.change_group', jack) # this will set a global permission
@@ -471,36 +457,33 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
         [<Group other group>]
         >>> get_objects_for_user(jack, ['auth.change_group', 'auth.delete_group'], any_perm) # this retrieves union
         [<Group some group>, <Group other group>]
+        ```
 
-    If accept_global_perms is set to ``True``, then all assigned global
-    permissions will also be taken into account.
+    Note:
+        If `accept_global_perms` is set to `True`, then all assigned global
+        permissions will also be taken into account.
 
-    - Scenario 1: a user has view permissions generally defined on the model
-      'books' but no object based permission on a single book instance:
+        - Scenario 1: a user has view permissions generally defined on the model
+          'books' but no object-based permission on a single book instance:
 
-        - If accept_global_perms is ``True``: List of all books will be
-          returned.
-        - If accept_global_perms is ``False``: list will be empty.
+            - If `accept_global_perms` is `True`: A list of all books will be returned.
+            - If `accept_global_perms` is `False`: The list will be empty.
 
-    - Scenario 2: a user has view permissions generally defined on the model
-      'books' and also has an object based permission to view book 'Whatever':
+        - Scenario 2: a user has view permissions generally defined on the model
+          'books' and also has an object-based permission to view book 'Whatever':
 
-        - If accept_global_perms is ``True``: List of all books will be
-          returned.
-        - If accept_global_perms is ``False``: list will only contain book
-          'Whatever'.
+            - If `accept_global_perms` is `True`: A list of all books will be returned.
+            - If `accept_global_perms` is `False`: The list will only contain book 'Whatever'.
 
-    - Scenario 3: a user only has object based permission on book 'Whatever':
+        - Scenario 3: a user only has object-based permission on book 'Whatever':
 
-        - If accept_global_perms is ``True``: List will only contain book
-          'Whatever'.
-        - If accept_global_perms is ``False``: List will only contain book
-          'Whatever'.
+            - If `accept_global_perms` is `True`: The list will only contain book 'Whatever'.
+            - If `accept_global_perms` is `False`: The list will only contain book 'Whatever'.
 
-    - Scenario 4: a user does not have any permission:
+        - Scenario 4: a user does not have any permission:
 
-        - If accept_global_perms is ``True``: Empty list.
-        - If accept_global_perms is ``False``: Empty list.
+            - If `accept_global_perms` is `True`: An empty list is returned.
+            - If `accept_global_perms` is `False`: An empty list is returned.
     """
     if isinstance(perms, str):
         perms = [perms]
@@ -544,7 +527,7 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
 
     # At this point, we should have both ctype and queryset and they should
     # match which means: ctype.model_class() == queryset.model
-    # we should also have ``codenames`` list
+    # we should also have `codenames` list
 
     # First check if user is superuser and if so, return queryset immediately
     if with_superuser and user.is_superuser:
@@ -658,35 +641,35 @@ def get_objects_for_user(user, perms, klass=None, use_groups=True, any_perm=Fals
 
 
 def get_objects_for_group(group, perms, klass=None, any_perm=False, accept_global_perms=True):
-    """
-    Returns queryset of objects for which a given ``group`` has *all*
-    permissions present at ``perms``.
+    """Get objects that a group has *all* the supplied permissions for.
 
-    :param group: ``Group`` instance for which objects would be returned.
-    :param perms: single permission string, or sequence of permission strings
-      which should be checked.
-      If ``klass`` parameter is not given, those should be full permission
-      names rather than only codenames (i.e. ``auth.change_user``). If more than
-      one permission is present within sequence, their content type **must** be
-      the same or ``MixedContentTypeError`` exception would be raised.
-    :param klass: may be a Model, Manager or QuerySet object. If not given
-      this parameter would be computed based on given ``params``.
-    :param any_perm: if True, any of permission in sequence is accepted
-    :param accept_global_perms: if ``True`` takes global permissions into account.
-      If any_perm is set to false then the intersection of matching objects based on global and object based permissions
-      is returned. Default is ``True``.
+    Parameters:
+        group (Group): `Group` instance for which objects would be returned.
+        perms (str | list[str]): permission(s) which should be checked.
+            If `klass` parameter is not given, those should be full permission
+            names rather than only codenames (i.e. `auth.change_user`).
+            If more than one permission is present within sequence,
+            their content type **must** be the same or `MixedContentTypeError` exception is raised.
+        klass (Model | Manager | QuerySet):  If not provided this parameter is computed
+            based on given `params`.
+        any_perm (bool): Whether any of permission in sequence is accepted.
+        accept_global_perms (bool): Whether global permissions are taken into account.
+            If `any_perm` is `False`, then the intersection of matching objects based on
+            global and object-based permissionsis returned.
 
-    :raises MixedContentTypeError: when computed content type for ``perms``
-      and/or ``klass`` clashes.
-    :raises WrongAppError: if cannot compute app label for given ``perms``/
-      ``klass``.
+    Returns:
+        queryset (QuerySet): objects for which a given `group` has *all* permissions in `perms`.
+
+    Raisess:
+        MixedContentTypeError: when computed content type for `perms` and/or `klass` clashes.
+        WrongAppError: if cannot compute app label for given `perms`/`klass`.
 
     Example:
+        Let's assume we have a `Task` model belonging to the `tasker` app with
+        the default add_task, change_task and delete_task permissions provided
+        by Django::
 
-    Let's assume we have a ``Task`` model belonging to the ``tasker`` app with
-    the default add_task, change_task and delete_task permissions provided
-    by Django::
-
+        ```shell
         >>> from guardian.shortcuts import get_objects_for_group
         >>> from tasker import Task
         >>> group = Group.objects.create('some group')
@@ -698,20 +681,23 @@ def get_objects_for_group(group, perms, klass=None, any_perm=False, accept_globa
         >>> get_objects_for_group(group, 'tasker.add_task')
         [<Task some task>]
 
-    The permission string can also be an iterable. Continuing with the previous example:
+        # The permission string can also be an iterable. Continuing with the previous example:
+
         >>> get_objects_for_group(group, ['tasker.add_task', 'tasker.delete_task'])
         []
         >>> assign_perm('tasker.delete_task', group, task)
         >>> get_objects_for_group(group, ['tasker.add_task', 'tasker.delete_task'])
         [<Task some task>]
 
-    Global permissions assigned to the group are also taken into account. Continuing with previous example:
+        # Global permissions assigned to the group are also taken into account. Continuing with previous example:
+
         >>> task_other = Task.objects.create('other task')
         >>> assign_perm('tasker.change_task', group)
         >>> get_objects_for_group(group, ['tasker.change_task'])
         [<Task some task>, <Task other task>]
         >>> get_objects_for_group(group, ['tasker.change_task'], accept_global_perms=False)
         [<Task some task>]
+        ```
 
     """
     if isinstance(perms, str):
@@ -756,7 +742,7 @@ def get_objects_for_group(group, perms, klass=None, any_perm=False, accept_globa
 
     # At this point, we should have both ctype and queryset and they should
     # match which means: ctype.model_class() == queryset.model
-    # we should also have ``codenames`` list
+    # we should also have `codenames` list
 
     global_perms = set()
     if accept_global_perms:

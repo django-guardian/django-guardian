@@ -1,3 +1,5 @@
 # Managers 
 
-::: guardian.managers
+::: guardian.managers.UserObjectPermissionManager
+
+::: guardian.managers.GroupObjectPermissionManager

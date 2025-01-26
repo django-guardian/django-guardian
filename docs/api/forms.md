@@ -1,3 +1,5 @@
 # Forms
 
-::: guardian.forms
+::: guardian.forms.UserObjectPermissionsForm
+
+::: guardian.forms.GroupObjectPermissionsForm

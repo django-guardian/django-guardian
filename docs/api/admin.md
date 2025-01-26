@@ -1,3 +1,5 @@
 # Admin
 
-::: guardian.admin
+::: guardian.admin.GuardedModelAdmin
+
+::: guardian.admin.GuardedModelAdminMixin
