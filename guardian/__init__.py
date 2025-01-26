@@ -2,24 +2,24 @@
 Implementation of per object permissions for Django.
 """
 from . import checks
-import django
+from importlib.metadata import version
 
+import re
 
-# PEP 396: The __version__ attribute's value SHOULD be a string.
-__version__ = '2.4.1'
+# Use importlib to ensure this version always matches with pyproject.toml
+__version__ = version('django-guardian')
 
 # Compatibility to eg. django-rest-framework
-VERSION = tuple(int(x) for x in __version__.split('.')[:3])
-
+# (removes any release candidate or other modifiers)
+VERSION = tuple(int(x) for x in re.split('[a-z]', __version__)[0].split('.')[:3])
 
 def get_version():
     return __version__
 
 
 def monkey_patch_user():
+    from .utils import evict_obj_perms_cache, get_anonymous_user, get_user_obj_perms_model
     from django.contrib.auth import get_user_model
-    from .utils import get_anonymous_user, evict_obj_perms_cache
-    from .utils import get_user_obj_perms_model
     UserObjectPermission = get_user_obj_perms_model()
     User = get_user_model()
     # Prototype User and Group methods
@@ -32,8 +32,9 @@ def monkey_patch_user():
 
 
 def monkey_patch_group():
-    from django.contrib.auth.models import Group, Permission
     from .utils import get_group_obj_perms_model
+    from django.contrib.auth.models import Group, Permission
+
     GroupObjectPermission = get_group_obj_perms_model()
     # Prototype Group methods
     setattr(Group, 'add_obj_perm',
