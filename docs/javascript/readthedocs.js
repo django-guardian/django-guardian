@@ -1,3 +1,5 @@
+// This snippet is used to add the Read the Docs search to MkDocs Material
+// It is based on the Read the Docs documentation:
 // https://docs.readthedocs.com/platform/stable/intro/mkdocs.html#configure-read-the-docs-search
 document.addEventListener("DOMContentLoaded", function(event) {
 // Trigger Read the Docs' search addon instead of Material MkDocs default
@@ -8,7 +10,8 @@ document.querySelector(".md-search__input").addEventListener("focus", (e) => {
 });
 
 
-// Use CustomEvent to generate the version selector
+// This snippet is used to add the Read the Docs version dropdown to MkDocs Material
+// It is based on the Read the Docs documentation:
 // https://docs.readthedocs.com/platform/stable/intro/mkdocs.html#integrate-the-read-the-docs-version-menu-into-your-site-navigation
 document.addEventListener(
         "readthedocs-addons-data-ready",
