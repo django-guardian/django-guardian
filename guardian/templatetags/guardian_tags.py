@@ -53,13 +53,13 @@ def get_obj_perms(parser, token):
     """Get a list of permissions for a given user/group and object.
 
     Parses `get_obj_perms` tag which should be in format:
-    ```html
+    ```
     {% get_obj_perms user/group for obj as "context_var" %}
     ```
 
     Returns:
-         perms (list[str]): a list of permissions (as `codename` strings) for a given
-           `user`/`group` and `obj` (Model instance).
+         perms (list[str]): a list of permissions (as `codename` strings)
+              for a given `user`/`group` and `obj` (Model instance).
 
 
     Note:
