@@ -7,25 +7,26 @@ description: How to run the test harness, generate coverage reports, and other c
 
 ## Introduction
 
-`django-guardian` is extending capabilities of Django's authorization
-facilities and as so, it changes it's security somehow.
-It is extremely important to provide as simplest `api` as possible.
-
-According to [OWASP](http://www.owasp.org/), [broken
-authentication](http://www.owasp.org/index.php/Top_10_2010-A3) is one of
+According to [OWASP](http://www.owasp.org/),
+[broken authentication](http://www.owasp.org/index.php/Top_10_2010-A3) is one of
 the most common security issues exposed in web applications.
-As such, Guardian aims to have a high test scenario coverage and a relative small API to test.
 
-Nevertheless, if you find a bug in this application, please take a minute and file it at
-[issue-tracker](http://github.com/django-guardian/django-guardian).
+`django-guardian` extends the capabilities of Django's authorization facilities, 
+as such it has to be tested thoroughly.
+It is extremely important that Guardian provides the simplest `api` as possible,
+with a have a high test scenario coverage.
 
 !!! danger "Security Risks"
     If you spot a *security risk* or a bug that might affect security of systems that use `django-guardian`,
 
-    **DO NOT create a bbblic issue**. 
+    **DO NOT create a public issue**. 
 
     Instead, contact the Guardian maintainer team directly.
     You can find contact information in the [SECURITY.md file](https://github.com/django-guardian/django-guardian/blob/devel/.github/SECURITY.md)
+
+If you find a non-security related bug in this application, 
+please take a minute and file a ticket in our
+[issue-tracker](http://github.com/django-guardian/django-guardian).
 
 ## Running tests
 
