@@ -300,7 +300,7 @@ class PermissionListMixin:
                                        % self.permission_required)
         return perms
 
-    def get_get_objects_for_user_kwargs(self, queryset):
+    def get_objects_for_user_kwargs(self, queryset):
         """Get kwargs to pass to `get_objects_for_user`.
 
         Returns dict of kwargs that should be passed to `get_objects_for_user`.
@@ -313,6 +313,13 @@ class PermissionListMixin:
                     klass=queryset,
                     **self.get_objects_for_user_extra_kwargs)
 
+    def get_get_objects_for_user_kwargs(self, queryset):
+        """Kept here for backward compatibility.
+
+        See `get_objects_for_user_kwargs`
+        """
+        return self.get_objects_for_user_kwargs(queryset)
+
     def get_queryset(self, *args, **kwargs):
         qs = super().get_queryset(*args, **kwargs)
-        return get_objects_for_user(**self.get_get_objects_for_user_kwargs(qs))
+        return get_objects_for_user(**self.get_objects_for_user_kwargs(qs))
