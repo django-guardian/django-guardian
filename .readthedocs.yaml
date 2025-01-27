@@ -10,12 +10,11 @@ build:
   tools:
     python: "3.12"
 
-# Build documentation in the "docs/" directory with Sphinx
-sphinx:
-  configuration: docs/conf.py
+mkdocs:
+  configuration: mkdocs.yml
 
 # Declare the Python requirements required to build the documentation
 # See https://docs.readthedocs.io/en/stable/guides/reproducible-builds.html
 python:
   install:
-    - requirements: requirements.txt
+    - requirements: docs/requirements.txt
