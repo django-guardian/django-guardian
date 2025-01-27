@@ -80,7 +80,7 @@ def get_obj_perms(parser, token):
        Please remember that superusers would always get full list of permissions
        for a given object.
 
-    Note: Added in 1.2
+    Note: Added in version 1.2
         As of v1.2, passing `None` as `obj` for this template tag won't rise
         obfuscated exception and would return empty permissions set instead.
 

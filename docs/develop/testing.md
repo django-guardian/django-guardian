@@ -97,7 +97,7 @@ TOTAL                                   231    231   100%
 ## Tox
 
 
-!!! note "Added in 1.0.4"
+!!! abstract "Added in version 1.0.4"
 
 We also started using [tox](http://pypi.python.org/pypi/tox) to ensure
 `django-guardian`'s tests would pass on all supported Python and Django
@@ -118,7 +118,7 @@ environments and pull dependencies) but would ensure everything is fine.
 
 ## GitHub Actions
 
-!!! note "Added in 2.4.0"
+!!! abstract "Added in version 2.4.0"
 
 [![image](https://github.com/django-guardian/django-guardian/workflows/Tests/badge.svg?branch=devel)](https://github.com/django-guardian/django-guardian/actions/workflows/tests.yml)
 

@@ -54,7 +54,7 @@ Guardian has the following, optional configuration variables:
 
 ## `GUARDIAN_RAISE_403`
 
-!!! info "Added in 1.0.4"
+!!! abstract "Added in version 1.0.4"
 
 If set to `True`, guardian would raise `django.core.exceptions.PermissionDenied` error instead of returning 
 empty `django.http.HttpResponseForbidden`.
@@ -67,7 +67,7 @@ empty `django.http.HttpResponseForbidden`.
 
 ## `GUARDIAN_RENDER_403`
 
-!!! info "Added in 1.0.4"
+!!! abstract "Added in version 1.0.4"
 
 If set to `True`, guardian would try to render 403 response rather than
 return content less `django.http.HttpResponseForbidden`. 
@@ -83,7 +83,7 @@ Would use template pointed by `GUARDIAN_TEMPLATE_403` to do that. Default is `Fa
 
 ## `GUARDIAN_TEMPLATE_403`
 
-!!! info "Added in 1.0.4"
+!!! abstract "Added in version 1.0.4"
 
 Tells parts of guardian what template to use for responses with status
 code `403` (i.e. `api-decorators-permission_required`). Defaults to `403.html`.
@@ -91,7 +91,7 @@ code `403` (i.e. `api-decorators-permission_required`). Defaults to `403.html`.
 
 ## `ANONYMOUS_USER_NAME`
 
-!!! info "Added in 1.4.2"
+!!! abstract "Added in version 1.4.2"
 
 This is the username of the anonymous user. Used to create the anonymous
 user and subsequently fetch the anonymous user as required.
@@ -104,12 +104,12 @@ your environment.
 Defaults to `"AnonymousUser"`.
 
 
-See also
-[Django's docs on substituting a custom user model](https://docs.djangoproject.com/en/stable/topics/auth/customizing/#substituting-a-custom-user-model)
+!!! tip 
+    [Django's docs on substituting a custom user model](https://docs.djangoproject.com/en/stable/topics/auth/customizing/#substituting-a-custom-user-model)
 
 ## `GUARDIAN_GET_INIT_ANONYMOUS_USER`
 
-!!! info "Added in 1.2"
+!!! abstract "Added in version 1.2"
 
 Guardian supports object level permissions for anonymous users, however,
 when in our project we use a custom User model, default function might
@@ -120,7 +120,7 @@ method would be called on that instance.
 
 Defaults to `"guardian.management.get_init_anonymous_user"`.
 
-!!! info "See also `custom-user-model-anonymous`"
+!!! tip "See also `custom-user-model-anonymous`"
 
 ## `GUARDIAN_GET_CONTENT_TYPE`
 
@@ -141,7 +141,7 @@ Defaults to `"guardian.ctypes.get_default_content_type"`.
 
 ## `GUARDIAN_AUTO_PREFETCH`
 
-!!! info "Added in 2.0.0"
+!!! abstract "Added in version 2.0.0"
 
 For vanilla deployments using standard `ContentType` interfaces and
 default `UserObjectPermission` or `GroupObjectPermission` models,
@@ -156,7 +156,7 @@ Defaults to `False`.
 
 ## `GUARDIAN_USER_OBJ_PERMS_MODEL`
 
-!!! info "Added in 2.0.0"
+!!! abstract "Added in version 2.0.0"
 
 Allows the default `UserObjectPermission` model to be overridden by a
 custom model. The custom model needs to minimally inherit from
@@ -200,7 +200,7 @@ Defaults to `'guardian.UserObjectPermission'`.
 
 ## `GUARDIAN_GROUP_OBJ_PERMS_MODEL`
 
-!!! info "Added in 2.x.x"
+!!! abstract "Added in version 2.0.0"
 
 Allows the default `GroupObjectPermission` model to be overridden by a
 custom model. The custom model needs to minimally inherit from

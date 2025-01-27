@@ -16,3 +16,12 @@ pip install django-guardian
 
 Additional dependencies are required to run tests or the example application, see [Testing](./develop/testing.md)
 and [Example project](./userguide/examples.md).
+
+## Starting a new project
+
+By default, Guardian uses generic foreign keys to retain relation with any Django model which 
+has implications on performance. 
+If you're starting a new project, you may want to read the following sections of the documentation:
+
+1. [performance tuning docs](./userguide/performance.md) 
+2. [Configuration docs](./configuration.md)

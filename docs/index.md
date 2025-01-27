@@ -25,26 +25,27 @@ description: django-guardian documentation. Per-object permissions for Django.
 
 `django-guardian` supports Python 3.9+ and Django 4.2+.
 
-## Incoming
-
--   Admin templates for [grappelli](https://github.com/sehmaschine/django-grappelli)
-
 ## Source and issue tracker
 
-Sources are available at [issue-tracker](http://github.com/django-guardian/django-guardian). 
-You may also file a bug there.
+The source code and issue tracker are available on [GitHub](http://github.com/django-guardian/django-guardian). 
+If you find a bug, have a suggestion, or would like to request a feature, 
+you may file a ticket there.
 
 ## Alternate projects
 
-[Django](http://www.djangoproject.com/) *only* has the foundation for object-level permissions
+[Django](http://www.djangoproject.com/) has the foundation for object-level permissions
 <sup> 
     [[1]](#references)
 </sup>, 
 `django-guardian` makes use of these facilities, and it is based on them. 
-There are some other pluggable applications which do *NOT* require [Django](http://www.djangoproject.com/) version 1.2+. 
+While it is possible to role-your-own implementation,
+we recommend using `django-guardian`, but we may be biased.
+
+There are some other third-party projects, including:
 
 - [django-authority](https://github.com/jazzband/django-authority)
-- [django-permissions](https://github.com/lambdalisue/django-permission)
+- [django-permissions](https://github.com/lambdalisue/django-permission) (Archived)
+- [django-rules](https://github.com/dfunckt/django-rules)
 
 ### References
 

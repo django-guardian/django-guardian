@@ -5,7 +5,7 @@ description: Using a custom user model with django-guardian.
 
 # Custom User model
 
-!!! note "Added in 1.1"
+!!! abstract "Added in version 1.1"
 
 Django comes with the ability to customize default `auth.User` model -
 either by subclassing `AbstractUser` or defining very own class. This
@@ -30,7 +30,7 @@ To fix this, it is recommended to add the setting
     for `guardian` - **without many to many User (custom or default) and
     auth.Group relation django-guardian will BREAK**.
 
-!!! note "See Also"
+!!! tip "See Also"
     Read more about 
     [customizing the Django User model](https://docs.djangoproject.com/en/stable/topics/auth/customizing/#substituting-a-custom-user-model)
 

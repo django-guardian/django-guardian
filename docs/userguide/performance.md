@@ -26,7 +26,7 @@ same, generic way of pointing to other models:
     simply a proxy that can retrieve proper model instance being
     targeted by two previous fields
 
-!!! info "See Also"
+!!! tip "See Also"
     [Django generic relations](https://docs.djangoproject.com/en/stable/ref/contrib/contenttypes/#generic-relations)
 
 Let's consider following model:
@@ -36,7 +36,7 @@ class Project(models.Model):
     name = models.CharField(max_length=128, unique=True)
 ```
 
-In order to add a *change_project* permission for *joe* user we would
+To add a *change_project* permission for *joe* user we would
 use `api-shortcuts-assign` shortcut:
 
 ``` python
@@ -66,12 +66,12 @@ checks can be slow with this generic solution.
 
 ## Direct foreign keys 
 
-!!! note "Added in 1.1"
+!!! abstract "Added in version 1.1"
 
-In order to make our permission checks faster we can use direct foreign
-key solution. It actually is very simple to setup - we need to declare
-two new models next to our `Project` model, one for `User` and one for
-`Group` models:
+To make our permission checks faster, we can use a direct foreign key.
+It is straightforward to set up; 
+All we need to do is to declare two new models next to our `Project` model,
+one for `User` and one for `Group` models:
 
 ``` python
 from guardian.models import UserObjectPermissionBase
@@ -88,7 +88,6 @@ class ProjectGroupObjectPermission(GroupObjectPermissionBase):
 ```
 
 !!! danger "Important"
-
     Name of the `ForeignKey` field is important and it should be
     `content_object` as underlying queries depends on it.
 
@@ -109,7 +108,7 @@ data from the generic model tables before using the direct models.
 
 ## Prefetching permissions
 
-!!! note "Added in 1.4.3"
+!!! abstract "Added in version 1.4.3"
 
 Naively looping through objects and checking permissions on each one
 using `has_perms` results in a permissions lookup in the database for

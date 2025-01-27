@@ -100,7 +100,7 @@ It is also possible to provide list of permissions rather than single
 string, own queryset (as `klass` argument) or control if result should
 be computed with (default) or without user's groups permissions.
 
-!!! note "See Also"
+!!! tip "See Also"
     Documentation for `get_objects_for_user`
 
 ### ObjectPermissionChecker
