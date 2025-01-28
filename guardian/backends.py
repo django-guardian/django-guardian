@@ -7,8 +7,10 @@ from guardian.exceptions import WrongAppError
 
 
 def check_object_support(obj):
-    """
-    Returns ``True`` if given ``obj`` is supported
+    """Checks if given `obj` is supported
+
+    Returns:
+         supported (bool): `True` if given `obj` is supported
     """
     # Backend checks only object permissions (isinstance implies that obj
     # is not None)
@@ -17,12 +19,14 @@ def check_object_support(obj):
 
 
 def check_user_support(user_obj):
-    """
-    Returns a tuple of checkresult and ``user_obj`` which should be used for
-    permission checks
+    """Checks if given user is supported.
 
     Checks if the given user is supported. Anonymous users need explicit
     activation via ANONYMOUS_USER_NAME
+
+    Returns:
+        results (tuple[bool, User]): A tuple of checkresult and `user_obj` which should be used for permission checks
+
     """
     # This is how we support anonymous users - simply try to retrieve User
     # instance and perform checks for that predefined user
@@ -39,7 +43,8 @@ def check_user_support(user_obj):
 
 
 def check_support(user_obj, obj):
-    """
+    """Checks if given user and object are supported.
+
     Combination of ``check_object_support`` and ``check_user_support``
     """
     obj_support = check_object_support(obj)
@@ -48,6 +53,7 @@ def check_support(user_obj, obj):
 
 
 class ObjectPermissionBackend:
+    """Django backend for checking object-level permissions."""
     supports_object_permissions = True
     supports_anonymous_user = True
     supports_inactive_user = True
@@ -56,23 +62,29 @@ class ObjectPermissionBackend:
         return None
 
     def has_perm(self, user_obj, perm, obj=None):
-        """
-        Returns ``True`` if given ``user_obj`` has ``perm`` for ``obj``. If no
-        ``obj`` is given, ``False`` is returned.
+        """Check if a user has the permission for a given object.
 
-        .. note::
-
-           Remember, that if user is not *active*, all checks would return
-           ``False``.
-
-        Main difference between Django's ``ModelBackend`` is that we can pass
-        ``obj`` instance here and ``perm`` doesn't have to contain
-        ``app_label`` as it can be retrieved from given ``obj``.
+        Returns `True` if given `user_obj` has `perm` for `obj`.
+        If no `obj` is given, `False` is returned.
+        The main difference between Django's `ModelBackend` is that we can pass
+        `obj` instance here and `perm` doesn't have to contain
+        `app_label` as it can be retrieved from given `obj`.
 
         **Inactive user support**
 
-        If user is authenticated but inactive at the same time, all checks
-        always returns ``False``.
+        If `user` is authenticated but inactive at the same time, all checks
+        always return `False`.
+
+        Note:
+           Remember, that if user is not *active*, all checks would return `False`.
+
+        Parameters:
+            user_obj (User): User instance.
+            perm (str): Permission string.
+            obj (Model): Model instance.
+
+        Returns:
+            user_has_permission (bool): `True` if `user_obj` has permission, `False` otherwise.
         """
 
         # check if user_obj and object are supported
@@ -96,8 +108,14 @@ class ObjectPermissionBackend:
         return check.has_perm(perm, obj)
 
     def get_all_permissions(self, user_obj, obj=None):
-        """
-        Returns a set of permission strings that the given ``user_obj`` has for ``obj``
+        """Returns all permissions for a given object.
+
+        Parameters:
+            user_obj (User): User instance.
+            obj (Model): Django Model instance.
+
+        Returns:
+             permission (set): a set of permission strings that the given `user_obj` has for `obj`.
         """
         # check if user_obj and object are supported
         support, user_obj = check_support(user_obj, obj)

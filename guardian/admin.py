@@ -19,8 +19,8 @@ from guardian.utils import get_group_obj_perms_model
 class AdminUserObjectPermissionsForm(UserObjectPermissionsForm):
     """
     Extends :form:`UserObjectPermissionsForm`. It only overrides
-    ``get_obj_perms_field_widget`` method so it return
-    ``django.contrib.admin.widgets.FilteredSelectMultiple`` widget.
+    `get_obj_perms_field_widget` method so it return
+    `django.contrib.admin.widgets.FilteredSelectMultiple` widget.
     """
 
     def get_obj_perms_field_widget(self):
@@ -30,8 +30,8 @@ class AdminUserObjectPermissionsForm(UserObjectPermissionsForm):
 class AdminGroupObjectPermissionsForm(GroupObjectPermissionsForm):
     """
     Extends :form:`GroupObjectPermissionsForm`. It only overrides
-    ``get_obj_perms_field_widget`` method so it return
-    ``django.contrib.admin.widgets.FilteredSelectMultiple`` widget.
+    `get_obj_perms_field_widget` method so it return
+    `django.contrib.admin.widgets.FilteredSelectMultiple` widget.
     """
 
     def get_obj_perms_field_widget(self):
@@ -39,9 +39,7 @@ class AdminGroupObjectPermissionsForm(GroupObjectPermissionsForm):
 
 
 class GuardedModelAdminMixin:
-    """
-    Serves as a helper for custom subclassing ``admin.ModelAdmin``.
-    """
+    """Mixin helper for custom subclassing `admin.ModelAdmin`."""
     change_form_template = \
         'admin/guardian/model/change_form.html'
     obj_perms_manage_template = \
@@ -73,15 +71,14 @@ class GuardedModelAdminMixin:
 
     def get_urls(self):
         """
+
         Extends standard admin model urls with the following:
+        - `.../permissions/` under `app_mdodel_permissions` url name (params: object_pk)
+        - `.../permissions/user-manage/<user_id>/` under `app_model_permissions_manage_user` url name (params: object_pk, user_pk)
+        - `.../permissions/group-manage/<group_id>/` under `app_model_permissions_manage_group` url name (params: object_pk, group_pk)
 
-        - ``.../permissions/`` under ``app_mdodel_permissions`` url name (params: object_pk)
-        - ``.../permissions/user-manage/<user_id>/`` under ``app_model_permissions_manage_user`` url name (params: object_pk, user_pk)
-        - ``.../permissions/group-manage/<group_id>/`` under ``app_model_permissions_manage_group`` url name (params: object_pk, group_pk)
-
-        .. note::
-           ``...`` above are standard, instance detail url (i.e.
-           ``/admin/flatpages/1/``)
+        Note:
+           `...` above are standard, instance detail url (i.e. `/admin/flatpages/1/`)
 
         """
         urls = super().get_urls()
@@ -105,10 +102,14 @@ class GuardedModelAdminMixin:
         return urls
 
     def get_obj_perms_base_context(self, request, obj):
-        """
+        """Get context dict with common admin and object permissions related content.
+
         Returns context dictionary with common admin and object permissions
         related content. It uses AdminSite.each_context,
         making sure all required template vars are in the context.
+
+        Returns:
+            context (dict): django template context
         """
         context = self.admin_site.each_context(request)
         context.update({
@@ -125,12 +126,11 @@ class GuardedModelAdminMixin:
         return context
 
     def obj_perms_manage_view(self, request, object_pk):
-        """
-        Main object permissions view. Presents all users and groups with any
-        object permissions for the current model *instance*. Users or groups
-        without object permissions for related *instance* would **not** be
-        shown. In order to add or manage user or group one should use links or
-        forms presented within the page.
+        """Main object permissions view.
+
+        Presents all users and groups with any object permissions for the current model *instance*.
+        Users or groups without object permissions for related *instance* would **not** be shown.
+        To add or manage user or group, one should use links or forms presented within the page.
         """
         if not self.has_change_permission(request, None):
             post_url = reverse('admin:index', current_app=self.admin_site.name)
@@ -209,9 +209,9 @@ class GuardedModelAdminMixin:
         Returns main object permissions admin template.  May be overridden if
         need to change it dynamically.
 
-        .. note::
-           If ``INSTALLED_APPS`` contains ``grappelli`` this function would
-           return ``"admin/guardian/grappelli/obj_perms_manage.html"``.
+        Note:
+           If `INSTALLED_APPS` contains `grappelli` this function would
+           return `"admin/guardian/grappelli/obj_perms_manage.html"`.
 
         """
         if 'grappelli' in settings.INSTALLED_APPS:
@@ -219,9 +219,7 @@ class GuardedModelAdminMixin:
         return self.obj_perms_manage_template
 
     def obj_perms_manage_user_view(self, request, object_pk, user_id):
-        """
-        Manages selected users' permissions for current object.
-        """
+        """Manages selected users' permissions for the current object."""
         if not self.has_change_permission(request, None):
             post_url = reverse('admin:index', current_app=self.admin_site.name)
             return redirect(post_url)
@@ -256,44 +254,55 @@ class GuardedModelAdminMixin:
         return render(request, self.get_obj_perms_manage_user_template(), context)
 
     def get_obj_perms_manage_user_template(self):
-        """
-        Returns object permissions for user admin template.  May be overridden
-        if need to change it dynamically.
+        """Returns object permissions for user admin template.
 
-        .. note::
-           If ``INSTALLED_APPS`` contains ``grappelli`` this function would
-           return ``"admin/guardian/grappelli/obj_perms_manage_user.html"``.
+        May be overridden if dynamic behavior is needed.
 
+        Note:
+           If `INSTALLED_APPS` contains `grappelli` this function would
+           return `"admin/guardian/grappelli/obj_perms_manage_user.html"`.
         """
         if 'grappelli' in settings.INSTALLED_APPS:
             return 'admin/guardian/contrib/grappelli/obj_perms_manage_user.html'
         return self.obj_perms_manage_user_template
 
     def get_obj_perms_user_select_form(self, request):
-        """
-        Returns form class for selecting a user for permissions management.  By
-        default :form:`UserManage` is returned.
+        """Get the form class for selecting a user for permissions management.
+
+        Parameters:
+            request (HttpRequest): The HTTP request object.
+
+        Returns:
+            form_class (type): The form class for selecting a user for permissions management.
+                Default is `UserManage`
         """
         return UserManage
 
     def get_obj_perms_group_select_form(self, request):
-        """
-        Returns form class for selecting a group for permissions management.  By
-        default :form:`GroupManage` is returned.
+        """Get the form class for group object permissions management.
+        Parameters:
+            request (HttpRequest): The HTTP request object.
+
+        Returns:
+            form_class (type): The form class for group object permissions management.
+                Default is `GroupManage`
         """
         return GroupManage
 
     def get_obj_perms_manage_user_form(self, request):
-        """
-        Returns form class for user object permissions management.  By default
-        :form:`AdminUserObjectPermissionsForm` is returned.
+        """Get the form class for user object permissions management.
+
+        Parameters:
+            request (HttpRequest): The HTTP request object.
+
+        Returns:
+            form_class (type): The form class for user object permissions management.
+                Default is `AdminUserObjectPermissionsForm`.
         """
         return AdminUserObjectPermissionsForm
 
     def obj_perms_manage_group_view(self, request, object_pk, group_id):
-        """
-        Manages selected groups' permissions for current object.
-        """
+        """Manages selected groups' permissions for the current object."""
         if not self.has_change_permission(request, None):
             post_url = reverse('admin:index', current_app=self.admin_site.name)
             return redirect(post_url)
@@ -329,13 +338,16 @@ class GuardedModelAdminMixin:
         return render(request, self.get_obj_perms_manage_group_template(), context)
 
     def get_obj_perms_manage_group_template(self):
-        """
-        Returns object permissions for group admin template.  May be overridden
-        if need to change it dynamically.
+        """Returns object permissions for group admin template.
 
-        .. note::
-           If ``INSTALLED_APPS`` contains ``grappelli`` this function would
-           return ``"admin/guardian/grappelli/obj_perms_manage_group.html"``.
+        May be overridden if dynamic behavior is needed.
+
+        Returns:
+            template (str): template name
+
+        Note:
+           If `INSTALLED_APPS` contains `grappelli` this function would
+           return `"admin/guardian/grappelli/obj_perms_manage_group.html"`.
 
         """
         if 'grappelli' in settings.INSTALLED_APPS:
@@ -343,80 +355,56 @@ class GuardedModelAdminMixin:
         return self.obj_perms_manage_group_template
 
     def get_obj_perms_manage_group_form(self, request):
-        """
-        Returns form class for group object permissions management.  By default
-        :form:`AdminGroupObjectPermissionsForm` is returned.
+        """Get the form class for group object permissions management.
+
+        Parameters:
+            request (HttpRequest): The HTTP request object.
+
+        Returns:
+            form_class (type): The form class for group object permissions management.
+                Default is `AdminGroupObjectPermissionsForm`.
         """
         return AdminGroupObjectPermissionsForm
 
 
 class GuardedModelAdmin(GuardedModelAdminMixin, admin.ModelAdmin):
-    """
-    Extends ``django.contrib.admin.ModelAdmin`` class. Provides some extra
-    views for object permissions management at admin panel. It also changes
-    default ``change_form_template`` option to
-    ``'admin/guardian/model/change_form.html'`` which is required for proper
+    """Provide views for managing object permissions on the Django admin panel.
+
+    Extends `django.contrib.admin.ModelAdmin` class.
+    It uses `'admin/guardian/model/change_form.html'` as the
+    default `change_form_template` attribute which is required for proper
     url (object permissions related) being shown at the model pages.
 
-    **Extra options**
+    Attributes:
+        obj_perms_manage_template (str): Defaults to `admin/guardian/model/obj_perms_manage.html`
+        obj_perms_manage_user_template (str): Defaults to `admin/guardian/model/obj_perms_manage_user.html`
+        obj_perms_manage_group_template (str): Defaults to `admin/guardian/model/obj_perms_manage_group.html`
+        user_can_access_owned_objects_only (bool): Defaults to `False`.
+            If `True`, `request.user` would be used to filter out objects they don't own
+            checking `user` field of used model -
+            field name may be overridden by the `user_owned_objects_field` option.
+        user_can_access_owned_by_group_objects_only (bool): *Default*: `False`
+            If `True`, `request.user` is used to filter out objects her or his group doesn't own
+            (checking if any group the user belongs to is set as `group` field of the object;
+            name of the field can be changed by overriding `group_owned_objects_field`).
+        group_owned_objects_field (str): *Default*: `group`
+            Name of the field to check for group ownership.
+        include_object_permissions_urls (bool): *Default*: `True`
+            Added in version 1.2.
+            If `False` guardian-specific URLs are **NOT** included in the admin
 
-    ``GuardedModelAdmin.obj_perms_manage_template``
+    Warning:
+       Setting `user_can_access_owned_objects_only` to `True` will **NOT** affect superusers!
+       Admins would still see all items.
 
-        *Default*: ``admin/guardian/model/obj_perms_manage.html``
+    Warning:
+       Setting `user_can_access_owned_by_group_objects_only` to `True` will **NOT** affect superusers!
+       Admins would still see all items.
 
-    ``GuardedModelAdmin.obj_perms_manage_user_template``
 
-        *Default*: ``admin/guardian/model/obj_perms_manage_user.html``
-
-    ``GuardedModelAdmin.obj_perms_manage_group_template``
-
-        *Default*: ``admin/guardian/model/obj_perms_manage_group.html``
-
-    ``GuardedModelAdmin.user_can_access_owned_objects_only``
-
-        *Default*: ``False``
-
-        If this would be set to ``True``, ``request.user`` would be used to
-        filter out objects he or she doesn't own (checking ``user`` field
-        of used model - field name may be overridden by
-        ``user_owned_objects_field`` option).
-
-        .. note::
-           Please remember that this will **NOT** affect superusers!
-           Admins would still see all items.
-
-    ``GuardedModelAdmin.user_can_access_owned_by_group_objects_only``
-
-        *Default*: ``False``
-
-        If this would be set to ``True``, ``request.user`` would be used to
-        filter out objects her or his group doesn't own (checking if any group
-        user belongs to is set as ``group`` field of the object; name of the
-        field can be changed by overriding ``group_owned_objects_field``).
-
-        .. note::
-           Please remember that this will **NOT** affect superusers!
-           Admins would still see all items.
-
-    ``GuardedModelAdmin.group_owned_objects_field``
-
-        *Default*: ``group``
-
-    ``GuardedModelAdmin.include_object_permissions_urls``
-
-        *Default*: ``True``
-
-        .. versionadded:: 1.2
-
-        Might be set to ``False`` in order **NOT** to include guardian-specific
-        urls.
-
-    **Usage example**
-
-    Just use :admin:`GuardedModelAdmin` instead of
-    ``django.contrib.admin.ModelAdmin``.
-
-    .. code-block:: python
+    Example:
+        ```python
+        # Just use GuardedModelAdmin instead of django.contrib.admin.ModelAdmin.
 
         from django.contrib import admin
         from guardian.admin import GuardedModelAdmin
@@ -426,7 +414,7 @@ class GuardedModelAdmin(GuardedModelAdminMixin, admin.ModelAdmin):
             pass
 
         admin.site.register(Author, AuthorAdmin)
-
+        ```
     """
 
 
@@ -440,9 +428,7 @@ class UserManage(forms.Form):
                            )
 
     def clean_user(self):
-        """
-        Returns ``User`` instance based on the given identification.
-        """
+        """Returns `User` instance based on the given identification."""
         identification = self.cleaned_data['user']
         user_model = get_user_model()
         try:
@@ -462,9 +448,7 @@ class GroupManage(forms.Form):
                                                            _("This group does not exist")})
 
     def clean_group(self):
-        """
-        Returns ``Group`` instance based on the given group name.
-        """
+        """Returns `Group` instance based on the given group name."""
         name = self.cleaned_data['group']
         GroupModel = get_group_obj_perms_model().group.field.related_model
         try:

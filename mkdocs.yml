@@ -1,0 +1,76 @@
+site_name: Django Guardian
+site_description: django-guardian - per object permissions for Django - Django Guardian
+site_url: !ENV READTHEDOCS_CANONICAL_URL
+repo_url: https://github.com/django-guardian/django-guardian
+edit_uri: /blob/main/docs/
+plugins:
+  - privacy:
+  - search:
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: google
+            show_root_heading: true
+            show_root_full_path: false
+theme:
+  features:
+    - content.code.copy
+  name: material
+  logo: assets/logo.svg
+  favicon: assets/favicon.ico
+  palette:
+    - scheme: slate
+      primary: blue-grey
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: default
+      primary: blue-grey
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  # https://squidfunk.github.io/mkdocs-material/customization/
+  custom_dir: docs/overrides
+extra_javascript:
+  - javascript/readthedocs.js
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Configuration: configuration.md
+  - User Guide:
+      - Example Project: userguide/examples.md
+      - Assign Object Permissions: userguide/assign.md
+      - Caveats: userguide/caveats.md
+      - Checks Object Permissions: userguide/checks.md
+      - Performance Tuning: userguide/performance.md
+      - Remove Object Permissions: userguide/remove.md
+      - Custom User Model: userguide/custom-user-model.md
+      - Custom Group Model: userguide/custom-group-model.md
+      - Admin Integration: userguide/admin-integration.md
+  - Contributing:
+      - Overview: develop/overview.md
+      - Testing: develop/testing.md
+  - API Reference:
+    - Admin: api/admin.md
+    - Backends: api/backends.md
+    - Core: api/core.md
+    - Decorators: api/decorators.md
+    - Forms: api/forms.md
+    - Management Commands: api/management.md
+    - Managers: api/managers.md
+    - Mixins: api/mixins.md
+    - Models: api/models.md
+    - Shortcuts: api/shortcuts.md
+    - Template Tags: api/templatetags.md
+    - Utilities: api/utils.md
+
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.highlight:
+  - pymdownx.superfences
+
+watch:
+  - guardian

@@ -96,11 +96,13 @@ class BaseObjectPermissionsForm(forms.Form):
 
 
 class UserObjectPermissionsForm(BaseObjectPermissionsForm):
-    """
-    Object level permissions management form for usage with ``User`` instances.
+    """Object level permissions management form for usage with `User` instances.
 
-    Example usage::
+    Attributes:
+        user (User): The user instance for which the permissions are being managed.
 
+    Example:
+        ```python
         from django.shortcuts import get_object_or_404
         from myapp.models import Post
         from guardian.forms import UserObjectPermissionsForm
@@ -113,6 +115,7 @@ class UserObjectPermissionsForm(BaseObjectPermissionsForm):
             if request.method == 'POST' and form.is_valid():
                 form.save_obj_perms()
             ...
+        ```
 
     """
 
@@ -121,11 +124,17 @@ class UserObjectPermissionsForm(BaseObjectPermissionsForm):
         super().__init__(*args, **kwargs)
 
     def get_obj_perms_field_initial(self):
+        """Returns initial object permissions management field choices.
+
+        Returns:
+            perms (list): List of permissions assigned to the user for the object.
+        """
         perms = get_user_perms(self.user, self.obj)
         return perms
 
     def save_obj_perms(self):
-        """
+        """Saves selected object permissions.
+
         Saves selected object permissions by creating new ones and removing
         those which were not selected but already exists.
 
@@ -144,11 +153,13 @@ class UserObjectPermissionsForm(BaseObjectPermissionsForm):
 
 
 class GroupObjectPermissionsForm(BaseObjectPermissionsForm):
-    """
-    Object level permissions management form for usage with ``Group`` instances.
+    """Object level permissions management form for usage with `Group` instances.
 
-    Example usage::
+    Attributes:
+        group (Group): The group instance for which the permissions are being managed.
 
+    Example:
+        ```python
         from django.shortcuts import get_object_or_404
         from myapp.models import Post
         from guardian.forms import GroupObjectPermissionsForm
@@ -161,7 +172,7 @@ class GroupObjectPermissionsForm(BaseObjectPermissionsForm):
             if request.method == 'POST' and form.is_valid():
                 form.save_obj_perms()
             ...
-
+        ```
     """
 
     def __init__(self, group, *args, **kwargs):
@@ -169,11 +180,17 @@ class GroupObjectPermissionsForm(BaseObjectPermissionsForm):
         super().__init__(*args, **kwargs)
 
     def get_obj_perms_field_initial(self):
+        """Returns initial object permissions management field choices.
+
+        Returns:
+            perms (list): List of permissions assigned to the group for the object.
+        """
         perms = get_group_perms(self.group, self.obj)
         return perms
 
     def save_obj_perms(self):
-        """
+        """Saves selected object permissions.
+
         Saves selected object permissions by creating new ones and removing
         those which were not selected but already exists.
 

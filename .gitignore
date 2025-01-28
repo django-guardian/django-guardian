@@ -35,3 +35,6 @@ example_project_custom_group/conf/*.py
 
 # Local virtual environments
 .venv
+
+# Documentation
+site*/

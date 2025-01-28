@@ -10,33 +10,44 @@ from guardian.shortcuts import get_objects_for_user
 
 
 class LoginRequiredMixin:
-    """
-    A login required mixin for use with class based views. This Class is a
-    light wrapper around the `login_required` decorator and hence function
-    parameters are just attributes defined on the class.
+    """A login required mixin for use with class-based views.
 
-    Due to parent class order traversal this mixin must be added as the left
+    This Class is a light wrapper around the Django `login_required` decorator,
+    function parameters are instead attributes defined on the class.
+
+    Due to Python Method Resolution Order (MRO), this mixin must be added as the left
     most mixin of a view.
 
-    The mixin has exactly the same flow as `login_required` decorator:
+    Attributes:
+        redirect_field_name (str): *Default*: `'next'`
+        login_url (str): *Default*: `settings.LOGIN_URL`
 
-        If the user isn't logged in, redirect to ``settings.LOGIN_URL``, passing
-        the current absolute path in the query string. Example:
-        ``/accounts/login/?next=/polls/3/``.
+    Example:
+        ```python
+        from guardian.mixins import LoginRequiredMixin
+        from django.views.generic import View
 
-        If the user is logged in, execute the view normally. The view code is
-        free to assume the user is logged in.
+        class SecretView(LoginRequiredMixin, View):
+            redirect_field_name = 'foobar'
+            login_url = '/let-me-in/'
 
-    **Class Settings**
+            def get(self, request):
+                return HttpResponse('secret-view')
+        ```
 
-    ``LoginRequiredMixin.redirect_field_name``
+    Note:
+        The mixin has exactly the same flow as `login_required` decorator:
 
-        *Default*: ``'next'``
+        - If the user isn't logged in, redirect to `settings.LOGIN_URL`, passing
+        the current absolute path in the query string.
+            - Example: `/accounts/login/?next=/polls/3/`.
 
-    ``LoginRequiredMixin.login_url``
+        - If the user is logged in, execute the view normally.
+        The view code is free to assume the user is logged in.
 
-        *Default*: ``settings.LOGIN_URL``
 
+    See Also:
+        - [Python MRO historical reference](https://docs.python.org/3/howto/mro.html)
     """
     redirect_field_name = REDIRECT_FIELD_NAME
     login_url = settings.LOGIN_URL
@@ -49,91 +60,66 @@ class LoginRequiredMixin:
 
 
 class PermissionRequiredMixin:
-    """
-    A view mixin that verifies if the current logged in user has the specified
-    permission by wrapping the ``request.user.has_perm(..)`` method.
+    """A view mixin that verifies if the current logged-in user has the specified permission.
 
+    This mixin works by wrapping the `request.user.has_perm(...)` method.
     If a `get_object()` method is defined either manually or by including
-    another mixin (for example ``SingleObjectMixin``) or ``self.object`` is
-    defined then the permission will be tested against that specific instance,
-    alternatively you can specify `get_permission_object()` method if ``self.object``
+    another mixin (e.g., `SingleObjectMixin`) or `self.object` is
+    defined, then the permission will be tested against that specific instance.
+    Alternatively, you can specify `get_permission_object()` method if `self.object`
     or `get_object()` does not return the object against you want to test permission
-
-    .. note:
-       Testing of a permission against a specific object instance requires an
-       authentication backend that supports. Please see ``django-guardian`` to
-       add object level permissions to your project.
 
     The mixin does the following:
 
-        If the user isn't logged in, redirect to settings.LOGIN_URL, passing
-        the current absolute path in the query string. Example:
-        /accounts/login/?next=/polls/3/.
+    - If the user isn't logged in, redirect to settings.LOGIN_URL, passing
+    the current absolute path in the query string.
+        - Example: /accounts/login/?next=/polls/3/.
 
-        If the `raise_exception` is set to True than rather than redirect to
-        login page a `PermissionDenied` (403) is raised.
+    - If `raise_exception` is set to `True` a `PermissionDenied` (403) is raised
+    instead of redirecting the user to `settings.LOGIN_URL`.
 
-        If the user is logged in, and passes the permission check than the view
-        is executed normally.
+    - If the user is logged in, and passes the permission check, the view is executed normally.
 
-    **Example Usage**::
+    Note:
+       Testing of a permission against a specific object instance requires an
+       authentication backend that supports.
+       The `guardian.backends.ObjectPermissionBackend` or a custom implementation
+       must be listed under the list of authentication backends in your project.
+
+    Attributes:
+        permission_required (str | list[str]): permissions to check
+            in form `"<app_label>.<permission codename>"`.
+            Default is `None`.
+        login_url (str): Default: `settings.LOGIN_URL`
+        redirect_field_name (str): Default is `'next'`
+        return_403 (bool): Returns 403 error page instead of redirecting.
+            Default is `False`.
+        return_404 (bool): Returns 404 error page instead of redirecting.
+            Default is `False`.
+        raise_exception (bool): Default is `False`
+        permission_denied_message (str): A string to pass to the `PermissionDenied` exception.
+            It is available in the 403 template context object as `exception`.
+            Default is `''`.
+        accept_global_perms (bool): Whether the mixin should first check for global perms.
+            If none are found, proceed to check object level permissions.
+            Default is `False`.
+        permission_object (None | object): Object against which test the permission;
+            if not set fallback to `self.get_permission_object()` which return `self.get_object()`
+            or `self.object` by default.
+            Default is `None`.
+        any_perm (bool): Whether any of the permissions in sequence is accepted.
+            Default is `False`.
+
+    Example:
+        ```python
+        from guardian.mixins import PermissionRequiredMixin
+        from django.views.generic import View
 
         class SecureView(PermissionRequiredMixin, View):
             ...
             permission_required = 'auth.change_user'
             ...
-
-    **Class Settings**
-
-    ``PermissionRequiredMixin.permission_required``
-
-        *Default*: ``None``, must be set to either a string or list of strings
-        in format: *<app_label>.<permission_codename>*.
-
-    ``PermissionRequiredMixin.login_url``
-
-        *Default*: ``settings.LOGIN_URL``
-
-    ``PermissionRequiredMixin.redirect_field_name``
-
-        *Default*: ``'next'``
-
-    ``PermissionRequiredMixin.return_403``
-
-        *Default*: ``False``. Returns 403 error page instead of redirecting
-        user.
-
-    ``PermissionRequiredMixin.return_404``
-
-        *Default*: ``False``. Returns 404 error page instead of redirecting
-        user.
-
-    ``PermissionRequiredMixin.raise_exception``
-
-        *Default*: ``False``
-
-        `permission_required` - the permission to check of form "<app_label>.<permission codename>"
-                                i.e. 'polls.can_vote' for a permission on a model in the polls application.
-
-    ``PermissionRequiredMixin.permission_denied_message``
-        *Default*: ``''``. A string to pass to the ``PermisssionDenied`` exception.
-            Will be available in the 403 template context as ``exception``.
-
-    ``PermissionRequiredMixin.accept_global_perms``
-
-        *Default*: ``False``,  If accept_global_perms would be set to True, then
-         mixing would first check for global perms, if none found, then it will
-         proceed to check object level permissions.
-
-    ``PermissionRequiredMixin.permission_object``
-         *Default*: ``(not set)``, object against which test the permission; if not set fallback
-         to ``self.get_permission_object()`` which return ``self.get_object()``
-         or ``self.object`` by default.
-
-    ``PermissionRequiredMixin.any_perm``
-
-        *Default*: ``False``. if True, any of permission in sequence is accepted.
-
+        ```
     """
     # default class view settings
     login_url = settings.LOGIN_URL
@@ -147,18 +133,21 @@ class PermissionRequiredMixin:
     any_perm = False
 
     def get_object_permission_denied_message(self):
-        """
+        """Get the message to pass to the `PermissionDenied` exception.
+
         Override this method to override the object_permission_denied_message attribute.
         """
         return self.object_permission_denied_message
 
     def get_required_permissions(self, request=None):
-        """
-        Returns list of permissions in format *<app_label>.<codename>* that
-        should be checked against *request.user* and *object*. By default, it
-        returns list from ``permission_required`` attribute.
+        """Get the required permissions.
 
-        :param request: Original request.
+        Returns list of permissions in format *<app_label>.<codename>* that
+        should be checked against *request.user* and *object*.
+        By default, it returns a list from `permission_required` attribute.
+
+        Parameters:
+            request (HttpRequest): Original request.
         """
         if isinstance(self.permission_required, str):
             perms = [self.permission_required]
@@ -178,11 +167,13 @@ class PermissionRequiredMixin:
                 getattr(self, 'object', None))
 
     def check_permissions(self, request):
-        """
-        Checks if *request.user* has all permissions returned by
-        *get_required_permissions* method.
+        """Check if the user has the required permissions.
 
-        :param request: Original request.
+        Checks if `request.user` has all permissions returned by the
+        `get_required_permissions()` method.
+
+        Parameters:
+            request (HttpRequest): The original request.
         """
         obj = self.get_permission_object()
 
@@ -205,14 +196,16 @@ class PermissionRequiredMixin:
         return forbidden
 
     def on_permission_check_fail(self, request, response, obj=None):
-        """
-        Method called upon permission check fail. By default it does nothing and
-        should be overridden, if needed.
+        """Method called upon permission check fail.
 
-        :param request: Original request
-        :param response: 403 response returned by *check_permissions* method.
-        :param obj: Object that was fetched from the view (using ``get_object``
-          method or ``object`` attribute, in that order).
+        Allow subclasses to hook into the permission check failure process.
+        By default, it does nothing and should be overridden, if needed.
+
+        Parameters:
+            request (HttpRequest): Original request
+            response (HttpResponse): 403 response returned by *check_permissions* method.
+            obj (Model | Any): Object that was fetched from the view (using `get_object`
+                method or `object` attribute, in that order).
         """
 
     def dispatch(self, request, *args, **kwargs):
@@ -252,46 +245,49 @@ class GuardianGroupMixin:
 
 
 class PermissionListMixin:
-    """
-    A view mixin that filter object in queryset for the current logged by required permission.
+    """A view mixin that filter a queryset by user and permission.
 
-    **Example Usage**::
+    This mixin filter object retrieved by a queryset that the
+    logged-in user has the specified permission for.
+
+    Example:
+        ```python
+        from django.views.generic import ListView
+        from guardian.mixins import PermissionListMixin
 
         class SecureView(PermissionListMixin, ListView):
             ...
             permission_required = 'articles.view_article'
             ...
 
-    or::
+        # or
 
         class SecureView(PermissionListMixin, ListView):
             ...
             permission_required = 'auth.change_user'
             get_objects_for_user_extra_kwargs = {'use_groups': False}
             ...
+        ```
 
-    **Class Settings**
-
-    ``PermissionListMixin.permission_required``
-
-        *Default*: ``None``, must be set to either a string or list of strings
-        in format: *<app_label>.<permission_codename>*.
-
-    ``PermissionListMixin.get_objects_for_user_extra_kwargs``
-
-        *Default*: ``{}``,  A extra params to pass for ```guardian.shortcuts.get_objects_for_user```
-
+    Attributes:
+        permission_required (str | list[str]): permissions to check
+            in format: `"<app_label>.<permission codename>"`.
+            Default is `None`
+        get_objects_for_user_extra_kwargs (dict): Extra params to pass to `guardian.shortcuts.get_objects_for_user`.
+            Default to `{}`,
     """
     permission_required = None
     get_objects_for_user_extra_kwargs = {}
 
     def get_required_permissions(self, request=None):
-        """
-        Returns list of permissions in format *<app_label>.<codename>* that
-        should be checked against *request.user* and *object*. By default, it
-        returns list from ``permission_required`` attribute.
+        """Get the required permissions.
 
-        :param request: Original request.
+        Returns list of permissions in format *<app_label>.<codename>* that
+        should be checked against *request.user* and *object*.
+        By default, it returns a list from `permission_required` attribute.
+
+        Parameters:
+            request (HttpRequest): Original request.
         """
         if isinstance(self.permission_required, str):
             perms = [self.permission_required]
@@ -305,10 +301,12 @@ class PermissionListMixin:
         return perms
 
     def get_get_objects_for_user_kwargs(self, queryset):
-        """
-        Returns dict of kwargs that should be pass to ```get_objects_for_user```.
+        """Get kwargs to pass to `get_objects_for_user`.
 
-        :param request: Queryset to filter
+        Returns dict of kwargs that should be passed to `get_objects_for_user`.
+
+        Parameters:
+            queryset (QuerySet): Queryset to filter.
         """
         return dict(user=self.request.user,
                     perms=self.get_required_permissions(self.request),
