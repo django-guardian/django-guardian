@@ -117,9 +117,8 @@ for more information.
 
 ## How do I make a release candidate?
 
----
-
-This workflow may only be triggered by project maintainers.
+!!! warning
+    This workflow may only be triggered by project maintainers.
 
 To make a new _release candidate_ you should perform the following steps:
 
@@ -140,9 +139,10 @@ This will:
 - tag the repo, and
 - create a prerelease version in GitHub Releases.
 
-## How do you make a full release?
+## How do I make a full release?
 
-This workflow may only be triggered by project maintainers.
+!!! warning
+    This workflow may only be triggered by project maintainers.
 
 To make a new full release you should perform the following steps:
 
