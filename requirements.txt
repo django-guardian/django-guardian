@@ -1,4 +1,0 @@
-Django>=4.2
-django-environ
-bumpversion
-mock
