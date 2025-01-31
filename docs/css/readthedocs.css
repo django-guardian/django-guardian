@@ -1,0 +1,4 @@
+:root {
+    /* Ensure that search text color is not low contrast */
+    --readthedocs-search-color: black;
+}

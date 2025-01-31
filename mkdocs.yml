@@ -34,6 +34,8 @@ theme:
   custom_dir: docs/overrides
 extra_javascript:
   - javascript/readthedocs.js
+extra_css:
+  - css/readthedocs.css
 nav:
   - Home: index.md
   - Installation: installation.md
