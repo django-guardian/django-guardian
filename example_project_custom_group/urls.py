@@ -17,6 +17,3 @@ urlpatterns = [
 
 if 'grappelli' in settings.INSTALLED_APPS:
     urlpatterns += [path('grappelli/', include('grappelli.urls')), ]
-
-if 'rosetta' in settings.INSTALLED_APPS:
-    urlpatterns += [path('rosetta/', include('rosetta.urls')), ]

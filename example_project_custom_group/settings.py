@@ -37,12 +37,6 @@ if 'GRAPPELLI' in os.environ:
     except ImportError:
         print("django-grappelli not installed")
 
-try:
-    import rosetta
-    INSTALLED_APPS += ('rosetta',)
-except ImportError:
-    pass
-
 MIDDLEWARE = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

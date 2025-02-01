@@ -1,0 +1,23 @@
+# Note: This pyproject.toml file is an example and is not used
+# while testing guardian. For guardian dev/test dependencies, see
+# pyproject.toml in guardian's root directory.
+
+[project]
+name = "example-project"
+version = "0.0.1"
+description = "Just an example of how to use guardian"
+# dependencies = [
+#     "django>=5.1.5",
+#     "django-environ>=0.12.0",
+#     "django-guardian>=3.0.0",
+# ]
+
+[dependency-groups]
+# For running tests, the test app, and building docs      
+# dev = [
+#     "mock>=5.1.0",
+#     "pytest>=8.3.4",
+#     "pytest-cov>=6.0.0",
+#     "pytest-django>=4.9.0",
+# ]
+

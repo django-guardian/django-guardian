@@ -5,7 +5,7 @@ description = "Per object permissions for Django"
 keywords = ["django", "permissions", "authorization", "object", "row", "level"]
 readme = "README.md"
 license = { text = "BSD-2-Clause" }
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
@@ -121,12 +121,15 @@ Issues = "https://github.com/me/spam/issues"
 Changelog = "https://github.com/django-guardian/django-guardian/releases"
 
 [dependency-groups]
-# For running tests, the test app, and building docs
+# PACKAGES=( 'psycopg2-binary' 'mysqlclient')
 dev = [
-    "django>=4.2.18",
-    "django-environ>=0.11.2",
+    "django-environ>=0.12.0",
     "mock>=5.1.0",
-    "pytest>=8.3.4"
+    "mysqlclient>=2.2.7",
+    "psycopg2-binary>=2.9.10",
+    "pytest>=8.3.4",
+    "pytest-cov>=5.0.0",
+    "pytest-django>=4.9.0",
 ]
 
 [tool.setuptools]
