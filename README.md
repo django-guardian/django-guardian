@@ -11,12 +11,6 @@ of Django’s authorization backend. Read an introduction to per-object permissi
 
 Online documentation is available at [https://django-guardian.readthedocs.io/](https://django-guardian.readthedocs.io/).
 
-## Requirements
-
-- Python 3.8+
-- A supported version of Django (currently 3.2+)
-
-GitHub Actions run tests against Django versions 3.2, 4.1, 4.2, 5.0, 5.1 and main.
 
 ## Installation
 
@@ -104,15 +98,3 @@ For example:
 
     admin.site.register(Author, AuthorAdmin)
 ```
-
-## For Developers
-
-To develop on guardian, you need to install `uv`, which is the package manager we use. It's very good, [you can find it here](https://docs.astral.sh/uv/).
-
-Once you're set up with `uv`, you can do:
-
-```bash
-uv sync --all-groups
-```
-
-Which will install development dependencies.
