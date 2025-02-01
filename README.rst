@@ -22,7 +22,7 @@ Online documentation is available at https://django-guardian.readthedocs.io/.
 Requirements
 ------------
 
-* Python 3.8+
+* Python 3.9+
 * A supported version of Django (currently 3.2+)
 
 GitHub Actions run tests against Django versions 3.2, 4.1, 4.2, 5.0, 5.1, and main.
