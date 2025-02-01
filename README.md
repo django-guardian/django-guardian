@@ -14,11 +14,13 @@ Online documentation is available at [https://django-guardian.readthedocs.io/](h
 
 ## Installation
 
-To install `django-guardian` simply run:
+To install `django-guardian` into your project run:
 
 ```bash
-pip install django-guardian
+uv add django-guardian
 ```
+> **TIP**: Not using a package manager like `uv` or `poetry` for your django project? You probably should try them :). In the meantime, `pip install django-guardian` works just fine too.
+
 
 ## Configuration
 
