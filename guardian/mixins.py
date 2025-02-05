@@ -1,4 +1,5 @@
 from collections.abc import Iterable
+from typing import Union
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, REDIRECT_FIELD_NAME
@@ -276,8 +277,8 @@ class PermissionListMixin:
         get_objects_for_user_extra_kwargs (dict): Extra params to pass to `guardian.shortcuts.get_objects_for_user`.
             Default to `{}`,
     """
-    permission_required = None
-    get_objects_for_user_extra_kwargs = {}
+    permission_required: Union[bool, None] = None
+    get_objects_for_user_extra_kwargs: dict = {}
 
     def get_required_permissions(self, request=None):
         """Get the required permissions.
