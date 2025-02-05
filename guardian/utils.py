@@ -8,14 +8,13 @@ and be considered unstable; their APIs may change in any future releases.
 import logging
 import os
 from itertools import chain
-from typing import Union, Any
+from typing import Union, Any, Protocol
 
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME, get_user_model
-from django.contrib.auth.base_user import AbstractBaseUser
-from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.models import AnonymousUser, Permission, GroupManager, UserManager, User, Group
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
-from django.db.models import Model, QuerySet
+from django.db.models import Model, QuerySet, ManyToManyField
 from django.http import (
     HttpResponseForbidden,
     HttpResponseNotFound,
@@ -32,7 +31,24 @@ logger = logging.getLogger(__name__)
 abspath = lambda *p: os.path.abspath(os.path.join(*p))
 
 
-def get_anonymous_user() -> AbstractBaseUser:
+
+class GuardianGroupProtocol(Protocol):
+    permissions: ManyToManyField[Permission]
+    objects: GroupManager
+    name: str
+
+class GuardianUserProtocol(Protocol):
+    EMAIL_FIELD: str
+    USERNAME_FIELD: str
+    REQUIRED_FIELDS: list[str]
+    groups: ManyToManyField[GuardianGroupProtocol]
+    is_active: bool
+    objects: UserManager
+    username: str
+    user_permissions: ManyToManyField[Permission]
+
+
+def get_anonymous_user() -> GuardianUserProtocol:
     """Get the django-guardian equivalent of the anonymous user.
 
     It returns a `User` model instance (not `AnonymousUser`) depending on
@@ -45,12 +61,12 @@ def get_anonymous_user() -> AbstractBaseUser:
         - [Guardian Configuration](https://django-guardian.readthedocs.io/en/stable/configuration.html)
         - [ANONYMOUS_USER_NAME configuration](https://django-guardian.readthedocs.io/en/stable/configuration.html#anonymous-user-nam)
     """
-    User = get_user_model()
-    lookup = {User.USERNAME_FIELD: guardian_settings.ANONYMOUS_USER_NAME}
-    return User.objects.get(**lookup)
+    user_model: GuardianUserProtocol = get_user_model()  # type: ignore
+    lookup = {user_model.USERNAME_FIELD: guardian_settings.ANONYMOUS_USER_NAME}
+    return user_model.objects.get(**lookup)
 
 
-def get_identity(identity: Model) -> tuple[Union[Model, None], Union[Model, None]]:
+def get_identity(identity: Union[User,Group,AnonymousUser]) -> tuple[Union[User, None], Union[Group, None]]:
     """Get a tuple with the identity of the given input.
 
     Returns a tuple with one of the members set to `None` depending on whether the input is
@@ -69,7 +85,7 @@ def get_identity(identity: Model) -> tuple[Union[Model, None], Union[Model, None
 
     Examples:
         ```shell
-        >>> from django.contrib.auth.models import User
+        >>> from django.contrib.auth.models import User, Group
         >>> user = User.objects.create(username='joe')
         >>> get_identity(user)
         (<User: joe>, None)
@@ -90,25 +106,25 @@ def get_identity(identity: Model) -> tuple[Union[Model, None], Union[Model, None
     if isinstance(identity, AnonymousUser):
         identity = get_anonymous_user()
 
-    Group = get_group_obj_perms_model().group.field.related_model
+    group_model = get_group_obj_perms_model().group.field.related_model
 
     # get identity from queryset model type
     if isinstance(identity, QuerySet):
         identity_model_type = identity.model
         if identity_model_type == get_user_model():
             return identity, None
-        elif identity_model_type == Group:
+        elif identity_model_type == group_model:
             return None, identity
 
     # get identity from the first element in the list
     if isinstance(identity, list) and isinstance(identity[0], get_user_model()):
         return identity, None
-    if isinstance(identity, list) and isinstance(identity[0], Group):
+    if isinstance(identity, list) and isinstance(identity[0], group_model):
         return None, identity
 
     if isinstance(identity, get_user_model()):
         return identity, None
-    if isinstance(identity, Group):
+    if isinstance(identity, group_model):
         return None, identity
 
     raise NotUserNorGroup("User/AnonymousUser or Group instance is required "
