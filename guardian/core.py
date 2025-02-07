@@ -1,4 +1,5 @@
 from itertools import chain
+from typing import Iterable
 
 from django.contrib.auth.models import Permission
 from django.db.models import Model
@@ -188,7 +189,7 @@ class ObjectPermissionChecker:
         pks, model, ctype = _get_pks_model_and_ctype(objects)
 
         if self.user and self.user.is_superuser:
-            perms = list(
+            perms: Iterable = list(
                 Permission.objects.filter(content_type=ctype).values_list("codename", flat=True)
             )
 

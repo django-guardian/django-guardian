@@ -315,8 +315,8 @@ class PermissionListMixin:
         Parameters:
             queryset (QuerySet): Queryset to filter.
         """
-        return dict(user=self.request.user,
-                    perms=self.get_required_permissions(self.request),
+        return dict(user=self.request.user,  # type: ignore[attr-defined]
+                    perms=self.get_required_permissions(self.request),  # type: ignore[attr-defined]
                     klass=queryset,
                     **self.get_objects_for_user_extra_kwargs)
 

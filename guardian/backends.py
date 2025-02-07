@@ -99,7 +99,8 @@ class ObjectPermissionBackend:
 
         if '.' in perm:
             app_label, _ = perm.split('.', 1)
-            if app_label != obj._meta.app_label:
+            # TODO (David Graham): Check if obj is None or change the method signature
+            if app_label != obj._meta.app_label:  # type: ignore[union-attr]
                 # Check the content_type app_label when permission
                 # and obj app labels don't match.
                 ctype = get_content_type(obj)
@@ -107,7 +108,7 @@ class ObjectPermissionBackend:
                     raise WrongAppError("Passed perm has app label of '%s' while "
                                         "given obj has app label '%s' and given obj"
                                         "content_type has app label '%s'" %
-                                        (app_label, obj._meta.app_label, ctype.app_label))
+                                        (app_label, obj._meta.app_label, ctype.app_label))   # type: ignore[union-attr]
 
         check = ObjectPermissionChecker(user_obj)
         return check.has_perm(perm, obj)
