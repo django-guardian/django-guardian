@@ -8,10 +8,11 @@ and be considered unstable; their APIs may change in any future releases.
 import logging
 import os
 from itertools import chain
-from typing import Union, Any, Protocol
+from typing import Union, Any, Protocol, Type
 
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME, get_user_model
+from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import AnonymousUser, Permission, GroupManager, UserManager, User, Group
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db.models import Model, QuerySet, ManyToManyField
@@ -31,9 +32,8 @@ logger = logging.getLogger(__name__)
 abspath = lambda *p: os.path.abspath(os.path.join(*p))
 
 
-
 class GuardianGroupProtocol(Protocol):
-    permissions: ManyToManyField[Permission]
+    permissions: ManyToManyField
     objects: GroupManager
     name: str
 
@@ -41,14 +41,39 @@ class GuardianUserProtocol(Protocol):
     EMAIL_FIELD: str
     USERNAME_FIELD: str
     REQUIRED_FIELDS: list[str]
-    groups: ManyToManyField[GuardianGroupProtocol]
+    groups: ManyToManyField
     is_active: bool
     objects: UserManager
     username: str
-    user_permissions: ManyToManyField[Permission]
+    user_permissions: ManyToManyField
 
 
-def get_anonymous_user() -> GuardianUserProtocol:
+_UserType = Union[User, AnonymousUser, Type[AbstractBaseUser], GuardianUserProtocol]
+"""A type representing the built in Django user or custom user model.
+
+An acceptable type can be the django.contrib.auth.models.User model, 
+as well as a custom user model that implements the necessary methods/attributes 
+as defined by the GuardianUser interfaces.
+"""
+
+_GroupType = Union[Group, Type[Group], GuardianGroupProtocol]
+"""A type representing built in Django group or custom group model.
+
+An acceptable type can be the built in Django Group, 
+as well as a custom group model that implements the necessary methods/attributes 
+as defined by the GuardianGroup interfaces.
+"""
+
+_UserOrGroupType = Union[_UserType, _GroupType]
+"""A type representing either a user or group.
+
+An acceptable type can be the built in Django User, Group, or AnonymousUser,
+as well as a custom user or group model that implements the necessary methods/attributes
+as defined by the GuardianUser and GuardianGroup interfaces.
+"""
+
+
+def get_anonymous_user() -> _UserType:
     """Get the django-guardian equivalent of the anonymous user.
 
     It returns a `User` model instance (not `AnonymousUser`) depending on
@@ -61,12 +86,12 @@ def get_anonymous_user() -> GuardianUserProtocol:
         - [Guardian Configuration](https://django-guardian.readthedocs.io/en/stable/configuration.html)
         - [ANONYMOUS_USER_NAME configuration](https://django-guardian.readthedocs.io/en/stable/configuration.html#anonymous-user-nam)
     """
-    user_model: GuardianUserProtocol = get_user_model()  # type: ignore
+    user_model: _UserType = get_user_model()
     lookup = {user_model.USERNAME_FIELD: guardian_settings.ANONYMOUS_USER_NAME}
     return user_model.objects.get(**lookup)
 
 
-def get_identity(identity: Union[User,Group,AnonymousUser]) -> tuple[Union[User, None], Union[Group, None]]:
+def get_identity(identity: _UserOrGroupType) -> tuple[Union[Any, None], Union[Any, None]]:
     """Get a tuple with the identity of the given input.
 
     Returns a tuple with one of the members set to `None` depending on whether the input is
@@ -214,8 +239,8 @@ def get_obj_perm_model_by_conf(setting_name: str) -> type[Model]:
         ImproperlyConfigured: If the setting value is not an installed model or
             does not follow the format 'app_label.model_name'.
     """
+    setting_value: str = getattr(guardian_settings, setting_name)
     try:
-        setting_value = getattr(guardian_settings, setting_name)
         return django_apps.get_model(setting_value, require_ready=False)  # type: ignore
     except ValueError as e:
         raise ImproperlyConfigured("{} must be of the form 'app_label.model_name'".format(setting_value)) from e

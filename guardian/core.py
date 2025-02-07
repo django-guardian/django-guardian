@@ -1,12 +1,13 @@
 from itertools import chain
 
 from django.contrib.auth.models import Permission
+from django.db.models import Model
 from django.db.models.query import QuerySet
 from django.utils.encoding import force_str
 
 from guardian.conf import settings as guardian_settings
 from guardian.ctypes import get_content_type
-from guardian.utils import get_group_obj_perms_model, get_identity, get_user_obj_perms_model
+from guardian.utils import get_group_obj_perms_model, get_identity, get_user_obj_perms_model, _UserOrGroupType
 
 
 def _get_pks_model_and_ctype(objects):
@@ -47,14 +48,14 @@ class ObjectPermissionChecker:
        dictionary.
     """
 
-    def __init__(self, user_or_group=None):
+    def __init__(self, user_or_group: _UserOrGroupType = None) -> None:
         """Constructor for ObjectPermissionChecker.
 
         Parameters:
             user_or_group (User, AnonymousUser, Group): The user or group to check permissions for.
         """
         self.user, self.group = get_identity(user_or_group)
-        self._obj_perms_cache = {}
+        self._obj_perms_cache: dict = {}
 
     def has_perm(self, perm: str, obj: Model) -> bool:
         """Checks if user/group has the specified permission for the given object.
