@@ -1,12 +1,17 @@
+from typing import Any, Union, Iterable
+
 from django.contrib.auth import get_user_model
 from django.db import models
+from django.db.models import Model
+from django.http import HttpRequest
+
 from guardian.conf import settings
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
 from guardian.exceptions import WrongAppError
 
 
-def check_object_support(obj):
+def check_object_support(obj: Model) -> bool:
     """Checks if given `obj` is supported
 
     Returns:
@@ -18,7 +23,7 @@ def check_object_support(obj):
     return isinstance(obj, models.Model)
 
 
-def check_user_support(user_obj):
+def check_user_support(user_obj: Any) -> tuple[bool, Any]:
     """Checks if given user is supported.
 
     Checks if the given user is supported. Anonymous users need explicit
@@ -42,7 +47,7 @@ def check_user_support(user_obj):
     return True, user_obj
 
 
-def check_support(user_obj, obj):
+def check_support(user_obj: Any, obj: Model) -> Any:
     """Checks if given user and object are supported.
 
     Combination of ``check_object_support`` and ``check_user_support``
@@ -58,10 +63,10 @@ class ObjectPermissionBackend:
     supports_anonymous_user = True
     supports_inactive_user = True
 
-    def authenticate(self, request, username=None, password=None):
+    def authenticate(self, request: HttpRequest, username: Union[str, None] = None, password: Union[str, None] = None) -> Any:
         return None
 
-    def has_perm(self, user_obj, perm, obj=None):
+    def has_perm(self, user_obj: Any, perm: str, obj: Union[Model, None] = None) -> bool:
         """Check if a user has the permission for a given object.
 
         Returns `True` if given `user_obj` has `perm` for `obj`.
@@ -107,7 +112,7 @@ class ObjectPermissionBackend:
         check = ObjectPermissionChecker(user_obj)
         return check.has_perm(perm, obj)
 
-    def get_all_permissions(self, user_obj, obj=None):
+    def get_all_permissions(self, user_obj: Any, obj: Union[Model, None] = None) -> Iterable[str]:
         """Returns all permissions for a given object.
 
         Parameters:
