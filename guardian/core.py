@@ -34,16 +34,16 @@ class ObjectPermissionChecker:
     """Generic object permissions checker class being the heart of `django-guardian`.
 
     Note:
-       Once checked for single object, permissions are stored and we don't hit
-       database again if another check is called for this object. This is great
-       for templates, views or other request based checks (assuming we don't
+       Once checked for a single object, permissions are stored, and we don't hit
+       the database again if another check is called for this object. This is great
+       for templates, views or other request-based checks (assuming we don't
        have hundreds of permissions on a single object as we fetch all
        permissions for checked object).
 
-       On the other hand, if we call `has_perm` for perm1/object1, then we
+       if we call `has_perm` for perm1/object1, then we
        change permission state and call `has_perm` again for same
-       perm1/object1 on same instance of ObjectPermissionChecker we won't see a
-       difference as permissions are already fetched and stored within cache
+       perm1/object1 on the same instance of ObjectPermissionChecker we won't see a
+       difference as permissions are already fetched and stored within the cache
        dictionary.
     """
 
@@ -56,7 +56,7 @@ class ObjectPermissionChecker:
         self.user, self.group = get_identity(user_or_group)
         self._obj_perms_cache = {}
 
-    def has_perm(self, perm, obj):
+    def has_perm(self, perm: str, obj: Model) -> bool:
         """Checks if user/group has the specified permission for the given object.
 
         Parameters:
@@ -64,6 +64,8 @@ class ObjectPermissionChecker:
                 prefix (if not prefixed, we grab app_label from `obj`)
             obj (Model): Django model instance for which permission should be checked
 
+        Returns:
+            has_perm (bool): True if user/group has the permission, False otherwise
         """
         if self.user and not self.user.is_active:
             return False
@@ -110,7 +112,7 @@ class ObjectPermissionChecker:
 
         return user_filters
 
-    def get_user_perms(self, obj):
+    def get_user_perms(self, obj: Model) -> QuerySet:
         ctype = get_content_type(obj)
 
         perms_qs = Permission.objects.filter(content_type=ctype)
@@ -120,7 +122,7 @@ class ObjectPermissionChecker:
 
         return user_perms
 
-    def get_group_perms(self, obj):
+    def get_group_perms(self, obj: Model) -> QuerySet:
         ctype = get_content_type(obj)
 
         perms_qs = Permission.objects.filter(content_type=ctype)
@@ -130,7 +132,7 @@ class ObjectPermissionChecker:
 
         return group_perms
 
-    def get_perms(self, obj):
+    def get_perms(self, obj: Model) -> list:
         """Get a list of permissions for the given object.
 
         Get the list of permissions for the given object.
@@ -150,7 +152,7 @@ class ObjectPermissionChecker:
         ctype = get_content_type(obj)
         key = self.get_local_cache_key(obj)
         if key not in self._obj_perms_cache:
-            # If auto-prefetching enabled, do not hit database
+            # If auto-prefetching enabled, do not hit the database
             if guardian_settings.AUTO_PREFETCH:
                 return []
             if self.user and self.user.is_superuser:
@@ -169,12 +171,11 @@ class ObjectPermissionChecker:
         return self._obj_perms_cache[key]
 
     def get_local_cache_key(self, obj):
-        """Returns cache key for `_obj_perms_cache` dict.
-       """
+        """Returns cache key for `_obj_perms_cache` dict."""
         ctype = get_content_type(obj)
         return (ctype.id, force_str(obj.pk))
 
-    def prefetch_perms(self, objects):
+    def prefetch_perms(self, objects: list[Model]):
         """Prefetches the permissions for objects in `objects` and puts them in the cache.
 
         Parameters:
