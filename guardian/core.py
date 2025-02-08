@@ -1,5 +1,5 @@
 from itertools import chain
-from typing import Iterable
+from typing import Iterable, Union, Any
 
 from django.contrib.auth.models import Permission
 from django.db.models import Model
@@ -8,7 +8,7 @@ from django.utils.encoding import force_str
 
 from guardian.conf import settings as guardian_settings
 from guardian.ctypes import get_content_type
-from guardian.utils import get_group_obj_perms_model, get_identity, get_user_obj_perms_model, _UserOrGroupType
+from guardian.utils import get_group_obj_perms_model, get_identity, get_user_obj_perms_model
 
 
 def _get_pks_model_and_ctype(objects):
@@ -49,7 +49,7 @@ class ObjectPermissionChecker:
        dictionary.
     """
 
-    def __init__(self, user_or_group: _UserOrGroupType = None) -> None:
+    def __init__(self, user_or_group: Union[Any, None] = None) -> None:
         """Constructor for ObjectPermissionChecker.
 
         Parameters:

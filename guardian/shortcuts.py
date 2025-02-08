@@ -6,17 +6,13 @@ import warnings
 from collections import defaultdict
 from functools import partial, lru_cache
 from itertools import groupby
-from typing import Union, TypeVar, Any
+from typing import Union, Any
 
 from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission, User, AnonymousUser, Group
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
-from django.db.models import Count, Q, QuerySet, Model, Manager
-from django.shortcuts import _get_queryset
-from django.db.models.expressions import Value
-from django.db.models.functions import Cast, Replace
 from django.db.models import (
     AutoField,
     BigIntegerField,
@@ -28,6 +24,11 @@ from django.db.models import (
     SmallIntegerField,
     UUIDField,
 )
+from django.db.models import Count, Q, QuerySet, Model, Manager
+from django.db.models.expressions import Value
+from django.db.models.functions import Cast, Replace
+from django.shortcuts import _get_queryset
+
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
 from guardian.exceptions import (
@@ -51,12 +52,9 @@ def _get_ct_cached(app_label, codename):
     return ContentType.objects.get(app_label=app_label, permission__codename=codename)
 
 
-UserOrGroup = TypeVar("UserOrGroup", bound=Model)
-
-
 def assign_perm(
     perm: Union[str, Permission],
-    user_or_group: UserOrGroup,
+    user_or_group: Any,
     obj: Union[Model, None] = None,
 ) -> Union[str, Permission, None]:
     """Assigns permission to user/group and object pair.
@@ -728,11 +726,11 @@ def get_objects_for_group(
     Example:
         Let's assume we have a `Task` model belonging to the `tasker` app with
         the default add_task, change_task and delete_task permissions provided
-        by Django::
+        by Django:
 
         ```shell
         >>> from guardian.shortcuts import get_objects_for_group
-        >>> from tasker import Task
+        >>> from tasker import Task  # noqa
         >>> group = Group.objects.create('some group')
         >>> task = Task.objects.create('some task')
         >>> get_objects_for_group(group, 'tasker.add_task')

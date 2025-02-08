@@ -8,14 +8,13 @@ and be considered unstable; their APIs may change in any future releases.
 import logging
 import os
 from itertools import chain
-from typing import Union, Any, Protocol, Type
+from typing import Union, Any
 
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME, get_user_model
-from django.contrib.auth.base_user import AbstractBaseUser
-from django.contrib.auth.models import AnonymousUser, Permission, GroupManager, UserManager, User, Group
+from django.contrib.auth.models import AnonymousUser, User, Group
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
-from django.db.models import Model, QuerySet, ManyToManyField
+from django.db.models import Model, QuerySet
 from django.http import (
     HttpResponseForbidden,
     HttpResponseNotFound,
@@ -24,6 +23,7 @@ from django.http import (
     HttpResponse,
 )
 from django.shortcuts import render
+
 from guardian.conf import settings as guardian_settings
 from guardian.ctypes import get_content_type
 from guardian.exceptions import NotUserNorGroup
@@ -32,48 +32,7 @@ logger = logging.getLogger(__name__)
 abspath = lambda *p: os.path.abspath(os.path.join(*p))
 
 
-class GuardianGroupProtocol(Protocol):
-    permissions: ManyToManyField
-    objects: GroupManager
-    name: str
-
-class GuardianUserProtocol(Protocol):
-    EMAIL_FIELD: str
-    USERNAME_FIELD: str
-    REQUIRED_FIELDS: list[str]
-    groups: ManyToManyField
-    is_active: bool
-    objects: UserManager
-    username: str
-    user_permissions: ManyToManyField
-
-
-_UserType = Union[User, AnonymousUser, Type[AbstractBaseUser], GuardianUserProtocol]
-"""A type representing the built in Django user or custom user model.
-
-An acceptable type can be the django.contrib.auth.models.User model, 
-as well as a custom user model that implements the necessary methods/attributes 
-as defined by the GuardianUser interfaces.
-"""
-
-_GroupType = Union[Group, Type[Group], GuardianGroupProtocol]
-"""A type representing built in Django group or custom group model.
-
-An acceptable type can be the built in Django Group, 
-as well as a custom group model that implements the necessary methods/attributes 
-as defined by the GuardianGroup interfaces.
-"""
-
-_UserOrGroupType = Union[_UserType, _GroupType]
-"""A type representing either a user or group.
-
-An acceptable type can be the built in Django User, Group, or AnonymousUser,
-as well as a custom user or group model that implements the necessary methods/attributes
-as defined by the GuardianUser and GuardianGroup interfaces.
-"""
-
-
-def get_anonymous_user() -> _UserType:
+def get_anonymous_user() -> Any:
     """Get the django-guardian equivalent of the anonymous user.
 
     It returns a `User` model instance (not `AnonymousUser`) depending on
@@ -86,12 +45,12 @@ def get_anonymous_user() -> _UserType:
         - [Guardian Configuration](https://django-guardian.readthedocs.io/en/stable/configuration.html)
         - [ANONYMOUS_USER_NAME configuration](https://django-guardian.readthedocs.io/en/stable/configuration.html#anonymous-user-nam)
     """
-    user_model: _UserType = get_user_model()
+    user_model = get_user_model()
     lookup = {user_model.USERNAME_FIELD: guardian_settings.ANONYMOUS_USER_NAME}
     return user_model.objects.get(**lookup)
 
 
-def get_identity(identity: _UserOrGroupType) -> tuple[Union[Any, None], Union[Any, None]]:
+def get_identity(identity: Model) -> tuple[Union[Any, None], Union[Any, None]]:
     """Get a tuple with the identity of the given input.
 
     Returns a tuple with one of the members set to `None` depending on whether the input is
