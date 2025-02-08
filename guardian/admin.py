@@ -7,8 +7,8 @@ from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, path
-from django.utils.translation import gettext_lazy as _
 from django.utils.translation import gettext
+from django.utils.translation import gettext_lazy as _
 
 from guardian.forms import GroupObjectPermissionsForm, UserObjectPermissionsForm
 from guardian.shortcuts import (get_group_perms, get_groups_with_perms, get_perms_for_model, get_user_perms,
@@ -40,19 +40,15 @@ class AdminGroupObjectPermissionsForm(GroupObjectPermissionsForm):
 
 class GuardedModelAdminMixin:
     """Mixin helper for custom subclassing `admin.ModelAdmin`."""
-    change_form_template = \
-        'admin/guardian/model/change_form.html'
-    obj_perms_manage_template = \
-        'admin/guardian/model/obj_perms_manage.html'
-    obj_perms_manage_user_template = \
-        'admin/guardian/model/obj_perms_manage_user.html'
-    obj_perms_manage_group_template = \
-        'admin/guardian/model/obj_perms_manage_group.html'
-    user_can_access_owned_objects_only = False
-    user_owned_objects_field = 'user'
-    user_can_access_owned_by_group_objects_only = False
-    group_owned_objects_field = 'group'
-    include_object_permissions_urls = True
+    change_form_template: str = 'admin/guardian/model/change_form.html'
+    obj_perms_manage_template: str = 'admin/guardian/model/obj_perms_manage.html'
+    obj_perms_manage_user_template: str = 'admin/guardian/model/obj_perms_manage_user.html'
+    obj_perms_manage_group_template: str = 'admin/guardian/model/obj_perms_manage_group.html'
+    user_can_access_owned_objects_only: bool = False
+    user_owned_objects_field: str = 'user'
+    user_can_access_owned_by_group_objects_only: bool = False
+    group_owned_objects_field: str = 'group'
+    include_object_permissions_urls: bool = True
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
