@@ -26,6 +26,7 @@ setup(
         'guardian.testapp.tests'
     ],
     include_package_data=True,
+    package_data={'guardian': ["py.typed"]},
     license='BSD',
     install_requires=["Django>=3.2"],
     tests_require=['mock', 'django-environ', 'pytest', 'pytest-django'],
