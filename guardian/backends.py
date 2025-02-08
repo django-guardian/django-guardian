@@ -36,13 +36,12 @@ def check_user_support(user_obj: Any) -> tuple[bool, Any]:
     # This is how we support anonymous users - simply try to retrieve User
     # instance and perform checks for that predefined user
     if not user_obj.is_authenticated:
-        # If anonymous user permission is disabled then they are always
-        # unauthorized
+        # If anonymous user permission is disabled, then they are always unauthorized
         if settings.ANONYMOUS_USER_NAME is None:
             return False, user_obj
-        User = get_user_model()
-        lookup = {User.USERNAME_FIELD: settings.ANONYMOUS_USER_NAME}
-        user_obj = User.objects.get(**lookup)
+        user_model = get_user_model()
+        lookup = {user_model.USERNAME_FIELD: settings.ANONYMOUS_USER_NAME}
+        user_obj = user_model.objects.get(**lookup)
 
     return True, user_obj
 
@@ -50,7 +49,7 @@ def check_user_support(user_obj: Any) -> tuple[bool, Any]:
 def check_support(user_obj: Any, obj: Model) -> Any:
     """Checks if given user and object are supported.
 
-    Combination of ``check_object_support`` and ``check_user_support``
+    Combination of `check_object_support` and `check_user_support`
     """
     obj_support = check_object_support(obj)
     user_support, user_obj = check_user_support(user_obj)
