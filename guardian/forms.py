@@ -1,30 +1,32 @@
+from typing import Union
+
 from django import forms
+from django.db.models import Model
 from django.utils.translation import gettext as _
 from guardian.shortcuts import assign_perm, get_group_perms, get_perms_for_model, get_user_perms, remove_perm
 
 
 class BaseObjectPermissionsForm(forms.Form):
-    """
-    Base form for object permissions management. Needs to be extended for usage
-    with users and/or groups.
+    """Base form for object permissions management.
+
+    Needs to be extended for usage with users and/or groups.
     """
 
-    def __init__(self, obj, *args, **kwargs):
-        """
-        Constructor for BaseObjectPermissionsForm.
+    def __init__(self, obj: Union[Model], *args, **kwargs) -> None:
+        """Constructor for BaseObjectPermissionsForm.
 
-        :param obj: Any instance which form would use to manage object
-          permissions"
+        Parameters:
+            obj (Model | Any): Any instance which form would use to manage object permissions
         """
         self.obj = obj
         super().__init__(*args, **kwargs)
         field_name = self.get_obj_perms_field_name()
         self.fields[field_name] = self.get_obj_perms_field()
 
-    def get_obj_perms_field(self):
-        """
-        Returns field instance for object permissions management. May be
-        replaced entirely.
+    def get_obj_perms_field(self) -> forms.Field:
+        """Get the field instance for object permissions management.
+
+        May be overridden entirely.
         """
         field_class = self.get_obj_perms_field_class()
         field = field_class(
@@ -36,58 +38,71 @@ class BaseObjectPermissionsForm(forms.Form):
         )
         return field
 
-    def get_obj_perms_field_name(self):
-        """
-        Returns name of the object permissions management field. Default:
-        ``permission``.
+    def get_obj_perms_field_name(self) -> str:
+        """Get the name of the object permissions management field.
+
+        Returns:
+            field_name (str): Name of the object permissions management field.
+                Defaults to 'permission'
         """
         return 'permissions'
 
-    def get_obj_perms_field_label(self):
-        """
-        Returns label of the object permissions management field. Defualt:
-        ``_("Permissions")`` (marked to be translated).
+    def get_obj_perms_field_label(self) -> str:
+        """Get the label of the object permissions management field.
+
+        Returns:
+            field_label (str): Label of the object permissions management field.
+            Default to `_("Permissions")` (marked to be translated).
         """
         return _("Permissions")
 
-    def get_obj_perms_field_choices(self):
-        """
+    def get_obj_perms_field_choices(self) -> list:
+        """Get the choices for object permissions management field.
+
         Returns choices for object permissions management field. Default:
-        list of tuples ``(codename, name)`` for each ``Permission`` instance
+        list of tuples `(codename, name)` for each `Permission` instance
         for the managed object.
         """
         choices = [(p.codename, p.name) for p in get_perms_for_model(self.obj)]
         return choices
 
-    def get_obj_perms_field_initial(self):
-        """
-        Returns initial object permissions management field choices. Default:
-        ``[]`` (empty list).
+    def get_obj_perms_field_initial(self) -> list:
+        """Get the initial object permissions management field choices.
+
+        Returns:
+            perms_field_initial (list): List of initial object permissions.
+            Default to `[]` (empty list).
         """
         return []
 
-    def get_obj_perms_field_class(self):
-        """
-        Returns object permissions management field's base class. Default:
-        ``django.forms.MultipleChoiceField``.
+    def get_obj_perms_field_class(self) -> type[forms.Field]:
+        """Get object permissions management field's class.
+
+        Returns:
+            field_class (forms.Field): Object permissions management field's class.
+            Default to `forms.MultipleChoiceField`.
         """
         return forms.MultipleChoiceField
 
-    def get_obj_perms_field_widget(self):
-        """
-        Returns object permissions management field's widget base class.
-        Default: ``django.forms.SelectMultiple``.
+    def get_obj_perms_field_widget(self) -> type[forms.Widget]:
+        """Get the widget class for object permissions management field.
+
+        Returns:
+            field_widget (forms.Widget): Object permissions management field's widget class.
+            Default to `forms.SelectMultiple`.
         """
         return forms.SelectMultiple
 
-    def are_obj_perms_required(self):
-        """
-        Indicates if at least one object permission should be required. Default:
-        ``False``.
+    def are_obj_perms_required(self) -> bool:
+        """Indicates if at least one object permission should be required.
+
+        Returns:
+            required (bool): Whether at least one object permission should be required.
+            Defaults to `False`.
         """
         return False
 
-    def save_obj_perms(self):
+    def save_obj_perms(self) -> None:
         """
         Must be implemented in concrete form class. This method should store
         selected object permissions.
