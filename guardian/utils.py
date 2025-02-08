@@ -236,7 +236,7 @@ def clean_orphan_obj_perms() -> int:
 # TODO: should raise error when multiple UserObjectPermission direct relations
 # are defined
 
-def get_obj_perms_model(obj: Union[type[Model], None], base_cls: type[Model], generic_cls: type[Model]) -> type[Model]:
+def get_obj_perms_model(obj: Union[Model, None], base_cls: type[Model], generic_cls: type[Model]) -> type[Model]:
     """Return the matching object permission model for the obj class.
 
     Defaults to returning the generic object permission when no direct foreignkey is defined, or obj is None.
@@ -271,7 +271,7 @@ def get_obj_perms_model(obj: Union[type[Model], None], base_cls: type[Model], ge
     return generic_cls
 
 
-def get_user_obj_perms_model(obj: Union[type[Model], None] = None) -> type[Model]:
+def get_user_obj_perms_model(obj: Union[Model, None] = None) -> type[Model]:
     """Returns model class that connects given `obj` and User class.
 
     If obj is not specified, then the user generic object permission model
@@ -282,7 +282,7 @@ def get_user_obj_perms_model(obj: Union[type[Model], None] = None) -> type[Model
     return get_obj_perms_model(obj, UserObjectPermissionBase, UserObjectPermission)
 
 
-def get_group_obj_perms_model(obj: Union[type[Model], None] = None) -> type[Model]:
+def get_group_obj_perms_model(obj: Union[Model, None] = None) -> type[Model]:
     """Returns model class that connects given `obj` and Group class.
 
     If obj is not specified, then the group generic object permission model
