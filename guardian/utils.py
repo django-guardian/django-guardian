@@ -46,7 +46,7 @@ def get_anonymous_user() -> Any:
         - [ANONYMOUS_USER_NAME configuration](https://django-guardian.readthedocs.io/en/stable/configuration.html#anonymous-user-nam)
     """
     user_model = get_user_model()
-    lookup = {user_model.USERNAME_FIELD: guardian_settings.ANONYMOUS_USER_NAME}
+    lookup = {user_model.USERNAME_FIELD: guardian_settings.ANONYMOUS_USER_NAME}  # type: ignore[attr-defined]
     return user_model.objects.get(**lookup)
 
 
@@ -90,7 +90,7 @@ def get_identity(identity: Model) -> tuple[Union[Any, None], Union[Any, None]]:
     if isinstance(identity, AnonymousUser):
         identity = get_anonymous_user()
 
-    group_model = get_group_obj_perms_model().group.field.related_model
+    group_model = get_group_obj_perms_model().group.field.related_model  # type: ignore[attr-defined]
 
     # get identity from queryset model type
     if isinstance(identity, QuerySet):
@@ -143,13 +143,13 @@ def get_40x_or_None(
     has_permissions = False
     # global perms check first (if accept_global_perms)
     if accept_global_perms:
-        has_permissions = all(request.user.has_perm(perm) for perm in perms)
+        has_permissions = all(request.user.has_perm(perm) for perm in perms)  # type: ignore[union-attr]
     # if still no permission granted, try obj perms
     if not has_permissions:
         if any_perm:
-            has_permissions = any(request.user.has_perm(perm, obj) for perm in perms)
+            has_permissions = any(request.user.has_perm(perm, obj) for perm in perms)  # type: ignore[union-attr]
         else:
-            has_permissions = all(request.user.has_perm(perm, obj) for perm in perms)
+            has_permissions = all(request.user.has_perm(perm, obj) for perm in perms)  # type: ignore[union-attr]
 
     if not has_permissions:
         if return_403:
