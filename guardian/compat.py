@@ -28,9 +28,8 @@ def get_user_model_path() -> str:
     otherwise `auth.User` is returned.
 
     Returns:
-        user_model_path (str): Python path to the user model class in the format
+        str: Python path to the user model class in the format
             'app_label.ModelName'.
-
     """
     return getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 
@@ -42,7 +41,7 @@ def get_user_permission_full_codename(perm: str) -> str:
     and if `myapp.CustomUser` is used it would return `myapp.change_customuser`.
 
     Returns:
-        codename (str): Full codename for the user permission in the format
+        str: Full codename for the user permission in the format
             'app_label.<perm>_<usermodulename>'.
     """
     user_model = get_user_model()
@@ -57,7 +56,7 @@ def get_user_permission_codename(perm: str) -> str:
     and if `myapp.CustomUser` is used, it would return `change_customuser`.
 
     Returns:
-        codename (str): Codename for the user permission in the format
+        str: Codename for the user permission in the format
             `<perm>_<usermodulename>`
     """
     return get_user_permission_full_codename(perm).split('.')[1]

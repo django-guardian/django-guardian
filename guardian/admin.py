@@ -118,7 +118,7 @@ class GuardedModelAdminMixin:
         making sure all required template vars are in the context.
 
         Returns:
-            context (dict): django template context
+            dict: django template context
         """
         context = self.admin_site.each_context(request)
         context.update(
@@ -277,7 +277,7 @@ class GuardedModelAdminMixin:
             request (HttpRequest): The HTTP request object.
 
         Returns:
-            form_class (type): The form class for selecting a user for permissions management.
+            Type: The form class for selecting a user for permissions management.
                 Default is `UserManage`
         """
         return UserManage
@@ -288,7 +288,7 @@ class GuardedModelAdminMixin:
             request (HttpRequest): The HTTP request object.
 
         Returns:
-            form_class (type): The form class for group object permissions management.
+            Type: The form class for group object permissions management.
                 Default is `GroupManage`
         """
         return GroupManage
@@ -300,7 +300,7 @@ class GuardedModelAdminMixin:
             request (HttpRequest): The HTTP request object.
 
         Returns:
-            form_class (type): The form class for user object permissions management.
+            Type: The form class for user object permissions management.
                 Default is `AdminUserObjectPermissionsForm`.
         """
         return AdminUserObjectPermissionsForm
@@ -346,12 +346,11 @@ class GuardedModelAdminMixin:
         May be overridden if dynamic behavior is needed.
 
         Returns:
-            template (str): template name
+            str: template name
 
         Note:
            If `INSTALLED_APPS` contains `grappelli` this function would
            return `"admin/guardian/grappelli/obj_perms_manage_group.html"`.
-
         """
         if "grappelli" in settings.INSTALLED_APPS:
             return "admin/guardian/contrib/grappelli/obj_perms_manage_group.html"
@@ -364,7 +363,7 @@ class GuardedModelAdminMixin:
             request (HttpRequest): The HTTP request object.
 
         Returns:
-            form_class (type): The form class for group object permissions management.
+            Type: The form class for group object permissions management.
                 Default is `AdminGroupObjectPermissionsForm`.
         """
         return AdminGroupObjectPermissionsForm

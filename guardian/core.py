@@ -67,7 +67,7 @@ class ObjectPermissionChecker:
             obj (Model): Django model instance for which permission should be checked
 
         Returns:
-            has_perm (bool): True if user/group has the permission, False otherwise
+            bool: True if user/group has the permission, False otherwise
         """
         if self.user and not self.user.is_active:
             return False
@@ -141,7 +141,7 @@ class ObjectPermissionChecker:
             obj (Model): Django model instance for which permission should be checked.
 
         Returns:
-            codenames (list): list of codenames for all permissions for given `obj`.
+            list: list of codenames for all permissions for given `obj`.
         """
         if self.user and not self.user.is_active:
             return []

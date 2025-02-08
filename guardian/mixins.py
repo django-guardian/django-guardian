@@ -7,9 +7,9 @@ from django.core.exceptions import ImproperlyConfigured, PermissionDenied
 from django.db.models import QuerySet, Model
 from django.http import HttpRequest, HttpResponseForbidden, HttpResponseNotFound, HttpResponseRedirect, HttpResponse
 
-from guardian.utils import get_user_obj_perms_model, get_group_obj_perms_model
-from guardian.utils import get_40x_or_None, get_anonymous_user
 from guardian.shortcuts import get_objects_for_user
+from guardian.utils import get_40x_or_None, get_anonymous_user
+from guardian.utils import get_user_obj_perms_model, get_group_obj_perms_model
 
 
 class LoginRequiredMixin:
@@ -293,7 +293,7 @@ class PermissionListMixin:
             request (HttpRequest): Original request.
 
         Returns:
-            permissions (list[str]): List of the required permissions.
+            list[str]: List of the required permissions.
         """
         if isinstance(self.permission_required, str):
             perms = [self.permission_required]
@@ -310,7 +310,7 @@ class PermissionListMixin:
         """Get kwargs to pass to `get_objects_for_user`.
 
         Returns:
-            objects (dict): kwargs that should be passed to `get_objects_for_user`.
+            dict: kwargs that should be passed to `get_objects_for_user`.
 
         Parameters:
             queryset (QuerySet): Queryset to filter.
