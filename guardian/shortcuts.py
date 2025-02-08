@@ -243,7 +243,7 @@ def get_user_perms(user: Union[User, AnonymousUser], obj: Model) -> QuerySet:
 
 def get_group_perms(
     user_or_group: Union[User, AnonymousUser, Group], obj: Model
-) -> QuerySet:
+) -> QuerySet[Permission]:
     """Get permissions for a given group and object pair.
 
     Unlike `get_perms`, this function only returns permissions assigned directly to the group.

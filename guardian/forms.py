@@ -1,8 +1,10 @@
-from typing import Union
+from typing import Union, Any
 
 from django import forms
-from django.db.models import Model
+from django.contrib.auth.models import Permission
+from django.db.models import Model, QuerySet
 from django.utils.translation import gettext as _
+
 from guardian.shortcuts import assign_perm, get_group_perms, get_perms_for_model, get_user_perms, remove_perm
 
 
@@ -134,20 +136,19 @@ class UserObjectPermissionsForm(BaseObjectPermissionsForm):
 
     """
 
-    def __init__(self, user, *args, **kwargs):
+    def __init__(self, user: Any, *args, **kwargs) -> None:
         self.user = user
         super().__init__(*args, **kwargs)
 
-    def get_obj_perms_field_initial(self):
+    def get_obj_perms_field_initial(self) -> QuerySet[Permission]:
         """Returns initial object permissions management field choices.
 
         Returns:
-            perms (list): List of permissions assigned to the user for the object.
+            perms (QuerySet[Permission]): List of permissions assigned to the user for the object.
         """
-        perms = get_user_perms(self.user, self.obj)
-        return perms
+        return get_user_perms(self.user, self.obj)
 
-    def save_obj_perms(self):
+    def save_obj_perms(self) -> None:
         """Saves selected object permissions.
 
         Saves selected object permissions by creating new ones and removing
@@ -190,20 +191,19 @@ class GroupObjectPermissionsForm(BaseObjectPermissionsForm):
         ```
     """
 
-    def __init__(self, group, *args, **kwargs):
+    def __init__(self, group: Any, *args, **kwargs) -> None:
         self.group = group
         super().__init__(*args, **kwargs)
 
-    def get_obj_perms_field_initial(self):
+    def get_obj_perms_field_initial(self) -> QuerySet[Permission]:
         """Returns initial object permissions management field choices.
 
         Returns:
             perms (list): List of permissions assigned to the group for the object.
         """
-        perms = get_group_perms(self.group, self.obj)
-        return perms
+        return get_group_perms(self.group, self.obj)
 
-    def save_obj_perms(self):
+    def save_obj_perms(self) -> None:
         """Saves selected object permissions.
 
         Saves selected object permissions by creating new ones and removing
