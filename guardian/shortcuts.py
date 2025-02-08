@@ -223,7 +223,7 @@ def get_perms(
     """Gets the permissions for given user/group and object pair,
 
     Returns:
-        permissions (list[str]): List of permissions for the given user/group and object pair.
+        permissions (list): List of permissions for the given user/group and object pair.
     """
     check = ObjectPermissionChecker(user_or_group)
     return check.get_perms(obj)
