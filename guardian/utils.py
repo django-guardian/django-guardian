@@ -8,11 +8,11 @@ and be considered unstable; their APIs may change in any future releases.
 import logging
 import os
 from itertools import chain
-from typing import Union, Any
+from typing import Union, Any, Optional
 
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME, get_user_model
-from django.contrib.auth.models import AnonymousUser, User, Group
+from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db.models import Model, QuerySet
 from django.http import (
@@ -119,9 +119,9 @@ def get_identity(identity: Model) -> tuple[Union[Any, None], Union[Any, None]]:
 def get_40x_or_None(
     request: HttpRequest,
     perms: list[str],
-    obj: Union[Any, None] = None,
-    login_url: Union[Any, None] = None,
-    redirect_field_name: Union[str, None] = None,
+    obj: Optional[Any] = None,
+    login_url: Optional[Any] = None,
+    redirect_field_name: Optional[str] = None,
     return_403: bool = False,
     return_404: bool = False,
     permission_denied_message: str = "",
@@ -236,7 +236,7 @@ def clean_orphan_obj_perms() -> int:
 # TODO: should raise error when multiple UserObjectPermission direct relations
 # are defined
 
-def get_obj_perms_model(obj: Union[Model, None], base_cls: type[Model], generic_cls: type[Model]) -> type[Model]:
+def get_obj_perms_model(obj: Optional[Model], base_cls: type[Model], generic_cls: type[Model]) -> type[Model]:
     """Return the matching object permission model for the obj class.
 
     Defaults to returning the generic object permission when no direct foreignkey is defined, or obj is None.
@@ -271,7 +271,7 @@ def get_obj_perms_model(obj: Union[Model, None], base_cls: type[Model], generic_
     return generic_cls
 
 
-def get_user_obj_perms_model(obj: Union[Model, None] = None) -> type[Model]:
+def get_user_obj_perms_model(obj: Optional[Model] = None) -> type[Model]:
     """Returns model class that connects given `obj` and User class.
 
     If obj is not specified, then the user generic object permission model
@@ -282,7 +282,7 @@ def get_user_obj_perms_model(obj: Union[Model, None] = None) -> type[Model]:
     return get_obj_perms_model(obj, UserObjectPermissionBase, UserObjectPermission)
 
 
-def get_group_obj_perms_model(obj: Union[Model, None] = None) -> type[Model]:
+def get_group_obj_perms_model(obj: Optional[Model] = None) -> type[Model]:
     """Returns model class that connects given `obj` and Group class.
 
     If obj is not specified, then the group generic object permission model

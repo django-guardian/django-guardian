@@ -1,4 +1,4 @@
-from typing import Union, Callable, Optional
+from typing import Callable, Optional
 
 from django.apps import apps
 from django.conf import settings
@@ -26,7 +26,7 @@ class _PermissionRequiredOptions(TypedDict, total=False):
     accept_global_perms: Optional[bool]
 
 
-def permission_required(perm: str, lookup_variables: Union[tuple, None] = None, **kwargs: _PermissionRequiredOptions) ->Callable[[Callable[_P, _R]], Callable[_P, _R]]:
+def permission_required(perm: str, lookup_variables: Optional[tuple] = None, **kwargs: _PermissionRequiredOptions) ->Callable[[Callable[_P, _R]], Callable[_P, _R]]:
     """A Django view decorator that checks whether a user has a particular permission enabled.
 
     Optionally, instances for which check should be made may be passed as a

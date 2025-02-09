@@ -1,5 +1,5 @@
 from collections.abc import Iterable
-from typing import Union, Any
+from typing import Union, Any, Optional
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_required, REDIRECT_FIELD_NAME
@@ -126,7 +126,7 @@ class PermissionRequiredMixin:
     """
     # default class view settings
     login_url: str = settings.LOGIN_URL
-    permission_required: Union[list[str], None] = None
+    permission_required: Optional[list[str]] = None
     redirect_field_name: str = REDIRECT_FIELD_NAME
     return_403: bool = False
     return_404: bool = False
@@ -142,7 +142,7 @@ class PermissionRequiredMixin:
         """
         return self.object_permission_denied_message
 
-    def get_required_permissions(self, request: Union[HttpRequest, None] = None):
+    def get_required_permissions(self, request: Optional[HttpRequest] = None) -> list[str]:
         """Get the required permissions.
 
         Returns list of permissions in format *<app_label>.<codename>* that
@@ -198,11 +198,11 @@ class PermissionRequiredMixin:
             raise PermissionDenied(self.get_object_permission_denied_message())
         return forbidden
 
-    def on_permission_check_fail(self, request: HttpRequest, response: HttpResponse, obj: Union[Model, Any, None] = None) -> Any:
+    def on_permission_check_fail(self, request: HttpRequest, response: HttpResponse, obj: Optional[Union[Model, Any]] = None) -> None:
         """Method called upon permission check fail.
 
         Allow subclasses to hook into the permission check failure process.
-        By default, it does nothing and should be overridden, if needed.
+        By default, it does nothing and should only be overridden, if needed.
 
         Parameters:
             request (HttpRequest): Original request
@@ -282,7 +282,7 @@ class PermissionListMixin:
     permission_required: Union[bool, None] = None
     get_objects_for_user_extra_kwargs: dict = {}
 
-    def get_required_permissions(self, request: Union[HttpRequest, None] = None) -> list[str]:
+    def get_required_permissions(self, request: Optional[HttpRequest] = None) -> list[str]:
         """Get the required permissions.
 
         Returns list of permissions in format *<app_label>.<codename>* that

@@ -1,4 +1,4 @@
-from typing import Any, Union, Iterable
+from typing import Any, Iterable, Optional
 
 from django.contrib.auth import get_user_model
 from django.db import models
@@ -61,10 +61,10 @@ class ObjectPermissionBackend:
     supports_anonymous_user = True
     supports_inactive_user = True
 
-    def authenticate(self, request: HttpRequest, username: Union[str, None] = None, password: Union[str, None] = None) -> Any:
+    def authenticate(self, request: HttpRequest, username: Optional[str] = None, password: Optional[str] = None) -> Any:
         return None
 
-    def has_perm(self, user_obj: Any, perm: str, obj: Union[Model, None] = None) -> bool:
+    def has_perm(self, user_obj: Any, perm: str, obj: Optional[Model] = None) -> bool:
         """Check if a user has the permission for a given object.
 
         Returns `True` if given `user_obj` has `perm` for `obj`.
@@ -111,7 +111,7 @@ class ObjectPermissionBackend:
         check = ObjectPermissionChecker(user_obj)
         return check.has_perm(perm, obj)
 
-    def get_all_permissions(self, user_obj: Any, obj: Union[Model, None] = None) -> Iterable[str]:
+    def get_all_permissions(self, user_obj: Any, obj: Optional[Model] = None) -> Iterable[str]:
         """Returns all permissions for a given object.
 
         Parameters:

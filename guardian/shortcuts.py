@@ -6,7 +6,7 @@ import warnings
 from collections import defaultdict
 from functools import partial, lru_cache
 from itertools import groupby
-from typing import Union, Any
+from typing import Union, Any, Optional
 
 from django.apps import apps
 from django.contrib.auth import get_user_model
@@ -55,7 +55,7 @@ def _get_ct_cached(app_label, codename):
 def assign_perm(
     perm: Union[str, Permission],
     user_or_group: Any,
-    obj: Union[Model, None] = None,
+    obj: Optional[Model] = None,
 ) -> Union[str, Permission, None]:
     """Assigns permission to user/group and object pair.
 
@@ -276,7 +276,7 @@ def get_users_with_perms(
     attach_perms: bool = False,
     with_superusers: bool = False,
     with_group_users: bool = True,
-    only_with_perms_in: Union[list[str], None] = None,
+    only_with_perms_in: Optional[list[str]] = None,
 ) -> Union[Any, list[str]]:
     """Get all users with *any* object permissions for the given `obj`.
 

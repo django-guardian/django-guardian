@@ -1,4 +1,4 @@
-from typing import Union, Any
+from typing import Any
 
 from django import forms
 from django.contrib.auth.models import Permission
@@ -14,7 +14,7 @@ class BaseObjectPermissionsForm(forms.Form):
     Needs to be extended for usage with users and/or groups.
     """
 
-    def __init__(self, obj: Union[Model], *args, **kwargs) -> None:
+    def __init__(self, obj: Model, *args, **kwargs) -> None:
         """Constructor for BaseObjectPermissionsForm.
 
         Parameters:
