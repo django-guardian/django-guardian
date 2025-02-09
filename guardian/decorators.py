@@ -1,32 +1,17 @@
-from typing import Callable, Optional
-
 from django.apps import apps
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.db.models import Model
 from django.db.models.base import ModelBase
 from django.db.models.query import QuerySet
-from django.http import HttpResponse, HttpRequest
 from django.shortcuts import get_object_or_404
 from django.utils.functional import wraps
-from typing_extensions import ParamSpec, TypeVar, TypedDict
 
 from guardian.exceptions import GuardianError
 from guardian.utils import get_40x_or_None
 
-_P = ParamSpec("_P")
-_R = TypeVar("_R", bound=HttpResponse)
 
-
-class _PermissionRequiredOptions(TypedDict, total=False):
-    login_url: Optional[str]
-    redirect_field_name: Optional[str]
-    return_403: Optional[bool]
-    return_404: Optional[bool]
-    accept_global_perms: Optional[bool]
-
-
-def permission_required(perm: str, lookup_variables: Optional[tuple] = None, **kwargs: _PermissionRequiredOptions) ->Callable[[Callable[_P, _R]], Callable[_P, _R]]:
+def permission_required(perm, lookup_variables=None, **kwargs):
     """A Django view decorator that checks whether a user has a particular permission enabled.
 
     Optionally, instances for which check should be made may be passed as a
@@ -40,7 +25,7 @@ def permission_required(perm: str, lookup_variables: Optional[tuple] = None, **k
         perm (str): permission to check in format: 'app_label.codename'.
         lookup_variables (tuple): optional, instances for which check should be made.
 
-    Keyword Arguments:
+    Other Parameters:
         login_url (str): if denied, user would be redirected to location set by
             this parameter. Defaults to `django.conf.settings.LOGIN_URL`.
         redirect_field_name (str): name of the parameter passed if redirected.
@@ -68,23 +53,23 @@ def permission_required(perm: str, lookup_variables: Optional[tuple] = None, **k
 
         @permission_required('auth.change_user', (User, 'username', 'username'))
         def my_view(request, username):
-            \"\"\"
+            '''
             auth.change_user permission would be checked based on given
-            'username'. If the view's parameter is named `name`, we would
-            rather use the following decorator:
+            'username'. If view's parameter would be named `name`, we would
+            rather use following decorator::
 
                 @permission_required('auth.change_user', (User, 'username', 'name'))
-            \"\"\"
+            '''
             user = get_object_or_404(User, username=username)
             return user.get_absolute_url()
 
         @permission_required('auth.change_user',
             (User, 'username', 'username', 'groups__name', 'group_name'))
         def my_view(request, username, group_name):
-            \"\"\"
-            Similar to the above example, however, here we also make sure that
+            '''
+            Similar to the above example, here however we also make sure that
             one of user's group is named same as request's `group_name` param.
-            \"\"\"
+            '''
             user = get_object_or_404(User, username=username,
                 group__name=group_name)
             return user.get_absolute_url()
@@ -94,18 +79,20 @@ def permission_required(perm: str, lookup_variables: Optional[tuple] = None, **k
     login_url = kwargs.pop('login_url', settings.LOGIN_URL)
     redirect_field_name = kwargs.pop(
         'redirect_field_name', REDIRECT_FIELD_NAME)
-    return_403 = bool(kwargs.pop('return_403', False))
-    return_404 = bool(kwargs.pop('return_404', False))
-    accept_global_perms = bool(kwargs.pop('accept_global_perms', False))
+    return_403 = kwargs.pop('return_403', False)
+    return_404 = kwargs.pop('return_404', False)
+    accept_global_perms = kwargs.pop('accept_global_perms', False)
 
+    # Check if perm is given as string in order not to decorate
+    # view function itself which makes debugging harder
     if not isinstance(perm, str):
         raise GuardianError("First argument must be in format: "
                             "'app_label.codename or a callable which return similar string'")
 
-    def decorator(view_func: Callable[_P, _R]) -> Callable[_P, _R]:
-        def _wrapped_view(request: HttpRequest, *args: _P.args, **kwargs: _P.kwargs) -> _R:
-            # if more than one parameter is passed to the decorator, we try to
-            # fetch the object for which the check would be made
+    def decorator(view_func):
+        def _wrapped_view(request, *args, **kwargs):
+            # if more than one parameter is passed to the decorator we try to
+            # fetch object for which check would be made
             obj = None
             if lookup_variables:
                 model, lookups = lookup_variables[0], lookup_variables[1:]
@@ -144,7 +131,7 @@ def permission_required(perm: str, lookup_variables: Optional[tuple] = None, **k
     return decorator
 
 
-def permission_required_or_403(perm: str, *args, **kwargs):
+def permission_required_or_403(perm, *args, **kwargs):
     """Check if user has permission, if not return 403.
 
     This decorator is wrapper for `permission_required` decorator.
@@ -161,7 +148,7 @@ def permission_required_or_403(perm: str, *args, **kwargs):
     return permission_required(perm, *args, **kwargs)
 
 
-def permission_required_or_404(perm: str, *args, **kwargs):
+def permission_required_or_404(perm, *args, **kwargs):
     """Check if user has permission, if not return 404.
 
     This decorator is wrapper for permission_required decorator.
