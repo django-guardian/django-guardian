@@ -1,10 +1,12 @@
 from collections import OrderedDict
+from typing import Type
 
 from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
+from django.http import HttpRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, path
 from django.utils.translation import gettext
@@ -22,9 +24,10 @@ from guardian.utils import get_group_obj_perms_model
 
 
 class AdminUserObjectPermissionsForm(UserObjectPermissionsForm):
-    """
-    Extends :form:`UserObjectPermissionsForm`. It only overrides
-    `get_obj_perms_field_widget` method so it return
+    """Admin form for user object permissions.
+
+    Extends the `UserObjectPermissionsForm` and overrides the
+    `get_obj_perms_field_widget` method so it returns the
     `django.contrib.admin.widgets.FilteredSelectMultiple` widget.
     """
 
@@ -33,9 +36,10 @@ class AdminUserObjectPermissionsForm(UserObjectPermissionsForm):
 
 
 class AdminGroupObjectPermissionsForm(GroupObjectPermissionsForm):
-    """
-    Extends :form:`GroupObjectPermissionsForm`. It only overrides
-    `get_obj_perms_field_widget` method so it return
+    """Admin form for group object permissions.
+
+    Extends the `GroupObjectPermissionsForm` and overrides the
+    `get_obj_perms_field_widget` method so it returns the
     `django.contrib.admin.widgets.FilteredSelectMultiple` widget.
     """
 
@@ -259,20 +263,21 @@ class GuardedModelAdminMixin:
 
         return render(request, self.get_obj_perms_manage_user_template(), context)
 
-    def get_obj_perms_manage_user_template(self):
+    def get_obj_perms_manage_user_template(self) -> str:
         """Returns object permissions for user admin template.
 
         May be overridden if dynamic behavior is needed.
 
         Note:
-           If `INSTALLED_APPS` contains `grappelli` this function would
-           return `"admin/guardian/grappelli/obj_perms_manage_user.html"`.
+           If `INSTALLED_APPS` contains "grappelli" this function returns
+           `"admin/guardian/grappelli/obj_perms_manage_user.html"`.
+           Else, it returns `self.obj_perms_manage_user_template`.
         """
         if 'grappelli' in settings.INSTALLED_APPS:
             return 'admin/guardian/contrib/grappelli/obj_perms_manage_user.html'
         return self.obj_perms_manage_user_template
 
-    def get_obj_perms_user_select_form(self, request):
+    def get_obj_perms_user_select_form(self, request: HttpRequest) -> Type[forms.Form]:
         """Get the form class for selecting a user for permissions management.
 
         Parameters:
@@ -284,7 +289,7 @@ class GuardedModelAdminMixin:
         """
         return UserManage
 
-    def get_obj_perms_group_select_form(self, request):
+    def get_obj_perms_group_select_form(self, request: HttpRequest) -> Type[forms.Form]:
         """Get the form class for group object permissions management.
         Parameters:
             request (HttpRequest): The HTTP request object.
@@ -295,7 +300,7 @@ class GuardedModelAdminMixin:
         """
         return GroupManage
 
-    def get_obj_perms_manage_user_form(self, request):
+    def get_obj_perms_manage_user_form(self, request: HttpRequest) -> Type[forms.Form]:
         """Get the form class for user object permissions management.
 
         Parameters:
@@ -375,7 +380,7 @@ class GuardedModelAdminMixin:
 class GuardedModelAdmin(GuardedModelAdminMixin, admin.ModelAdmin):
     """Provide views for managing object permissions on the Django admin panel.
 
-    Extends `django.contrib.admin.ModelAdmin` class.
+    Extends the `django.contrib.admin.ModelAdmin` class.
     It uses `'admin/guardian/model/change_form.html'` as the
     default `change_form_template` attribute which is required for proper
     url (object permissions related) being shown at the model pages.

@@ -1,6 +1,4 @@
-"""
-Convenient shortcuts to manage or check object permissions.
-"""
+"""Convenient shortcuts to manage or check object permissions."""
 
 import warnings
 from collections import defaultdict
@@ -46,9 +44,7 @@ from guardian.utils import (
 
 @lru_cache(None)
 def _get_ct_cached(app_label, codename):
-    """
-    Caches `ContentType` instances like its `QuerySet` does.
-    """
+    """Caches `ContentType` instances like its `QuerySet` does."""
     return ContentType.objects.get(app_label=app_label, permission__codename=codename)
 
 
