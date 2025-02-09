@@ -10,7 +10,7 @@ from typing import Union, Any, Optional
 
 from django.apps import apps
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission, User, AnonymousUser, Group
+from django.contrib.auth.models import Permission, Group
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.db.models import (
@@ -167,7 +167,7 @@ def assign(perm, user_or_group, obj=None):
 
 def remove_perm(
     perm: str,
-    user_or_group: Union[User, AnonymousUser, Group, None] = None,
+    user_or_group: Any = None,
     obj: Union[Model, QuerySet, None] = None,
 ) -> None:
     """Removes permission from user/group and object pair.
@@ -217,9 +217,7 @@ def remove_perm(
         return model.objects.remove_perm(perm, group, obj)
 
 
-def get_perms(
-    user_or_group: Union[User, AnonymousUser, Group], obj: Model
-) -> list[str]:
+def get_perms(user_or_group: Any, obj: Model) -> list[str]:
     """Gets the permissions for given user/group and object pair,
 
     Returns:
@@ -229,7 +227,7 @@ def get_perms(
     return check.get_perms(obj)
 
 
-def get_user_perms(user: Union[User, AnonymousUser], obj: Model) -> QuerySet:
+def get_user_perms(user: Any, obj: Model) -> QuerySet:
     """Get permissions for given a User-object pair.
 
      Unlike `get_perms`, this function only returns permissions assigned directly to the user.
@@ -241,9 +239,7 @@ def get_user_perms(user: Union[User, AnonymousUser], obj: Model) -> QuerySet:
     return check.get_user_perms(obj)
 
 
-def get_group_perms(
-    user_or_group: Union[User, AnonymousUser, Group], obj: Model
-) -> QuerySet[Permission]:
+def get_group_perms(user_or_group: Any, obj: Model) -> QuerySet[Permission]:
     """Get permissions for a given group and object pair.
 
     Unlike `get_perms`, this function only returns permissions assigned directly to the group.
@@ -437,7 +433,7 @@ def get_groups_with_perms(obj: Model, attach_perms: bool = False) -> Union[Group
 
 
 def get_objects_for_user(
-    user: Union[User, AnonymousUser],
+    user: Any,
     perms: Union[str, list[str]],
     klass: Union[Model, Manager, QuerySet, None] = None,
     use_groups: bool = True,
