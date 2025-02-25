@@ -319,7 +319,7 @@ def get_users_with_perms(obj, attach_perms=False, with_superusers=False,
             qset = qset | Q(groups__in=group_ids)
         if with_superusers:
             qset = qset | Q(is_superuser=True)
-        return get_user_model().objects.filter(qset).distinct()
+        return get_user_model().objects.filter(qset).filter(is_active=True).distinct()
     else:
         # TODO: Do not hit db for each user!
         users = {}
