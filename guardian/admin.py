@@ -119,7 +119,7 @@ class GuardedModelAdminMixin:
         making sure all required template vars are in the context.
 
         Returns:
-            dict: django template context
+            django template context
         """
         context = self.admin_site.each_context(request)
         context.update({
@@ -284,7 +284,7 @@ class GuardedModelAdminMixin:
             request (HttpRequest): The HTTP request object.
 
         Returns:
-            Type: The form class for selecting a user for permissions management.
+            The form class for selecting a user for permissions management.
                 Default is `UserManage`
         """
         return UserManage
@@ -295,7 +295,7 @@ class GuardedModelAdminMixin:
             request (HttpRequest): The HTTP request object.
 
         Returns:
-            Type: The form class for group object permissions management.
+            The form class for group object permissions management.
                 Default is `GroupManage`
         """
         return GroupManage
@@ -307,7 +307,7 @@ class GuardedModelAdminMixin:
             request (HttpRequest): The HTTP request object.
 
         Returns:
-            Type: The form class for user object permissions management.
+            The form class for user object permissions management.
                 Default is `AdminUserObjectPermissionsForm`.
         """
         return AdminUserObjectPermissionsForm
@@ -354,7 +354,7 @@ class GuardedModelAdminMixin:
         May be overridden if dynamic behavior is needed.
 
         Returns:
-            str: template name
+            template name
 
         Note:
            If `INSTALLED_APPS` contains `grappelli` this function would
@@ -371,7 +371,7 @@ class GuardedModelAdminMixin:
             request (HttpRequest): The HTTP request object.
 
         Returns:
-            Type: The form class for group object permissions management.
+            The form class for group object permissions management.
                 Default is `AdminGroupObjectPermissionsForm`.
         """
         return AdminGroupObjectPermissionsForm

@@ -58,7 +58,7 @@ def get_obj_perms(parser, token):
     ```
 
     Returns:
-         list[str]: a list of permissions (as `codename` strings)
+         a list of permissions (as `codename` strings)
               for a given `user`/`group` and `obj` (Model instance).
 
     Note:

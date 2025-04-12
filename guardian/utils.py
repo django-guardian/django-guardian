@@ -59,7 +59,7 @@ def get_identity(identity: Model) -> tuple[Union[Any, None], Union[Any, None]]:
     It is convenient and needed for authorization backend to support anonymous users.
 
     Returns:
-         tuple: Either (user_obj, None) or (None, group_obj) depending on the input type.
+         Either (user_obj, None) or (None, group_obj) depending on the input type.
 
     Parameters:
         identity (User | Group): Instance of `User` or `Group` to get identity from.
@@ -192,7 +192,7 @@ def get_obj_perm_model_by_conf(setting_name: str) -> type[Model]:
         setting_name (str): The name of the setting to get the model from.
 
     Returns:
-        type[Model]: The model class that matches the guardian settings.
+        The model class that matches the guardian settings.
 
     Raises:
         ImproperlyConfigured: If the setting value is not an installed model or
@@ -213,7 +213,7 @@ def clean_orphan_obj_perms() -> int:
     """Seeks and removes all object permissions entries pointing at non-existing targets.
 
     Returns:
-         int: The number of objects removed.
+         The number of objects removed.
     """
     UserObjectPermission = get_user_obj_perms_model()
     GroupObjectPermission = get_group_obj_perms_model()

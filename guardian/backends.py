@@ -15,7 +15,7 @@ def check_object_support(obj: Model) -> bool:
     """Checks if given `obj` is supported
 
     Returns:
-         bool: `True` if given `obj` is supported
+         `True` if given `obj` is supported
     """
     # Backend checks only object permissions (isinstance implies that obj
     # is not None)
@@ -30,7 +30,7 @@ def check_user_support(user_obj: Any) -> tuple[bool, Any]:
     activation via ANONYMOUS_USER_NAME
 
     Returns:
-        tuple[bool, User]: A tuple of checkresult and `user_obj` which should be used for permission checks
+        A tuple of checkresult and `user_obj` which should be used for permission checks
     """
     # This is how we support anonymous users - simply try to retrieve User
     # instance and perform checks for that predefined user
@@ -87,7 +87,7 @@ class ObjectPermissionBackend:
             obj (Model): Model instance.
 
         Returns:
-            bool: `True` if `user_obj` has permission, `False` otherwise.
+            `True` if `user_obj` has permission, `False` otherwise.
         """
 
         # check if user_obj and object are supported
@@ -119,7 +119,7 @@ class ObjectPermissionBackend:
             obj (Model): Django Model instance.
 
         Returns:
-             Iterable: a set of permission strings that the given `user_obj` has for `obj`.
+             a set of permission strings that the given `user_obj` has for `obj`.
         """
         # check if user_obj and object are supported
         support, user_obj = check_support(user_obj, obj)

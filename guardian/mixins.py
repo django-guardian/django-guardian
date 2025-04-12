@@ -293,7 +293,7 @@ class PermissionListMixin:
             request (HttpRequest): Original request.
 
         Returns:
-            list[str]: List of the required permissions.
+            List of the required permissions.
         """
         if isinstance(self.permission_required, str):
             perms = [self.permission_required]
@@ -310,7 +310,7 @@ class PermissionListMixin:
         """Get kwargs to pass to `get_objects_for_user`.
 
         Returns:
-            dict: kwargs that should be passed to `get_objects_for_user`.
+            kwargs that should be passed to `get_objects_for_user`.
 
         Parameters:
             queryset (QuerySet): Queryset to filter.

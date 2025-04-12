@@ -20,7 +20,7 @@ def get_default_content_type(obj: Union[Model, Type[Model]]) -> ContentType:
         obj (Model | Type): Object for which content type is to be fetched.
 
     Returns:
-        ContentType: Content type for the given object.
+        Content type for the given object.
 
     See Also:
         https://docs.djangoproject.com/en/5.1/ref/contrib/contenttypes/

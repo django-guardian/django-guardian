@@ -44,7 +44,7 @@ class BaseObjectPermissionsForm(forms.Form):
         """Get the name of the object permissions management field.
 
         Returns:
-            str: Name of the object permissions management field.
+            Name of the object permissions management field.
                 Defaults to 'permission'
         """
         return 'permissions'
@@ -53,7 +53,7 @@ class BaseObjectPermissionsForm(forms.Form):
         """Get the label of the object permissions management field.
 
         Returns:
-            str: Label of the object permissions management field.
+            Label of the object permissions management field.
             Default to `_("Permissions")` (marked to be translated).
         """
         return _("Permissions")
@@ -72,7 +72,7 @@ class BaseObjectPermissionsForm(forms.Form):
         """Get the initial object permissions management field choices.
 
         Returns:
-            list: List of initial object permissions.
+            List of initial object permissions.
             Default to `[]` (empty list).
         """
         return []
@@ -81,7 +81,7 @@ class BaseObjectPermissionsForm(forms.Form):
         """Get object permissions management field's class.
 
         Returns:
-            forms.Field: Object permissions management field's class.
+            Object permissions management field's class.
             Default to `forms.MultipleChoiceField`.
         """
         return forms.MultipleChoiceField
@@ -90,7 +90,7 @@ class BaseObjectPermissionsForm(forms.Form):
         """Get the widget class for object permissions management field.
 
         Returns:
-            forms.Widget: Object permissions management field's widget class.
+            Object permissions management field's widget class.
             Default to `forms.SelectMultiple`.
         """
         return forms.SelectMultiple
@@ -99,7 +99,7 @@ class BaseObjectPermissionsForm(forms.Form):
         """Indicates if at least one object permission should be required.
 
         Returns:
-            bool: Whether at least one object permission should be required.
+            Whether at least one object permission should be required.
             Defaults to `False`.
         """
         return False
@@ -144,7 +144,7 @@ class UserObjectPermissionsForm(BaseObjectPermissionsForm):
         """Returns initial object permissions management field choices.
 
         Returns:
-            QuerySet[Permission]: List of permissions assigned to the user for the object.
+            List of permissions assigned to the user for the object.
         """
         return get_user_perms(self.user, self.obj)
 
@@ -199,7 +199,7 @@ class GroupObjectPermissionsForm(BaseObjectPermissionsForm):
         """Returns initial object permissions management field choices.
 
         Returns:
-            list: List of permissions assigned to the group for the object.
+            List of permissions assigned to the group for the object.
         """
         return get_group_perms(self.group, self.obj)
 

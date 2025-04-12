@@ -217,7 +217,7 @@ def get_perms(user_or_group: Any, obj: Model) -> list[str]:
     """Gets the permissions for given user/group and object pair,
 
     Returns:
-        list: List of permissions for the given user/group and object pair.
+        List of permissions for the given user/group and object pair.
     """
     check = ObjectPermissionChecker(user_or_group)
     return check.get_perms(obj)
@@ -229,7 +229,7 @@ def get_user_perms(user: Any, obj: Model) -> QuerySet:
      Unlike `get_perms`, this function only returns permissions assigned directly to the user.
 
     Returns:
-        list[str]: List of permissions for the given user and object pair.
+        List of permissions for the given user and object pair.
     """
     check = ObjectPermissionChecker(user)
     return check.get_user_perms(obj)
@@ -241,7 +241,7 @@ def get_group_perms(user_or_group: Any, obj: Model) -> QuerySet[Permission]:
     Unlike `get_perms`, this function only returns permissions assigned directly to the group.
 
     Returns:
-        list[str]: List of permissions for the given group and object pair.
+        List of permissions for the given group and object pair.
     """
     check = ObjectPermissionChecker(user_or_group)
     return check.get_group_perms(obj)
@@ -251,7 +251,7 @@ def get_perms_for_model(cls: Model) -> QuerySet:
     """Get all permissions for a given model class.
 
     Returns:
-        QuerySet: QuerySet of all Permission objects for the given class.
+        QuerySet of all Permission objects for the given class.
             It is possible to pass Model as class or instance.
     """
     if isinstance(cls, str):
@@ -378,7 +378,7 @@ def get_groups_with_perms(obj: Model, attach_perms: bool = False) -> Union[Group
             This would fetch groups eagerly!
 
     Returns:
-        QuerySet: All `Group` objects with *any* object permissions for the given `obj`.
+        All `Group` objects with *any* object permissions for the given `obj`.
 
     Example:
         ```shell
@@ -709,7 +709,7 @@ def get_objects_for_group(
             global and object-based permissionsis returned.
 
     Returns:
-        QuerySet: objects for which a given `group` has *all* permissions in `perms`.
+        objects for which a given `group` has *all* permissions in `perms`.
 
     Raisess:
         MixedContentTypeError: when computed content type for `perms` and/or `klass` clashes.
