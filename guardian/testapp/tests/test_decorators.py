@@ -240,7 +240,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
 
     def test_user_has_access_on_model_with_metaclass(self):
         """
-        Test to the fix issues of comparaison made via type()
+        Test to the fix issues of comparison made via type()
         in the decorator. In the case of a `Model` implementing
         a custom metaclass, the decorator fail because type
         doesn't return `ModelBase`
@@ -384,12 +384,8 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
             pass
         response = dummy_view(request, project_name='foobar')
         self.assertTrue(isinstance(response, HttpResponseRedirect))
-        if django.VERSION >= (3, 2):
-            self.assertTrue(response.headers['location'].startswith(
-                '/foobar/'))
-        else:
-            self.assertTrue(response._headers['location'][1].startswith(
-                '/foobar/'))
+        self.assertTrue(response.headers['location'].startswith(
+            '/foobar/'))
 
     @override_settings(LOGIN_URL='django.contrib.auth.views.login')
     def test_redirection_class(self):

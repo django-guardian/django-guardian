@@ -1,0 +1,111 @@
+# Release the package on GitHub and publish it to PyPI.
+
+name: Release and Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch or commit SHA to publish and tag"
+        type: string
+        required: true
+      tag:
+        description: "Tag  to apply"
+        type: string
+        required: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install python
+        uses: actions/setup-python@v5
+        with:
+          # Installs the latest version compatible with the requires-python field
+          python-version-file: "pyproject.toml"
+
+      - name: Install the project
+        run: uv sync --all-extras --dev
+
+      - name: Get package version
+        id: version
+        run: |
+          VERSION=$(uvx --from=toml-cli toml get --toml-path=pyproject.toml project.version)
+          echo "package_version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Determine if version is a candidate (prerelease)
+        id: candidate
+        run: |
+          VERSION="${{ steps.version.outputs.package_version }}"
+          # Test against the regex
+          if [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "is_candidate=false" >> $GITHUB_OUTPUT
+          else
+            echo "is_candidate=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Validate candidate branch
+        id: candidate-branch
+        run: |
+          if [ "${{ steps.candidate.outputs.is_candidate }}" = "true" ] && [ "${{ github.ref_name }}" = "main" ]; then
+            echo "Error: Candidate versions must NOT be released from 'main' branch"
+            exit 1
+          fi
+          if [ "${{ steps.candidate.outputs.is_candidate }}" != "true" ] && [ "${{ github.ref_name }}" != "main" ]; then
+            echo "Error: Non-candidate versions must be released from 'main' branch only"
+            exit 1
+          fi
+
+      - name: Verify given tag matches package version
+        # Since we trigger releases manually, this cross-checks the user's intention
+        id: verify-tag
+        run: |
+          if [ "${{ steps.version.outputs.package_version }}" != "${{ inputs.tag }}" ]; then
+            echo "::error ::Provided tag ('${{ inputs.tag }}') does not match the package version ('${{ steps.version.outputs.package_version }}')."
+            exit 1
+          fi
+
+      - uses: ncipollo/release-action@v1
+        with:
+          draft: false
+          generateReleaseNotes: true
+          commit: ${{ inputs.ref }}
+          tag: ${{ inputs.tag || steps.version.outputs.package_version }}
+          prerelease: ${{ steps.candidate.outputs.is_candidate }}
+          skipIfReleaseExists: true
+
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    needs: release
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install python
+        uses: actions/setup-python@v5
+        with:
+          # Installs the latest version compatible with the requires-python field
+          python-version-file: "pyproject.toml"
+
+      - name: Install the project
+        run: uv build
+
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@v1.12.4

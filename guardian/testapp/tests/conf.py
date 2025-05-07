@@ -1,8 +1,10 @@
 import unittest
-from guardian.conf import settings as guardian_settings
-from django.conf import settings
+
 from django.conf import UserSettingsHolder
+from django.conf import settings
 from django.utils.functional import wraps
+
+from guardian.conf import settings as guardian_settings
 
 
 def skipUnlessTestApp(obj):
@@ -30,7 +32,7 @@ class override_settings:
     """
     Acts as either a decorator, or a context manager. If it's a decorator it
     takes a function and returns a wrapped function. If it's a contextmanager
-    it's used with the ``with`` statement. In either event entering/exiting
+    it's used with the `with` statement. In either event entering/exiting
     are called before and after, respectively, the function/block is executed.
     """
 

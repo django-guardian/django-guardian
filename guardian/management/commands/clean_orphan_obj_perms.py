@@ -4,15 +4,16 @@ from guardian.utils import clean_orphan_obj_perms
 
 
 class Command(BaseCommand):
-    """
-    clean_orphan_obj_perms command is a tiny wrapper around
-    :func:`guardian.utils.clean_orphan_obj_perms`.
+    """A wrapper around `guardian.utils.clean_orphan_obj_perms`.
 
-    Usage::
+    Seeks and removes all object permissions entries pointing at non-existing targets.
+    Returns the number of objects removed.
 
+    Example:
+        ```shell
         $ python manage.py clean_orphan_obj_perms
         Removed 11 object permission entries with no targets
-
+        ```
     """
     help = "Removes object permissions with not existing targets"
 

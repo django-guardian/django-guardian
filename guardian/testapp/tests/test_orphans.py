@@ -21,7 +21,7 @@ user_module_name = User._meta.model_name
 class OrphanedObjectPermissionsTest(TestCase):
 
     def setUp(self):
-        # Create objects for which we would assing obj perms
+        # Create objects for which we would assign obj perms
         self.target_user1 = User.objects.create(username='user1')
         self.target_group1 = Group.objects.create(name='group1')
         self.target_obj1 = ContentType.objects.create(
@@ -43,7 +43,7 @@ class OrphanedObjectPermissionsTest(TestCase):
             self.target_obj1: ["change_contenttype", "delete_contenttype"],
             self.target_obj2: ["change_contenttype"],
         }
-        obj_perms_count = sum([len(val) for key, val in target_perms.items()])
+        obj_perms_count = sum(len(val) for key, val in target_perms.items())
         for target, perms in target_perms.items():
             target.__old_pk = target.pk  # Store pkeys
             for perm in perms:

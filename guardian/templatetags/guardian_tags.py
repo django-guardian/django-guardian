@@ -1,5 +1,5 @@
 """
-``django-guardian`` template tags. To use in a template just put the following
+`django-guardian` template tags. To use in a template, put the following
 *load* tag inside a template::
 
     {% load guardian_tags %}
@@ -50,36 +50,38 @@ class ObjectPermissionsNode(template.Node):
 
 @register.tag
 def get_obj_perms(parser, token):
-    """
-    Returns a list of permissions (as ``codename`` strings) for a given
-    ``user``/``group`` and ``obj`` (Model instance).
+    """Get a list of permissions for a given user/group and object.
 
-    Parses ``get_obj_perms`` tag which should be in format::
+    Parses `get_obj_perms` tag which should be in format:
+    ```
+    {% get_obj_perms user/group for obj as "context_var" %}
+    ```
 
-        {% get_obj_perms user/group for obj as "context_var" %}
+    Returns:
+         a list of permissions (as `codename` strings)
+              for a given `user`/`group` and `obj` (Model instance).
 
-    .. note::
+    Note:
        Make sure that you set and use those permissions in same template
-       block (``{% block %}``).
+       block (`{% block %}`).
 
-    Example of usage (assuming ``flatpage`` and ``perm`` objects are
-    available from *context*)::
-
+    Example:
+        Assuming `flatpage` and `perm` objects are available in the *context* object:
+        ```
         {% get_obj_perms request.user for flatpage as "flatpage_perms" %}
 
         {% if "delete_flatpage" in flatpage_perms %}
             <a href="/pages/delete?target={{ flatpage.url }}">Remove page</a>
         {% endif %}
+        ```
 
-    .. note::
+    Note:
        Please remember that superusers would always get full list of permissions
        for a given object.
 
-    .. versionadded:: 1.2
-
-    As of v1.2, passing ``None`` as ``obj`` for this template tag won't rise
-    obfuscated exception and would return empty permissions set instead.
-
+    Note: Added in version 1.2
+        As of v1.2, passing `None` as `obj` for this template tag won't rise
+        obfuscated exception and would return empty permissions set instead.
     """
     bits = token.split_contents()
     format = '{% get_obj_perms user/group for obj as "context_var" perm_checker %}'

@@ -10,7 +10,7 @@ DEBUG = False
 ANONYMOUS_USER_NAME = "AnonymousUser"
 
 AUTH_USER_MODEL = "testapp.CustomUser"
-GUARDIAN_MONKEY_PATCH = False
+GUARDIAN_MONKEY_PATCH_USER = False
 
 INSTALLED_APPS = (
     'django.contrib.auth',
@@ -40,7 +40,7 @@ TEST_RUNNER = 'django.test.runner.DiscoverRunner'
 ROOT_URLCONF = 'guardian.testapp.tests.urls'
 SITE_ID = 1
 
-SECRET_KEY = ''.join([random.choice(string.ascii_letters) for x in range(40)])
+SECRET_KEY = ''.join(random.choice(string.ascii_letters) for x in range(40))
 
 # Database specific
 
@@ -63,7 +63,10 @@ TEMPLATES = [
                 'django.template.context_processors.static',
                 'django.template.context_processors.tz',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.request',
             ],
         },
     },
 ]
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

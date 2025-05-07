@@ -1,26 +1,18 @@
-from unittest import mock
-import unittest
-
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.models import AnonymousUser
-from django.contrib.auth.models import Group
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import AbstractUser, AnonymousUser, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.test import TestCase
+from guardian.backends import ObjectPermissionBackend
+from guardian.compat import get_user_model_path, get_user_permission_codename
+from guardian.exceptions import GuardianError, NotUserNorGroup, ObjectNotPersisted, WrongAppError
+from guardian.models import GroupObjectPermission, UserObjectPermission
+from guardian.testapp.tests.conf import TestDataMixin
+from unittest import mock
 
 import guardian
-from guardian.backends import ObjectPermissionBackend
-from guardian.compat import get_user_model_path
-from guardian.compat import get_user_permission_codename
-from guardian.exceptions import GuardianError
-from guardian.exceptions import NotUserNorGroup
-from guardian.exceptions import ObjectNotPersisted
-from guardian.exceptions import WrongAppError
-from guardian.models import GroupObjectPermission
-from guardian.models import UserObjectPermission
-from guardian.testapp.tests.conf import TestDataMixin
+import unittest
+
 User = get_user_model()
 user_model_path = get_user_model_path()
 
@@ -37,7 +29,7 @@ class UserPermissionTests(TestDataMixin, TestCase):
         self.obj2 = ContentType.objects.create(
             model='bar', app_label='guardian-tests')
 
-    def test_assignement(self):
+    def test_assignment(self):
         self.assertFalse(self.user.has_perm('change_contenttype', self.ctype))
 
         UserObjectPermission.objects.assign_perm('change_contenttype', self.user,
@@ -46,7 +38,7 @@ class UserPermissionTests(TestDataMixin, TestCase):
         self.assertTrue(self.user.has_perm('contenttypes.change_contenttype',
                                            self.ctype))
 
-    def test_assignement_and_remove(self):
+    def test_assignment_and_remove(self):
         UserObjectPermission.objects.assign_perm('change_contenttype', self.user,
                                                  self.ctype)
         self.assertTrue(self.user.has_perm('change_contenttype', self.ctype))
@@ -249,18 +241,11 @@ class ObjectPermissionBackendTests(TestCase):
         UserObjectPermission.objects.assign_perm(perm, user, ctype)
         self.assertTrue(self.backend.has_perm(user, perm, ctype))
         user.is_active = False
-        user.save()
+        user.save(update_fields=["is_active"])
         self.assertFalse(self.backend.has_perm(user, perm, ctype))
 
 
 class GuardianBaseTests(TestCase):
-
-    def has_attrs(self):
-        self.assertTrue(hasattr(guardian, '__version__'))
-
-    def test_version(self):
-        for x in guardian.VERSION:
-            self.assertTrue(isinstance(x, (int, str)))
 
     def test_get_version(self):
         self.assertTrue(isinstance(guardian.get_version(), str))

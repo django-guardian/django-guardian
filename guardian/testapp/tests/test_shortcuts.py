@@ -1,6 +1,8 @@
 import warnings
+from unittest import mock
 
 import django
+from unittest import mock
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
@@ -32,6 +34,10 @@ from guardian.models import Group, Permission
 User = get_user_model()
 user_app_label = User._meta.app_label
 user_module_name = User._meta.model_name
+
+
+def get_group_content_type(obj):
+    return ContentType.objects.get_for_model(Group)
 
 
 class ShortcutsTests(ObjectPermissionTestCase):
@@ -550,8 +556,7 @@ class GetUsersWithPermsTest(TestCase):
         self.assertEqual(set(get_group_perms(self.group2, self.obj1)), set())
         self.assertEqual(set(get_group_perms(admin, self.obj1)), set())
         expected_permissions = ['add_contenttype', 'change_contenttype', 'delete_contenttype']
-        if django.VERSION >= (2, 1):
-            expected_permissions.append('view_contenttype')
+        expected_permissions.append('view_contenttype')
         self.assertEqual(set(get_perms(admin, self.obj1)), set(expected_permissions))
         self.assertEqual(set(get_perms(self.user1, self.obj1)), {'change_contenttype', 'delete_contenttype'})
         self.assertEqual(set(get_perms(self.user2, self.obj1)), {'delete_contenttype'})
@@ -570,8 +575,7 @@ class GetUsersWithPermsTest(TestCase):
             admin: ["add_contenttype", "change_contenttype", "delete_contenttype"],
             self.user2: ["delete_contenttype"]
         }
-        if django.VERSION >= (2, 1):
-            expected[admin].append("view_contenttype")
+        expected[admin].append("view_contenttype")
         result = get_users_with_perms(self.obj1, attach_perms=True,
             with_superusers=False, with_group_users=True)
         self.assertEqual(result.keys(), expected.keys())
@@ -693,6 +697,17 @@ class GetGroupsWithPerms(TestCase):
         for key, perms in result.items():
             self.assertEqual(set(perms), set(expected[key]))
 
+    def test_custom_group_model(self):
+        with mock.patch("guardian.conf.settings.GROUP_OBJ_PERMS_MODEL", "testapp.GenericGroupObjectPermission"):
+            result = get_groups_with_perms(self.obj1)
+            self.assertEqual(len(result), 0)
+
+    def test_custom_group_model_attach_perms(self):
+        with mock.patch("guardian.conf.settings.GROUP_OBJ_PERMS_MODEL", "testapp.GenericGroupObjectPermission"):
+            result = get_groups_with_perms(self.obj1, attach_perms=True)
+            expected = {}
+            self.assertEqual(expected, result)
+
 
 class GetObjectsForUser(TestCase):
 
@@ -758,6 +773,10 @@ class GetObjectsForUser(TestCase):
     def test_mixed_perms_and_klass(self):
         self.assertRaises(MixedContentTypeError, get_objects_for_user,
                           self.user, ['auth.change_group'], User)
+
+    def test_override_get_content_type(self):
+        with mock.patch('guardian.conf.settings.GET_CONTENT_TYPE', 'guardian.testapp.tests.test_shortcuts.get_group_content_type'):
+            get_objects_for_user(self.user, ['auth.change_group'], User)
 
     def test_no_app_label_nor_klass(self):
         self.assertRaises(WrongAppError, get_objects_for_user, self.user,
@@ -1204,6 +1223,10 @@ class GetObjectsForGroup(TestCase):
     def test_mixed_perms_and_klass(self):
         self.assertRaises(MixedContentTypeError, get_objects_for_group,
                           self.group1, ['auth.change_group'], User)
+
+    def test_override_get_content_type(self):
+        with mock.patch('guardian.conf.settings.GET_CONTENT_TYPE', 'guardian.testapp.tests.test_shortcuts.get_group_content_type'):
+            get_objects_for_group(self.group1, ['auth.change_group'], User)
 
     def test_no_app_label_nor_klass(self):
         self.assertRaises(WrongAppError, get_objects_for_group, self.group1,

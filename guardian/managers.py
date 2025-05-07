@@ -1,6 +1,8 @@
+from typing import Any
+
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
-from django.db.models import Q
+from django.db.models import Q, Model, QuerySet
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
 from guardian.exceptions import ObjectNotPersisted
@@ -12,25 +14,22 @@ import warnings
 class BaseObjectPermissionManager(models.Manager):
 
     @property
-    def user_or_group_field(self):
+    def user_or_group_field(self) -> str:
         try:
             self.model._meta.get_field('user')
             return 'user'
         except FieldDoesNotExist:
             return 'group'
 
-    def is_generic(self):
+    def is_generic(self) -> bool:
         try:
             self.model._meta.get_field('object_pk')
             return True
         except FieldDoesNotExist:
             return False
 
-    def assign_perm(self, perm, user_or_group, obj):
-        """
-        Assigns permission with given ``perm`` for an instance ``obj`` and
-        ``user``.
-        """
+    def assign_perm(self, perm: str, user_or_group: Any, obj: Model) -> Any:
+        """Assigns permission with given `perm` for an instance `obj` and `user`."""
         if getattr(obj, 'pk', None) is None:
             raise ObjectNotPersisted("Object %s needs to be persisted first"
                                      % obj)
@@ -49,10 +48,10 @@ class BaseObjectPermissionManager(models.Manager):
         obj_perm, _ = self.get_or_create(**kwargs)
         return obj_perm
 
-    def bulk_assign_perm(self, perm, user_or_group, queryset):
+    def bulk_assign_perm(self, perm: str, user_or_group: Any, queryset: QuerySet) -> Any:
         """
-        Bulk assigns permissions with given ``perm`` for an objects in ``queryset`` and
-        ``user_or_group``.
+        Bulk assigns permissions with given `perm` for an objects in `queryset` and
+        `user_or_group`.
         """
         if isinstance(queryset, list):
             ctype = get_content_type(queryset[0])
@@ -81,9 +80,9 @@ class BaseObjectPermissionManager(models.Manager):
 
         return assigned_perms
 
-    def assign_perm_to_many(self, perm, users_or_groups, obj):
+    def assign_perm_to_many(self, perm: str, users_or_groups: Any, obj: Model) -> Any:
         """
-        Bulk assigns given ``perm`` for the object ``obj`` to a set of users or a set of groups.
+        Bulk assigns given `perm` for the object `obj` to a set of users or a set of groups.
         """
         ctype = get_content_type(obj)
         if not isinstance(perm, Permission):
@@ -109,18 +108,18 @@ class BaseObjectPermissionManager(models.Manager):
 
         return self.model.objects.bulk_create(to_add)
 
-    def assign(self, perm, user_or_group, obj):
+    def assign(self, perm: str, user_or_group: Any, obj: Model) -> Any:
         """ Depreciated function name left in for compatibility"""
         warnings.warn("UserObjectPermissionManager method 'assign' is being renamed to 'assign_perm'. Update your code accordingly as old name will be depreciated in 2.0 version.", DeprecationWarning)
         return self.assign_perm(perm, user_or_group, obj)
 
-    def remove_perm(self, perm, user_or_group, obj):
+    def remove_perm(self, perm: str, user_or_group: Any, obj: Model) -> tuple[int, dict]:
         """
-        Removes permission ``perm`` for an instance ``obj`` and given ``user_or_group``.
+        Removes permission `perm` for an instance `obj` and given `user_or_group`.
 
-        Please note that we do NOT fetch object permission from database - we
-        use ``Queryset.delete`` method for removing it. Main implication of this
-        is that ``post_delete`` signals would NOT be fired.
+        Please note that we do NOT fetch object permission from database -
+        we use `Queryset.delete` method for removing it.
+        The main implication of this is that `post_delete` signals would NOT be fired.
         """
         if getattr(obj, 'pk', None) is None:
             raise ObjectNotPersisted("Object %s needs to be persisted first"
@@ -140,13 +139,13 @@ class BaseObjectPermissionManager(models.Manager):
             filters &= Q(content_object__pk=obj.pk)
         return self.filter(filters).delete()
 
-    def bulk_remove_perm(self, perm, user_or_group, queryset):
+    def bulk_remove_perm(self, perm: str, user_or_group: Any, queryset: QuerySet) -> tuple[int, dict]:
         """
-        Removes permission ``perm`` for a ``queryset`` and given ``user_or_group``.
+        Removes permission `perm` for a `queryset` and given `user_or_group`.
 
-        Please note that we do NOT fetch object permission from database - we
-        use ``Queryset.delete`` method for removing it. Main implication of this
-        is that ``post_delete`` signals would NOT be fired.
+        Please note that we do NOT fetch object permission from database -
+        we use `Queryset.delete` method for removing it.
+        The main implication of this is that `post_delete` signals would NOT be fired.
         """
         filters = Q(**{self.user_or_group_field: user_or_group})
 
@@ -166,8 +165,16 @@ class BaseObjectPermissionManager(models.Manager):
 
 
 class UserObjectPermissionManager(BaseObjectPermissionManager):
+    """
+    See Also:
+        `guardian.managers.UserObjectPermissionManager`
+    """
     pass
 
 
 class GroupObjectPermissionManager(BaseObjectPermissionManager):
+    """
+    See Also:
+        `guardian.managers.UserObjectPermissionManager`
+    """
     pass
