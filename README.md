@@ -24,7 +24,7 @@ uv add django-guardian
 
 ## Configuration
 
-We need to hook `django-guardian`` into our project.
+We need to hook `django-guardian` into our project.
 
 1. Put `guardian` into your `INSTALLED_APPS` at settings module:
 
@@ -44,7 +44,7 @@ We need to hook `django-guardian`` into our project.
     )
 ```
 
-3. Create `guardian` database tables by running::
+3. Create `guardian` database tables by running:
 
 ```
      python manage.py migrate
