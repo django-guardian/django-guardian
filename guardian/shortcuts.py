@@ -828,12 +828,19 @@ def _handle_pk_field(queryset):
     return None
 
 def filter_perms_queryset_by_objects(perms_queryset, objects):
-    if not isinstance(objects, QuerySet):
-        return perms_queryset
-    else:
+    if isinstance(objects, QuerySet):
         field = 'content_object__pk'
         if perms_queryset.model.objects.is_generic():
             field = 'object_pk'
+            handle_pk_field = _handle_pk_field(objects)
+            if handle_pk_field is not None:
+                objects = objects.values(_pk=Cast(handle_pk_field('pk'), output_field=CharField()))
+            else:
+                objects = objects.values('pk')
+        else:
+            objects = objects.values('pk')
         return perms_queryset.filter(
-            **{'{}__in'.format(field): list(objects.values_list(
-                'pk', flat=True).distinct().order_by())})
+            **{'{}__in'.format(field): objects}
+        )
+    else:
+        return perms_queryset
