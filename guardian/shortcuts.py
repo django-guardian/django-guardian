@@ -180,13 +180,25 @@ def remove_perm(perm, user_or_group=None, obj=None):
     if not isinstance(perm, Permission):
         perm = perm.split('.')[-1]
 
-    if isinstance(obj, QuerySet):
+    if isinstance(obj, (QuerySet, list)):
+        if isinstance(user_or_group, (QuerySet, list)):
+            raise MultipleIdentityAndObjectError("Only bulk operations on either users/groups OR objects supported")
         if user:
-            model = get_user_obj_perms_model(obj.model)
+            model = get_user_obj_perms_model(
+                    obj[0] if isinstance(obj, list) else obj.model)
             return model.objects.bulk_remove_perm(perm, user, obj)
         if group:
-            model = get_group_obj_perms_model(obj.model)
+            model = get_group_obj_perms_model(
+                    obj[0] if isinstance(obj, list) else obj.model)
             return model.objects.bulk_remove_perm(perm, group, obj)
+
+    if isinstance(user_or_group, (QuerySet, list)):
+        if user:
+            model = get_user_obj_perms_model(obj)
+            return model.objects.remove_perm_from_many(perm, user, obj)
+        if group:
+            model = get_group_obj_perms_model(obj)
+            return model.objects.remove_perm_from_many(perm, group, obj)
 
     if user:
         model = get_user_obj_perms_model(obj)
