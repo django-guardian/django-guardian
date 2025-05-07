@@ -1,6 +1,8 @@
 from itertools import chain
+from typing import Iterable, Optional
 
 from django.contrib.auth.models import Permission
+from django.db.models import Model
 from django.db.models.query import QuerySet
 from django.utils.encoding import force_str
 
@@ -34,29 +36,29 @@ class ObjectPermissionChecker:
     """Generic object permissions checker class being the heart of `django-guardian`.
 
     Note:
-       Once checked for single object, permissions are stored and we don't hit
-       database again if another check is called for this object. This is great
-       for templates, views or other request based checks (assuming we don't
+       Once checked for a single object, permissions are stored, and we don't hit
+       the database again if another check is called for this object. This is great
+       for templates, views or other request-based checks (assuming we don't
        have hundreds of permissions on a single object as we fetch all
        permissions for checked object).
 
-       On the other hand, if we call `has_perm` for perm1/object1, then we
+       if we call `has_perm` for perm1/object1, then we
        change permission state and call `has_perm` again for same
-       perm1/object1 on same instance of ObjectPermissionChecker we won't see a
-       difference as permissions are already fetched and stored within cache
+       perm1/object1 on the same instance of ObjectPermissionChecker we won't see a
+       difference as permissions are already fetched and stored within the cache
        dictionary.
     """
 
-    def __init__(self, user_or_group=None):
+    def __init__(self, user_or_group: Optional[Model] = None) -> None:
         """Constructor for ObjectPermissionChecker.
 
         Parameters:
             user_or_group (User, AnonymousUser, Group): The user or group to check permissions for.
         """
-        self.user, self.group = get_identity(user_or_group)
-        self._obj_perms_cache = {}
+        self.user, self.group = get_identity(user_or_group)  # type: ignore[arg-type] # None is not allowed
+        self._obj_perms_cache: dict = {}
 
-    def has_perm(self, perm, obj):
+    def has_perm(self, perm: str, obj: Model) -> bool:
         """Checks if user/group has the specified permission for the given object.
 
         Parameters:
@@ -64,6 +66,8 @@ class ObjectPermissionChecker:
                 prefix (if not prefixed, we grab app_label from `obj`)
             obj (Model): Django model instance for which permission should be checked
 
+        Returns:
+            True if user/group has the permission, False otherwise
         """
         if self.user and not self.user.is_active:
             return False
@@ -93,14 +97,14 @@ class ObjectPermissionChecker:
 
         return group_filters
 
-    def get_user_filters(self, obj):
+    def get_user_filters(self, obj: Model):
         ctype = get_content_type(obj)
         model = get_user_obj_perms_model(obj)
-        related_name = model.permission.field.related_query_name()
+        related_name = model.permission.field.related_query_name()  # type: ignore[attr-defined]
 
         user_filters = {f'{related_name}__user': self.user}
 
-        if model.objects.is_generic():
+        if model.objects.is_generic():  # type: ignore[attr-defined]
             user_filters.update({
                 '%s__content_type' % related_name: ctype,
                 '%s__object_pk' % related_name: obj.pk,
@@ -110,36 +114,34 @@ class ObjectPermissionChecker:
 
         return user_filters
 
-    def get_user_perms(self, obj):
+    def get_user_perms(self, obj: Model) -> QuerySet[Permission]:
         ctype = get_content_type(obj)
 
         perms_qs = Permission.objects.filter(content_type=ctype)
         user_filters = self.get_user_filters(obj)
         user_perms_qs = perms_qs.filter(**user_filters)
-        user_perms = user_perms_qs.values_list("codename", flat=True)
+        user_perms: QuerySet[Permission] = user_perms_qs.values_list("codename", flat=True)
 
         return user_perms
 
-    def get_group_perms(self, obj):
+    def get_group_perms(self, obj: Model) -> QuerySet[Permission]:
         ctype = get_content_type(obj)
 
         perms_qs = Permission.objects.filter(content_type=ctype)
         group_filters = self.get_group_filters(obj)
         group_perms_qs = perms_qs.filter(**group_filters)
-        group_perms = group_perms_qs.values_list("codename", flat=True)
+        group_perms: QuerySet[Permission] = group_perms_qs.values_list("codename", flat=True)
 
         return group_perms
 
-    def get_perms(self, obj):
+    def get_perms(self, obj: Model) -> list[str]:
         """Get a list of permissions for the given object.
-
-        Get the list of permissions for the given object.
 
         Parameters:
             obj (Model): Django model instance for which permission should be checked.
 
         Returns:
-            codenames (list): list of codenames for all permissions for given `obj`.
+            list of codenames for all permissions for given `obj`.
         """
         if self.user and not self.user.is_active:
             return []
@@ -150,11 +152,11 @@ class ObjectPermissionChecker:
         ctype = get_content_type(obj)
         key = self.get_local_cache_key(obj)
         if key not in self._obj_perms_cache:
-            # If auto-prefetching enabled, do not hit database
+            # If auto-prefetching enabled, do not hit the database
             if guardian_settings.AUTO_PREFETCH:
                 return []
             if self.user and self.user.is_superuser:
-                perms = list(
+                perms: list[str] = list(
                     Permission.objects.filter(content_type=ctype).values_list("codename", flat=True)
                 )
             elif self.user:
@@ -162,19 +164,18 @@ class ObjectPermissionChecker:
                 # the results to avoid a slow query
                 user_perms = self.get_user_perms(obj)
                 group_perms = self.get_group_perms(obj)
-                perms = list(set(chain(user_perms, group_perms)))
+                perms: list[str] = list(set(chain(user_perms, group_perms)))  # type: ignore[no-redef]
             else:
-                perms = list(set(self.get_group_perms(obj)))
+                perms: list[str] = list(set(self.get_group_perms(obj)))  # type: ignore[no-redef]
             self._obj_perms_cache[key] = perms
         return self._obj_perms_cache[key]
 
-    def get_local_cache_key(self, obj):
-        """Returns cache key for `_obj_perms_cache` dict.
-       """
+    def get_local_cache_key(self, obj: Model) -> tuple:
+        """Returns cache key for `_obj_perms_cache` dict."""
         ctype = get_content_type(obj)
-        return (ctype.id, force_str(obj.pk))
+        return ctype.id, force_str(obj.pk)
 
-    def prefetch_perms(self, objects):
+    def prefetch_perms(self, objects: QuerySet):
         """Prefetches the permissions for objects in `objects` and puts them in the cache.
 
         Parameters:
@@ -186,7 +187,7 @@ class ObjectPermissionChecker:
         pks, model, ctype = _get_pks_model_and_ctype(objects)
 
         if self.user and self.user.is_superuser:
-            perms = list(
+            perms: Iterable = list(
                 Permission.objects.filter(content_type=ctype).values_list("codename", flat=True)
             )
 
@@ -202,7 +203,7 @@ class ObjectPermissionChecker:
             group_filters = {'group': self.group}
 
         group_model = get_group_obj_perms_model(model)
-        if group_model.objects.is_generic():
+        if group_model.objects.is_generic():  # type: ignore[attr-defined]
             group_filters.update({
                 'content_type': ctype,
                 'object_pk__in': pks,

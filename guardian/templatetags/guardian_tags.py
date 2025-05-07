@@ -58,9 +58,8 @@ def get_obj_perms(parser, token):
     ```
 
     Returns:
-         perms (list[str]): a list of permissions (as `codename` strings)
+         a list of permissions (as `codename` strings)
               for a given `user`/`group` and `obj` (Model instance).
-
 
     Note:
        Make sure that you set and use those permissions in same template
@@ -83,7 +82,6 @@ def get_obj_perms(parser, token):
     Note: Added in version 1.2
         As of v1.2, passing `None` as `obj` for this template tag won't rise
         obfuscated exception and would return empty permissions set instead.
-
     """
     bits = token.split_contents()
     format = '{% get_obj_perms user/group for obj as "context_var" perm_checker %}'

@@ -130,6 +130,7 @@ dev = [
     "mkdocstrings>=0.29.1",
     "mkdocstrings-python>=1.16.10",
     "mock>=5.1.0",
+    "mypy>=1.15.0",
     "mysqlclient>=2.2.7",
     "psycopg2-binary>=2.9.10",
     "pytest>=8.3.4",
@@ -150,6 +151,14 @@ packages = [
     "guardian.testapp.tests"
 ]
 
+[tool.setuptools.package-data]
+guardian = ["py.typed"]
+
 [build-system]
 requires = ["setuptools>=61", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.mypy]
+ignore_missing_imports = true
+show_error_codes = true
+exclude = "example*|guardian/testapp/*"

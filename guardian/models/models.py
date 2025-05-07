@@ -22,13 +22,13 @@ class BaseObjectPermission(models.Model):
     class Meta:
         abstract = True
 
-    def __str__(self):
+    def __str__(self) -> str:
         return '{} | {} | {}'.format(
             str(self.content_object),
             str(getattr(self, 'user', False) or self.group),
             str(self.permission.codename))
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs) -> None:
         """Save the current instance.
 
         Override this if you need to control the saving process.

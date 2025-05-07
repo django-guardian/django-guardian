@@ -6,6 +6,7 @@ from django.db.models.base import ModelBase
 from django.db.models.query import QuerySet
 from django.shortcuts import get_object_or_404
 from django.utils.functional import wraps
+
 from guardian.exceptions import GuardianError
 from guardian.utils import get_40x_or_None
 
