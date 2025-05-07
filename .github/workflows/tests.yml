@@ -106,7 +106,7 @@
             PYTEST_ADDOPTS: "-vv --durations=20"
             DIFF_AGAINST: HEAD
             UV_PYTHON_PREFERENCE: "only-managed"
-          run: tox run --skip-pkg-install
+          run: tox run -vv --skip-pkg-install
 
         # - name: Test with MariaDB
         #   if: matrix.database-engine == 'mariadb'
