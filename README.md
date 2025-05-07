@@ -29,25 +29,25 @@ We need to hook `django-guardian` into our project.
 1. Put `guardian` into your `INSTALLED_APPS` at settings module:
 
 ```python
-    INSTALLED_APPS = (
-     ...
-     'guardian',
-    )
+INSTALLED_APPS = (
+...
+'guardian',
+)
 ```
 
 2. Add extra authorization backend to your `settings.py`:
 
 ```py
-    AUTHENTICATION_BACKENDS = (
-        'django.contrib.auth.backends.ModelBackend',
-        'guardian.backends.ObjectPermissionBackend',
-    )
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',
+    'guardian.backends.ObjectPermissionBackend',
+)
 ```
 
 3. Create `guardian` database tables by running:
 
 ```
-     python manage.py migrate
+python manage.py migrate
 ```
 
 ## Usage
@@ -58,24 +58,23 @@ with Django.
 Lets start really quickly:
 
 ```py
-      >>> from django.contrib.auth.models import User, Group
-      >>> jack = User.objects.create_user('jack', 'jack@example.com', 'topsecretagentjack')
-      >>> admins = Group.objects.create(name='admins')
-      >>> jack.has_perm('change_group', admins)
-      False
-      >>> from guardian.shortcuts import assign_perm
-      >>> assign_perm('change_group', jack, obj=admins)
-      <UserObjectPermission: admins | jack | change_group>
-      >>> jack.has_perm('change_group', admins)
-      True
+>>> from django.contrib.auth.models import User, Group
+>>> jack = User.objects.create_user('jack', 'jack@example.com', 'topsecretagentjack')
+>>> admins = Group.objects.create(name='admins')
+>>> jack.has_perm('change_group', admins)
+False
+>>> from guardian.shortcuts import assign_perm
+>>> assign_perm('change_group', jack, obj=admins)
+<UserObjectPermission: admins | jack | change_group>
+>>> jack.has_perm('change_group', admins)
+True
 ```
 
 Of course our agent jack here would not be able to _change_group_ globally:
 
 ```py
-
-    >>> jack.has_perm('change_group')
-    False
+>>> jack.has_perm('change_group')
+False
 ```
 
 ## Admin integration
@@ -86,19 +85,19 @@ which should have object permissions support within admin panel.
 For example:
 
 ```py
-    from django.contrib import admin
-    from myapp.models import Author
-    from guardian.admin import GuardedModelAdmin
+from django.contrib import admin
+from myapp.models import Author
+from guardian.admin import GuardedModelAdmin
 
-    # Old way:
-    #class AuthorAdmin(admin.ModelAdmin):
-    #    pass
+# Old way:
+#class AuthorAdmin(admin.ModelAdmin):
+#    pass
 
-    # With object permissions support
-    class AuthorAdmin(GuardedModelAdmin):
-        pass
+# With object permissions support
+class AuthorAdmin(GuardedModelAdmin):
+    pass
 
-    admin.site.register(Author, AuthorAdmin)
+admin.site.register(Author, AuthorAdmin)
 ```
 
 ## Django Unfold integration
