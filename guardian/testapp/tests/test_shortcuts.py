@@ -513,6 +513,16 @@ class GetUsersWithPermsTest(TestCase):
             {self.user1, admin},
         )
 
+    def test_inactive_user(self):
+        inactive_user = User.objects.create(username='inactive', is_active=False)
+        assign_perm("change_contenttype", inactive_user, self.obj1)
+
+        result = get_users_with_perms(self.obj1)
+        self.assertEqual(
+            set(result),
+            set(),
+        )
+
     def test_without_group_users(self):
         self.user1.groups.add(self.group1)
         self.user2.groups.add(self.group2)
