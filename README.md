@@ -30,8 +30,8 @@ We need to hook `django-guardian` into our project.
 
 ```python
 INSTALLED_APPS = (
-...
-'guardian',
+    ...
+    'guardian',
 )
 ```
 
