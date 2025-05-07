@@ -122,3 +122,4 @@
             export DATABASE_URL=sqlite://
             py.test --cov=guardian
   
+          
