@@ -12,6 +12,7 @@ _build
 dist
 .DS_Store
 .coverage
+coverage.xml
 .hgignore
 .tox
 .ropeproject
@@ -38,3 +39,13 @@ example_project_custom_group/conf/*.py
 
 # Documentation
 site*/
+
+# Common IDEs
+.idea*
+.vscode*
+
+# Ignore uv.lock to avoid developers clashing in pull requests.
+# This is not recommended practice for an application but for 
+# a library with a thorough dependency matrix test suite this is
+# just fine.
+uv.lock
