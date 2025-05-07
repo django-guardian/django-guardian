@@ -83,6 +83,7 @@ def get_identity(identity):
         identity = get_anonymous_user()
 
     Group = get_group_obj_perms_model().group.field.related_model
+    UserModel = get_user_obj_perms_model().user.field.related_model
 
     # get identity from queryset model type
     if isinstance(identity, QuerySet):
@@ -93,12 +94,12 @@ def get_identity(identity):
             return None, identity
 
     # get identity from first element in list
-    if isinstance(identity, list) and isinstance(identity[0], get_user_model()):
+    if isinstance(identity, list) and isinstance(identity[0], UserModel):
         return identity, None
     if isinstance(identity, list) and isinstance(identity[0], Group):
         return None, identity
 
-    if isinstance(identity, get_user_model()):
+    if isinstance(identity, UserModel):
         return identity, None
     if isinstance(identity, Group):
         return None, identity
