@@ -11,7 +11,7 @@ classifiers = [
     "Intended Audience :: Developers",
     'Environment :: Web Environment',
     "Topic :: Software Development :: Libraries :: Python Modules",
-    "License :: OSI Approved :: BSD-3-Clause",
+    "License :: OSI Approved :: BSD License",
     'Framework :: Django',
     'Framework :: Django :: 3.2',
     'Framework :: Django :: 4.1',
