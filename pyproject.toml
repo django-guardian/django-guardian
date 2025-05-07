@@ -124,6 +124,7 @@ Changelog = "https://github.com/django-guardian/django-guardian/releases"
 # PACKAGES=( 'psycopg2-binary' 'mysqlclient')
 dev = [
     "django-environ>=0.12.0",
+    "mkdocs>=1.6.1",
     "mock>=5.1.0",
     "mysqlclient>=2.2.7",
     "psycopg2-binary>=2.9.10",
