@@ -1,6 +1,6 @@
 # django-guardian
 
-[![Tests](https://github.com/django-guardian/django-guardian/workflows/Tests/badge.svg?branch=devel)](https://github.com/django-guardian/django-guardian/actions/workflows/tests.yml)
+[![Tests](https://github.com/django-guardian/django-guardian/workflows/Tests/badge.svg?branch=next)](https://github.com/django-guardian/django-guardian/actions/workflows/tests.yml)
 [![PyPI version](https://img.shields.io/pypi/v/django-guardian.svg)](https://pypi.python.org/pypi/django-guardian)
 [![Python versions](https://img.shields.io/pypi/pyversions/django-guardian.svg)](https://pypi.python.org/pypi/django-guardian)
 
