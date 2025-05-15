@@ -1,3 +1,4 @@
+import warnings
 from collections.abc import Iterable
 from typing import Union, Any, Optional
 
@@ -126,7 +127,7 @@ class PermissionRequiredMixin:
     """
     # default class view settings
     login_url: str = settings.LOGIN_URL
-    permission_required: Optional[list[str]] = None
+    permission_required: Union[str, list[str], None] = None
     redirect_field_name: str = REDIRECT_FIELD_NAME
     return_403: bool = False
     return_404: bool = False
@@ -279,7 +280,7 @@ class PermissionListMixin:
         get_objects_for_user_extra_kwargs (dict): Extra params to pass to `guardian.shortcuts.get_objects_for_user`.
             Default to `{}`,
     """
-    permission_required: Union[bool, None] = None
+    permission_required: Union[str, list[str], None] = None
     get_objects_for_user_extra_kwargs: dict = {}
 
     def get_required_permissions(self, request: Optional[HttpRequest] = None) -> list[str]:
