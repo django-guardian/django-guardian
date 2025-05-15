@@ -4,7 +4,7 @@ import warnings
 from collections import defaultdict
 from functools import partial, lru_cache
 from itertools import groupby
-from typing import Union, Any, Optional
+from typing import Union, Any, Optional, TypeVar, Type
 
 from django.apps import apps
 from django.contrib.auth import get_user_model
@@ -427,16 +427,17 @@ def get_groups_with_perms(obj: Model, attach_perms: bool = False) -> Union[Group
             group_perms_mapping[group_perm.group].append(group_perm.permission.codename)
         return dict(group_perms_mapping)
 
+T = TypeVar("T", bound=Model)
 
 def get_objects_for_user(
     user: Any,
     perms: Union[str, list[str]],
-    klass: Union[Model, Manager, QuerySet, None] = None,
+    klass: Union[T, Manager[T],QuerySet[T], None] = None,
     use_groups: bool = True,
     any_perm: bool = False,
     with_superuser: bool = True,
     accept_global_perms: bool = True,
-) -> list[Model]:
+) -> QuerySet[T]:
     """Get objects that a user has *all* the supplied permissions for.
 
     Parameters:
