@@ -281,6 +281,7 @@ class PermissionListMixin:
             Default to `{}`,
     """
     permission_required: Union[str, list[str], None] = None
+    # rename get_objects_for_user_kwargs to when get_get_objects_for_user_kwargs is removed
     get_objects_for_user_extra_kwargs: dict = {}
 
     def get_required_permissions(self, request: Optional[HttpRequest] = None) -> list[str]:
@@ -310,26 +311,20 @@ class PermissionListMixin:
     def get_get_objects_for_user_kwargs(self, queryset: QuerySet) -> dict:
         """Get kwargs to pass to `get_objects_for_user`.
 
-        Warnings:
-            This method is deprecated and will be removed in future versions.
-            Use `get_objects_for_user_kwargs` instead which has identical behavior.
-
-        """
-        warnings.warn(
-            "get_get_objects_for_user_kwargs is deprecated, use get_objects_for_user_kwargs instead",
-            DeprecationWarning,
-        )
-        return self.get_objects_for_user_kwargs(queryset)
-
-    def get_objects_for_user_kwargs(self, queryset: QuerySet) -> dict:
-        """Get kwargs to pass to `get_objects_for_user`.
-
         Returns:
-            kwargs that should be passed to `get_objects_for_user`.
+            dict of kwargs to be passed to `get_objects_for_user`.
 
         Parameters:
             queryset (QuerySet): Queryset to filter.
+
+        Warning: Deprecation Warning
+            This method is deprecated and will be removed in future versions.
+            Use `get_user_object_kwargs` instead which has identical behavior.
         """
+        warnings.warn(
+            "get_get_objects_for_user_kwargs will be deprecated in a future release.",
+            DeprecationWarning,
+        )
         return dict(user=self.request.user,  # type: ignore[attr-defined]
                     perms=self.get_required_permissions(self.request),  # type: ignore[attr-defined]
                     klass=queryset,
@@ -337,4 +332,4 @@ class PermissionListMixin:
 
     def get_queryset(self, *args, **kwargs):
         qs = super().get_queryset(*args, **kwargs)
-        return get_objects_for_user(**self.get_objects_for_user_kwargs(qs))
+        return get_objects_for_user(**self.get_get_objects_for_user_kwargs(qs))
