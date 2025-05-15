@@ -432,7 +432,7 @@ T = TypeVar("T", bound=Model)
 def get_objects_for_user(
     user: Any,
     perms: Union[str, list[str]],
-    klass: Union[T, Manager[T],QuerySet[T], None] = None,
+    klass: Union[Type[T], Manager[T],QuerySet[T], None] = None,
     use_groups: bool = True,
     any_perm: bool = False,
     with_superuser: bool = True,
