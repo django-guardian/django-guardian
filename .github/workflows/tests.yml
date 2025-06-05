@@ -9,6 +9,9 @@ on:
       - next
   pull_request:
 
+env:
+  CI_DEP_GROUPS: ci
+
 jobs:
   tests:
     runs-on: ubuntu-24.04

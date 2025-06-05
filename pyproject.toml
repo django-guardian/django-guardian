@@ -132,7 +132,7 @@ dev = [
     "pytest-django>=4.9.0",
     "tox>=4.26.0",
 ]
-db = [
+ci = [
     "psycopg2-binary>=2.9.10",
     "mysqlclient>=2.2.7",
     { include-group = "dev" }
