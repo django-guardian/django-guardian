@@ -166,9 +166,10 @@ class PermissionRequiredMixin:
     def get_permission_object(self):
         if hasattr(self, 'permission_object'):
             return self.permission_object
-        return (hasattr(self, 'get_object') and self.get_object() or
-                getattr(self, 'object', None))
-
+        return getattr(self, "object", None) or (
+            hasattr(self, "get_object") and self.get_object()
+        )
+        
     def check_permissions(self, request: HttpRequest) -> Union[HttpResponseForbidden, HttpResponseNotFound, HttpResponseRedirect, HttpResponse, None]:
         """Check if the user has the required permissions.
 
