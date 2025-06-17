@@ -76,7 +76,7 @@ class BaseObjectPermissionManager(models.Manager):
                 else:
                     kwargs['content_object'] = instance
                 assigned_perms.append(self.model(**kwargs))
-        self.model.objects.bulk_create(assigned_perms)
+        self.model.objects.bulk_create(assigned_perms, ignore_conflicts=True)
 
         return assigned_perms
 
@@ -106,7 +106,7 @@ class BaseObjectPermissionManager(models.Manager):
                 self.model(**kwargs)
             )
 
-        return self.model.objects.bulk_create(to_add)
+        return self.model.objects.bulk_create(to_add, ignore_conflicts=True)
 
     def assign(self, perm: str, user_or_group: Any, obj: Model) -> Any:
         """ Depreciated function name left in for compatibility"""
