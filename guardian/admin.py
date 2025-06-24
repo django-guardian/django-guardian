@@ -318,9 +318,9 @@ class GuardedModelAdminMixin:
             post_url = reverse('admin:index', current_app=self.admin_site.name)
             return redirect(post_url)
 
-        GroupModel = get_group_obj_perms_model().group.field.related_model
-        group = get_object_or_404(GroupModel, id=group_id)
         obj = get_object_or_404(self.get_queryset(request), pk=object_pk)
+        GroupModel = get_group_obj_perms_model(obj).group.field.related_model
+        group = get_object_or_404(GroupModel, id=group_id)
         form_class = self.get_obj_perms_manage_group_form(request)
         form = form_class(group, obj, request.POST or None)
 
