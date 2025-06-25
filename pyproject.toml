@@ -163,3 +163,10 @@ build-backend = "setuptools.build_meta"
 ignore_missing_imports = true
 show_error_codes = true
 exclude = "example*|guardian/testapp/*"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "guardian.testapp.testsettings"
+filterwarnings = [
+    "once::DeprecationWarning",
+    "once::PendingDeprecationWarning",
+]
