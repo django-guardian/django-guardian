@@ -13,7 +13,7 @@ description = "Just an example of how to use guardian"
 # ]
 
 [dependency-groups]
-# For running tests, the test app, and building docs      
+# For running tests, the test app, and building docs
 # dev = [
 #     "mock>=5.1.0",
 #     "pytest>=8.3.4",

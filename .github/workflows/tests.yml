@@ -2,14 +2,14 @@
   name: Tests
   permissions:
     contents: read
-  
+
   on:
     push:
       branches:
         - main
         - next
     pull_request:
-  
+
   jobs:
     tests:
       runs-on: ubuntu-24.04
@@ -18,7 +18,7 @@
         matrix:
           python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
           database-engine: ['sqlite', 'mariadb', 'postgres']
-              
+
       services:
         mariadb:
           image: mariadb:11.4.2
@@ -38,7 +38,7 @@
             --health-retries 5
           ports:
             - 5432:5432
-  
+
       env:
         DJANGO_SETTINGS_MODULE: tests.server.settings
         DATABASE_ENGINE: ${{ matrix.database-engine }}
@@ -46,34 +46,34 @@
       steps:
         - name: Checkout code
           uses: actions/checkout@v4
-  
+
         - name: Install uv
           uses: astral-sh/setup-uv@v5
           with:
             enable-cache: true
             cache-dependency-glob: "pyproject.toml"
-  
+
         - name: Install tox
           # See: https://github.com/tox-dev/tox-gh
           run: uv tool install --python-preference only-managed --python 3.13 tox --with . --with tox-uv --with tox-gh
-  
+
         - name: Install Python
           # Skip if the python version is already installed to run tox
           if: matrix.python-version != '3.13'
           run: uv python install --python-preference only-managed ${{ matrix.python-version }}
-  
+
         - name: Setup test suite
           run: tox run -vv --notest --skip-missing-interpreters false
           env:
             TOX_GH_MAJOR_MINOR: ${{ matrix.python-version }}
-  
+
         - name: Create databases
           run: |
             PGPASSWORD="postgres" psql -c 'create database django_guardian;' -h localhost -U postgres;
             PGPASSWORD="postgres" psql -c 'create database test_django_guardian;' -h localhost -U postgres;
             mysql --host=127.0.0.1 --user=root --password=mariadb -e 'CREATE DATABASE django_guardian;';
             mysql --host=127.0.0.1 --user=root --password=mariadb -e 'CREATE DATABASE test_django_guardian;';
-  
+
         - name: Test with PostgreSQL
           if: matrix.database-engine == 'postgres'
           env:
