@@ -1,6 +1,7 @@
 """
 Implementation of per object permissions for Django.
 """
+
 from . import checks  # noqa: F401
 
 
@@ -22,22 +23,22 @@ def get_version():
     recommended importlib approach.
     """
     from importlib.metadata import version
-    return version('django-guardian')
+
+    return version("django-guardian")
 
 
 def monkey_patch_user():
     from django.contrib.auth import get_user_model
 
     from .utils import evict_obj_perms_cache, get_anonymous_user, get_user_obj_perms_model
+
     UserObjectPermission = get_user_obj_perms_model()
     User = get_user_model()
     # Prototype User and Group methods
-    setattr(User, 'get_anonymous', staticmethod(lambda: get_anonymous_user()))
-    setattr(User, 'add_obj_perm',
-            lambda self, perm, obj: UserObjectPermission.objects.assign_perm(perm, self, obj))
-    setattr(User, 'del_obj_perm',
-            lambda self, perm, obj: UserObjectPermission.objects.remove_perm(perm, self, obj))
-    setattr(User, 'evict_obj_perms_cache', evict_obj_perms_cache)
+    setattr(User, "get_anonymous", staticmethod(lambda: get_anonymous_user()))
+    setattr(User, "add_obj_perm", lambda self, perm, obj: UserObjectPermission.objects.assign_perm(perm, self, obj))
+    setattr(User, "del_obj_perm", lambda self, perm, obj: UserObjectPermission.objects.remove_perm(perm, self, obj))
+    setattr(User, "evict_obj_perms_cache", evict_obj_perms_cache)
 
 
 def monkey_patch_group():
@@ -47,7 +48,5 @@ def monkey_patch_group():
 
     GroupObjectPermission = get_group_obj_perms_model()
     # Prototype Group methods
-    setattr(Group, 'add_obj_perm',
-            lambda self, perm, obj: GroupObjectPermission.objects.assign_perm(perm, self, obj))
-    setattr(Group, 'del_obj_perm',
-            lambda self, perm, obj: GroupObjectPermission.objects.remove_perm(perm, self, obj))
+    setattr(Group, "add_obj_perm", lambda self, perm, obj: GroupObjectPermission.objects.assign_perm(perm, self, obj))
+    setattr(Group, "del_obj_perm", lambda self, perm, obj: GroupObjectPermission.objects.remove_perm(perm, self, obj))

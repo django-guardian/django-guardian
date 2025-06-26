@@ -18,23 +18,19 @@ user_module_name = User._meta.model_name
 
 @skipUnlessTestApp
 class OrphanedObjectPermissionsTest(TestCase):
-
     def setUp(self):
         # Create objects for which we would assign obj perms
-        self.target_user1 = User.objects.create(username='user1')
-        self.target_group1 = Group.objects.create(name='group1')
-        self.target_obj1 = ContentType.objects.create(
-            model='foo', app_label='fake-for-guardian-tests')
-        self.target_obj2 = ContentType.objects.create(
-            model='bar', app_label='fake-for-guardian-tests')
+        self.target_user1 = User.objects.create(username="user1")
+        self.target_group1 = Group.objects.create(name="group1")
+        self.target_obj1 = ContentType.objects.create(model="foo", app_label="fake-for-guardian-tests")
+        self.target_obj2 = ContentType.objects.create(model="bar", app_label="fake-for-guardian-tests")
         # Required if MySQL backend is used :/
         create_permissions(auth_app, 1)
 
-        self.user = User.objects.create(username='user')
-        self.group = Group.objects.create(name='group')
+        self.user = User.objects.create(username="user")
+        self.group = Group.objects.create(name="group")
 
     def test_clean_perms(self):
-
         # assign obj perms
         target_perms = {
             self.target_user1: ["change_%s" % user_module_name],

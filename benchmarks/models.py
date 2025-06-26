@@ -8,11 +8,11 @@ class TestModel(models.Model):
 
 
 class DirectUser(UserObjectPermissionBase):
-    content_object = models.ForeignKey('TestDirectModel', on_delete=models.CASCADE)
+    content_object = models.ForeignKey("TestDirectModel", on_delete=models.CASCADE)
 
 
 class DirectGroup(GroupObjectPermissionBase):
-    content_object = models.ForeignKey('TestDirectModel', on_delete=models.CASCADE)
+    content_object = models.ForeignKey("TestDirectModel", on_delete=models.CASCADE)
 
 
 class TestDirectModel(models.Model):

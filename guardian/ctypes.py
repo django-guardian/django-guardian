@@ -8,8 +8,7 @@ from guardian.conf import settings as guardian_settings
 
 
 def get_content_type(obj: Union[Model, Type[Model]]) -> Any:
-    get_content_type_function = import_string(
-        guardian_settings.GET_CONTENT_TYPE)
+    get_content_type_function = import_string(guardian_settings.GET_CONTENT_TYPE)
     return get_content_type_function(obj)
 
 

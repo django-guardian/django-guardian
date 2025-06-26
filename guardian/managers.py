@@ -12,39 +12,37 @@ from guardian.exceptions import ObjectNotPersisted
 
 
 class BaseObjectPermissionManager(models.Manager):
-
     @property
     def user_or_group_field(self) -> str:
         try:
-            self.model._meta.get_field('user')
-            return 'user'
+            self.model._meta.get_field("user")
+            return "user"
         except FieldDoesNotExist:
-            return 'group'
+            return "group"
 
     def is_generic(self) -> bool:
         try:
-            self.model._meta.get_field('object_pk')
+            self.model._meta.get_field("object_pk")
             return True
         except FieldDoesNotExist:
             return False
 
     def assign_perm(self, perm: str, user_or_group: Any, obj: Model) -> Any:
         """Assigns permission with given `perm` for an instance `obj` and `user`."""
-        if getattr(obj, 'pk', None) is None:
-            raise ObjectNotPersisted("Object %s needs to be persisted first"
-                                     % obj)
+        if getattr(obj, "pk", None) is None:
+            raise ObjectNotPersisted("Object %s needs to be persisted first" % obj)
         ctype = get_content_type(obj)
         if not isinstance(perm, Permission):
             permission = Permission.objects.get(content_type=ctype, codename=perm)
         else:
             permission = perm
 
-        kwargs = {'permission': permission, self.user_or_group_field: user_or_group}
+        kwargs = {"permission": permission, self.user_or_group_field: user_or_group}
         if self.is_generic():
-            kwargs['content_type'] = ctype
-            kwargs['object_pk'] = obj.pk
+            kwargs["content_type"] = ctype
+            kwargs["object_pk"] = obj.pk
         else:
-            kwargs['content_object'] = obj
+            kwargs["content_object"] = obj
         obj_perm, _ = self.get_or_create(**kwargs)
         return obj_perm
 
@@ -69,12 +67,12 @@ class BaseObjectPermissionManager(models.Manager):
         assigned_perms = []
         for instance in queryset:
             if not checker.has_perm(permission.codename, instance):
-                kwargs = {'permission': permission, self.user_or_group_field: user_or_group}
+                kwargs = {"permission": permission, self.user_or_group_field: user_or_group}
                 if self.is_generic():
-                    kwargs['content_type'] = ctype
-                    kwargs['object_pk'] = instance.pk
+                    kwargs["content_type"] = ctype
+                    kwargs["object_pk"] = instance.pk
                 else:
-                    kwargs['content_object'] = instance
+                    kwargs["content_object"] = instance
                 assigned_perms.append(self.model(**kwargs))
         self.model.objects.bulk_create(assigned_perms)
 
@@ -86,31 +84,31 @@ class BaseObjectPermissionManager(models.Manager):
         """
         ctype = get_content_type(obj)
         if not isinstance(perm, Permission):
-            permission = Permission.objects.get(content_type=ctype,
-                                                codename=perm)
+            permission = Permission.objects.get(content_type=ctype, codename=perm)
         else:
             permission = perm
 
-        kwargs = {'permission': permission}
+        kwargs = {"permission": permission}
         if self.is_generic():
-            kwargs['content_type'] = ctype
-            kwargs['object_pk'] = obj.pk
+            kwargs["content_type"] = ctype
+            kwargs["object_pk"] = obj.pk
         else:
-            kwargs['content_object'] = obj
+            kwargs["content_object"] = obj
 
         to_add = []
         field = self.user_or_group_field
         for user in users_or_groups:
             kwargs[field] = user
-            to_add.append(
-                self.model(**kwargs)
-            )
+            to_add.append(self.model(**kwargs))
 
         return self.model.objects.bulk_create(to_add)
 
     def assign(self, perm: str, user_or_group: Any, obj: Model) -> Any:
-        """ Depreciated function name left in for compatibility"""
-        warnings.warn("UserObjectPermissionManager method 'assign' is being renamed to 'assign_perm'. Update your code accordingly as old name will be depreciated in 2.0 version.", DeprecationWarning)
+        """Depreciated function name left in for compatibility"""
+        warnings.warn(
+            "UserObjectPermissionManager method 'assign' is being renamed to 'assign_perm'. Update your code accordingly as old name will be depreciated in 2.0 version.",
+            DeprecationWarning,
+        )
         return self.assign_perm(perm, user_or_group, obj)
 
     def remove_perm(self, perm: str, user_or_group: Any, obj: Model) -> tuple[int, dict]:
@@ -121,17 +119,15 @@ class BaseObjectPermissionManager(models.Manager):
         we use `Queryset.delete` method for removing it.
         The main implication of this is that `post_delete` signals would NOT be fired.
         """
-        if getattr(obj, 'pk', None) is None:
-            raise ObjectNotPersisted("Object %s needs to be persisted first"
-                                     % obj)
+        if getattr(obj, "pk", None) is None:
+            raise ObjectNotPersisted("Object %s needs to be persisted first" % obj)
 
         filters = Q(**{self.user_or_group_field: user_or_group})
 
         if isinstance(perm, Permission):
             filters &= Q(permission=perm)
         else:
-            filters &= Q(permission__codename=perm,
-                         permission__content_type=get_content_type(obj))
+            filters &= Q(permission__codename=perm, permission__content_type=get_content_type(obj))
 
         if self.is_generic():
             filters &= Q(object_pk=obj.pk)
@@ -153,11 +149,10 @@ class BaseObjectPermissionManager(models.Manager):
             filters &= Q(permission=perm)
         else:
             ctype = get_content_type(queryset.model)
-            filters &= Q(permission__codename=perm,
-                         permission__content_type=ctype)
+            filters &= Q(permission__codename=perm, permission__content_type=ctype)
 
         if self.is_generic():
-            filters &= Q(object_pk__in=[str(pk) for pk in queryset.values_list('pk', flat=True)])
+            filters &= Q(object_pk__in=[str(pk) for pk in queryset.values_list("pk", flat=True)])
         else:
             filters &= Q(content_object__in=queryset)
 
@@ -169,6 +164,7 @@ class UserObjectPermissionManager(BaseObjectPermissionManager):
     See Also:
         `guardian.managers.UserObjectPermissionManager`
     """
+
     pass
 
 
@@ -177,4 +173,5 @@ class GroupObjectPermissionManager(BaseObjectPermissionManager):
     See Also:
         `guardian.managers.UserObjectPermissionManager`
     """
+
     pass

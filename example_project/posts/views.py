@@ -13,18 +13,17 @@ User = get_user_model()
 
 class PostList(ListView):
     model = Post
-    context_object_name = 'posts'
+    context_object_name = "posts"
+
 
 post_list = PostList.as_view()
 
 
-@permission_required_or_403('posts.view_post', (Post, 'slug', 'slug'))
+@permission_required_or_403("posts.view_post", (Post, "slug", "slug"))
 def post_detail(request, slug, **kwargs):
     data = {
-        'post': get_object_or_404(Post, slug=slug),
-        'users': User.objects.all(),
-        'groups': Group.objects.all(),
+        "post": get_object_or_404(Post, slug=slug),
+        "users": User.objects.all(),
+        "groups": Group.objects.all(),
     }
-    return render(
-        request, 'posts/post_detail.html', data,
-        RequestContext(request))
+    return render(request, "posts/post_detail.html", data, RequestContext(request))

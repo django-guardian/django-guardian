@@ -18,16 +18,16 @@ class BaseObjectPermission(models.Model):
     See Also:
         `UserObjectPermission` and `GroupObjectPermission`
     """
+
     permission = models.ForeignKey(Permission, on_delete=models.CASCADE)
 
     class Meta:
         abstract = True
 
     def __str__(self) -> str:
-        return '{} | {} | {}'.format(
-            str(self.content_object),
-            str(getattr(self, 'user', False) or self.group),
-            str(self.permission.codename))
+        return "{} | {} | {}".format(
+            str(self.content_object), str(getattr(self, "user", False) or self.group), str(self.permission.codename)
+        )
 
     def save(self, *args, **kwargs) -> None:
         """Save the current instance.
@@ -43,21 +43,23 @@ class BaseObjectPermission(models.Model):
         """
         content_type = get_content_type(self.content_object)
         if content_type != self.permission.content_type:
-            raise ValidationError("Cannot persist permission not designed for "
-                                  "this class (permission's type is %r and object's type is %r)"
-                                  % (self.permission.content_type, content_type))
+            raise ValidationError(
+                "Cannot persist permission not designed for "
+                "this class (permission's type is %r and object's type is %r)"
+                % (self.permission.content_type, content_type)
+            )
         return super().save(*args, **kwargs)
 
 
 class BaseGenericObjectPermission(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_pk = models.CharField(_('object ID'), max_length=255)
-    content_object = GenericForeignKey(fk_field='object_pk')
+    object_pk = models.CharField(_("object ID"), max_length=255)
+    content_object = GenericForeignKey(fk_field="object_pk")
 
     class Meta:
         abstract = True
         indexes = [
-            models.Index(fields=['content_type', 'object_pk']),
+            models.Index(fields=["content_type", "object_pk"]),
         ]
 
 
@@ -93,20 +95,20 @@ class UserObjectPermissionBase(BaseObjectPermission):
         - [Django-Guardian Performance Tuning](https://django-guardian.readthedocs.io/en/stable/userguide/performance.html)
         - [How to override the default UserObjectPermission](https://django-guardian.readthedocs.io/en/stable/configuration.html#guardian-user-obj-perms-model)
     """
+
     user = models.ForeignKey(user_model_label, on_delete=models.CASCADE)
 
     objects = UserObjectPermissionManager()
 
     class Meta:
         abstract = True
-        unique_together = ['user', 'permission', 'content_object']
+        unique_together = ["user", "permission", "content_object"]
 
 
 class UserObjectPermissionAbstract(UserObjectPermissionBase, BaseGenericObjectPermission):
-
     class Meta(UserObjectPermissionBase.Meta, BaseGenericObjectPermission.Meta):
         abstract = True
-        unique_together = ['user', 'permission', 'object_pk']
+        unique_together = ["user", "permission", "object_pk"]
 
 
 class UserObjectPermission(UserObjectPermissionAbstract):
@@ -154,20 +156,21 @@ class GroupObjectPermissionBase(BaseObjectPermission):
         - [Django-Guardian Performance Tuning](https://django-guardian.readthedocs.io/en/stable/userguide/performance.html)
         - [How to override the default UserObjectPermission](https://django-guardian.readthedocs.io/en/stable/configuration.html#guardian-user-obj-perms-model)
     """
+
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
 
     objects = GroupObjectPermissionManager()
 
     class Meta:
         abstract = True
-        unique_together = ['group', 'permission', 'content_object']
+        unique_together = ["group", "permission", "content_object"]
 
 
 class GroupObjectPermissionAbstract(GroupObjectPermissionBase, BaseGenericObjectPermission):
-
     class Meta(GroupObjectPermissionBase.Meta, BaseGenericObjectPermission.Meta):
         abstract = True
-        unique_together = ['group', 'permission', 'object_pk']
+        unique_together = ["group", "permission", "object_pk"]
+
 
 class GroupObjectPermission(GroupObjectPermissionAbstract):
     """The default implementation of the GroupObjectPermissionAbstract model.

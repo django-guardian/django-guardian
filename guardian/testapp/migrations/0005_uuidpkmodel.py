@@ -6,16 +6,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('testapp', '0004_childtestmodel_parenttestmodel'),
+        ("testapp", "0004_childtestmodel_parenttestmodel"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='UUIDPKModel',
+            name="UUIDPKModel",
             fields=[
-                ('uuid_pk', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
+                ("uuid_pk", models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
             ],
         ),
     ]

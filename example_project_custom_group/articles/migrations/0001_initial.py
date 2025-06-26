@@ -5,68 +5,70 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('auth', '0012_alter_user_first_name_max_length'),
-        ('contenttypes', '0002_remove_content_type_name'),
+        ("auth", "0012_alter_user_first_name_max_length"),
+        ("contenttypes", "0002_remove_content_type_name"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Article',
+            name="Article",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=64, verbose_name='title')),
-                ('slug', models.SlugField(max_length=64)),
-                ('content', models.TextField(verbose_name='content')),
-                ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("title", models.CharField(max_length=64, verbose_name="title")),
+                ("slug", models.SlugField(max_length=64)),
+                ("content", models.TextField(verbose_name="content")),
+                ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
             ],
             options={
-                'permissions': (('view_article', 'Can view article'),),
-                'get_latest_by': 'created_at',
-                'default_permissions': ('add', 'change', 'delete'),
+                "permissions": (("view_article", "Can view article"),),
+                "get_latest_by": "created_at",
+                "default_permissions": ("add", "change", "delete"),
             },
         ),
         migrations.CreateModel(
-            name='ArticleGroupObjectPermission',
+            name="ArticleGroupObjectPermission",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='ArticleUserObjectPermission',
+            name="ArticleUserObjectPermission",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='BigGroupObjectPermission',
+            name="BigGroupObjectPermission",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('object_pk', models.CharField(max_length=255, verbose_name='object ID')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("object_pk", models.CharField(max_length=255, verbose_name="object ID")),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='BigUserObjectPermission',
+            name="BigUserObjectPermission",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('object_pk', models.CharField(max_length=255, verbose_name='object ID')),
-                ('content_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='contenttypes.contenttype')),
-                ('permission', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='auth.permission')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("object_pk", models.CharField(max_length=255, verbose_name="object ID")),
+                (
+                    "content_type",
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="contenttypes.contenttype"),
+                ),
+                ("permission", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="auth.permission")),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
     ]

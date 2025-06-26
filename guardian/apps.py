@@ -5,8 +5,8 @@ from . import monkey_patch_group, monkey_patch_user
 
 
 class GuardianConfig(AppConfig):
-    name = 'guardian'
-    default_auto_field = 'django.db.models.AutoField'
+    name = "guardian"
+    default_auto_field = "django.db.models.AutoField"
 
     def ready(self):
         if settings.GUARDIAN_MONKEY_PATCH_GROUP:

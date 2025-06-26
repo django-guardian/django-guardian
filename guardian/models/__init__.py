@@ -12,14 +12,14 @@ from .models import (
 )
 
 __all__ = [
-    'BaseObjectPermission',
-    'BaseGenericObjectPermission',
-    'UserObjectPermissionBase',
-    'UserObjectPermissionAbstract',
-    'GroupObjectPermissionBase',
-    'GroupObjectPermissionAbstract',
-    'Permission',
-    'Group',
-    'UserObjectPermission',
-    'GroupObjectPermission'
+    "BaseObjectPermission",
+    "BaseGenericObjectPermission",
+    "UserObjectPermissionBase",
+    "UserObjectPermissionAbstract",
+    "GroupObjectPermissionBase",
+    "GroupObjectPermissionAbstract",
+    "Permission",
+    "Group",
+    "UserObjectPermission",
+    "GroupObjectPermission",
 ]
