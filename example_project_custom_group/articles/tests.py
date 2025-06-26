@@ -1,14 +1,11 @@
+from articles.models import Article
+from articles.views import ArticleCreateView, ArticleDeleteView, ArticleDetailView, ArticleListView, ArticleUpdateView
+from core.models import CustomGroup
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.test.client import RequestFactory
 
 from guardian.shortcuts import assign_perm
-
-from articles.models import Article
-from articles.views import (ArticleCreateView, ArticleDeleteView, ArticleDetailView,
-                            ArticleListView, ArticleUpdateView)
-
-from core.models import CustomGroup
 
 
 class ViewUserTestCase(TestCase):

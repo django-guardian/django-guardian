@@ -2,7 +2,8 @@ import copy
 import os
 import unittest
 
-from django import VERSION as DJANGO_VERSION, forms
+from django import VERSION as DJANGO_VERSION
+from django import forms
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import get_user_model
@@ -13,11 +14,10 @@ from django.test.client import Client
 from django.urls import reverse
 
 from guardian.admin import GuardedModelAdmin
-from guardian.shortcuts import get_perms
-from guardian.shortcuts import get_perms_for_model
 from guardian.models import Group
-from guardian.testapp.tests.conf import skipUnlessTestApp
+from guardian.shortcuts import get_perms, get_perms_for_model
 from guardian.testapp.models import LogEntryWithGroup as LogEntry
+from guardian.testapp.tests.conf import skipUnlessTestApp
 
 User = get_user_model()
 

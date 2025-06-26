@@ -1,11 +1,9 @@
-from django.urls import reverse_lazy
-from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
-                                  UpdateView)
-
-from guardian.mixins import PermissionRequiredMixin, PermissionListMixin
-from guardian.shortcuts import assign_perm
-
 from articles.models import Article
+from django.urls import reverse_lazy
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+
+from guardian.mixins import PermissionListMixin, PermissionRequiredMixin
+from guardian.shortcuts import assign_perm
 
 
 class ArticleListView(PermissionListMixin, ListView):

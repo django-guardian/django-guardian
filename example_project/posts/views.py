@@ -1,8 +1,9 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.shortcuts import render, get_object_or_404
-from django.views.generic import ListView
+from django.shortcuts import get_object_or_404, render
 from django.template import RequestContext
+from django.views.generic import ListView
+
 from guardian.decorators import permission_required_or_403
 
 from .models import Post

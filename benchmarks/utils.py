@@ -1,6 +1,7 @@
 def show_settings(settings, action):
-    import guardian
     from django.utils.termcolors import colorize
+
+    import guardian
 
     guardian_path = guardian.__path__[0]
     msg = "django-guardian module's path: %r" % guardian_path

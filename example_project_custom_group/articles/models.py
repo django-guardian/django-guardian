@@ -1,10 +1,13 @@
+from core.models import CustomGroup
 from django.db import models
 from django.urls import reverse
 
-from guardian.models import UserObjectPermissionAbstract, GroupObjectPermissionAbstract
-from guardian.models import GroupObjectPermissionBase, UserObjectPermissionBase
-
-from core.models import CustomGroup
+from guardian.models import (
+    GroupObjectPermissionAbstract,
+    GroupObjectPermissionBase,
+    UserObjectPermissionAbstract,
+    UserObjectPermissionBase,
+)
 
 
 class Article(models.Model):

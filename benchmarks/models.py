@@ -1,6 +1,6 @@
 from django.db import models
-from guardian.models import UserObjectPermissionBase
-from guardian.models import GroupObjectPermissionBase
+
+from guardian.models import GroupObjectPermissionBase, UserObjectPermissionBase
 
 
 class TestModel(models.Model):

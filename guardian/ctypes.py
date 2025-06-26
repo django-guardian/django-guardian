@@ -1,4 +1,4 @@
-from typing import Any, Union, Type
+from typing import Any, Type, Union
 
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Model

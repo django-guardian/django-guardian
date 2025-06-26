@@ -1,17 +1,18 @@
+import unittest
+from unittest import mock
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractUser, AnonymousUser, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.test import TestCase
+
+import guardian
 from guardian.backends import ObjectPermissionBackend
 from guardian.compat import get_user_model_path, get_user_permission_codename
 from guardian.exceptions import GuardianError, NotUserNorGroup, ObjectNotPersisted, WrongAppError
 from guardian.models import GroupObjectPermission, UserObjectPermission
 from guardian.testapp.tests.conf import TestDataMixin
-from unittest import mock
-
-import guardian
-import unittest
 
 User = get_user_model()
 user_model_path = get_user_model_path()

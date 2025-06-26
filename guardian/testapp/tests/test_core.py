@@ -1,22 +1,21 @@
 from itertools import chain
 
-from django.conf import settings
-from guardian.conf import settings as guardian_settings
 from django.apps import apps as django_apps
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.management import create_permissions
-from django.contrib.auth.models import Group, Permission, AnonymousUser
+from django.contrib.auth.models import AnonymousUser, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 
+from guardian.conf import settings as guardian_settings
 from guardian.core import ObjectPermissionChecker
 from guardian.exceptions import NotUserNorGroup
-from guardian.models import UserObjectPermission, GroupObjectPermission
-from guardian.shortcuts import assign_perm
 from guardian.management import create_anonymous_user
+from guardian.models import GroupObjectPermission, UserObjectPermission
+from guardian.shortcuts import assign_perm
+from guardian.testapp.models import Project, ProjectGroupObjectPermission, ProjectUserObjectPermission
 from guardian.utils import evict_obj_perms_cache
-
-from guardian.testapp.models import Project, ProjectUserObjectPermission, ProjectGroupObjectPermission
 
 auth_app = django_apps.get_app_config('auth')
 User = get_user_model()

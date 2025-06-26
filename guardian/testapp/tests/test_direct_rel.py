@@ -2,16 +2,21 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.test import TestCase
 
-from guardian.shortcuts import assign_perm
-from guardian.shortcuts import get_groups_with_perms
-from guardian.shortcuts import get_objects_for_group
-from guardian.shortcuts import get_objects_for_user
-from guardian.shortcuts import get_users_with_perms
-from guardian.shortcuts import remove_perm
-from guardian.testapp.models import Mixed, ReverseMixed
-from guardian.testapp.models import Project
-from guardian.testapp.models import ProjectGroupObjectPermission
-from guardian.testapp.models import ProjectUserObjectPermission
+from guardian.shortcuts import (
+    assign_perm,
+    get_groups_with_perms,
+    get_objects_for_group,
+    get_objects_for_user,
+    get_users_with_perms,
+    remove_perm,
+)
+from guardian.testapp.models import (
+    Mixed,
+    Project,
+    ProjectGroupObjectPermission,
+    ProjectUserObjectPermission,
+    ReverseMixed,
+)
 from guardian.testapp.tests.conf import skipUnlessTestApp
 
 User = get_user_model()

@@ -1,14 +1,13 @@
 from copy import deepcopy
+from unittest import mock
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.sessions.models import Session
 from django.test import TestCase, override_settings
 
-from unittest import mock
 from guardian.management import create_anonymous_user
 from guardian.utils import get_anonymous_user
-
 
 mocked_get_init_anon = mock.Mock()
 multi_db_dict = {

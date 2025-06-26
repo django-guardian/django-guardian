@@ -1,27 +1,20 @@
+from unittest import mock
+
 from django.conf import global_settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group, AnonymousUser
+from django.contrib.auth.models import AnonymousUser, Group
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db.models.base import ModelBase
-from django.http import HttpRequest
-from django.http import HttpResponse
-from django.http import HttpResponseForbidden
-from django.http import HttpResponseNotFound
-from django.http import HttpResponseRedirect
+from django.http import HttpRequest, HttpResponse, HttpResponseForbidden, HttpResponseNotFound, HttpResponseRedirect
 from django.shortcuts import get_object_or_404
 from django.template import TemplateDoesNotExist
 from django.test import TestCase
 
-from guardian.compat import get_user_model_path
-from guardian.compat import get_user_permission_full_codename
-from unittest import mock
+from guardian.compat import get_user_model_path, get_user_permission_full_codename
 from guardian.decorators import permission_required, permission_required_or_403, permission_required_or_404
-from guardian.exceptions import GuardianError
-from guardian.exceptions import WrongAppError
+from guardian.exceptions import GuardianError, WrongAppError
 from guardian.shortcuts import assign_perm
-from guardian.testapp.tests.conf import TestDataMixin
-from guardian.testapp.tests.conf import override_settings
-from guardian.testapp.tests.conf import skipUnlessTestApp
+from guardian.testapp.tests.conf import TestDataMixin, override_settings, skipUnlessTestApp
 
 User = get_user_model()
 user_model_path = get_user_model_path()

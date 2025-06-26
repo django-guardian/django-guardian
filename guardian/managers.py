@@ -1,14 +1,14 @@
 from typing import Any
+import warnings
 
+from django.contrib.auth.models import Permission
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
-from django.db.models import Q, Model, QuerySet
+from django.db.models import Model, Q, QuerySet
+
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
 from guardian.exceptions import ObjectNotPersisted
-from django.contrib.auth.models import Permission
-
-import warnings
 
 
 class BaseObjectPermissionManager(models.Manager):

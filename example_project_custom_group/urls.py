@@ -1,8 +1,9 @@
-from guardian.compat import include,  handler404, handler500
 from django.conf import settings
-from django.urls import path
 from django.contrib import admin
 from django.contrib.auth.views import LogoutView
+from django.urls import path
+
+from guardian.compat import handler404, handler500, include
 
 __all__ = ['handler404', 'handler500']
 

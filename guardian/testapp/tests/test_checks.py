@@ -1,4 +1,5 @@
 from django.test import TestCase
+
 from guardian.checks import check_settings
 
 

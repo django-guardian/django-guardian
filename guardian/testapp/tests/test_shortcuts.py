@@ -1,5 +1,5 @@
-import warnings
 from unittest import mock
+import warnings
 
 import django
 from django.contrib.auth import get_user_model
@@ -8,27 +8,25 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models.query import QuerySet
 from django.test import TestCase
 
-from guardian.shortcuts import get_perms_for_model
-from guardian.core import ObjectPermissionChecker
 from guardian.compat import get_user_permission_full_codename
-from guardian.shortcuts import assign
-from guardian.shortcuts import assign_perm
-from guardian.shortcuts import remove_perm
-from guardian.shortcuts import get_perms
-from guardian.shortcuts import get_user_perms
-from guardian.shortcuts import get_group_perms
-from guardian.shortcuts import get_users_with_perms
-from guardian.shortcuts import get_groups_with_perms
-from guardian.shortcuts import get_objects_for_user
-from guardian.shortcuts import get_objects_for_group
-from guardian.exceptions import MixedContentTypeError
-from guardian.exceptions import NotUserNorGroup
-from guardian.exceptions import WrongAppError
-from guardian.exceptions import MultipleIdentityAndObjectError
+from guardian.core import ObjectPermissionChecker
+from guardian.exceptions import MixedContentTypeError, MultipleIdentityAndObjectError, NotUserNorGroup, WrongAppError
+from guardian.models import Group, Permission
+from guardian.shortcuts import (
+    assign,
+    assign_perm,
+    get_group_perms,
+    get_groups_with_perms,
+    get_objects_for_group,
+    get_objects_for_user,
+    get_perms,
+    get_perms_for_model,
+    get_user_perms,
+    get_users_with_perms,
+    remove_perm,
+)
 from guardian.testapp.models import CharPKModel, ChildTestModel, UUIDPKModel
 from guardian.testapp.tests.test_core import ObjectPermissionTestCase
-from guardian.models import Group, Permission
-
 
 User = get_user_model()
 user_app_label = User._meta.app_label

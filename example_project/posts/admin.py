@@ -1,5 +1,4 @@
 from django.contrib import admin
-
 from posts.models import Post
 
 from guardian.admin import GuardedModelAdmin

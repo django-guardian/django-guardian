@@ -8,7 +8,7 @@ from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse, path
+from django.urls import path, reverse
 from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
 

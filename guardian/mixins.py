@@ -1,15 +1,14 @@
 from collections.abc import Iterable
-from typing import Union, Any, Optional
+from typing import Any, Optional, Union
 
 from django.conf import settings
-from django.contrib.auth.decorators import login_required, REDIRECT_FIELD_NAME
+from django.contrib.auth.decorators import REDIRECT_FIELD_NAME, login_required
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
-from django.db.models import QuerySet, Model
-from django.http import HttpRequest, HttpResponseForbidden, HttpResponseNotFound, HttpResponseRedirect, HttpResponse
+from django.db.models import Model, QuerySet
+from django.http import HttpRequest, HttpResponse, HttpResponseForbidden, HttpResponseNotFound, HttpResponseRedirect
 
 from guardian.shortcuts import get_objects_for_user
-from guardian.utils import get_40x_or_None, get_anonymous_user
-from guardian.utils import get_user_obj_perms_model, get_group_obj_perms_model
+from guardian.utils import get_40x_or_None, get_anonymous_user, get_group_obj_perms_model, get_user_obj_perms_model
 
 
 class LoginRequiredMixin:

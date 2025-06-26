@@ -1,10 +1,12 @@
 from django.db import models
 from django.urls import reverse
 
-from guardian.models import (GroupObjectPermissionAbstract,
-                             GroupObjectPermissionBase,
-                             UserObjectPermissionAbstract,
-                             UserObjectPermissionBase)
+from guardian.models import (
+    GroupObjectPermissionAbstract,
+    GroupObjectPermissionBase,
+    UserObjectPermissionAbstract,
+    UserObjectPermissionBase,
+)
 
 
 class Article(models.Model):

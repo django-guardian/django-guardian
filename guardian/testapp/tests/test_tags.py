@@ -1,13 +1,13 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group, AnonymousUser
+from django.contrib.auth.models import AnonymousUser, Group
 from django.contrib.contenttypes.models import ContentType
-from django.template import Template, Context, TemplateSyntaxError
+from django.template import Context, Template, TemplateSyntaxError
 from django.test import TestCase
 
 from guardian.core import ObjectPermissionChecker
 from guardian.exceptions import NotUserNorGroup
-from guardian.models import UserObjectPermission, GroupObjectPermission
+from guardian.models import GroupObjectPermission, UserObjectPermission
 
 User = get_user_model()
 

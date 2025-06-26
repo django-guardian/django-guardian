@@ -1,9 +1,9 @@
+from unittest import mock
 import warnings
 
-from unittest import mock
 from django.test import TestCase
-from guardian.managers import UserObjectPermissionManager
-from guardian.managers import GroupObjectPermissionManager
+
+from guardian.managers import GroupObjectPermissionManager, UserObjectPermissionManager
 
 
 class TestManagers(TestCase):

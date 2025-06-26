@@ -1,15 +1,14 @@
 import datetime
-from django.utils import timezone
-
-from django.db import models
-from django.contrib.auth.models import Group, AbstractBaseUser, UserManager
-from django.contrib.auth.validators import UnicodeUsernameValidator
-from django.utils.translation import gettext_lazy as _
-from django.core.mail import send_mail
-
-from guardian.mixins import GuardianGroupMixin, GuardianUserMixin
 
 from core.mixins import CustomGroupPermissionsMixin
+from django.contrib.auth.models import AbstractBaseUser, Group, UserManager
+from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.core.mail import send_mail
+from django.db import models
+from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
+
+from guardian.mixins import GuardianGroupMixin, GuardianUserMixin
 
 
 class CustomGroup(Group, GuardianGroupMixin):

@@ -1,7 +1,8 @@
 from django.contrib.auth import get_user_model
+from django.db import router
 from django.db.models import signals
 from django.utils.module_loading import import_string
-from django.db import router
+
 from guardian.conf import settings as guardian_settings
 
 

@@ -1,7 +1,6 @@
 import unittest
 
-from django.conf import UserSettingsHolder
-from django.conf import settings
+from django.conf import UserSettingsHolder, settings
 from django.utils.functional import wraps
 
 from guardian.conf import settings as guardian_settings
@@ -17,8 +16,8 @@ class TestDataMixin:
 
     def setUp(self):
         super().setUp()
-        from django.contrib.auth.models import Group
         from django.contrib.auth import get_user_model
+        from django.contrib.auth.models import Group
         User = get_user_model()
         Group.objects.create(pk=1, name='admins')
         jack_group = Group.objects.create(pk=2, name='jackGroup')

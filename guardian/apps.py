@@ -1,7 +1,7 @@
 from django.apps import AppConfig
 from django.conf import settings
 
-from . import monkey_patch_user, monkey_patch_group
+from . import monkey_patch_group, monkey_patch_user
 
 
 class GuardianConfig(AppConfig):

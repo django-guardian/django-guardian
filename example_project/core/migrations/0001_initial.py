@@ -1,8 +1,8 @@
 import django
+import django.contrib.auth.models
+import django.core.validators
 from django.db import migrations, models
 import django.utils.timezone
-import django.core.validators
-import django.contrib.auth.models
 
 
 class Migration(migrations.Migration):

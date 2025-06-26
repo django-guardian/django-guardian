@@ -1,14 +1,12 @@
-import uuid
 from datetime import datetime
+import uuid
 
-from django.db import models
 from django.contrib.admin.models import LogEntry
-from django.contrib.auth.models import AbstractUser, AbstractBaseUser
+from django.contrib.auth.models import AbstractBaseUser, AbstractUser
+from django.db import models
 
 from guardian.mixins import GuardianUserMixin
-from guardian.models import UserObjectPermissionBase
-from guardian.models import GroupObjectPermissionBase
-from guardian.models import GroupObjectPermissionAbstract
+from guardian.models import GroupObjectPermissionAbstract, GroupObjectPermissionBase, UserObjectPermissionBase
 
 
 class Post(models.Model):

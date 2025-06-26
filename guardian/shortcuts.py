@@ -1,28 +1,32 @@
 """Convenient shortcuts to manage or check object permissions."""
 
-import warnings
 from collections import defaultdict
-from functools import partial, lru_cache
+from functools import lru_cache, partial
 from itertools import groupby
-from typing import Union, Any, Optional, TypeVar, Type
+from typing import Any, Optional, Type, TypeVar, Union
+import warnings
 
 from django.apps import apps
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission, Group
+from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.db.models import (
     AutoField,
     BigIntegerField,
     CharField,
+    Count,
     ForeignKey,
     IntegerField,
+    Manager,
+    Model,
     PositiveIntegerField,
     PositiveSmallIntegerField,
+    Q,
+    QuerySet,
     SmallIntegerField,
     UUIDField,
 )
-from django.db.models import Count, Q, QuerySet, Model, Manager
 from django.db.models.expressions import Value
 from django.db.models.functions import Cast, Replace
 from django.shortcuts import _get_queryset
@@ -31,8 +35,8 @@ from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
 from guardian.exceptions import (
     MixedContentTypeError,
-    WrongAppError,
     MultipleIdentityAndObjectError,
+    WrongAppError,
 )
 from guardian.utils import (
     get_anonymous_user,
