@@ -15,8 +15,8 @@ documented in `performance-direct-fk`.
 
 Permissions, in particular *per object permissions*, can be tricky to manage.
 For example, how can we manage permissions that are no longer used?
-In some setups, it is possible to reuse database primary keys 
-which have been removed from the database. 
+In some setups, it is possible to reuse database primary keys
+which have been removed from the database.
 When permissions are at the model level only, this is not a problem;
 but can lead to tremendous security issues when using object permissions.
 How can we deal with this?
@@ -24,9 +24,9 @@ How can we deal with this?
 Let's imagine our table has primary key to the filesystem path.
 We have a record with pk equal to `/home/www/joe.config`.
 User *jane* has read access to joe's configuration and we store that information in database
-by creating guardian's object permissions. 
+by creating guardian's object permissions.
 Now, *joe* user removes account from our site and another user creates account with *joe* as username.
-The problem is that if we haven't removed object permissions explicitly in 
+The problem is that if we haven't removed object permissions explicitly in
 the process of first *joe* account removal, *jane* still
 has read permissions for *joe's* configuration file - but this is another user.
 
@@ -45,11 +45,11 @@ orphaned object permissions. Remember - those are only helpers.
 Applications should remove those object permissions explicitly by
 itself.
 
-From our previous example, our application should remove a user object (e.g., *joe*). 
-However, permissions for the *joe* user assigned to *jane* would**NOT** be removed. 
+From our previous example, our application should remove a user object (e.g., *joe*).
+However, permissions for the *joe* user assigned to *jane* would**NOT** be removed.
 In this case, it would be easy to remove
 user/group object permissions if we connect proper action with proper
-signal. 
+signal.
 This could be achieved by following snippet:
 
 ```python
@@ -76,8 +76,8 @@ user just before user is actually removed.
 If we forgot to add such handlers, we may still remove orphaned object
 permissions by using `clean_orphan_obj_perms` If our application uses
 [celery](http://www.celeryproject.org/), it is also straightforward to remove
-orphaned permissions periodically with `guardian.utils.clean_orphan_obj_perms` function. 
-We would still **strongly** advise to remove orphaned object permissions explicitly 
+orphaned permissions periodically with `guardian.utils.clean_orphan_obj_perms` function.
+We would still **strongly** advise to remove orphaned object permissions explicitly
 (i.e., at view that confirms object removal or using signals as described above).
 
 !!! info

@@ -10,6 +10,6 @@ class CustomUser(AbstractUser):
 
 def get_custom_anon_user(User):
     return User(
-        username='AnonymousUser',
+        username="AnonymousUser",
         birth_date=datetime.date(1410, 7, 15),
     )

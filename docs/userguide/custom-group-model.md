@@ -87,7 +87,7 @@ def return_all_group_obj_perms():
     `GroupObjectPermission` model directly
     in your code, always use the `get_group_obj_perms_model` function.
 
-By default, django-guardian monkey patches the group model to add some necessary functionality. 
+By default, django-guardian monkey patches the group model to add some necessary functionality.
 This can result in errors if guardian is imported
 into the `models.py` of the same app where the custom group model lives.
 

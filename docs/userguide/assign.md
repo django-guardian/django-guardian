@@ -3,7 +3,7 @@ title: Object Permissions
 description: How to assign object permissions.
 ---
 
-# Assigning Object Permissions 
+# Assigning Object Permissions
 
 Django Guardian makes assigning object permissions simple once permissions are created for models.
 
@@ -20,7 +20,7 @@ class Task(models.Model):
 ```
 
 ... and we want to be able to set custom permission *assign_task*.
-We can let Django know about our custom permissions by adding a `permissions` 
+We can let Django know about our custom permissions by adding a `permissions`
 tuple to `Meta` class and our final model could look like:
 
 ``` python
@@ -56,7 +56,7 @@ After we call management commands `makemigrations` and `migrate` our
     django](https://docs.djangoproject.com/en/stable/topics/auth/). Now we
     can move to `assigning object permissions <assign-obj-perms>`
 
-## Assign object permissions 
+## Assign object permissions
 
 We can assign permissions for any user or group and object pairs
 using the convenient function: `guardian.shortcuts.assign_perm()`
@@ -85,7 +85,7 @@ True
 
 ### For group
 
-This case doesn't really differ from user permissions assignment. 
+This case doesn't really differ from user permissions assignment.
 The only difference is we have to pass `Group` instance rather than `User`.
 
 ``` python

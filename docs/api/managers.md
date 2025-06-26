@@ -1,4 +1,4 @@
-# Managers 
+# Managers
 
 ::: guardian.managers.UserObjectPermissionManager
 

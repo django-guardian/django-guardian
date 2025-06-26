@@ -1,4 +1,4 @@
-# Mixins 
+# Mixins
 
 !!! abstract "Added in version 1.0.4"
 

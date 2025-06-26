@@ -1,4 +1,4 @@
-# Shortcuts 
+# Shortcuts
 
 ::: guardian.shortcuts.assign_perm
 

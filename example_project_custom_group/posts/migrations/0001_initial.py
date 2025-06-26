@@ -4,26 +4,24 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Post',
+            name="Post",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(max_length=64, verbose_name='title')),
-                ('slug', models.SlugField(max_length=64)),
-                ('content', models.TextField(verbose_name='content')),
-                ('created_at', models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("title", models.CharField(max_length=64, verbose_name="title")),
+                ("slug", models.SlugField(max_length=64)),
+                ("content", models.TextField(verbose_name="content")),
+                ("created_at", models.DateTimeField(auto_now_add=True, db_index=True)),
             ],
             options={
-                'permissions': (('view_post', 'Can view post'),),
-                'get_latest_by': 'created_at',
-                'default_permissions': ('add', 'change', 'delete'),
+                "permissions": (("view_post", "Can view post"),),
+                "get_latest_by": "created_at",
+                "default_permissions": ("add", "change", "delete"),
             },
         ),
     ]
