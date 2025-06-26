@@ -1,6 +1,6 @@
 [project]
 name = "django-guardian"
-version = "3.0.3"
+version = "3.0.4"
 description = "Per object permissions for Django"
 keywords = ["django", "permissions", "authorization", "object", "row", "level"]
 readme = "README.md"
