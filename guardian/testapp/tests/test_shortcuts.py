@@ -2,7 +2,6 @@ import warnings
 from unittest import mock
 
 import django
-from unittest import mock
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
@@ -918,7 +917,8 @@ class GetObjectsForUser(TestCase):
 
     def test_has_global_permission_only(self):
         group_names = ['group1', 'group2', 'group3']
-        groups = [Group.objects.create(name=name) for name in group_names]
+        for name in group_names:
+            Group.objects.create(name=name)
         # global permission to change any group
         perm = 'auth.change_group'
 

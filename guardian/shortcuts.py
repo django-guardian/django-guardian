@@ -47,6 +47,10 @@ def _get_ct_cached(app_label, codename):
     """Caches `ContentType` instances like its `QuerySet` does."""
     return ContentType.objects.get(app_label=app_label, permission__codename=codename)
 
+def _get_first(t):
+    """Allow sorting/grouping by pk by returning first in result tuple
+    """
+    return t[0]
 
 def assign_perm(
     perm: Union[str, Permission],
@@ -648,10 +652,9 @@ def get_objects_for_user(
             groups_obj_perms = groups_obj_perms_queryset.values_list(*group_fields)
             data = list(user_obj_perms) + list(groups_obj_perms)
             # sorting/grouping by pk (first in result tuple)
-            keyfunc = lambda t: t[0]
-            data = sorted(data, key=keyfunc)
+            data = sorted(data, key=_get_first)
             pk_list = []
-            for pk, group in groupby(data, keyfunc):
+            for pk, group in groupby(data, _get_first):
                 obj_codenames = {e[1] for e in group}
                 if codenames.issubset(obj_codenames):
                     pk_list.append(pk)
@@ -827,10 +830,10 @@ def get_objects_for_group(
         groups_obj_perms = groups_obj_perms_queryset.values_list(*fields)
         data = list(groups_obj_perms)
 
-        keyfunc = lambda t: t[0]  # sorting/grouping by pk (first in result tuple)
-        data = sorted(data, key=keyfunc)
+        # sorting/grouping by pk (first in result tuple)
+        data = sorted(data, key=_get_first)
         pk_list = []
-        for pk, group in groupby(data, keyfunc):
+        for pk, group in groupby(data, _get_first):
             obj_codenames = {e[1] for e in group}
             if any_perm or codenames.issubset(obj_codenames):
                 pk_list.append(pk)

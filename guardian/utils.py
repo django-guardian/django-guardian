@@ -8,20 +8,15 @@ and be considered unstable; their APIs may change in any future releases.
 import logging
 import os
 from itertools import chain
-from typing import Union, Any, Optional
+from typing import Any, Optional, Union
 
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME, get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db.models import Model, QuerySet
-from django.http import (
-    HttpResponseForbidden,
-    HttpResponseNotFound,
-    HttpRequest,
-    HttpResponseRedirect,
-    HttpResponse,
-)
+from django.http import (HttpRequest, HttpResponse, HttpResponseForbidden,
+                         HttpResponseNotFound, HttpResponseRedirect)
 from django.shortcuts import render
 
 from guardian.conf import settings as guardian_settings
@@ -29,7 +24,11 @@ from guardian.ctypes import get_content_type
 from guardian.exceptions import NotUserNorGroup
 
 logger = logging.getLogger(__name__)
-abspath = lambda *p: os.path.abspath(os.path.join(*p))
+
+
+def abspath(*args):
+    """Join path arguments and return their absolute path"""
+    return os.path.abspath(os.path.join(*args))
 
 
 def get_anonymous_user() -> Any:

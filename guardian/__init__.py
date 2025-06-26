@@ -1,7 +1,7 @@
 """
 Implementation of per object permissions for Django.
 """
-from . import checks
+from . import checks # noqa: F401
 
 
 def get_version():
@@ -41,7 +41,7 @@ def monkey_patch_user():
 
 def monkey_patch_group():
     from .utils import get_group_obj_perms_model
-    from django.contrib.auth.models import Group, Permission
+    from django.contrib.auth.models import Group
 
     GroupObjectPermission = get_group_obj_perms_model()
     # Prototype Group methods
