@@ -545,7 +545,7 @@ def get_objects_for_user(
             new_app_label, codename = perm.split(".", 1)
             if app_label is not None and app_label != new_app_label:
                 raise MixedContentTypeError(
-                    "Given perms must have same app label (%s != %s)" % (app_label, new_app_label)
+                    "Given perms must have same app label ({} != {})".format(app_label, new_app_label)
                 )
             else:
                 app_label = new_app_label
@@ -556,7 +556,7 @@ def get_objects_for_user(
             new_ctype = new_ctype = _get_ct_cached(app_label, codename)
             if ctype is not None and ctype != new_ctype:
                 raise MixedContentTypeError(
-                    "ContentType was once computed to be %s and another one %s" % (ctype, new_ctype)
+                    "ContentType was once computed to be {} and another one {}".format(ctype, new_ctype)
                 )
             else:
                 ctype = new_ctype
@@ -759,7 +759,7 @@ def get_objects_for_group(
             new_app_label, codename = perm.split(".", 1)
             if app_label is not None and app_label != new_app_label:
                 raise MixedContentTypeError(
-                    "Given perms must have same app label (%s != %s)" % (app_label, new_app_label)
+                    "Given perms must have same app label ({} != {})".format(app_label, new_app_label)
                 )
             else:
                 app_label = new_app_label
@@ -770,7 +770,7 @@ def get_objects_for_group(
             new_ctype = _get_ct_cached(app_label, codename)
             if ctype is not None and ctype != new_ctype:
                 raise MixedContentTypeError(
-                    "ContentType was once computed to be %s and another one %s" % (ctype, new_ctype)
+                    "ContentType was once computed to be {} and another one {}".format(ctype, new_ctype)
                 )
             else:
                 ctype = new_ctype
