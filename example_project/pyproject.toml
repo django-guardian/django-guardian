@@ -20,4 +20,3 @@ description = "Just an example of how to use guardian"
 #     "pytest-cov>=6.0.0",
 #     "pytest-django>=4.9.0",
 # ]
-

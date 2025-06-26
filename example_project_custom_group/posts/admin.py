@@ -12,4 +12,3 @@ class PostAdmin(GuardedModelAdmin):
     search_fields = ('title', 'content')
     ordering = ('-created_at',)
     date_hierarchy = 'created_at'
-

@@ -53,4 +53,3 @@ class BigGroupObjectPermission(GroupObjectPermissionAbstract):
             *GroupObjectPermissionAbstract.Meta.indexes,
             models.Index(fields=['content_type', 'object_pk', 'group']),
         ]
-
