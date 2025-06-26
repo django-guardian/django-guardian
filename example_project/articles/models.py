@@ -1,8 +1,10 @@
 from django.db import models
 from django.urls import reverse
 
-
-from guardian.models import GroupObjectPermissionBase, UserObjectPermissionBase
+from guardian.models import (GroupObjectPermissionAbstract,
+                             GroupObjectPermissionBase,
+                             UserObjectPermissionAbstract,
+                             UserObjectPermissionBase)
 
 
 class Article(models.Model):
@@ -32,8 +34,6 @@ class ArticleUserObjectPermission(UserObjectPermissionBase):
 class ArticleGroupObjectPermission(GroupObjectPermissionBase):
     content_object = models.ForeignKey(Article, on_delete=models.CASCADE)
 
-
-from guardian.models import UserObjectPermissionAbstract, GroupObjectPermissionAbstract
 
 class BigUserObjectPermission(UserObjectPermissionAbstract):
     id = models.BigAutoField(editable=False, unique=True, primary_key=True)

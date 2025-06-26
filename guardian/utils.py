@@ -10,10 +10,12 @@ import os
 from itertools import chain
 from typing import Any, Optional, Union
 
+from django.apps import apps as django_apps
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME, get_user_model
 from django.contrib.auth.models import AnonymousUser
-from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from django.core.exceptions import (ImproperlyConfigured, ObjectDoesNotExist,
+                                    PermissionDenied)
 from django.db.models import Model, QuerySet
 from django.http import (HttpRequest, HttpResponse, HttpResponseForbidden,
                          HttpResponseNotFound, HttpResponseRedirect)
@@ -180,8 +182,6 @@ def get_40x_or_None(
     return None
 
 
-from django.apps import apps as django_apps
-from django.core.exceptions import ImproperlyConfigured
 
 
 def get_obj_perm_model_by_conf(setting_name: str) -> type[Model]:
