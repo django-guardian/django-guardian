@@ -1,8 +1,4 @@
-# ruff: noqa: E402
 from django.apps import apps as django_apps
-
-auth_app = django_apps.get_app_config("auth")
-
 from django.contrib.auth import get_user_model
 from django.contrib.auth.management import create_permissions
 from django.contrib.contenttypes.models import ContentType
@@ -13,6 +9,8 @@ from guardian.models import Group
 from guardian.shortcuts import assign_perm
 from guardian.testapp.tests.conf import skipUnlessTestApp
 from guardian.utils import clean_orphan_obj_perms
+
+auth_app = django_apps.get_app_config("auth")
 
 User = get_user_model()
 user_module_name = User._meta.model_name

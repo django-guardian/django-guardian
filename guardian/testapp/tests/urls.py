@@ -3,8 +3,6 @@ from django.contrib.auth.views import LoginView
 from django.urls import path
 from django.views.generic import View
 
-# handler404 and handler500 are needed for admin tests
-from guardian.compat import handler404, handler500  # noqa: F401
 from guardian.mixins import PermissionRequiredMixin
 
 admin.autodiscover()

@@ -726,7 +726,7 @@ def get_objects_for_group(
 
         ```shell
         >>> from guardian.shortcuts import get_objects_for_group
-        >>> from tasker import Task  # noqa
+        >>> from tasker import Task
         >>> group = Group.objects.create('some group')
         >>> task = Task.objects.create('some task')
         >>> get_objects_for_group(group, 'tasker.add_task')
