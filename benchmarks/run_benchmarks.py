@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# ruff: noqa: E402
 """
 This benchmark package should be treated as work-in-progress, not a production
 ready benchmarking solution for django-guardian.
@@ -9,7 +10,10 @@ import random
 import string
 import sys
 
-abspath = lambda *p: os.path.abspath(os.path.join(*p))
+
+def abspath(*args):
+    """Join path arguments and return their absolute path"""
+    return os.path.abspath(os.path.join(*args))
 
 THIS_DIR = abspath(os.path.dirname(__file__))
 ROOT_DIR = abspath(THIS_DIR, '..')
@@ -21,18 +25,18 @@ sys.path.insert(0, ROOT_DIR)
 os.environ["DJANGO_SETTINGS_MODULE"] = 'benchmarks.settings'
 
 import django
+
 django.setup()
 
-from benchmarks import settings
-from guardian.shortcuts import assign_perm
-from django.core.exceptions import ImproperlyConfigured
-from benchmarks.utils import show_settings
-from django.contrib.auth.models import User, Group
-from django.utils.termcolors import colorize
-from benchmarks.models import TestModel
-from benchmarks.models import TestDirectModel
-from guardian.models import UserObjectPermission
+from django.contrib.auth.models import Group, User
 from django.contrib.contenttypes.models import ContentType
+from django.utils.termcolors import colorize
+
+from benchmarks import settings
+from benchmarks.models import TestDirectModel, TestModel
+from benchmarks.utils import show_settings
+from guardian.models import UserObjectPermission
+from guardian.shortcuts import assign_perm
 
 USERS_COUNT = 50
 OBJECTS_COUNT = 100
@@ -119,7 +123,7 @@ class Benchmark:
     def grant_perms(self):
         ids = range(1, self.objects_count)
         for user in User.objects.iterator():
-            for x in xrange(self.objects_with_perms_count):
+            for x in range(self.objects_with_perms_count):
                 obj = self.Model.objects.get(id=random.choice(ids))
                 self.grant_perm(user, obj, self.perm)
 
@@ -130,7 +134,7 @@ class Benchmark:
     def check_perms(self):
         ids = range(1, self.objects_count)
         for user in User.objects.iterator():
-            for x in xrange(self.objects_with_perms_count):
+            for x in range(self.objects_with_perms_count):
                 obj = self.Model.objects.get(id=random.choice(ids))
                 self.check_perm(user, obj, self.perm)
 
@@ -139,7 +143,7 @@ class Benchmark:
         ctype = ContentType.objects.get_for_model(self.Model)
         ids = range(1, self.users_count)
         for user in User.objects.iterator():
-            for x in xrange(self.objects_with_perms_count):
+            for x in range(self.objects_with_perms_count):
                 filters = {'user': random.choice(ids),
                            'permission__codename__in': [self.perm],
                            'content_type': ctype
