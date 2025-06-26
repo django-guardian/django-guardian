@@ -141,6 +141,23 @@ dev = [
     "ruff>=0.12.0",
 ]
 
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+# Enable pycodestyle (`E`) and Pyflakes (`F`) codes
+# select = ["E", "F"]
+# Ignore E501 line-too-long which can self-conflict with ruff format - see https://docs.astral.sh/ruff/faq/#is-the-ruff-linter-compatible-with-black for why
+ignore = ["E501"]
+# Disable fix for unused imports (`F401`) which annoyingly removes your work-in-progress on save
+unfixable = ["F401"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["benchmarks", "docs", "example_project", "example_project_custom_group", "guardian"]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+force-sort-within-sections = true
+
 [tool.setuptools]
 packages = [
     "guardian",
