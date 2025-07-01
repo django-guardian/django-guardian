@@ -32,6 +32,7 @@ classifiers = [
 authors = [
   # In order of first contribution...
   # New contributors please add your name at the end :)
+  { name = "Sezer Bozkir", email = "admin@sezerbozkir.com" },
   { name = "Lukasz Balcerzak", email = "lukaszbalcerzak@gmail.com" },
   { name = "Cesar Canassa", email = "cesar.canassa@gmail.com" },
   { name = "Vincent Driessen", email = "vincent@datafox.nl" },
