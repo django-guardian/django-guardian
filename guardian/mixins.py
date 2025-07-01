@@ -1,3 +1,4 @@
+import warnings
 from collections.abc import Iterable
 from typing import Union, Any, Optional
 
@@ -126,7 +127,7 @@ class PermissionRequiredMixin:
     """
     # default class view settings
     login_url: str = settings.LOGIN_URL
-    permission_required: Optional[list[str]] = None
+    permission_required: Union[str, list[str], None] = None
     redirect_field_name: str = REDIRECT_FIELD_NAME
     return_403: bool = False
     return_404: bool = False
@@ -279,7 +280,8 @@ class PermissionListMixin:
         get_objects_for_user_extra_kwargs (dict): Extra params to pass to `guardian.shortcuts.get_objects_for_user`.
             Default to `{}`,
     """
-    permission_required: Union[bool, None] = None
+    permission_required: Union[str, list[str], None] = None
+    # rename get_objects_for_user_kwargs to when get_get_objects_for_user_kwargs is removed
     get_objects_for_user_extra_kwargs: dict = {}
 
     def get_required_permissions(self, request: Optional[HttpRequest] = None) -> list[str]:
@@ -310,11 +312,19 @@ class PermissionListMixin:
         """Get kwargs to pass to `get_objects_for_user`.
 
         Returns:
-            kwargs that should be passed to `get_objects_for_user`.
+            dict of kwargs to be passed to `get_objects_for_user`.
 
         Parameters:
             queryset (QuerySet): Queryset to filter.
+
+        Warning: Deprecation Warning
+            This method is deprecated and will be removed in future versions.
+            Use `get_user_object_kwargs` instead which has identical behavior.
         """
+        warnings.warn(
+            "get_get_objects_for_user_kwargs will be deprecated in a future release.",
+            DeprecationWarning,
+        )
         return dict(user=self.request.user,  # type: ignore[attr-defined]
                     perms=self.get_required_permissions(self.request),  # type: ignore[attr-defined]
                     klass=queryset,
