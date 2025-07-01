@@ -95,3 +95,66 @@ class OrphanedObjectPermissionsTest(TestCase):
             target.save()
             for perm in perms:
                 self.assertFalse(self.user.has_perm(perm, target))
+    
+    def test_clean_all_permissions(self):
+        """Should clean all orphaned permissions without batching."""
+        count = self._assign_and_delete_targets(3)
+        removed = clean_orphan_obj_perms()
+        self.assertEqual(removed, count)
+
+    def test_clean_with_batch_size(self):
+        """Should clean permissions in small batches."""
+        count = self._assign_and_delete_targets(5)
+        removed = clean_orphan_obj_perms(batch_size=2)
+        self.assertEqual(removed, count)
+
+    def test_clean_with_max_batches(self):
+        """Should stop after reaching max_batches."""
+        self._assign_and_delete_targets(5)
+        removed = clean_orphan_obj_perms(batch_size=1, max_batches=2)
+        self.assertEqual(removed, 2)
+
+    def test_clean_with_skip_batches(self):
+        """Should skip first N batches and then start cleaning."""
+        self._assign_and_delete_targets(6)
+        # First call: process 3 batches and stop
+        clean_orphan_obj_perms(batch_size=2, max_batches=3)
+        # Second call: skip first 3, process next 2
+        removed = clean_orphan_obj_perms(batch_size=2, max_batches=2, skip_batches=3)
+        self.assertEqual(removed, 2)
+
+    def test_clean_with_max_duration(self):
+        """Should stop after max_duration_secs exceeded."""
+        import time as pytime
+
+        self._assign_and_delete_targets(3)
+
+        original_iterator = ContentType.objects.all().iterator
+
+        def slow_iterator(*args, **kwargs):
+            for obj in original_iterator(*args, **kwargs):
+                pytime.sleep(0.3)  # Slow down processing
+                yield obj
+
+        ContentType.objects.all().iterator = slow_iterator
+
+        try:
+            removed = clean_orphan_obj_perms(batch_size=1, max_duration_secs=0.5)
+            self.assertLess(removed, 3)
+        finally:
+            ContentType.objects.all().iterator = original_iterator
+
+    def test_log_output_and_resumption_suggestion(self):
+        """Ensure the resume log message is emitted properly."""
+        self._assign_and_delete_targets(5)
+
+        with self.assertLogs('guardian.utils', level='INFO') as cm:
+            clean_orphan_obj_perms(batch_size=2, max_batches=2, skip_batches=1, max_duration_secs=10)
+
+        self.assertTrue(any("To resume cleanup" in msg for msg in cm.output))
+
+    def test_clean_perms_command(self):
+        """Management command interface should also work."""
+        self._assign_and_delete_targets(2)
+        call_command("clean_orphan_obj_perms", verbosity=0)
+        self.assertTrue(True)  # If no error, test passes
