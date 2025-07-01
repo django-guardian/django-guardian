@@ -16,7 +16,6 @@ from django.contrib.auth import REDIRECT_FIELD_NAME, get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db.models import Model, QuerySet
-from django.db import models
 from django.http import (
     HttpResponseForbidden,
     HttpResponseNotFound,
