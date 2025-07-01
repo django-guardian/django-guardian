@@ -7,7 +7,8 @@ and be considered unstable; their APIs may change in any future releases.
 
 import logging
 import os
-from itertools import chain
+import time
+from itertools import islice, chain
 from typing import Union, Any, Optional
 
 from django.conf import settings
@@ -15,6 +16,7 @@ from django.contrib.auth import REDIRECT_FIELD_NAME, get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 from django.db.models import Model, QuerySet
+from django.db import models
 from django.http import (
     HttpResponseForbidden,
     HttpResponseNotFound,
@@ -209,27 +211,124 @@ def get_obj_perm_model_by_conf(setting_name: str) -> type[Model]:
         ) from e
 
 
-def clean_orphan_obj_perms() -> int:
-    """Seeks and removes all object permissions entries pointing at non-existing targets.
+def clean_orphan_obj_perms(
+    batch_size: Optional[int] = None,
+    max_batches: Optional[int] = None,
+    max_duration_secs: Optional[int] = None,
+    skip_batches: int = 0
+) -> int:
+    """
+    Removes orphan object permissions using iterator() with optional batching,
+    batch skipping, batch limit, and time-based interruption.
+
+    Args:
+        batch_size (int, optional): Number of records to process per batch. If None, processes all sequentially.
+        max_batches (int, optional): Max number of batches to process (only applies if batch_size is set).
+        max_duration_secs (int, optional): Max total execution time in seconds. If None, runs without time limit.
+        skip_batches (int, default=0): Number of initial batches to skip before starting cleanup.
 
     Returns:
-         The number of objects removed.
+        int: Total number of deleted orphan object permissions.
+
+    Examples:
+        # 1. Clean everything at once (not recommended for very large data)
+        clean_orphan_obj_perms()
+
+        # 2. Process in batches of 1000
+        clean_orphan_obj_perms(batch_size=1000)
+
+        # 3. Process maximum 5 batches of 500 items
+        clean_orphan_obj_perms(batch_size=500, max_batches=5)
+
+        # 4. Run for maximum 60 seconds regardless of batch size
+        clean_orphan_obj_perms(batch_size=1000, max_duration_secs=60)
+
+        # 5. Resume cleanup after skipping the first 10 batches
+        clean_orphan_obj_perms(batch_size=1000, skip_batches=10)
+
+        # 6. Combined usage: Skip 10 batches, process 5 more, max 2 minutes
+        clean_orphan_obj_perms(batch_size=1000, skip_batches=10, max_batches=5, max_duration_secs=120)
     """
     UserObjectPermission = get_user_obj_perms_model()
     GroupObjectPermission = get_group_obj_perms_model()
 
     deleted = 0
-    # TODO: optimise
-    for perm in chain(
-        UserObjectPermission.objects.all().iterator(),
-        GroupObjectPermission.objects.all().iterator(),
-    ):
-        if perm.content_object is None:
-            logger.debug("Removing %s (pk=%d)" % (perm, perm.pk))
-            perm.delete()
-            deleted += 1
-    logger.info("Total removed orphan object permissions instances: %d" %
-                deleted)
+    scanned = 0
+    processed_batches = 0
+    batch_count = 0
+    start_time = time.monotonic()
+
+    combined_iter = chain(
+        UserObjectPermission.objects.iterator(),
+        GroupObjectPermission.objects.iterator()
+    )
+
+    if batch_size is None:
+        for obj in combined_iter:
+            if max_duration_secs is not None and (time.monotonic() - start_time >= max_duration_secs):
+                logger.info(f"Time limit of {max_duration_secs}s reached.")
+                break
+            scanned += 1
+            if obj.content_object is None:
+                logger.debug("Removing %s (pk=%d)", obj, obj.pk)
+                obj.delete()
+                deleted += 1
+    else:
+        while True:
+            if max_batches is not None and batch_count >= max_batches:
+                logger.info(f"Max batch limit of {max_batches} reached.")
+                break
+
+            if max_duration_secs is not None and (time.monotonic() - start_time >= max_duration_secs):
+                logger.info(f"Time limit of {max_duration_secs}s reached.")
+                break
+
+            batch = list(islice(combined_iter, batch_size))
+            if not batch:
+                break
+
+            scanned += len(batch)
+
+            if processed_batches < skip_batches:
+                logger.debug("Skipping batch %d (size=%d)", processed_batches + 1, len(batch))
+                processed_batches += 1
+                continue
+
+            orphan_pks = []
+            for obj in batch:
+                if obj.content_object is None:
+                    logger.debug("Removing %s (pk=%d)", obj, obj.pk)
+                    orphan_pks.append(obj.pk)
+
+            if orphan_pks:
+                model_class = batch[0].__class__
+                model_class.objects.filter(pk__in=orphan_pks).delete()
+                deleted += len(orphan_pks)
+
+            processed_batches += 1
+            batch_count += 1
+
+    logger.info(
+        f"Finished orphan object permissions cleanup. "
+        f"Scanned: {scanned} | Removed: {deleted} | "
+        f"Batches processed: {processed_batches - skip_batches if batch_size else 'N/A'}"
+    )
+
+    if batch_size:
+        suggestion = (
+            f"To resume cleanup, call:\n"
+            f"clean_orphan_obj_perms(batch_size={batch_size}, "
+            f"skip_batches={processed_batches}, "
+        )
+        if max_batches is not None:
+            remaining_batches = max_batches - batch_count
+            if remaining_batches > 0:
+                suggestion += f"max_batches={remaining_batches}, "
+        if max_duration_secs is not None:
+            suggestion += f"max_duration_secs={max_duration_secs}, "
+        suggestion = suggestion.rstrip(", ") + ")"
+        logger.info(suggestion)
+
     return deleted
 
 
