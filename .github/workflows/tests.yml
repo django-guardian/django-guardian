@@ -11,7 +11,7 @@
 
   env:
     # Used in our tox configuration to determine which dependency groups to install
-    CI_DEP_GROUPS: ci
+    DEPENDENCY_GROUP: ci
 
   jobs:
     tests:
