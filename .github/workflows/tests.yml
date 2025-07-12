@@ -10,6 +10,7 @@ on:
   pull_request:
 
 env:
+  # Used in our tox configuration to determine which dependency groups to install
   CI_DEP_GROUPS: ci
 
 jobs:
