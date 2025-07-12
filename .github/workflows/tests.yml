@@ -1,108 +1,108 @@
-name: Tests
-permissions:
-  contents: read
+  name: Tests
+  permissions:
+    contents: read
 
-on:
-  push:
-    branches:
-      - main
-      - next
-  pull_request:
+  on:
+    push:
+      branches:
+        - main
+        - next
+    pull_request:
 
-env:
-  # Used in our tox configuration to determine which dependency groups to install
-  CI_DEP_GROUPS: ci
+  env:
+    # Used in our tox configuration to determine which dependency groups to install
+    CI_DEP_GROUPS: ci
 
-jobs:
-  tests:
-    runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: [ "3.9", "3.10", "3.11", "3.12", "3.13" ]
-        database-engine: [ 'sqlite', 'mariadb', 'postgres' ]
+  jobs:
+    tests:
+      runs-on: ubuntu-24.04
+      strategy:
+        fail-fast: false
+        matrix:
+          python-version: [ "3.9", "3.10", "3.11", "3.12", "3.13" ]
+          database-engine: [ 'sqlite', 'mariadb', 'postgres' ]
 
-    services:
-      mariadb:
-        image: mariadb:11.4.2
-        env:
-          MYSQL_ROOT_PASSWORD: mariadb
-        ports:
-          - 3306:3306
-      postgres:
-        image: postgres:16-alpine
-        env:
-          PGUSER: postgres
-          POSTGRES_PASSWORD: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
+      services:
+        mariadb:
+          image: mariadb:11.4.2
+          env:
+            MYSQL_ROOT_PASSWORD: mariadb
+          ports:
+            - 3306:3306
+        postgres:
+          image: postgres:16-alpine
+          env:
+            PGUSER: postgres
+            POSTGRES_PASSWORD: postgres
+          options: >-
+            --health-cmd pg_isready
+            --health-interval 10s
+            --health-timeout 5s
+            --health-retries 5
+          ports:
+            - 5432:5432
 
-    env:
-      DJANGO_SETTINGS_MODULE: tests.server.settings
-      DATABASE_ENGINE: ${{ matrix.database-engine }}
+      env:
+        DJANGO_SETTINGS_MODULE: tests.server.settings
+        DATABASE_ENGINE: ${{ matrix.database-engine }}
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v5
-        with:
-          enable-cache: true
-          cache-dependency-glob: "pyproject.toml"
+        - name: Install uv
+          uses: astral-sh/setup-uv@v5
+          with:
+            enable-cache: true
+            cache-dependency-glob: "pyproject.toml"
 
-      - name: Install tox
-        # See: https://github.com/tox-dev/tox-gh
-        run: uv tool install --python-preference only-managed --python 3.13 tox --with . --with tox-uv --with tox-gh
+        - name: Install tox
+          # See: https://github.com/tox-dev/tox-gh
+          run: uv tool install --python-preference only-managed --python 3.13 tox --with . --with tox-uv --with tox-gh
 
-      - name: Install Python
-        # Skip if the python version is already installed to run tox
-        if: matrix.python-version != '3.13'
-        run: uv python install --python-preference only-managed ${{ matrix.python-version }}
+        - name: Install Python
+          # Skip if the python version is already installed to run tox
+          if: matrix.python-version != '3.13'
+          run: uv python install --python-preference only-managed ${{ matrix.python-version }}
 
-      - name: Setup test suite
-        run: tox run -vv --notest --skip-missing-interpreters false
-        env:
-          TOX_GH_MAJOR_MINOR: ${{ matrix.python-version }}
+        - name: Setup test suite
+          run: tox run -vv --notest --skip-missing-interpreters false
+          env:
+            TOX_GH_MAJOR_MINOR: ${{ matrix.python-version }}
 
-      - name: Create databases
-        run: |
-          PGPASSWORD="postgres" psql -c 'create database django_guardian;' -h localhost -U postgres;
-          PGPASSWORD="postgres" psql -c 'create database test_django_guardian;' -h localhost -U postgres;
-          mysql --host=127.0.0.1 --user=root --password=mariadb -e 'CREATE DATABASE django_guardian;';
-          mysql --host=127.0.0.1 --user=root --password=mariadb -e 'CREATE DATABASE test_django_guardian;';
+        - name: Create databases
+          run: |
+            PGPASSWORD="postgres" psql -c 'create database django_guardian;' -h localhost -U postgres;
+            PGPASSWORD="postgres" psql -c 'create database test_django_guardian;' -h localhost -U postgres;
+            mysql --host=127.0.0.1 --user=root --password=mariadb -e 'CREATE DATABASE django_guardian;';
+            mysql --host=127.0.0.1 --user=root --password=mariadb -e 'CREATE DATABASE test_django_guardian;';
 
-      - name: Test with PostgreSQL
-        if: matrix.database-engine == 'postgres'
-        env:
-          TOX_GH_MAJOR_MINOR: ${{ matrix.python-version }}
-          DATABASE_URL: postgres://postgres:postgres@localhost/django_guardian
-          PYTEST_ADDOPTS: "-vv --durations=20"
-          DIFF_AGAINST: HEAD
-          UV_PYTHON_PREFERENCE: "only-managed"
-        run: tox run -vv --skip-pkg-install
+        - name: Test with PostgreSQL
+          if: matrix.database-engine == 'postgres'
+          env:
+            TOX_GH_MAJOR_MINOR: ${{ matrix.python-version }}
+            DATABASE_URL: postgres://postgres:postgres@localhost/django_guardian
+            PYTEST_ADDOPTS: "-vv --durations=20"
+            DIFF_AGAINST: HEAD
+            UV_PYTHON_PREFERENCE: "only-managed"
+          run: tox run -vv --skip-pkg-install
 
-      - name: Test with MariaDB
-        if: matrix.database-engine == 'mariadb'
-        env:
-          TOX_GH_MAJOR_MINOR: ${{ matrix.python-version }}
-          DATABASE_URL: mysql://root:mariadb@127.0.0.1:3306/django_guardian
-          PYTEST_ADDOPTS: "-vv --durations=20"
-          DIFF_AGAINST: HEAD
-          UV_PYTHON_PREFERENCE: "only-managed"
-        run: tox run -vv --skip-pkg-install
+        - name: Test with MariaDB
+          if: matrix.database-engine == 'mariadb'
+          env:
+            TOX_GH_MAJOR_MINOR: ${{ matrix.python-version }}
+            DATABASE_URL: mysql://root:mariadb@127.0.0.1:3306/django_guardian
+            PYTEST_ADDOPTS: "-vv --durations=20"
+            DIFF_AGAINST: HEAD
+            UV_PYTHON_PREFERENCE: "only-managed"
+          run: tox run -vv --skip-pkg-install
 
-      - name: Test with SQLite
-        if: matrix.database-engine == 'sqlite'
-        env:
-          TOX_GH_MAJOR_MINOR: ${{ matrix.python-version }}
-          DATABASE_URL: sqlite://
-          PYTEST_ADDOPTS: "-vv --durations=20"
-          DIFF_AGAINST: HEAD
-          UV_PYTHON_PREFERENCE: "only-managed"
-        run: tox run -vv --skip-pkg-install
+        - name: Test with SQLite
+          if: matrix.database-engine == 'sqlite'
+          env:
+            TOX_GH_MAJOR_MINOR: ${{ matrix.python-version }}
+            DATABASE_URL: sqlite://
+            PYTEST_ADDOPTS: "-vv --durations=20"
+            DIFF_AGAINST: HEAD
+            UV_PYTHON_PREFERENCE: "only-managed"
+          run: tox run -vv --skip-pkg-install
