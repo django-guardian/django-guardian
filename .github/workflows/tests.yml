@@ -25,6 +25,12 @@ jobs:
           MYSQL_ROOT_PASSWORD: mariadb
         ports:
         - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+          --port=3306
       postgres:
         image: postgres:16-alpine
         env:
@@ -51,6 +57,9 @@ jobs:
       with:
         enable-cache: true
         cache-dependency-glob: pyproject.toml
+
+    - name: Install MySQL client
+      run: sudo apt-get update && sudo apt-get install -y mysql-client
 
     - name: Install tox
           # See: https://github.com/tox-dev/tox-gh
