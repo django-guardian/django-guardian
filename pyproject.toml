@@ -139,6 +139,8 @@ dev = [
     "pytest-django>=4.9.0",
     "pyupgrade>=3.15.2",
     "pre-commit>=3.7.0"
+    "pyupgrade>=3.15.2",
+    "pre-commit>=3.7.0"
 ]
 
 [tool.setuptools]
