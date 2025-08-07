@@ -49,7 +49,7 @@ class BaseObjectPermissionManager(models.Manager):
         obj_perm, _ = self.get_or_create(**kwargs)
         return obj_perm
 
-    def bulk_assign_perm(self, perm, user_or_group, queryset):
+    def bulk_assign_perm(self, perm, user_or_group, queryset, ignore_conflicts=False):
         """
         Bulk assigns permissions with given ``perm`` for an objects in ``queryset`` and
         ``user_or_group``.
@@ -77,11 +77,11 @@ class BaseObjectPermissionManager(models.Manager):
                 else:
                     kwargs['content_object'] = instance
                 assigned_perms.append(self.model(**kwargs))
-        self.model.objects.bulk_create(assigned_perms, ignore_conflicts=True)
+        self.model.objects.bulk_create(assigned_perms, ignore_conflicts=ignore_conflicts)
 
         return assigned_perms
 
-    def assign_perm_to_many(self, perm, users_or_groups, obj):
+    def assign_perm_to_many(self, perm, users_or_groups, obj, ignore_conflicts=False):
         """
         Bulk assigns given ``perm`` for the object ``obj`` to a set of users or a set of groups.
         """
@@ -107,7 +107,7 @@ class BaseObjectPermissionManager(models.Manager):
                 self.model(**kwargs)
             )
 
-        return self.model.objects.bulk_create(to_add, ignore_conflicts=True)
+        return self.model.objects.bulk_create(to_add, ignore_conflicts=ignore_conflicts)
 
     def assign(self, perm, user_or_group, obj):
         """ Depreciated function name left in for compatibility"""
