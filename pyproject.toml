@@ -141,8 +141,6 @@ dev = [
     "pre-commit>=3.7.0",
     "pyupgrade>=3.15.2",
     "pre-commit>=3.7.0",
-    "pytest-django >=4.8.0",
-    "pytest-cov>=5.0.0",
 ]
 
 [tool.setuptools]
