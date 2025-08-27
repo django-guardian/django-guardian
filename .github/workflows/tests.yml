@@ -9,6 +9,10 @@ on:
     - next
   pull_request:
 
+env:
+    # Used in our tox configuration to determine which dependency groups to install
+  DEPENDENCY_GROUP: ci
+
 jobs:
   tests:
     runs-on: ubuntu-24.04

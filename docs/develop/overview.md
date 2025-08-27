@@ -82,38 +82,22 @@ Here is a quick how to:
 
 ## Installing dev dependencies and running tests
 
-!!! warning
-
-    The `mysqlclient` library is a dev dependency of `django-guardian`. It relies on you having either `mysql` or `mysql-client` installed. If you see an error like:
-    ```
-    Resolved 21 packages in 231ms
-      × Failed to build `mysqlclient==2.2.7`
-      ├─▶ The build backend returned an error
-      ╰─▶ Call to `setuptools.build_meta.build_wheel` failed (exit
-          status: 1)
-    ```
-    This is probably because you don't have `mysql` or `mysql` client.
-    Installing one or other is fairly straightforwardly described [here](https://pypi.org/project/mysqlclient/) (skip the `pip install mysqlclient` instructions though). For those on macOS it'll look like:
-    ```
-    brew install mysql pkg-config
-    ```
-
 1. Install the `uv` package manager by [following the instructions here](https://docs.astral.sh/uv/getting-started/installation/).
 
 2. Install tox tool and its plugins into your local environment:
-```
-uv tool install --python-preference only-managed --python 3.13 tox --with . --with tox-uv
-```
+    ```
+    uv tool install --python-preference only-managed --python 3.13 tox --with . --with tox-uv
+    ```
 
-3. First check all the test environments will install for you (without actually running the tests:
-```
-tox run -n
-```
+3. First check all the test environments will install for you (without actually running the tests):
+    ```
+    tox run -n
+    ```
 
-4. Run all the tests (takes about 5m20s on a Mac Airbook M3):
-```
-tox run
-```
+4. Run all the tests:
+    ```
+    tox run
+    ```
 
 Under the hood, the tests use `pytest` so of course, you can set up your IDE to use pytest directly alternatively.
 
