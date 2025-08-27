@@ -27,17 +27,17 @@ description: django-guardian documentation. Per-object permissions for Django.
 
 ## Source and issue tracker
 
-The source code and issue tracker are available on [GitHub](http://github.com/django-guardian/django-guardian). 
-If you find a bug, have a suggestion, or would like to request a feature, 
+The source code and issue tracker are available on [GitHub](http://github.com/django-guardian/django-guardian).
+If you find a bug, have a suggestion, or would like to request a feature,
 you may file a ticket there.
 
 ## Alternate projects
 
 [Django](http://www.djangoproject.com/) has the foundation for object-level permissions
-<sup> 
+<sup>
     [[1]](#references)
-</sup>, 
-`django-guardian` makes use of these facilities, and it is based on them. 
+</sup>,
+`django-guardian` makes use of these facilities, and it is based on them.
 While it is possible to role-your-own implementation,
 we recommend using `django-guardian`, but we may be biased.
 
@@ -49,7 +49,7 @@ There are some other third-party projects, including:
 
 ### References
 
-<sup> 
+<sup>
     [1]
-</sup> 
+</sup>
 See [https://docs.djangoproject.com/en/stable/topics/auth/customizing/#handling-object-permissions](https://docs.djangoproject.com/en/stable/topics/auth/customizing/#handling-object-permissions) for more detail.

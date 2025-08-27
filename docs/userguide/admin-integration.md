@@ -1,12 +1,12 @@
 ---
-title: Admin 
+title: Admin
 description: How to use django-guardian with Django's admin interface.
 ---
 
 # Django Admin Integration
 
 Django comes with an excellent and widely used *Admin* application.
-Basically, it provides content management for Django applications. 
+Basically, it provides content management for Django applications.
 Users with access to admin panel can manage users, groups, permissions and
 other data provided by system.
 
@@ -87,5 +87,5 @@ And thats it. We can now navigate to **change** post page and just next
 to the *history* link we can click *Object permissions* button to manage
 row level permissions.
 
-!!! note 
+!!! note
     Example above is shipped with `django-guardian` package with the example project.

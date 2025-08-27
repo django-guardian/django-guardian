@@ -6,63 +6,68 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('auth', '0009_alter_user_last_name_max_length'),
-        ('contenttypes', '0002_remove_content_type_name'),
+        ("auth", "0009_alter_user_last_name_max_length"),
+        ("contenttypes", "0002_remove_content_type_name"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('articles', '0001_initial'),
+        ("articles", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='BigGroupObjectPermission',
+            name="BigGroupObjectPermission",
             fields=[
-                ('object_pk', models.CharField(max_length=255, verbose_name='object ID')),
-                ('id', models.BigAutoField(editable=False, primary_key=True, serialize=False, unique=True)),
-                ('content_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='contenttypes.ContentType')),
-                ('group', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='auth.Group')),
-                ('permission', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='auth.Permission')),
+                ("object_pk", models.CharField(max_length=255, verbose_name="object ID")),
+                ("id", models.BigAutoField(editable=False, primary_key=True, serialize=False, unique=True)),
+                (
+                    "content_type",
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="contenttypes.ContentType"),
+                ),
+                ("group", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="auth.Group")),
+                ("permission", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="auth.Permission")),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.CreateModel(
-            name='BigUserObjectPermission',
+            name="BigUserObjectPermission",
             fields=[
-                ('object_pk', models.CharField(max_length=255, verbose_name='object ID')),
-                ('id', models.BigAutoField(editable=False, primary_key=True, serialize=False, unique=True)),
-                ('content_type', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='contenttypes.ContentType')),
-                ('permission', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='auth.Permission')),
-                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                ("object_pk", models.CharField(max_length=255, verbose_name="object ID")),
+                ("id", models.BigAutoField(editable=False, primary_key=True, serialize=False, unique=True)),
+                (
+                    "content_type",
+                    models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="contenttypes.ContentType"),
+                ),
+                ("permission", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="auth.Permission")),
+                ("user", models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={
-                'abstract': False,
+                "abstract": False,
             },
         ),
         migrations.AddIndex(
-            model_name='biguserobjectpermission',
-            index=models.Index(fields=['content_type', 'object_pk'], name='articles_bi_content_3fff51_idx'),
+            model_name="biguserobjectpermission",
+            index=models.Index(fields=["content_type", "object_pk"], name="articles_bi_content_3fff51_idx"),
         ),
         migrations.AddIndex(
-            model_name='biguserobjectpermission',
-            index=models.Index(fields=['content_type', 'object_pk', 'user'], name='articles_bi_content_a2ac4b_idx'),
+            model_name="biguserobjectpermission",
+            index=models.Index(fields=["content_type", "object_pk", "user"], name="articles_bi_content_a2ac4b_idx"),
         ),
         migrations.AlterUniqueTogether(
-            name='biguserobjectpermission',
-            unique_together={('user', 'permission', 'object_pk')},
+            name="biguserobjectpermission",
+            unique_together={("user", "permission", "object_pk")},
         ),
         migrations.AddIndex(
-            model_name='biggroupobjectpermission',
-            index=models.Index(fields=['content_type', 'object_pk'], name='articles_bi_content_824ecd_idx'),
+            model_name="biggroupobjectpermission",
+            index=models.Index(fields=["content_type", "object_pk"], name="articles_bi_content_824ecd_idx"),
         ),
         migrations.AddIndex(
-            model_name='biggroupobjectpermission',
-            index=models.Index(fields=['content_type', 'object_pk', 'group'], name='articles_bi_content_61c3ef_idx'),
+            model_name="biggroupobjectpermission",
+            index=models.Index(fields=["content_type", "object_pk", "group"], name="articles_bi_content_61c3ef_idx"),
         ),
         migrations.AlterUniqueTogether(
-            name='biggroupobjectpermission',
-            unique_together={('group', 'permission', 'object_pk')},
+            name="biggroupobjectpermission",
+            unique_together={("group", "permission", "object_pk")},
         ),
     ]

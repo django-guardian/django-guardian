@@ -15,10 +15,10 @@ class Command(BaseCommand):
         Removed 11 object permission entries with no targets
         ```
     """
+
     help = "Removes object permissions with not existing targets"
 
     def handle(self, **options):
         removed = clean_orphan_obj_perms()
-        if options['verbosity'] > 0:
-            print("Removed %d object permission entries with no targets" %
-                  removed)
+        if options["verbosity"] > 0:
+            print("Removed %d object permission entries with no targets" % removed)
