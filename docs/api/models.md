@@ -1,4 +1,4 @@
-# Models 
+# Models
 
 ::: guardian.models.BaseObjectPermission
 

@@ -4,21 +4,21 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, Group, Permission
 
 __all__ = [
-    'Group',
-    'Permission',
-    'AnonymousUser',
-    'get_user_model',
-    'user_model_label',
-    'include',
-    'handler404',
-    'handler500',
+    "Group",
+    "Permission",
+    "AnonymousUser",
+    "get_user_model",
+    "user_model_label",
+    "include",
+    "handler404",
+    "handler500",
 ]
 
 # Since get_user_model() causes a circular import if called when app models are
 # being loaded, the user_model_label should be used when possible, with calls
 # to get_user_model deferred to execution time
 
-user_model_label = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
+user_model_label = getattr(settings, "AUTH_USER_MODEL", "auth.User")
 
 
 def get_user_model_path() -> str:
@@ -31,7 +31,7 @@ def get_user_model_path() -> str:
         Python path to the user model class in the format
             'app_label.ModelName'.
     """
-    return getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
+    return getattr(settings, "AUTH_USER_MODEL", "auth.User")
 
 
 def get_user_permission_full_codename(perm: str) -> str:
@@ -46,7 +46,7 @@ def get_user_permission_full_codename(perm: str) -> str:
     """
     user_model = get_user_model()
     model_name = user_model._meta.model_name
-    return '{}.{}_{}'.format(user_model._meta.app_label, perm, model_name)
+    return "{}.{}_{}".format(user_model._meta.app_label, perm, model_name)
 
 
 def get_user_permission_codename(perm: str) -> str:
@@ -59,4 +59,4 @@ def get_user_permission_codename(perm: str) -> str:
          Codename for the user permission in the format
             `<perm>_<usermodulename>`
     """
-    return get_user_permission_full_codename(perm).split('.')[1]
+    return get_user_permission_full_codename(perm).split(".")[1]

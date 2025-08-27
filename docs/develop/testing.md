@@ -11,7 +11,7 @@ According to [OWASP](http://www.owasp.org/),
 [broken authentication](http://www.owasp.org/index.php/Top_10_2010-A3) is one of
 the most common security issues exposed in web applications.
 
-`django-guardian` extends the capabilities of Django's authorization facilities, 
+`django-guardian` extends the capabilities of Django's authorization facilities,
 as such it has to be tested thoroughly.
 It is extremely important that Guardian provides the simplest `api` as possible,
 with a have a high test scenario coverage.
@@ -19,12 +19,12 @@ with a have a high test scenario coverage.
 !!! danger "Security Risks"
     If you spot a *security risk* or a bug that might affect security of systems that use `django-guardian`,
 
-    **DO NOT create a public issue**. 
+    **DO NOT create a public issue**.
 
     Instead, contact the Guardian maintainer team directly.
     You can find contact information in the [SECURITY.md file](https://github.com/django-guardian/django-guardian/blob/devel/.github/SECURITY.md)
 
-If you find a non-security related bug in this application, 
+If you find a non-security related bug in this application,
 please take a minute and file a ticket in our
 [issue-tracker](http://github.com/django-guardian/django-guardian).
 
@@ -102,7 +102,7 @@ TOTAL                                   231    231   100%
 
 We also started using [tox](http://pypi.python.org/pypi/tox) to ensure
 `django-guardian`'s tests would pass on all supported Python and Django
-versions (see `supported-versions`). 
+versions (see `supported-versions`).
 
 ```shell
 pip install tox

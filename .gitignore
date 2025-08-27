@@ -45,7 +45,7 @@ site*/
 .vscode*
 
 # Ignore uv.lock to avoid developers clashing in pull requests.
-# This is not recommended practice for an application but for 
+# This is not recommended practice for an application but for
 # a library with a thorough dependency matrix test suite this is
 # just fine.
 uv.lock
