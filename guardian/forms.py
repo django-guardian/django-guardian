@@ -47,7 +47,7 @@ class BaseObjectPermissionsForm(forms.Form):
             Name of the object permissions management field.
                 Defaults to 'permission'
         """
-        return 'permissions'
+        return "permissions"
 
     def get_obj_perms_field_label(self) -> str:
         """Get the label of the object permissions management field.

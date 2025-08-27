@@ -1,17 +1,16 @@
 from django.apps import apps as django_apps
-auth_app = django_apps.get_app_config("auth")
-
 from django.contrib.auth import get_user_model
 from django.contrib.auth.management import create_permissions
 from django.contrib.contenttypes.models import ContentType
 from django.core.management import call_command
 from django.test import TestCase
 
-from guardian.utils import clean_orphan_obj_perms
-from guardian.shortcuts import assign_perm
 from guardian.models import Group
+from guardian.shortcuts import assign_perm
 from guardian.testapp.tests.conf import skipUnlessTestApp
+from guardian.utils import clean_orphan_obj_perms
 
+auth_app = django_apps.get_app_config("auth")
 
 User = get_user_model()
 user_module_name = User._meta.model_name
@@ -19,23 +18,19 @@ user_module_name = User._meta.model_name
 
 @skipUnlessTestApp
 class OrphanedObjectPermissionsTest(TestCase):
-
     def setUp(self):
         # Create objects for which we would assign obj perms
-        self.target_user1 = User.objects.create(username='user1')
-        self.target_group1 = Group.objects.create(name='group1')
-        self.target_obj1 = ContentType.objects.create(
-            model='foo', app_label='fake-for-guardian-tests')
-        self.target_obj2 = ContentType.objects.create(
-            model='bar', app_label='fake-for-guardian-tests')
+        self.target_user1 = User.objects.create(username="user1")
+        self.target_group1 = Group.objects.create(name="group1")
+        self.target_obj1 = ContentType.objects.create(model="foo", app_label="fake-for-guardian-tests")
+        self.target_obj2 = ContentType.objects.create(model="bar", app_label="fake-for-guardian-tests")
         # Required if MySQL backend is used :/
         create_permissions(auth_app, 1)
 
-        self.user = User.objects.create(username='user')
-        self.group = Group.objects.create(name='group')
+        self.user = User.objects.create(username="user")
+        self.group = Group.objects.create(name="group")
 
     def test_clean_perms(self):
-
         # assign obj perms
         target_perms = {
             self.target_user1: ["change_%s" % user_module_name],

@@ -1,30 +1,27 @@
 import unittest
 
-from django.conf import UserSettingsHolder
-from django.conf import settings
+from django.conf import UserSettingsHolder, settings
 from django.utils.functional import wraps
 
 from guardian.conf import settings as guardian_settings
 
 
 def skipUnlessTestApp(obj):
-    app = 'guardian.testapp'
-    return unittest.skipUnless(app in settings.INSTALLED_APPS,
-                               'app %r must be installed to run this test' % app)(obj)
+    app = "guardian.testapp"
+    return unittest.skipUnless(app in settings.INSTALLED_APPS, "app %r must be installed to run this test" % app)(obj)
 
 
 class TestDataMixin:
-
     def setUp(self):
         super().setUp()
-        from django.contrib.auth.models import Group
         from django.contrib.auth import get_user_model
+        from django.contrib.auth.models import Group
+
         User = get_user_model()
-        Group.objects.create(pk=1, name='admins')
-        jack_group = Group.objects.create(pk=2, name='jackGroup')
+        Group.objects.create(pk=1, name="admins")
+        jack_group = Group.objects.create(pk=2, name="jackGroup")
         User.objects.get_or_create(username=guardian_settings.ANONYMOUS_USER_NAME)
-        jack = User.objects.create(username='jack', is_active=True,
-                                   is_superuser=False, is_staff=False)
+        jack = User.objects.create(username="jack", is_active=True, is_superuser=False, is_staff=False)
         jack.groups.add(jack_group)
 
 
@@ -48,6 +45,7 @@ class override_settings:
 
     def __call__(self, test_func):
         from django.test import TransactionTestCase
+
         if isinstance(test_func, type) and issubclass(test_func, TransactionTestCase):
             original_pre_setup = test_func._pre_setup
             original_post_teardown = test_func._post_teardown
@@ -59,14 +57,17 @@ class override_settings:
             def _post_teardown(innerself):
                 original_post_teardown(innerself)
                 self.disable()
+
             test_func._pre_setup = _pre_setup
             test_func._post_teardown = _post_teardown
             return test_func
         else:
+
             @wraps(test_func)
             def inner(*args, **kwargs):
                 with self:
                     return test_func(*args, **kwargs)
+
         return inner
 
     def enable(self):

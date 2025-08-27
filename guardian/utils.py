@@ -9,20 +9,15 @@ import logging
 import os
 import time
 from itertools import islice, chain
-from typing import Union, Any, Optional
+from typing import Any, Optional, Union
 
+from django.apps import apps as django_apps
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME, get_user_model
 from django.contrib.auth.models import AnonymousUser
-from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist, PermissionDenied
 from django.db.models import Model, QuerySet
-from django.http import (
-    HttpResponseForbidden,
-    HttpResponseNotFound,
-    HttpRequest,
-    HttpResponseRedirect,
-    HttpResponse,
-)
+from django.http import HttpRequest, HttpResponse, HttpResponseForbidden, HttpResponseNotFound, HttpResponseRedirect
 from django.shortcuts import render
 
 from guardian.conf import settings as guardian_settings
@@ -30,7 +25,11 @@ from guardian.ctypes import get_content_type
 from guardian.exceptions import NotUserNorGroup
 
 logger = logging.getLogger(__name__)
-abspath = lambda *p: os.path.abspath(os.path.join(*p))
+
+
+def abspath(*args):
+    """Join path arguments and return their absolute path"""
+    return os.path.abspath(os.path.join(*args))
 
 
 def get_anonymous_user() -> Any:
@@ -112,9 +111,7 @@ def get_identity(identity: Model) -> tuple[Union[Any, None], Union[Any, None]]:
     if isinstance(identity, group_model):
         return None, identity
 
-    raise NotUserNorGroup("User/AnonymousUser or Group instance is required "
-                          "(got %s)" % identity)
-
+    raise NotUserNorGroup("User/AnonymousUser or Group instance is required (got %s)" % identity)
 
 
 def get_40x_or_None(
@@ -176,14 +173,8 @@ def get_40x_or_None(
         else:
             from django.contrib.auth.views import redirect_to_login
 
-            return redirect_to_login(
-                request.get_full_path(), login_url, redirect_field_name
-            )
+            return redirect_to_login(request.get_full_path(), login_url, redirect_field_name)
     return None
-
-
-from django.apps import apps as django_apps
-from django.core.exceptions import ImproperlyConfigured
 
 
 def get_obj_perm_model_by_conf(setting_name: str) -> type[Model]:
@@ -252,6 +243,7 @@ def clean_orphan_obj_perms(
     GroupObjectPermission = get_group_obj_perms_model()
 
     deleted = 0
+    
     scanned = 0
     processed_batches = 0
     batch_count = 0
@@ -334,6 +326,7 @@ def clean_orphan_obj_perms(
 # TODO: should raise error when multiple UserObjectPermission direct relations
 # are defined
 
+
 def get_obj_perms_model(obj: Optional[Model], base_cls: type[Model], generic_cls: type[Model]) -> type[Model]:
     """Return the matching object permission model for the obj class.
 
@@ -347,18 +340,15 @@ def get_obj_perms_model(obj: Optional[Model], base_cls: type[Model], generic_cls
     if isinstance(obj, Model):
         obj = obj.__class__
 
-
-    fields = (f for f in obj._meta.get_fields()  # type: ignore[union-attr] # obj is already checked for None
-              if (f.one_to_many or f.one_to_one) and f.auto_created)
+    fields = (
+        f
+        for f in obj._meta.get_fields()  # type: ignore[union-attr] # obj is already checked for None
+        if (f.one_to_many or f.one_to_one) and f.auto_created
+    )
 
     for attr in fields:
         model = getattr(attr, "related_model", None)
-        if (
-            model
-            and issubclass(model, base_cls)
-            and model is not generic_cls
-            and getattr(model, "enabled", True)
-        ):
+        if model and issubclass(model, base_cls) and model is not generic_cls and getattr(model, "enabled", True):
             # if model is generic one it would be returned anyway
             if not model.objects.is_generic():
                 # make sure that content_object's content_type is the same as
@@ -376,6 +366,7 @@ def get_user_obj_perms_model(obj: Optional[Model] = None) -> type[Model]:
     that is returned is determined by the guardian settings for 'USER_OBJ_PERMS_MODEL'.
     """
     from guardian.models import UserObjectPermissionBase
+
     UserObjectPermission = get_obj_perm_model_by_conf("USER_OBJ_PERMS_MODEL")
     return get_obj_perms_model(obj, UserObjectPermissionBase, UserObjectPermission)
 
@@ -387,6 +378,7 @@ def get_group_obj_perms_model(obj: Optional[Model] = None) -> type[Model]:
     that is returned is determined by the guardian settings for 'GROUP_OBJ_PERMS_MODEL'.
     """
     from guardian.models import GroupObjectPermissionBase
+
     GroupObjectPermission = get_obj_perm_model_by_conf("GROUP_OBJ_PERMS_MODEL")
     return get_obj_perms_model(obj, GroupObjectPermissionBase, GroupObjectPermission)
 
