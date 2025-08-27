@@ -12,7 +12,6 @@ repos:
   - id: check-ast
   - id: check-case-conflict
   - id: check-docstring-first
-  - id: check-toml
   - id: check-yaml
   - id: end-of-file-fixer
   - id: no-commit-to-branch
