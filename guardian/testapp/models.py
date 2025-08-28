@@ -4,6 +4,7 @@ import uuid
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import AbstractBaseUser, AbstractUser
 from django.db import models
+from django.utils import timezone
 
 from guardian.mixins import GuardianUserMixin
 from guardian.models import GroupObjectPermissionAbstract, GroupObjectPermissionBase, UserObjectPermissionBase
@@ -39,7 +40,7 @@ class GenericGroupObjectPermission(GroupObjectPermissionAbstract):
 
 class Project(models.Model):
     name = models.CharField(max_length=128, unique=True)
-    created_at = models.DateTimeField(default=datetime.now)
+    created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         get_latest_by = "created_at"
