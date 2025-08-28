@@ -110,6 +110,8 @@ maintainers = [
   { name = "Michael K." },
   { name = "Chris Maggiuli" },
   { name = "Bona Fide IT GmbH"},
+  { name = "Sezer BOZKIR", email = "admin@sezerbozkir.com"},
+    
 ]
 dependencies = [
     "django>=3.2",
