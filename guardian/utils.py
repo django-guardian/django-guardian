@@ -4,24 +4,21 @@ django-guardian helper functions.
 Functions defined within this module are a part of django-guardian’s internal functionality
 and be considered unstable; their APIs may change in any future releases.
 """
-
+import gc
+import time
+from itertools import chain
 import logging
 import os
-from itertools import chain
-from typing import Union, Any, Optional
+from math import ceil
+from typing import Any, Optional, Union
 
+from django.apps import apps as django_apps
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME, get_user_model
 from django.contrib.auth.models import AnonymousUser
-from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist, PermissionDenied
 from django.db.models import Model, QuerySet
-from django.http import (
-    HttpResponseForbidden,
-    HttpResponseNotFound,
-    HttpRequest,
-    HttpResponseRedirect,
-    HttpResponse,
-)
+from django.http import HttpRequest, HttpResponse, HttpResponseForbidden, HttpResponseNotFound, HttpResponseRedirect
 from django.shortcuts import render
 
 from guardian.conf import settings as guardian_settings
@@ -29,7 +26,11 @@ from guardian.ctypes import get_content_type
 from guardian.exceptions import NotUserNorGroup
 
 logger = logging.getLogger(__name__)
-abspath = lambda *p: os.path.abspath(os.path.join(*p))
+
+
+def abspath(*args):
+    """Join path arguments and return their absolute path"""
+    return os.path.abspath(os.path.join(*args))
 
 
 def get_anonymous_user() -> Any:
@@ -111,9 +112,7 @@ def get_identity(identity: Model) -> tuple[Union[Any, None], Union[Any, None]]:
     if isinstance(identity, group_model):
         return None, identity
 
-    raise NotUserNorGroup("User/AnonymousUser or Group instance is required "
-                          "(got %s)" % identity)
-
+    raise NotUserNorGroup("User/AnonymousUser or Group instance is required (got %s)" % identity)
 
 
 def get_40x_or_None(
@@ -175,14 +174,8 @@ def get_40x_or_None(
         else:
             from django.contrib.auth.views import redirect_to_login
 
-            return redirect_to_login(
-                request.get_full_path(), login_url, redirect_field_name
-            )
+            return redirect_to_login(request.get_full_path(), login_url, redirect_field_name)
     return None
-
-
-from django.apps import apps as django_apps
-from django.core.exceptions import ImproperlyConfigured
 
 
 def get_obj_perm_model_by_conf(setting_name: str) -> type[Model]:
@@ -209,32 +202,175 @@ def get_obj_perm_model_by_conf(setting_name: str) -> type[Model]:
         ) from e
 
 
-def clean_orphan_obj_perms() -> int:
-    """Seeks and removes all object permissions entries pointing at non-existing targets.
-
-    Returns:
-         The number of objects removed.
+def clean_orphan_obj_perms(
+    batch_size: Optional[int] = None,
+    max_batches: Optional[int] = None,
+    max_duration_secs: Optional[int] = None,
+    skip_batches: int = 0,
+) -> int:
     """
+    Removes orphan object permissions using queryset slice-based batching,
+    batch skipping, batch limit, and time-based interruption.
+    """
+
     UserObjectPermission = get_user_obj_perms_model()
     GroupObjectPermission = get_group_obj_perms_model()
 
     deleted = 0
-    # TODO: optimise
-    for perm in chain(
-        UserObjectPermission.objects.all().iterator(),
-        GroupObjectPermission.objects.all().iterator(),
-    ):
-        if perm.content_object is None:
-            logger.debug("Removing %s (pk=%d)" % (perm, perm.pk))
-            perm.delete()
-            deleted += 1
-    logger.info("Total removed orphan object permissions instances: %d" %
-                deleted)
+    scanned = 0
+    processed_batches = 0
+    batch_count = 0
+    start_time = time.monotonic()
+
+    if batch_size is None:
+        all_objs = list(
+            chain(
+                UserObjectPermission.objects.order_by("pk"),
+                GroupObjectPermission.objects.order_by("pk"),
+            )
+        )
+
+        for obj in all_objs:
+            if max_duration_secs is not None and (
+                time.monotonic() - start_time >= max_duration_secs
+            ):
+                logger.info(f"Time limit of {max_duration_secs}s reached.")
+                break
+
+            scanned += 1
+            if obj.content_object is None:
+                logger.debug("Removing %s (pk=%d)", obj, obj.pk)
+                obj.delete()
+                deleted += 1
+        processed_batches = 1
+    else:
+        total_user = UserObjectPermission.objects.count()
+        total_group = GroupObjectPermission.objects.count()
+        total_records = total_user + total_group
+
+        total_batches_possible = ceil(total_records / batch_size)
+
+        remaining_batches = total_batches_possible - skip_batches
+        if max_batches is not None:
+            remaining_batches = min(remaining_batches, max_batches)
+
+        logger.info(
+            f"Starting orphan object permissions cleanup with batch_size={batch_size}, "
+            f"max_batches={max_batches}, max_duration_secs={max_duration_secs}, skip_batches={skip_batches}"
+        )
+
+        # Process User permissions first
+        user_processed = 0
+        user_total = UserObjectPermission.objects.count()
+        
+        # Skip user batches if needed
+        user_skip_records = min(skip_batches * batch_size, user_total)
+        user_remaining = user_total - user_skip_records
+        
+        while user_remaining > 0 and remaining_batches > 0:
+            if max_duration_secs is not None and (
+                time.monotonic() - start_time >= max_duration_secs
+            ):
+                logger.info(f"Time limit of {max_duration_secs}s reached.")
+                break
+                
+            gc.collect()
+            
+            current_batch_size = min(batch_size, user_remaining)
+            user_batch = list(
+                UserObjectPermission.objects.order_by("pk")[user_skip_records + user_processed:user_skip_records + user_processed + current_batch_size]
+            )
+            
+            if not user_batch:
+                break
+                
+            scanned += len(user_batch)
+            user_processed += len(user_batch)
+            user_remaining -= len(user_batch)
+            
+            orphan_pks = [obj.pk for obj in user_batch if obj.content_object is None]
+            
+            if orphan_pks:
+                logger.info(f"!!! Found {len(orphan_pks)} orphan user permissions in batch {processed_batches + 1}. !!!")
+                UserObjectPermission.objects.filter(pk__in=orphan_pks).delete()
+                deleted += len(orphan_pks)
+            
+            processed_batches += 1
+            batch_count += 1
+            remaining_batches -= 1
+            
+            logger.info(f"Processed user batch {processed_batches}, scanned {scanned} objects.")
+            
+        # Process Group permissions
+        if remaining_batches > 0:
+            group_processed = 0
+            group_total = GroupObjectPermission.objects.count()
+            
+            # Calculate skip for group permissions
+            total_user_batches = ceil(user_total / batch_size) if user_total > 0 else 0
+            group_skip_batches = max(0, skip_batches - total_user_batches)
+            group_skip_records = min(group_skip_batches * batch_size, group_total)
+            group_remaining = group_total - group_skip_records
+            
+            while group_remaining > 0 and remaining_batches > 0:
+                if max_duration_secs is not None and (
+                    time.monotonic() - start_time >= max_duration_secs
+                ):
+                    logger.info(f"Time limit of {max_duration_secs}s reached.")
+                    break
+                    
+                gc.collect()
+                
+                current_batch_size = min(batch_size, group_remaining)
+                group_batch = list(
+                    GroupObjectPermission.objects.order_by("pk")[group_skip_records + group_processed:group_skip_records + group_processed + current_batch_size]
+                )
+                
+                if not group_batch:
+                    break
+                    
+                scanned += len(group_batch)
+                group_processed += len(group_batch)
+                group_remaining -= len(group_batch)
+                
+                orphan_pks = [obj.pk for obj in group_batch if obj.content_object is None]
+                
+                if orphan_pks:
+                    logger.info(f"!!! Found {len(orphan_pks)} orphan group permissions in batch {processed_batches + 1}. !!!")
+                    GroupObjectPermission.objects.filter(pk__in=orphan_pks).delete()
+                    deleted += len(orphan_pks)
+                
+                processed_batches += 1
+                batch_count += 1
+                remaining_batches -= 1
+                
+                logger.info(f"Processed group batch {processed_batches}, scanned {scanned} objects.")
+
+    logger.info(
+        f"Finished orphan object permissions cleanup. "
+        f"Scanned: {scanned} | Removed: {deleted} | "
+        f"Batches processed: {processed_batches}"
+    )
+
+    if batch_size:
+        suggestion = (
+            f"To resume cleanup, call:\n"
+            f"clean_orphan_obj_perms(batch_size={batch_size}, "
+            f"skip_batches={skip_batches + processed_batches}, "
+        )
+        if max_batches is not None:
+            suggestion += f"max_batches={max_batches - batch_count}, "
+        if max_duration_secs is not None:
+            suggestion += f"max_duration_secs={max_duration_secs}, "
+        suggestion = suggestion.rstrip(", ") + ")"
+        logger.info(suggestion)
+
     return deleted
 
 
 # TODO: should raise error when multiple UserObjectPermission direct relations
 # are defined
+
 
 def get_obj_perms_model(obj: Optional[Model], base_cls: type[Model], generic_cls: type[Model]) -> type[Model]:
     """Return the matching object permission model for the obj class.
@@ -249,18 +385,15 @@ def get_obj_perms_model(obj: Optional[Model], base_cls: type[Model], generic_cls
     if isinstance(obj, Model):
         obj = obj.__class__
 
-
-    fields = (f for f in obj._meta.get_fields()  # type: ignore[union-attr] # obj is already checked for None
-              if (f.one_to_many or f.one_to_one) and f.auto_created)
+    fields = (
+        f
+        for f in obj._meta.get_fields()  # type: ignore[union-attr] # obj is already checked for None
+        if (f.one_to_many or f.one_to_one) and f.auto_created
+    )
 
     for attr in fields:
         model = getattr(attr, "related_model", None)
-        if (
-            model
-            and issubclass(model, base_cls)
-            and model is not generic_cls
-            and getattr(model, "enabled", True)
-        ):
+        if model and issubclass(model, base_cls) and model is not generic_cls and getattr(model, "enabled", True):
             # if model is generic one it would be returned anyway
             if not model.objects.is_generic():
                 # make sure that content_object's content_type is the same as
@@ -278,6 +411,7 @@ def get_user_obj_perms_model(obj: Optional[Model] = None) -> type[Model]:
     that is returned is determined by the guardian settings for 'USER_OBJ_PERMS_MODEL'.
     """
     from guardian.models import UserObjectPermissionBase
+
     UserObjectPermission = get_obj_perm_model_by_conf("USER_OBJ_PERMS_MODEL")
     return get_obj_perms_model(obj, UserObjectPermissionBase, UserObjectPermission)
 
@@ -289,6 +423,7 @@ def get_group_obj_perms_model(obj: Optional[Model] = None) -> type[Model]:
     that is returned is determined by the guardian settings for 'GROUP_OBJ_PERMS_MODEL'.
     """
     from guardian.models import GroupObjectPermissionBase
+
     GroupObjectPermission = get_obj_perm_model_by_conf("GROUP_OBJ_PERMS_MODEL")
     return get_obj_perms_model(obj, GroupObjectPermissionBase, GroupObjectPermission)
 

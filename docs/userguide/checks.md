@@ -5,7 +5,7 @@ description: How to check object-level permissions using django-guardian.
 
 # Check object permissions
 
-Once we have `assigned some permissions <assign>` we can get into detail 
+Once we have `assigned some permissions <assign>` we can get into detail
 about verifying permissions of a user or group.
 
 ## Standard way
@@ -38,7 +38,7 @@ Let's assign permission and check again:
 True
 ```
 
-This uses the backend we have specified at settings module (see`configuration`). 
+This uses the backend we have specified at settings module (see`configuration`).
 More on the backend can be found at
 `Backend's API <guardian.backends.ObjectPermissionBackend>`.
 

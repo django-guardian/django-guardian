@@ -15,7 +15,7 @@ if we subclass `AbstractUser` or define many-to-many relation with
 fine.
 
 By default, django-guardian monkey patches the user model to add some needed functionality.
-This can result in errors if guardian is imported into the models.py 
+This can result in errors if guardian is imported into the models.py
 of the same app where the custom user model lives.
 
 To fix this, it is recommended to add the setting
@@ -31,10 +31,10 @@ To fix this, it is recommended to add the setting
     auth.Group relation django-guardian will BREAK**.
 
 !!! tip "See Also"
-    Read more about 
+    Read more about
     [customizing the Django User model](https://docs.djangoproject.com/en/stable/topics/auth/customizing/#substituting-a-custom-user-model)
 
-## Anonymous user creation 
+## Anonymous user creation
 
 It is also possible to override default behavior of how instance for
 anonymous user is created. In example, let's imagine we have our user model as follows:
@@ -58,7 +58,7 @@ instance as default implementation cannot know anything about
 `CustomUser` model.
 
 In order to override the way anonymous instance is created we need to
-make `GUARDIAN_GET_INIT_ANONYMOUS_USER` pointing at our custom implementation. 
+make `GUARDIAN_GET_INIT_ANONYMOUS_USER` pointing at our custom implementation.
 In example, let's define our init function:
 
 ```python

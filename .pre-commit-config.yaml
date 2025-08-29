@@ -1,0 +1,47 @@
+exclude: mkdocs.yml|example_project/static|example_project/templates|example_project_custom_groups/static|example_project_custom_groups/templates|((?:[^/]*/)*)(.svg)|((?:[^/]*/)*)(.xml)
+default_stages: [commit]
+fail_fast: true
+default_language_version:
+  python: python3 # force all unspecified python hooks to run python3
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v3.1.0
+  hooks:
+  - id: check-added-large-files
+    args: [--maxkb=10240]
+  - id: check-ast
+  - id: check-case-conflict
+  - id: check-docstring-first
+  - id: check-yaml
+  - id: end-of-file-fixer
+  - id: no-commit-to-branch
+  - id: trailing-whitespace
+
+- repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
+  rev: v2.15.0
+  hooks:
+      # TODO - enable once this is merged: https://github.com/macisamuele/language-formatters-pre-commit-hooks/pull/252/files
+      # - id: pretty-format-toml
+      #   args: [--autofix]
+      # TODO - remove mkdocs.yml from the `exclude` argument if this gets fixed: https://github.com/macisamuele/language-formatters-pre-commit-hooks/issues/281
+  - id: pretty-format-yaml
+    args: [--autofix, --indent, '2']
+
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.12.0
+  hooks:
+  - id: ruff
+    name: Ruff lint
+    args: [--fix, --exit-non-zero-on-fix]
+
+  - id: ruff
+    name: Ruff isort
+    args: [check, --select, I, --fix]
+
+  - id: ruff-format
+    name: Ruff format
+
+- repo: https://github.com/asottile/pyupgrade
+  rev: v3.20.0
+  hooks:
+  - id: pyupgrade

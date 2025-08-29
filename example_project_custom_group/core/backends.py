@@ -3,7 +3,7 @@ from django.contrib.auth.models import Permission
 
 
 class CustomModelBackend(ModelBackend):
-    """ Overriding the default ModelBackend to fix the group permissions issue:
+    """Overriding the default ModelBackend to fix the group permissions issue:
     https://code.djangoproject.com/ticket/35792."""
 
     def _get_group_permissions(self, user_obj):
