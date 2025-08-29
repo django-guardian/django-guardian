@@ -1,6 +1,6 @@
 [project]
 name = "django-guardian"
-version = "3.0.7"
+version = "3.1.0"
 description = "Per object permissions for Django"
 keywords = ["django", "permissions", "authorization", "object", "row", "level"]
 readme = "README.md"
@@ -111,7 +111,7 @@ maintainers = [
   { name = "Chris Maggiuli" },
   { name = "Bona Fide IT GmbH"},
   { name = "Sezer BOZKIR", email = "admin@sezerbozkir.com"},
-    
+
 ]
 dependencies = [
     "django>=3.2",
