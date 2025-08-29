@@ -1,4 +1,3 @@
-from datetime import datetime
 import uuid
 
 from django.contrib.admin.models import LogEntry
