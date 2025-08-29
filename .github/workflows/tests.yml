@@ -1,47 +1,38 @@
----
 name: Tests
+permissions:
+  contents: read
 
 on:
   push:
     branches:
-      - master
-      - devel
+    - main
+    - next
   pull_request:
+
+env:
+    # Used in our tox configuration to determine which dependency groups to install
+  DEPENDENCY_GROUP: ci
 
 jobs:
   tests:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.6", "3.7", "3.8", "3.9"]
-        django: [2.2.17, 3.0.11, 3.1.3, 3.2.0]
-        include:
-          - python-version: "3.10"
-            django: 3.2.0
-          - python-version: "3.8"
-            django: 4.0.0
-          - python-version: "3.9"
-            django: 4.0.0
-          - python-version: "3.10"
-            django: 4.0.0
-          - python-version: "3.8"
-            django: main
-          - python-version: "3.9"
-            django: main
-          - python-version: "3.10"
-            django: main
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        database-engine: [sqlite, mariadb, postgres]
 
     services:
       mariadb:
-        image: mariadb:10.2
+        image: mariadb:11.4.2
         env:
           MYSQL_ROOT_PASSWORD: mariadb
         ports:
-          - 3306:3306
+        - 3306:3306
       postgres:
-        image: postgres:10-alpine
+        image: postgres:16-alpine
         env:
+          PGUSER: postgres
           POSTGRES_PASSWORD: postgres
         options: >-
           --health-cmd pg_isready
@@ -49,74 +40,69 @@ jobs:
           --health-timeout 5s
           --health-retries 5
         ports:
-          - 5432:5432
+        - 5432:5432
+
+    env:
+      DJANGO_SETTINGS_MODULE: tests.server.settings
+      DATABASE_ENGINE: ${{ matrix.database-engine }}
 
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install latest pip, setuptools, and wheel
-        run: |
-          python -m pip install --upgrade pip wheel setuptools
-      - name: Install dependencies
-        run: |
-          PACKAGES=('mock' 'pytest' 'pytest-django' 'pytest-cov' 'django-environ' 'setuptools_scm' 'pyupgrade' 'psycopg2-binary' 'mysqlclient')
-          if [[ "${{ matrix.django }}" == 'main' ]]; then
-              PACKAGES+=('https://github.com/django/django/archive/main.tar.gz');
-          else
-              PACKAGES+=("Django~=${{ matrix.django }}");
-          fi;
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-          PGPASSWORD="postgres" psql -c 'create database django_guardian;' -h localhost -U postgres;
-          PGPASSWORD="postgres" psql -c 'create database test_django_guardian;' -h localhost -U postgres;
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+        cache-dependency-glob: pyproject.toml
 
-          mysql --host=127.0.0.1 --user=root --password=mariadb -e 'CREATE DATABASE django_guardian;';
-          mysql --host=127.0.0.1 --user=root --password=mariadb -e 'CREATE DATABASE test_django_guardian;';
+    - name: Install tox
+          # See: https://github.com/tox-dev/tox-gh
+      run: uv tool install --python-preference only-managed --python 3.13 tox --with . --with tox-uv --with tox-gh
 
-          python -m pip install --upgrade --upgrade-strategy=only-if-needed ${PACKAGES[*]};
-      - name: Ensure no version conflicts exist
-        run: pip check
-      - name: Lint modern PY3 syntax
-        run: find . -name '*.py' | xargs pyupgrade --py3-only
+    - name: Install Python
+          # Skip if the python version is already installed to run tox
+      if: matrix.python-version != '3.13'
+      run: uv python install --python-preference only-managed ${{ matrix.python-version }}
 
-      - name: Code tests (with PostgreSQL)
-        run: |
-          export DATABASE_URL=postgres://postgres:postgres@localhost/django_guardian
-          python ./setup.py --version
-          py.test --cov=guardian
+    - name: Setup test suite
+      run: tox run -vv --notest --skip-missing-interpreters false
+      env:
+        TOX_GH_MAJOR_MINOR: ${{ matrix.python-version }}
 
-      - name: Code tests (with MariaDB)
-        run: |
-          export DATABASE_URL=mysql://root:mariadb@127.0.0.1:3306/django_guardian
-          python ./setup.py --version
-          py.test --cov=guardian
+    - name: Create databases
+      run: |
+        PGPASSWORD="postgres" psql -c 'create database django_guardian;' -h localhost -U postgres;
+        PGPASSWORD="postgres" psql -c 'create database test_django_guardian;' -h localhost -U postgres;
+        mysql --host=127.0.0.1 --user=root --password=mariadb -e 'CREATE DATABASE django_guardian;';
+        mysql --host=127.0.0.1 --user=root --password=mariadb -e 'CREATE DATABASE test_django_guardian;';
 
-      - name: Code tests (with SQLite)
-        run: |
-          export DATABASE_URL=sqlite://
-          python ./setup.py --version
-          py.test --cov=guardian
+    - name: Test with PostgreSQL
+      if: matrix.database-engine == 'postgres'
+      env:
+        TOX_GH_MAJOR_MINOR: ${{ matrix.python-version }}
+        DATABASE_URL: postgres://postgres:postgres@localhost/django_guardian
+        PYTEST_ADDOPTS: -vv --durations=20
+        DIFF_AGAINST: HEAD
+        UV_PYTHON_PREFERENCE: only-managed
+      run: tox run -vv --skip-pkg-install
 
-      - name: Test example_project
-        run: |
-          pip install .;
-          cd example_project;
-          DJANGO_VERSION="${{ matrix.django }}"
-          EXAMPLE_PROJECTS_DJANGO_VERSION=$(grep -i "django[^-]" requirements.txt | cut -d "=" -f 2)
-          if [ "${DJANGO_VERSION:0:3}" = "${EXAMPLE_PROJECTS_DJANGO_VERSION:0:3}" ]; then
-              python -Wa manage.py makemigrations --check --dry-run;
-          elif [ -z "${EXAMPLE_PROJECTS_DJANGO_VERSION}" ]; then
-              echo "Could not determine which version of Django the example project supports."
-              exit 1
-          fi;
+    - name: Test with MariaDB
+      if: matrix.database-engine == 'mariadb'
+      env:
+        TOX_GH_MAJOR_MINOR: ${{ matrix.python-version }}
+        DATABASE_URL: mysql://root:mariadb@127.0.0.1:3306/django_guardian
+        PYTEST_ADDOPTS: -vv --durations=20
+        DIFF_AGAINST: HEAD
+        UV_PYTHON_PREFERENCE: only-managed
+      run: tox run -vv --skip-pkg-install
 
-          export DATABASE_URL=postgres://postgres:postgres@localhost/django_guardian
-          python -Wa manage.py test;
-
-          export DATABASE_URL=mysql://root:mariadb@127.0.0.1:3306/django_guardian
-          python -Wa manage.py test;
-
-          export DATABASE_URL=sqlite://
-          python -Wa manage.py test;
+    - name: Test with SQLite
+      if: matrix.database-engine == 'sqlite'
+      env:
+        TOX_GH_MAJOR_MINOR: ${{ matrix.python-version }}
+        DATABASE_URL: sqlite://
+        PYTEST_ADDOPTS: -vv --durations=20
+        DIFF_AGAINST: HEAD
+        UV_PYTHON_PREFERENCE: only-managed
+      run: tox run -vv --skip-pkg-install

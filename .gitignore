@@ -12,12 +12,17 @@ _build
 dist
 .DS_Store
 .coverage
+coverage.xml
 .hgignore
 .tox
 .ropeproject
+.venv
+venv
 
 example_project/media
 example_project/conf/*.py
+example_project_custom_group/media
+example_project_custom_group/conf/*.py
 .idea/
 .eggs/
 .cache/
@@ -28,3 +33,19 @@ example_project/conf/*.py
 .DAV
 .project
 .pydevproject
+
+# Local virtual environments
+.venv
+
+# Documentation
+site*/
+
+# Common IDEs
+.idea*
+.vscode*
+
+# Ignore uv.lock to avoid developers clashing in pull requests.
+# This is not recommended practice for an application but for
+# a library with a thorough dependency matrix test suite this is
+# just fine.
+uv.lock
