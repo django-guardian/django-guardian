@@ -47,9 +47,15 @@ from guardian.utils import (
 
 
 @lru_cache(None)
-def _get_ct_cached(app_label, codename):
+def _get_ct_cached(app_label: str, codename: str) -> ContentType:
     """Caches `ContentType` instances like its `QuerySet` does."""
     return ContentType.objects.get(app_label=app_label, permission__codename=codename)
+
+
+# kwargs are required to be connected to a django signal
+def clear_ct_cache(**kwargs) -> None:
+    """Helper to clear cache of `_get_ct_cached`"""
+    _get_ct_cached.cache_clear()
 
 
 def _get_first(t):

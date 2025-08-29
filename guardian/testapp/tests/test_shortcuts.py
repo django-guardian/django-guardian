@@ -6,13 +6,14 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.query import QuerySet
-from django.test import TestCase
+from django.test import TestCase, TransactionTestCase
 
 from guardian.compat import get_user_permission_full_codename
 from guardian.core import ObjectPermissionChecker
 from guardian.exceptions import MixedContentTypeError, MultipleIdentityAndObjectError, NotUserNorGroup, WrongAppError
 from guardian.models import Group, Permission
 from guardian.shortcuts import (
+    _get_ct_cached,
     assign,
     assign_perm,
     get_group_perms,
@@ -1258,3 +1259,37 @@ class GetObjectsForGroup(TestCase):
         self.assertRaises(
             MixedContentTypeError, get_objects_for_group, self.group1, ["auth.change_permission", "auth.change_group"]
         )
+
+
+class ContentTypeCacheMixin:
+    def test_first_access(self):
+        shortcut_ct = _get_ct_cached("auth", "change_permission")
+        ct = ContentType.objects.get_by_natural_key("auth", "permission")
+        self.assertEqual(ct, shortcut_ct)
+
+        with self.assertNumQueries(0):
+            cached_ct_shortcut = _get_ct_cached("auth", "change_permission")
+            cached_ct = ContentType.objects.get_by_natural_key("auth", "permission")
+        self.assertEqual(cached_ct, cached_ct_shortcut)
+        self.assertIs(ct, cached_ct)
+        self.assertIs(shortcut_ct, cached_ct_shortcut)
+
+    def test_second_access(self):
+        shortcut_ct = _get_ct_cached("auth", "change_permission")
+        ct = ContentType.objects.get_by_natural_key("auth", "permission")
+        self.assertEqual(ct, shortcut_ct)
+
+        with self.assertNumQueries(0):
+            cached_ct_shortcut = _get_ct_cached("auth", "change_permission")
+            cached_ct = ContentType.objects.get_by_natural_key("auth", "permission")
+        self.assertEqual(cached_ct, cached_ct_shortcut)
+        self.assertIs(ct, cached_ct)
+        self.assertIs(shortcut_ct, cached_ct_shortcut)
+
+
+class ContentTypeCacheTestCase(ContentTypeCacheMixin, TestCase):
+    """Test cache against TestCase"""
+
+
+class ContentTypeCacheTransactionTestCase(ContentTypeCacheMixin, TransactionTestCase):
+    """Test cache against TransactionTestCase"""
