@@ -1,5 +1,6 @@
 from copy import deepcopy
 from unittest import mock
+import warnings
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -69,11 +70,14 @@ class TestGetAnonymousUser(TestCase):
         self.assertEqual(anon.get_username(), "AnonymousUser")
 
     @mock.patch("guardian.management.guardian_settings")
-    @override_settings(DATABASE_ROUTERS=[SessionRouter()], DATABASES=multi_db_dict)
     def test_non_migrated_db(self, guardian_settings):
         mocked_get_init_anon.reset_mock()
         guardian_settings.GET_INIT_ANONYMOUS_USER = "guardian.testapp.tests.test_management.mocked_get_init_anon"
 
-        create_anonymous_user("sender", using="session")
+        # Suppress the DATABASES override warning for this specific test
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            with override_settings(DATABASE_ROUTERS=[SessionRouter()], DATABASES=multi_db_dict):
+                create_anonymous_user("sender", using="session")
 
         mocked_get_init_anon.assert_not_called()

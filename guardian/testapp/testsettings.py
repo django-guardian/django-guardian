@@ -69,3 +69,7 @@ TEMPLATES = [
 ]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Timezone settings
+USE_TZ = True
+TIME_ZONE = "UTC"

@@ -125,6 +125,10 @@ class UserObjectPermission(UserObjectPermissionAbstract):
 
     class Meta(UserObjectPermissionAbstract.Meta):
         abstract = False
+        indexes = [
+            models.Index(fields=["permission", "user", "content_type", "object_pk"]),
+            models.Index(fields=["user", "content_type", "object_pk"]),
+        ]
 
 
 class GroupObjectPermissionBase(BaseObjectPermission):
@@ -186,3 +190,7 @@ class GroupObjectPermission(GroupObjectPermissionAbstract):
 
     class Meta(GroupObjectPermissionAbstract.Meta):
         abstract = False
+        indexes = [
+            models.Index(fields=["permission", "group", "content_type", "object_pk"]),
+            models.Index(fields=["group", "content_type", "object_pk"]),
+        ]
