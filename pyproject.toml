@@ -100,6 +100,7 @@ authors = [
   { name = "Chris Maggiuli" },
   { name = "Bona Fide IT GmbH"},
   { name = "Columbia University, SIS Development and Application Services" },
+  { name = "Cornelius Hoffmann", email = "coding@volucra.de" },
 ]
 maintainers = [
   {name = "Tom Clark", email = "django-guardian@octue.com"},

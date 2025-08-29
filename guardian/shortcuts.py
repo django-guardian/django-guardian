@@ -373,7 +373,7 @@ def get_users_with_perms(
         return users
 
 
-def get_groups_with_perms(obj: Model, attach_perms: bool = False) -> Union[Group, dict]:
+def get_groups_with_perms(obj: Model, attach_perms: bool = False, only_with_perms_in: Optional[list[str]] = None) -> Union[Group, dict]:
     """Get all groups with *any* object permissions for the given `obj`.
 
     Parameters:
@@ -381,9 +381,10 @@ def get_groups_with_perms(obj: Model, attach_perms: bool = False) -> Union[Group
         attach_perms (bool): Whether return result as a dict of `Group` instances
             with permissions' codenames list of values.
             This would fetch groups eagerly!
+        only_with_perms_in (list[str]): Only return groups with these permissions.
 
     Returns:
-        All `Group` objects with *any* object permissions for the given `obj`.
+        All `Group` objects with the matching object permissions for the given `obj`.
 
     Example:
         ```shell
@@ -415,11 +416,17 @@ def get_groups_with_perms(obj: Model, attach_perms: bool = False) -> Union[Group
             }
         else:
             group_filters = {"%s__content_object" % group_rel_name: obj}
+        if only_with_perms_in is not None:
+            permission_ids = Permission.objects.filter(content_type=ctype, codename__in=only_with_perms_in).values_list("id", flat=True)
+            group_filters.update({
+                "%s__permission_id__in" % group_rel_name: permission_ids,
+            })
+
         group_rel_model = group_model.group.field.related_model
         return group_rel_model.objects.filter(**group_filters).distinct()
     else:
         group_perms_mapping = defaultdict(list)
-        groups_with_perms = get_groups_with_perms(obj)
+        groups_with_perms = get_groups_with_perms(obj, only_with_perms_in=only_with_perms_in)
         qs = group_model.objects.filter(group__in=groups_with_perms).prefetch_related("group", "permission")
         if group_model.objects.is_generic():
             qs = qs.filter(object_pk=obj.pk, content_type=ctype)
