@@ -5,37 +5,40 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('auth', '0012_alter_user_first_name_max_length'),
-        ('contenttypes', '0002_remove_content_type_name'),
-        ('guardian', '0002_generic_permissions_index'),
+        ("auth", "0012_alter_user_first_name_max_length"),
+        ("contenttypes", "0002_remove_content_type_name"),
+        ("guardian", "0002_generic_permissions_index"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.RemoveIndex(
-            model_name='groupobjectpermission',
-            name='guardian_gr_content_ae6aec_idx',
+            model_name="groupobjectpermission",
+            name="guardian_gr_content_ae6aec_idx",
         ),
         migrations.RemoveIndex(
-            model_name='userobjectpermission',
-            name='guardian_us_content_179ed2_idx',
+            model_name="userobjectpermission",
+            name="guardian_us_content_179ed2_idx",
         ),
         migrations.AddIndex(
-            model_name='groupobjectpermission',
-            index=models.Index(fields=['permission', 'group', 'content_type', 'object_pk'], name='guardian_gr_permiss_83545c_idx'),
+            model_name="groupobjectpermission",
+            index=models.Index(
+                fields=["permission", "group", "content_type", "object_pk"], name="guardian_gr_permiss_83545c_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='groupobjectpermission',
-            index=models.Index(fields=['group', 'content_type', 'object_pk'], name='guardian_gr_group_i_9e7d12_idx'),
+            model_name="groupobjectpermission",
+            index=models.Index(fields=["group", "content_type", "object_pk"], name="guardian_gr_group_i_9e7d12_idx"),
         ),
         migrations.AddIndex(
-            model_name='userobjectpermission',
-            index=models.Index(fields=['permission', 'user', 'content_type', 'object_pk'], name='guardian_us_permiss_e5749c_idx'),
+            model_name="userobjectpermission",
+            index=models.Index(
+                fields=["permission", "user", "content_type", "object_pk"], name="guardian_us_permiss_e5749c_idx"
+            ),
         ),
         migrations.AddIndex(
-            model_name='userobjectpermission',
-            index=models.Index(fields=['user', 'content_type', 'object_pk'], name='guardian_us_user_id_8eae14_idx'),
+            model_name="userobjectpermission",
+            index=models.Index(fields=["user", "content_type", "object_pk"], name="guardian_us_user_id_8eae14_idx"),
         ),
     ]

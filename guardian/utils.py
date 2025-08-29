@@ -4,12 +4,13 @@ django-guardian helper functions.
 Functions defined within this module are a part of django-guardian’s internal functionality
 and be considered unstable; their APIs may change in any future releases.
 """
+
 import gc
-import time
 from itertools import chain
 import logging
-import os
 from math import ceil
+import os
+import time
 from typing import Any, Optional, Union
 
 from django.apps import apps as django_apps
@@ -231,9 +232,7 @@ def clean_orphan_obj_perms(
         )
 
         for obj in all_objs:
-            if max_duration_secs is not None and (
-                time.monotonic() - start_time >= max_duration_secs
-            ):
+            if max_duration_secs is not None and (time.monotonic() - start_time >= max_duration_secs):
                 logger.info(f"Time limit of {max_duration_secs}s reached.")
                 break
 
@@ -262,88 +261,92 @@ def clean_orphan_obj_perms(
         # Process User permissions first
         user_processed = 0
         user_total = UserObjectPermission.objects.count()
-        
+
         # Skip user batches if needed
         user_skip_records = min(skip_batches * batch_size, user_total)
         user_remaining = user_total - user_skip_records
-        
+
         while user_remaining > 0 and remaining_batches > 0:
-            if max_duration_secs is not None and (
-                time.monotonic() - start_time >= max_duration_secs
-            ):
+            if max_duration_secs is not None and (time.monotonic() - start_time >= max_duration_secs):
                 logger.info(f"Time limit of {max_duration_secs}s reached.")
                 break
-                
+
             gc.collect()
-            
+
             current_batch_size = min(batch_size, user_remaining)
             user_batch = list(
-                UserObjectPermission.objects.order_by("pk")[user_skip_records + user_processed:user_skip_records + user_processed + current_batch_size]
+                UserObjectPermission.objects.order_by("pk")[
+                    user_skip_records + user_processed : user_skip_records + user_processed + current_batch_size
+                ]
             )
-            
+
             if not user_batch:
                 break
-                
+
             scanned += len(user_batch)
             user_processed += len(user_batch)
             user_remaining -= len(user_batch)
-            
+
             orphan_pks = [obj.pk for obj in user_batch if obj.content_object is None]
-            
+
             if orphan_pks:
-                logger.info(f"!!! Found {len(orphan_pks)} orphan user permissions in batch {processed_batches + 1}. !!!")
+                logger.info(
+                    f"!!! Found {len(orphan_pks)} orphan user permissions in batch {processed_batches + 1}. !!!"
+                )
                 UserObjectPermission.objects.filter(pk__in=orphan_pks).delete()
                 deleted += len(orphan_pks)
-            
+
             processed_batches += 1
             batch_count += 1
             remaining_batches -= 1
-            
+
             logger.info(f"Processed user batch {processed_batches}, scanned {scanned} objects.")
-            
+
         # Process Group permissions
         if remaining_batches > 0:
             group_processed = 0
             group_total = GroupObjectPermission.objects.count()
-            
+
             # Calculate skip for group permissions
             total_user_batches = ceil(user_total / batch_size) if user_total > 0 else 0
             group_skip_batches = max(0, skip_batches - total_user_batches)
             group_skip_records = min(group_skip_batches * batch_size, group_total)
             group_remaining = group_total - group_skip_records
-            
+
             while group_remaining > 0 and remaining_batches > 0:
-                if max_duration_secs is not None and (
-                    time.monotonic() - start_time >= max_duration_secs
-                ):
+                if max_duration_secs is not None and (time.monotonic() - start_time >= max_duration_secs):
                     logger.info(f"Time limit of {max_duration_secs}s reached.")
                     break
-                    
+
                 gc.collect()
-                
+
                 current_batch_size = min(batch_size, group_remaining)
                 group_batch = list(
-                    GroupObjectPermission.objects.order_by("pk")[group_skip_records + group_processed:group_skip_records + group_processed + current_batch_size]
+                    GroupObjectPermission.objects.order_by("pk")[
+                        group_skip_records + group_processed : group_skip_records + group_processed + current_batch_size
+                    ]
                 )
-                
+
                 if not group_batch:
                     break
-                    
+
                 scanned += len(group_batch)
                 group_processed += len(group_batch)
                 group_remaining -= len(group_batch)
-                
+
                 orphan_pks = [obj.pk for obj in group_batch if obj.content_object is None]
-                
+
                 if orphan_pks:
-                    logger.info(f"!!! Found {len(orphan_pks)} orphan group permissions in batch {processed_batches + 1}. !!!")
+                    logger.info(
+                        f"!!! Found {len(orphan_pks)} orphan group permissions in batch {processed_batches + 1}. !!!"
+                    )
                     GroupObjectPermission.objects.filter(pk__in=orphan_pks).delete()
                     deleted += len(orphan_pks)
-                
+
                 processed_batches += 1
                 batch_count += 1
                 remaining_batches -= 1
-                
+
                 logger.info(f"Processed group batch {processed_batches}, scanned {scanned} objects.")
 
     logger.info(

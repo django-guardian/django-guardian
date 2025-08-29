@@ -360,8 +360,8 @@ class GetUsersWithPermsTest(TestCase):
         assign_perm("delete_contenttype", self.group2, self.obj1)
         assign_perm("delete_contenttype", self.group3, self.obj2)
 
-        result = get_groups_with_perms(self.obj1, only_with_perms_in=('change_contenttype',))
-        result_vals = result.values_list('name', flat=True)
+        result = get_groups_with_perms(self.obj1, only_with_perms_in=("change_contenttype",))
+        result_vals = result.values_list("name", flat=True)
 
         self.assertEqual(
             set(result_vals),
@@ -374,10 +374,9 @@ class GetUsersWithPermsTest(TestCase):
         assign_perm("delete_contenttype", self.group2, self.obj1)
         assign_perm("delete_contenttype", self.group3, self.obj2)
 
-        result = get_groups_with_perms(self.obj1, only_with_perms_in=('delete_contenttype',),
-            attach_perms=True)
+        result = get_groups_with_perms(self.obj1, only_with_perms_in=("delete_contenttype",), attach_perms=True)
 
-        expected = {self.group2: ('change_contenttype', 'delete_contenttype')}
+        expected = {self.group2: ("change_contenttype", "delete_contenttype")}
         self.assertEqual(result.keys(), expected.keys())
         for key, perms in result.items():
             self.assertEqual(set(perms), set(expected[key]))
