@@ -1,28 +1,12 @@
 from collections.abc import Iterable
-from typing import Any, Optional, Union, TYPE_CHECKING
+from typing import Any, Optional, Union
 import sys
 
 # Import deprecated decorator with fallback for Python < 3.13
-if TYPE_CHECKING:
-    # For type checking, always assume deprecated is available
-    if sys.version_info >= (3, 13):
-        from typing import deprecated
-    else:
-        from typing_extensions import deprecated
+if sys.version_info >= (3, 13):
+    from warnings import deprecated
 else:
-    # Runtime import with fallback
-    if sys.version_info >= (3, 13):
-        from typing import deprecated
-    else:
-        try:
-            from typing_extensions import deprecated
-        except ImportError:
-            # Fallback for when typing_extensions is not available
-            def deprecated(msg: str):
-                """Fallback deprecated decorator that does nothing."""
-                def decorator(func: Any) -> Any:
-                    return func
-                return decorator
+    from typing_extensions import deprecated
 
 from django.conf import settings
 from django.contrib.auth.decorators import REDIRECT_FIELD_NAME, login_required
