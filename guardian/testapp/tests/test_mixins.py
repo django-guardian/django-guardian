@@ -1,3 +1,4 @@
+import warnings
 from unittest import mock
 
 from django.contrib.auth import get_user_model
@@ -225,3 +226,23 @@ class TestViewMixins(TestCase):
         )
         response = view(request)
         self.assertEqual(response.status_code, 302)
+
+    def test_get_get_objects_for_user_kwargs_raises_deprecation_warning(self):
+        """The old method should raise a deprecation warning.
+
+        This test should be removed when the deprecated method is removed.
+
+        See Also:
+            https://docs.python.org/3.9/library/warnings.html#testing-warnings
+        """
+        request = self.factory.get('/')
+        request.user = self.user
+        request.user.add_obj_perm('change_post', self.post)
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            qs = PostPermissionListView.model.objects.all()
+            PostPermissionListView(request=request).get_get_objects_for_user_kwargs(qs)
+
+            assert len(w) == 1
+            assert issubclass(w[-1].category, DeprecationWarning)
