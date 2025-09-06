@@ -56,7 +56,7 @@ Guardian has the following, optional configuration variables:
 
 !!! abstract "Added in version 1.0.4"
 
-If set to `True`, guardian would raise `django.core.exceptions.PermissionDenied` error instead of returning 
+If set to `True`, guardian would raise `django.core.exceptions.PermissionDenied` error instead of returning
 empty `django.http.HttpResponseForbidden`.
 
 !!! warning
@@ -70,7 +70,7 @@ empty `django.http.HttpResponseForbidden`.
 !!! abstract "Added in version 1.0.4"
 
 If set to `True`, guardian would try to render 403 response rather than
-return content less `django.http.HttpResponseForbidden`. 
+return content less `django.http.HttpResponseForbidden`.
 Would use template pointed by `GUARDIAN_TEMPLATE_403` to do that. Default is `False`.
 
 !!! warning
@@ -104,7 +104,7 @@ your environment.
 Defaults to `"AnonymousUser"`.
 
 
-!!! tip 
+!!! tip
     [Django's docs on substituting a custom user model](https://docs.djangoproject.com/en/stable/topics/auth/customizing/#substituting-a-custom-user-model)
 
 ## `GUARDIAN_GET_INIT_ANONYMOUS_USER`
@@ -166,7 +166,7 @@ start of a project. If the dependent libraries do not call
 `UserObjectPermission = get_user_obj_perms_model()` for the model, then
 the dependent library does not support this feature.
 
-Define a custom user object permission model 
+Define a custom user object permission model
 
 ```python
 from guardian.models import UserObjectPermissionAbstract
@@ -187,7 +187,7 @@ Configure guardian to use the custom model in `settings.py` ::
 ```python
 GUARDIAN_USER_OBJ_PERMS_MODEL = "myapp.BigUserObjectPermission"
 ```
-    
+
 
 To access the model use `get_user_obj_perms_model()` with no parameters
 

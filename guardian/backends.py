@@ -57,6 +57,7 @@ def check_support(user_obj: Any, obj: Model) -> Any:
 
 class ObjectPermissionBackend:
     """Django backend for checking object-level permissions."""
+
     supports_object_permissions = True
     supports_anonymous_user = True
     supports_inactive_user = True
@@ -95,18 +96,19 @@ class ObjectPermissionBackend:
         if not support:
             return False
 
-        if '.' in perm:
-            app_label, _ = perm.split('.', 1)
+        if "." in perm:
+            app_label, _ = perm.split(".", 1)
             # TODO (David Graham): Check if obj is None or change the method signature
             if app_label != obj._meta.app_label:  # type: ignore[union-attr]
                 # Check the content_type app_label when permission
                 # and obj app labels don't match.
                 ctype = get_content_type(obj)
                 if app_label != ctype.app_label:
-                    raise WrongAppError("Passed perm has app label of '%s' while "
-                                        "given obj has app label '%s' and given obj"
-                                        "content_type has app label '%s'" %
-                                        (app_label, obj._meta.app_label, ctype.app_label))   # type: ignore[union-attr]
+                    raise WrongAppError(
+                        "Passed perm has app label of '%s' while "
+                        "given obj has app label '%s' and given obj"
+                        "content_type has app label '%s'" % (app_label, obj._meta.app_label, ctype.app_label)  # type: ignore[union-attr]
+                    )
 
         check = ObjectPermissionChecker(user_obj)
         return check.has_perm(perm, obj)
