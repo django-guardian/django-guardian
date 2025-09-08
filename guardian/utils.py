@@ -5,6 +5,7 @@ Functions defined within this module are a part of django-guardian’s internal 
 and be considered unstable; their APIs may change in any future releases.
 """
 
+from functools import lru_cache
 import gc
 from itertools import chain
 import logging
@@ -34,22 +35,46 @@ def abspath(*args):
     return os.path.abspath(os.path.join(*args))
 
 
+def _get_anonymous_user_cached() -> Any:
+    """Internal cached version of get_anonymous_user."""
+    user_model = get_user_model()
+    lookup = {user_model.USERNAME_FIELD: guardian_settings.ANONYMOUS_USER_NAME}  # type: ignore[attr-defined]
+    return user_model.objects.get(**lookup)
+
+
+def _get_anonymous_user_uncached() -> Any:
+    """Internal uncached version of get_anonymous_user."""
+    user_model = get_user_model()
+    lookup = {user_model.USERNAME_FIELD: guardian_settings.ANONYMOUS_USER_NAME}  # type: ignore[attr-defined]
+    return user_model.objects.get(**lookup)
+
+
+# Apply caching decorator only to the cached version
+_get_anonymous_user_cached = lru_cache(maxsize=1)(_get_anonymous_user_cached)
+
+
 def get_anonymous_user() -> Any:
     """Get the django-guardian equivalent of the anonymous user.
 
     It returns a `User` model instance (not `AnonymousUser`) depending on
     `ANONYMOUS_USER_NAME` configuration.
 
+    This function can be cached to avoid repetitive database queries if the
+    `GUARDIAN_CACHE_ANONYMOUS_USER` setting is set to True. When caching is disabled
+    (default), each call will perform a fresh database query.
+
     See Also:
         See the configuration docs that explain that the Guardian anonymous user is
-        not equivalent to Django’s AnonymousUser.
+        not equivalent to Django's AnonymousUser.
 
         - [Guardian Configuration](https://django-guardian.readthedocs.io/en/stable/configuration.html)
         - [ANONYMOUS_USER_NAME configuration](https://django-guardian.readthedocs.io/en/stable/configuration.html#anonymous-user-nam)
+        - [CACHE_ANONYMOUS_USER configuration](https://django-guardian.readthedocs.io/en/stable/configuration.html#cache-anonymous-user)
     """
-    user_model = get_user_model()
-    lookup = {user_model.USERNAME_FIELD: guardian_settings.ANONYMOUS_USER_NAME}  # type: ignore[attr-defined]
-    return user_model.objects.get(**lookup)
+    if guardian_settings.CACHE_ANONYMOUS_USER:
+        return _get_anonymous_user_cached()
+    else:
+        return _get_anonymous_user_uncached()
 
 
 def get_identity(identity: Model) -> tuple[Union[Any, None], Union[Any, None]]:
