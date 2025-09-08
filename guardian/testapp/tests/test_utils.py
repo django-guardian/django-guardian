@@ -1,8 +1,10 @@
+from unittest.mock import MagicMock, patch
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, Group
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.test import TestCase
+from django.test import TestCase, override_settings
 
 from guardian.exceptions import NotUserNorGroup
 from guardian.models import GroupObjectPermission, UserObjectPermission, UserObjectPermissionBase
@@ -10,6 +12,8 @@ from guardian.testapp.models import Project, ProjectGroupObjectPermission, Proje
 from guardian.testapp.tests.conf import skipUnlessTestApp
 from guardian.testapp.tests.test_core import ObjectPermissionTestCase
 from guardian.utils import (
+    _get_anonymous_user_cached,
+    _get_anonymous_user_uncached,
     get_anonymous_user,
     get_group_obj_perms_model,
     get_identity,
@@ -123,3 +127,245 @@ class GetObjPermsModelTest(TestCase):
         obj = SomeModel2()
         perm_model = get_obj_perms_model(obj, UserObjectPermissionBase, UserObjectPermission)
         self.assertEqual(perm_model, UserObjectPermission)
+
+
+class GetAnonymousUserCacheTest(TestCase):
+    """Test cases for get_anonymous_user caching functionality."""
+
+    def setUp(self):
+        # Clear any existing cache before each test
+        if hasattr(_get_anonymous_user_cached, "cache_clear"):
+            _get_anonymous_user_cached.cache_clear()
+
+    def tearDown(self):
+        # Clear cache after each test
+        if hasattr(_get_anonymous_user_cached, "cache_clear"):
+            _get_anonymous_user_cached.cache_clear()
+
+    @override_settings(GUARDIAN_CACHE_ANONYMOUS_USER=False)
+    def test_cache_disabled_by_default(self):
+        """Test that caching is disabled by default."""
+        with (
+            patch("guardian.utils._get_anonymous_user_uncached") as mock_uncached,
+            patch("guardian.utils._get_anonymous_user_cached") as mock_cached,
+        ):
+            mock_user = MagicMock()
+            mock_uncached.return_value = mock_user
+
+            # Call function multiple times
+            result1 = get_anonymous_user()
+            result2 = get_anonymous_user()
+
+            # Should call uncached version each time
+            self.assertEqual(mock_uncached.call_count, 2)
+            self.assertEqual(mock_cached.call_count, 0)
+            self.assertEqual(result1, mock_user)
+            self.assertEqual(result2, mock_user)
+
+    @override_settings(GUARDIAN_CACHE_ANONYMOUS_USER=True)
+    def test_cache_enabled(self):
+        """Test that caching works when enabled."""
+        with patch("guardian.utils.guardian_settings") as mock_settings:
+            mock_settings.CACHE_ANONYMOUS_USER = True
+            with (
+                patch("guardian.utils._get_anonymous_user_cached") as mock_cached,
+                patch("guardian.utils._get_anonymous_user_uncached") as mock_uncached,
+            ):
+                mock_user = MagicMock()
+                mock_cached.return_value = mock_user
+
+                # Call function multiple times
+                result1 = get_anonymous_user()
+                result2 = get_anonymous_user()
+                result3 = get_anonymous_user()
+
+                # Should call cached version each time
+                self.assertEqual(mock_cached.call_count, 3)
+                self.assertEqual(mock_uncached.call_count, 0)
+                self.assertEqual(result1, mock_user)
+                self.assertEqual(result2, mock_user)
+                self.assertEqual(result3, mock_user)
+
+    @override_settings(GUARDIAN_CACHE_ANONYMOUS_USER=False)
+    def test_uncached_function_calls_database_each_time(self):
+        """Test that uncached version calls database each time."""
+        with (
+            patch("guardian.utils.get_user_model") as mock_get_user_model,
+            patch("guardian.conf.settings.ANONYMOUS_USER_NAME", "TestAnonymousUser"),
+        ):
+            mock_user_model = MagicMock()
+            mock_user_model.USERNAME_FIELD = "username"
+            mock_user_instance = MagicMock()
+            mock_user_model.objects.get.return_value = mock_user_instance
+            mock_get_user_model.return_value = mock_user_model
+
+            # Call uncached function multiple times
+            result1 = _get_anonymous_user_uncached()
+            result2 = _get_anonymous_user_uncached()
+
+            # Should call database each time
+            self.assertEqual(mock_user_model.objects.get.call_count, 2)
+            self.assertEqual(result1, mock_user_instance)
+            self.assertEqual(result2, mock_user_instance)
+
+    @override_settings(GUARDIAN_CACHE_ANONYMOUS_USER=True)
+    def test_cached_function_calls_database_once(self):
+        """Test that cached version calls database only once."""
+        with (
+            patch("guardian.utils.get_user_model") as mock_get_user_model,
+            patch("guardian.conf.settings.ANONYMOUS_USER_NAME", "TestAnonymousUser"),
+        ):
+            mock_user_model = MagicMock()
+            mock_user_model.USERNAME_FIELD = "username"
+            mock_user_instance = MagicMock()
+            mock_user_model.objects.get.return_value = mock_user_instance
+            mock_get_user_model.return_value = mock_user_model
+
+            # Clear cache first
+            _get_anonymous_user_cached.cache_clear()
+
+            # Call cached function multiple times
+            result1 = _get_anonymous_user_cached()
+            result2 = _get_anonymous_user_cached()
+            result3 = _get_anonymous_user_cached()
+
+            # Should call database only once due to caching
+            self.assertEqual(mock_user_model.objects.get.call_count, 1)
+            self.assertEqual(result1, mock_user_instance)
+            self.assertEqual(result2, mock_user_instance)
+            self.assertEqual(result3, mock_user_instance)
+
+    @override_settings(GUARDIAN_CACHE_ANONYMOUS_USER=True)
+    def test_cache_info_available(self):
+        """Test that cache info is available for cached function."""
+        # Clear cache first
+        _get_anonymous_user_cached.cache_clear()
+
+        # Check initial cache info
+        info = _get_anonymous_user_cached.cache_info()
+        self.assertEqual(info.hits, 0)
+        self.assertEqual(info.misses, 0)
+
+        with (
+            patch("guardian.utils.get_user_model") as mock_get_user_model,
+            patch("guardian.conf.settings.ANONYMOUS_USER_NAME", "TestAnonymousUser"),
+        ):
+            mock_user_model = MagicMock()
+            mock_user_model.USERNAME_FIELD = "username"
+            mock_user_instance = MagicMock()
+            mock_user_model.objects.get.return_value = mock_user_instance
+            mock_get_user_model.return_value = mock_user_model
+
+            # Call function once (should be a miss)
+            _get_anonymous_user_cached()
+            info = _get_anonymous_user_cached.cache_info()
+            self.assertEqual(info.hits, 0)
+            self.assertEqual(info.misses, 1)
+
+            # Call function again (should be a hit)
+            _get_anonymous_user_cached()
+            info = _get_anonymous_user_cached.cache_info()
+            self.assertEqual(info.hits, 1)
+            self.assertEqual(info.misses, 1)
+
+    @override_settings(GUARDIAN_CACHE_ANONYMOUS_USER=True)
+    def test_cache_clear_functionality(self):
+        """Test that cache can be cleared."""
+        with (
+            patch("guardian.utils.get_user_model") as mock_get_user_model,
+            patch("guardian.conf.settings.ANONYMOUS_USER_NAME", "TestAnonymousUser"),
+        ):
+            mock_user_model = MagicMock()
+            mock_user_model.USERNAME_FIELD = "username"
+            mock_user_instance = MagicMock()
+            mock_user_model.objects.get.return_value = mock_user_instance
+            mock_get_user_model.return_value = mock_user_model
+
+            # Clear cache first
+            _get_anonymous_user_cached.cache_clear()
+
+            # Call function
+            _get_anonymous_user_cached()
+            self.assertEqual(mock_user_model.objects.get.call_count, 1)
+
+            # Call again (should use cache)
+            _get_anonymous_user_cached()
+            self.assertEqual(mock_user_model.objects.get.call_count, 1)
+
+            # Clear cache and call again
+            _get_anonymous_user_cached.cache_clear()
+            _get_anonymous_user_cached()
+            self.assertEqual(mock_user_model.objects.get.call_count, 2)
+
+    def test_both_functions_return_same_user(self):
+        """Test that cached and uncached functions return the same user."""
+        # Clear cache first
+        if hasattr(_get_anonymous_user_cached, "cache_clear"):
+            _get_anonymous_user_cached.cache_clear()
+
+        cached_result = _get_anonymous_user_cached()
+        uncached_result = _get_anonymous_user_uncached()
+
+        # Both should return the same user
+        self.assertEqual(cached_result.pk, uncached_result.pk)
+        self.assertEqual(str(cached_result), str(uncached_result))
+        self.assertTrue(isinstance(cached_result, User))
+        self.assertTrue(isinstance(uncached_result, User))
+
+    @override_settings(GUARDIAN_CACHE_ANONYMOUS_USER=True)
+    def test_integration_with_get_identity(self):
+        """Test that cached anonymous user works with get_identity function."""
+        anon = AnonymousUser()
+
+        # This test should use the actual implementation to ensure integration works
+        user, group = get_identity(anon)
+
+        # Should return a real user instance and None for group
+        self.assertTrue(isinstance(user, User))
+        self.assertIsNone(group)
+
+    @override_settings(GUARDIAN_CACHE_ANONYMOUS_USER=False)
+    def test_integration_with_get_identity_uncached(self):
+        """Test that uncached anonymous user works with get_identity function."""
+        anon = AnonymousUser()
+
+        # This test should use the actual implementation to ensure integration works
+        user, group = get_identity(anon)
+
+        # Should return a real user instance and None for group
+        self.assertTrue(isinstance(user, User))
+        self.assertIsNone(group)
+
+    def test_setting_controls_behavior(self):
+        """Test that the setting properly controls which function is called."""
+        # Test with cache disabled
+        with patch("guardian.utils.guardian_settings") as mock_settings:
+            mock_settings.CACHE_ANONYMOUS_USER = False
+            with (
+                patch("guardian.utils._get_anonymous_user_uncached") as mock_uncached,
+                patch("guardian.utils._get_anonymous_user_cached") as mock_cached,
+            ):
+                mock_user = MagicMock()
+                mock_uncached.return_value = mock_user
+
+                result = get_anonymous_user()
+
+                mock_uncached.assert_called_once()
+                mock_cached.assert_not_called()
+                self.assertEqual(result, mock_user)
+
+        # Test with cache enabled
+        with patch("guardian.utils.guardian_settings") as mock_settings:
+            mock_settings.CACHE_ANONYMOUS_USER = True
+            with (
+                patch("guardian.utils._get_anonymous_user_uncached") as mock_uncached,
+                patch("guardian.utils._get_anonymous_user_cached") as mock_cached,
+            ):
+                mock_user = MagicMock()
+                mock_cached.return_value = mock_user
+
+                result = get_anonymous_user()
+
+                mock_cached.assert_called_once()
+                mock_uncached.assert_not_called()
+                self.assertEqual(result, mock_user)
