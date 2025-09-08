@@ -1,5 +1,5 @@
 exclude: mkdocs.yml|example_project/static|example_project/templates|example_project_custom_groups/static|example_project_custom_groups/templates|((?:[^/]*/)*)(.svg)|((?:[^/]*/)*)(.xml)
-default_stages: [commit]
+default_stages: [pre-commit]
 fail_fast: true
 default_language_version:
   python: python3 # force all unspecified python hooks to run python3
