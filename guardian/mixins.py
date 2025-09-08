@@ -1,6 +1,6 @@
 from collections.abc import Iterable
-from typing import Any, Optional, Union
 import sys
+from typing import Any, Optional, Union
 
 # Import deprecated decorator with fallback for Python < 3.13
 if sys.version_info >= (3, 13):
@@ -318,7 +318,9 @@ class PermissionListMixin:
             )
         return perms
 
-    @deprecated("This method is deprecated and will be removed in future versions. Use get_user_object_kwargs instead which has identical behavior.")
+    @deprecated(
+        "This method is deprecated and will be removed in future versions. Use get_user_object_kwargs instead which has identical behavior."
+    )
     def get_get_objects_for_user_kwargs(self, queryset: QuerySet) -> dict:
         """Get kwargs to pass to `get_objects_for_user`.
 
@@ -327,7 +329,7 @@ class PermissionListMixin:
 
         Parameters:
             queryset (QuerySet): Queryset to filter.
-        
+
         Warning: Deprecation Warning
             This method is deprecated and will be removed in future versions.
             Use `get_user_object_kwargs` instead which has identical behavior.

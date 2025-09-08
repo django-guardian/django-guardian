@@ -1,5 +1,5 @@
-import warnings
 from unittest import mock
+import warnings
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
@@ -235,9 +235,9 @@ class TestViewMixins(TestCase):
         See Also:
             https://docs.python.org/3.9/library/warnings.html#testing-warnings
         """
-        request = self.factory.get('/')
+        request = self.factory.get("/")
         request.user = self.user
-        request.user.add_obj_perm('change_post', self.post)
+        request.user.add_obj_perm("change_post", self.post)
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
