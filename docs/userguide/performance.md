@@ -3,7 +3,7 @@ title: Performance
 description: Performance implications and optimizations when using django-guardian.
 ---
 
-# Performance Tuning 
+# Performance Tuning
 
 It is important to remember that by default `django-guardian` uses
 generic foreign keys to retain relation with any Django model. For most
@@ -14,7 +14,7 @@ how generic solution work and then we will move on to the tuning part.
 
 ## Default, generic solution
 
-`django-guardian` comes with two models: 
+`django-guardian` comes with two models:
 `UserObjectPermission` and `GroupObjectPermission`. They both have
 same, generic way of pointing to other models:
 
@@ -64,12 +64,12 @@ build an issues tracking service and we'd like to be able to support
 thousands of users and their project/tickets, object level permission
 checks can be slow with this generic solution.
 
-## Direct foreign keys 
+## Direct foreign keys
 
 !!! abstract "Added in version 1.1"
 
 To make our permission checks faster, we can use a direct foreign key.
-It is straightforward to set up; 
+It is straightforward to set up;
 All we need to do is to declare two new models next to our `Project` model,
 one for `User` and one for `Group` models:
 
