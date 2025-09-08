@@ -154,6 +154,35 @@ queries or when latency is particularly important.
 
 Defaults to `False`.
 
+## `GUARDIAN_CACHE_ANONYMOUS_USER`
+
+!!! abstract "Added in version 3.1.2"
+
+When set to `True`, the `get_anonymous_user()` function will cache the
+anonymous user instance to avoid repetitive database queries. Since the
+anonymous user configuration (`ANONYMOUS_USER_NAME`) is set at application
+startup and doesn't change during runtime, caching is safe and can provide
+significant performance improvements in applications that frequently access
+the anonymous user.
+
+When set to `False` (default), each call to `get_anonymous_user()` will
+perform a fresh database query.
+
+!!! tip "Performance optimization"
+
+    If your application frequently calls `get_anonymous_user()` or uses
+    object permissions with anonymous users, enabling this setting can
+    reduce database load and improve response times.
+
+!!! warning "Cache persistence"
+
+    The cache persists for the lifetime of the Python process. If you
+    manually change the anonymous user in the database during runtime
+    (which is not recommended), you'll need to restart your application
+    for the changes to take effect when caching is enabled.
+
+Defaults to `False`.
+
 ## `GUARDIAN_USER_OBJ_PERMS_MODEL`
 
 !!! abstract "Added in version 2.0.0"
