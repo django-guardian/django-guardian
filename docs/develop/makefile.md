@@ -114,7 +114,7 @@ $ make clean
 
 This removes:
 - `build/` directory
-- `dist/` directory  
+- `dist/` directory
 - `*.egg-info/` directories
 - `__pycache__` directories
 - `.pyc` files
