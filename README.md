@@ -3,6 +3,7 @@
 [![Tests](https://github.com/django-guardian/django-guardian/actions/workflows/tests.yml/badge.svg)](https://github.com/django-guardian/django-guardian/actions/workflows/tests.yml)
 [![PyPI version](https://img.shields.io/pypi/v/django-guardian.svg)](https://pypi.python.org/pypi/django-guardian)
 [![Python versions](https://img.shields.io/pypi/pyversions/django-guardian.svg)](https://pypi.python.org/pypi/django-guardian)
+[![Published on Django Packages](https://img.shields.io/badge/Published%20on-Django%20Packages-0c3c26)](https://djangopackages.org/packages/p/django-guardian/)
 
 `django-guardian` is an implementation of _per-object permissions_ on top
 of Django’s authorization backend. Read an introduction to per-object permissions [on djangoadvent articles](https://github.com/djangoadvent/djangoadvent-articles/blob/master/1.2/06_object-permissions.rst).
