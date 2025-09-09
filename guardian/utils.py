@@ -1,11 +1,10 @@
 """
 django-guardian helper functions.
 
-Functions defined within this module are a part of django-guardian’s internal functionality
+Functions defined within this module are a part of django-guardian's internal functionality
 and be considered unstable; their APIs may change in any future releases.
 """
 
-from functools import lru_cache
 import gc
 from itertools import chain
 import logging
@@ -18,6 +17,7 @@ from django.apps import apps as django_apps
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME, get_user_model
 from django.contrib.auth.models import AnonymousUser
+from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist, PermissionDenied
 from django.db.models import Model, QuerySet
 from django.http import HttpRequest, HttpResponse, HttpResponseForbidden, HttpResponseNotFound, HttpResponseRedirect
@@ -36,10 +36,22 @@ def abspath(*args):
 
 
 def _get_anonymous_user_cached() -> Any:
-    """Internal cached version of get_anonymous_user."""
+    """Internal cached version of get_anonymous_user using Django's cache system."""
+    cache_key = f"guardian:anonymous_user:{guardian_settings.ANONYMOUS_USER_NAME}"
+
+    # Try to get from cache first
+    user = cache.get(cache_key)
+    if user is not None:
+        return user
+
+    # If not in cache, get from database and cache it
     user_model = get_user_model()
     lookup = {user_model.USERNAME_FIELD: guardian_settings.ANONYMOUS_USER_NAME}  # type: ignore[attr-defined]
-    return user_model.objects.get(**lookup)
+    user = user_model.objects.get(**lookup)
+
+    # Cache with TTL from settings
+    cache.set(cache_key, user, guardian_settings.ANON_CACHE_TTL)
+    return user
 
 
 def _get_anonymous_user_uncached() -> Any:
@@ -47,10 +59,6 @@ def _get_anonymous_user_uncached() -> Any:
     user_model = get_user_model()
     lookup = {user_model.USERNAME_FIELD: guardian_settings.ANONYMOUS_USER_NAME}  # type: ignore[attr-defined]
     return user_model.objects.get(**lookup)
-
-
-# Apply caching decorator only to the cached version
-_get_anonymous_user_cached = lru_cache(maxsize=1)(_get_anonymous_user_cached)
 
 
 def get_anonymous_user() -> Any:
