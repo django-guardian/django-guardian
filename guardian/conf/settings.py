@@ -44,6 +44,9 @@ AUTO_PREFETCH = getattr(settings, "GUARDIAN_AUTO_PREFETCH", False)
 
 CACHE_ANONYMOUS_USER = getattr(settings, "GUARDIAN_CACHE_ANONYMOUS_USER", False)
 
+# Cache TTL for anonymous user (in seconds). Default: 300 seconds (5 minutes)
+ANON_CACHE_TTL = getattr(settings, "GUARDIAN_ANON_CACHE_TTL", 300)
+
 # Default to using guardian supplied generic object permission models
 USER_OBJ_PERMS_MODEL = getattr(settings, "GUARDIAN_USER_OBJ_PERMS_MODEL", "guardian.UserObjectPermission")
 GROUP_OBJ_PERMS_MODEL = getattr(settings, "GUARDIAN_GROUP_OBJ_PERMS_MODEL", "guardian.GroupObjectPermission")
