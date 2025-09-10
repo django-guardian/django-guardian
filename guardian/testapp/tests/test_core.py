@@ -583,3 +583,30 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
             guardian_settings.AUTO_PREFETCH = False
             ProjectUserObjectPermission.enabled = True
             ProjectGroupObjectPermission.enabled = True
+
+    def test_prefetch_user_perms_with_empty_objects(self):
+        settings.DEBUG = True
+        try:
+            from django.db import connection
+
+            ContentType.objects.clear_cache()
+            group1 = Group.objects.create(name="group1")
+            user = User.objects.create(username="active_user", is_active=True)
+            assign_perm("change_group", user, self.group)
+            assign_perm("change_group", user, group1)
+            checker = ObjectPermissionChecker(user)
+
+            # Checking that prefetching with empty objects does not raise an error
+            # This is a regression test for issue #519
+            prefetched_objects = []
+            self.assertTrue(checker.prefetch_perms(prefetched_objects))
+            query_count = len(connection.queries)
+
+            # Checking cache is empty
+            self.assertEqual(len(checker._obj_perms_cache), 0)
+
+            # Checking should work but will spawn queries as nothing was prefetched
+            checker.has_perm("change_group", self.group)
+            self.assertGreater(len(connection.queries), query_count)
+        finally:
+            settings.DEBUG = False
