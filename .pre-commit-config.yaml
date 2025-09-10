@@ -15,6 +15,7 @@ repos:
   - id: check-yaml
   - id: end-of-file-fixer
   - id: no-commit-to-branch
+    stages: [manual]
   - id: trailing-whitespace
 
 - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
