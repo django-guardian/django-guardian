@@ -1,5 +1,12 @@
 from collections.abc import Iterable
+import sys
 from typing import Any, Optional, Union
+
+# Import deprecated decorator with fallback for Python < 3.13
+if sys.version_info >= (3, 13):
+    from warnings import deprecated
+else:
+    from typing_extensions import deprecated
 
 from django.conf import settings
 from django.contrib.auth.decorators import REDIRECT_FIELD_NAME, login_required
@@ -126,7 +133,7 @@ class PermissionRequiredMixin:
 
     # default class view settings
     login_url: str = settings.LOGIN_URL
-    permission_required: Optional[list[str]] = None
+    permission_required: Union[str, list[str], None] = None
     redirect_field_name: str = REDIRECT_FIELD_NAME
     return_403: bool = False
     return_404: bool = False
@@ -282,7 +289,8 @@ class PermissionListMixin:
             Default to `{}`,
     """
 
-    permission_required: Union[bool, None] = None
+    permission_required: Union[str, list[str], None] = None
+    # rename get_objects_for_user_kwargs to when get_get_objects_for_user_kwargs is removed
     get_objects_for_user_extra_kwargs: dict = {}
 
     def get_required_permissions(self, request: Optional[HttpRequest] = None) -> list[str]:
@@ -310,11 +318,29 @@ class PermissionListMixin:
             )
         return perms
 
+    @deprecated(
+        "This method is deprecated and will be removed in future versions. Use get_user_object_kwargs instead which has identical behavior."
+    )
     def get_get_objects_for_user_kwargs(self, queryset: QuerySet) -> dict:
         """Get kwargs to pass to `get_objects_for_user`.
 
         Returns:
-            kwargs that should be passed to `get_objects_for_user`.
+            dict of kwargs to be passed to `get_objects_for_user`.
+
+        Parameters:
+            queryset (QuerySet): Queryset to filter.
+
+        Warning: Deprecation Warning
+            This method is deprecated and will be removed in future versions.
+            Use `get_user_object_kwargs` instead which has identical behavior.
+        """
+        return self.get_user_object_kwargs(queryset)
+
+    def get_user_object_kwargs(self, queryset: QuerySet) -> dict:
+        """Get kwargs to pass to `get_objects_for_user`.
+
+        Returns:
+            dict of kwargs to be passed to `get_objects_for_user`.
 
         Parameters:
             queryset (QuerySet): Queryset to filter.
@@ -328,4 +354,4 @@ class PermissionListMixin:
 
     def get_queryset(self, *args, **kwargs):
         qs = super().get_queryset(*args, **kwargs)
-        return get_objects_for_user(**self.get_get_objects_for_user_kwargs(qs))
+        return get_objects_for_user(**self.get_user_object_kwargs(qs))

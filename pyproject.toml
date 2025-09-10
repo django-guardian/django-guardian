@@ -1,6 +1,6 @@
 [project]
 name = "django-guardian"
-version = "3.1.0"
+version = "3.1.2"
 description = "Per object permissions for Django"
 keywords = ["django", "permissions", "authorization", "object", "row", "level"]
 readme = "README.md"
@@ -101,6 +101,7 @@ authors = [
   { name = "Bona Fide IT GmbH"},
   { name = "Columbia University, SIS Development and Application Services" },
   { name = "Cornelius Hoffmann", email = "coding@volucra.de" },
+  { name = "Sezer BOZKIR", email = "admin@sezerbozkir.com"},
 ]
 maintainers = [
   {name = "Tom Clark", email = "django-guardian@octue.com"},
@@ -116,6 +117,7 @@ maintainers = [
 ]
 dependencies = [
     "django>=3.2",
+    "typing_extensions>=4.12.0; python_version<'3.13'",
 ]
 
 [project.urls]
