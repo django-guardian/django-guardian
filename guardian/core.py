@@ -17,6 +17,10 @@ def _get_pks_model_and_ctype(objects):
     Assumes that all objects are of the same content type.
     """
 
+    model = None
+    ctype = None
+    pks = None
+
     if isinstance(objects, QuerySet):
         model = objects.model
         pks = [force_str(pk) for pk in objects.values_list("pk", flat=True)]
