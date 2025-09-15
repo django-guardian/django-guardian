@@ -50,7 +50,9 @@ def _get_anonymous_user_cached() -> Any:
     user = user_model.objects.get(**lookup)
 
     # Cache with TTL from settings
-    cache.set(cache_key, user, guardian_settings.ANON_CACHE_TTL)
+    # -1 means cache indefinitely (None), positive number is TTL in seconds
+    ttl = None if guardian_settings.ANONYMOUS_USER_CACHE_TTL == -1 else guardian_settings.ANONYMOUS_USER_CACHE_TTL
+    cache.set(cache_key, user, ttl)
     return user
 
 
@@ -67,9 +69,11 @@ def get_anonymous_user() -> Any:
     It returns a `User` model instance (not `AnonymousUser`) depending on
     `ANONYMOUS_USER_NAME` configuration.
 
-    This function can be cached to avoid repetitive database queries if the
-    `GUARDIAN_CACHE_ANONYMOUS_USER` setting is set to True. When caching is disabled
-    (default), each call will perform a fresh database query.
+    This function can be cached to avoid repetitive database queries based on the
+    `GUARDIAN_ANONYMOUS_USER_CACHE_TTL` setting:
+    - 0 (default): No caching, each call performs a fresh database query
+    - Positive number: Cache for that many seconds
+    - -1: Cache indefinitely (not recommended)
 
     See Also:
         See the configuration docs that explain that the Guardian anonymous user is
@@ -77,9 +81,9 @@ def get_anonymous_user() -> Any:
 
         - [Guardian Configuration](https://django-guardian.readthedocs.io/en/stable/configuration.html)
         - [ANONYMOUS_USER_NAME configuration](https://django-guardian.readthedocs.io/en/stable/configuration.html#anonymous-user-nam)
-        - [CACHE_ANONYMOUS_USER configuration](https://django-guardian.readthedocs.io/en/stable/configuration.html#cache-anonymous-user)
+        - [ANONYMOUS_USER_CACHE_TTL configuration](https://django-guardian.readthedocs.io/en/stable/configuration.html#anonymous-user-cache-ttl)
     """
-    if guardian_settings.CACHE_ANONYMOUS_USER:
+    if guardian_settings.ANONYMOUS_USER_CACHE_TTL > 0 or guardian_settings.ANONYMOUS_USER_CACHE_TTL == -1:
         return _get_anonymous_user_cached()
     else:
         return _get_anonymous_user_uncached()
