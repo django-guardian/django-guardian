@@ -23,6 +23,73 @@ from guardian.shortcuts import (
 from guardian.utils import get_group_obj_perms_model
 
 
+class GuardedInlineAdminMixin:
+    """Mixin for Django admin inline classes to work with Guardian permissions.
+
+    This mixin provides the necessary permission checking methods that Django's
+    inline admin forms expect, integrating with Guardian's object-level permissions.
+
+    Usage:
+        class MyInline(GuardedInlineAdminMixin, admin.StackedInline):
+            model = MyModel
+
+        class MyAdmin(GuardedModelAdminMixin, admin.ModelAdmin):
+            inlines = [MyInline]
+    """
+
+    def has_add_permission(self, request, obj=None):
+        """Check if the user has permission to add instances of this inline model."""
+        opts = self.model._meta
+        codename = f"add_{opts.model_name}"
+        perm = f"{opts.app_label}.{codename}"
+
+        if obj is None:
+            # For global permissions when obj is None
+            return request.user.has_perm(perm)
+        else:
+            # For object-level permissions
+            return request.user.has_perm(perm, obj)
+
+    def has_view_permission(self, request, obj=None):
+        """Check if the user has permission to view instances of this inline model."""
+        opts = self.model._meta
+        codename = f"view_{opts.model_name}"
+        perm = f"{opts.app_label}.{codename}"
+
+        if obj is None:
+            # For global permissions when obj is None
+            return request.user.has_perm(perm)
+        else:
+            # For object-level permissions
+            return request.user.has_perm(perm, obj)
+
+    def has_change_permission(self, request, obj=None):
+        """Check if the user has permission to change instances of this inline model."""
+        opts = self.model._meta
+        codename = f"change_{opts.model_name}"
+        perm = f"{opts.app_label}.{codename}"
+
+        if obj is None:
+            # For global permissions when obj is None
+            return request.user.has_perm(perm)
+        else:
+            # For object-level permissions
+            return request.user.has_perm(perm, obj)
+
+    def has_delete_permission(self, request, obj=None):
+        """Check if the user has permission to delete instances of this inline model."""
+        opts = self.model._meta
+        codename = f"delete_{opts.model_name}"
+        perm = f"{opts.app_label}.{codename}"
+
+        if obj is None:
+            # For global permissions when obj is None
+            return request.user.has_perm(perm)
+        else:
+            # For object-level permissions
+            return request.user.has_perm(perm, obj)
+
+
 class AdminUserObjectPermissionsForm(UserObjectPermissionsForm):
     """Admin form for user object permissions.
 
