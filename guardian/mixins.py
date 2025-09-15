@@ -1,5 +1,6 @@
 from collections.abc import Iterable
 import sys
+from types import GeneratorType
 from typing import Any, Optional, Union
 
 # Import deprecated decorator with fallback for Python < 3.13
@@ -161,6 +162,12 @@ class PermissionRequiredMixin:
         """
         if isinstance(self.permission_required, str):
             perms = [self.permission_required]
+        elif isinstance(self.permission_required, GeneratorType):
+            raise ImproperlyConfigured(
+                "'PermissionRequiredMixin' does not support generators for "
+                "'permission_required' attribute as they can only be consumed once, "
+                "potentially leading to security issues. Use a list or tuple instead."
+            )
         elif isinstance(self.permission_required, Iterable):
             perms = [p for p in self.permission_required]
         else:
@@ -308,6 +315,12 @@ class PermissionListMixin:
         """
         if isinstance(self.permission_required, str):
             perms = [self.permission_required]
+        elif isinstance(self.permission_required, GeneratorType):
+            raise ImproperlyConfigured(
+                "'PermissionRequiredMixin' does not support generators for "
+                "'permission_required' attribute as they can only be consumed once, "
+                "potentially leading to security issues. Use a list or tuple instead."
+            )
         elif isinstance(self.permission_required, Iterable):
             perms = [p for p in self.permission_required]
         else:

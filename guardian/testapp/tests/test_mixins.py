@@ -1,3 +1,4 @@
+from types import GeneratorType
 from unittest import mock
 import warnings
 
@@ -246,3 +247,75 @@ class TestViewMixins(TestCase):
 
             assert len(w) == 1
             assert issubclass(w[-1].category, DeprecationWarning)
+
+    def test_permission_required_generator_rejection(self):
+        """Test that generators are properly rejected to prevent security issue #666.
+
+        Generators can only be consumed once and would return empty list on second iteration,
+        potentially granting unauthorized access.
+        """
+
+        # Test PermissionRequiredMixin
+        class GeneratorTestView(PermissionRequiredMixin, View):
+            def get(self, request):
+                return HttpResponse("secret content")
+
+        generator_perms = (perm for perm in ["testapp.change_post", "testapp.view_post"])
+        self.assertIsInstance(generator_perms, GeneratorType)
+
+        view = GeneratorTestView()
+        view.permission_required = generator_perms
+
+        with self.assertRaises(ImproperlyConfigured) as cm:
+            view.get_required_permissions()
+
+        self.assertIn("does not support generators", str(cm.exception))
+        self.assertIn("security issues", str(cm.exception))
+        self.assertIn("Use a list or tuple instead", str(cm.exception))
+
+    def test_permission_required_iterable_types_validation(self):
+        """Ensure that valid iterable types (list, tuple, set) still work after the generator fix."""
+        request = self.factory.get("/")
+        request.user = self.user
+
+        # Test with list
+        view = PermissionTestView()
+        view.permission_required = ["testapp.change_post", "testapp.view_post"]
+        perms = view.get_required_permissions()
+        self.assertEqual(perms, ["testapp.change_post", "testapp.view_post"])
+
+        # Test with tuple
+        view.permission_required = ("testapp.change_post", "testapp.view_post")
+        perms = view.get_required_permissions()
+        self.assertEqual(perms, ["testapp.change_post", "testapp.view_post"])
+
+        # Test with set (order may vary)
+        view.permission_required = {"testapp.change_post", "testapp.view_post"}
+        perms = view.get_required_permissions()
+        self.assertEqual(set(perms), {"testapp.change_post", "testapp.view_post"})
+
+        # Test with string (single permission)
+        view.permission_required = "testapp.change_post"
+        perms = view.get_required_permissions()
+        self.assertEqual(perms, ["testapp.change_post"])
+
+    def test_permission_list_mixin_generator_rejection(self):
+        """Test that PermissionListMixin also rejects generators for security."""
+        from types import GeneratorType
+
+        # Test PermissionListMixin
+        class GeneratorListView(PermissionListMixin, ListView):
+            model = Post
+            template_name = "list.html"
+
+        generator_perms = (perm for perm in ["testapp.change_post", "testapp.view_post"])
+        self.assertIsInstance(generator_perms, GeneratorType)
+
+        view = GeneratorListView()
+        view.permission_required = generator_perms
+
+        with self.assertRaises(ImproperlyConfigured) as cm:
+            view.get_required_permissions()
+
+        self.assertIn("does not support generators", str(cm.exception))
+        self.assertIn("security issues", str(cm.exception))
