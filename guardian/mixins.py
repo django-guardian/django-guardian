@@ -1,6 +1,8 @@
 from collections.abc import Iterable
 import sys
+from types import GeneratorType
 from typing import Any, Optional, Union
+import warnings
 
 # Import deprecated decorator with fallback for Python < 3.13
 if sys.version_info >= (3, 13):
@@ -161,6 +163,16 @@ class PermissionRequiredMixin:
         """
         if isinstance(self.permission_required, str):
             perms = [self.permission_required]
+        elif isinstance(self.permission_required, GeneratorType):
+            # This feature will be removed in v4. (#666)
+            warnings.warn(
+                "Using generators for 'permission_required' attribute is deprecated and will be removed in v4. "
+                "Use a list or tuple instead as generators can only be consumed once, "
+                "potentially leading to security issues.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            perms = [p for p in self.permission_required]
         elif isinstance(self.permission_required, Iterable):
             perms = [p for p in self.permission_required]
         else:
@@ -308,6 +320,16 @@ class PermissionListMixin:
         """
         if isinstance(self.permission_required, str):
             perms = [self.permission_required]
+        elif isinstance(self.permission_required, GeneratorType):
+            # This feature will be removed in v4. (#666)
+            warnings.warn(
+                "Using generators for 'permission_required' attribute is deprecated and will be removed in v4. "
+                "Use a list or tuple instead as generators can only be consumed once, "
+                "potentially leading to security issues.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            perms = [p for p in self.permission_required]
         elif isinstance(self.permission_required, Iterable):
             perms = [p for p in self.permission_required]
         else:
