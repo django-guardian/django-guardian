@@ -154,6 +154,48 @@ queries or when latency is particularly important.
 
 Defaults to `False`.
 
+## `GUARDIAN_ANONYMOUS_USER_CACHE_TTL`
+
+!!! abstract "Added in version 3.1.3"
+
+Sets the cache timeout (in seconds) for the anonymous user. This setting controls
+both whether caching is enabled and how long the anonymous user instance will
+remain in the cache before being refreshed from the database.
+
+This setting uses Django's cache framework, making it compatible with
+all Django cache backends (Redis, Memcached, database cache, etc.)
+and supporting distributed deployments.
+
+```python
+# No cache (default)
+GUARDIAN_ANONYMOUS_USER_CACHE_TTL = 0
+
+# Cache anonymous user for 1 hour
+GUARDIAN_ANONYMOUS_USER_CACHE_TTL = 3600
+
+# Cache anonymous user indefinitely (not recommended)
+GUARDIAN_ANONYMOUS_USER_CACHE_TTL = -1
+```
+
+!!! tip "Performance tuning"
+
+    - For high-traffic applications: Use shorter TTL (300-600 seconds)
+    - For stable applications: Use longer TTL (1800-3600 seconds)
+    - Consider your cache backend's memory limits when setting TTL
+
+!!! warning "Cache persistence"
+
+    When caching is enabled (TTL > 0 or TTL = -1), the cache persists for the
+    specified duration or until the cache backend evicts it. If you manually
+    change the anonymous user in the database during runtime (which is not
+    recommended), cached entries will not reflect the changes until they expire.
+
+!!! note "Cache backend dependency"
+
+    The actual caching behavior depends on your Django cache
+    configuration (`CACHES` setting). When TTL is 0, no caching occurs
+    and each call to `get_anonymous_user()` performs a fresh database query.
+
 ## `GUARDIAN_USER_OBJ_PERMS_MODEL`
 
 !!! abstract "Added in version 2.0.0"
