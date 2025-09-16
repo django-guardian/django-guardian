@@ -1,3 +1,4 @@
+from types import GeneratorType
 from unittest import mock
 import warnings
 
@@ -246,3 +247,89 @@ class TestViewMixins(TestCase):
 
             assert len(w) == 1
             assert issubclass(w[-1].category, DeprecationWarning)
+
+    def test_permission_required_iterable_types_validation(self):
+        """Ensure that valid iterable types (list, tuple, set) still work after the generator fix."""
+        request = self.factory.get("/")
+        request.user = self.user
+
+        # Test with list
+        view = PermissionTestView()
+        view.permission_required = ["testapp.change_post", "testapp.view_post"]
+        perms = view.get_required_permissions()
+        self.assertEqual(perms, ["testapp.change_post", "testapp.view_post"])
+
+        # Test with tuple
+        view.permission_required = ("testapp.change_post", "testapp.view_post")
+        perms = view.get_required_permissions()
+        self.assertEqual(perms, ["testapp.change_post", "testapp.view_post"])
+
+        # Test with set (order may vary)
+        view.permission_required = {"testapp.change_post", "testapp.view_post"}
+        perms = view.get_required_permissions()
+        self.assertEqual(set(perms), {"testapp.change_post", "testapp.view_post"})
+
+        # Test with string (single permission)
+        view.permission_required = "testapp.change_post"
+        perms = view.get_required_permissions()
+        self.assertEqual(perms, ["testapp.change_post"])
+
+    def test_permission_required_generator_deprecation(self):
+        """Test that generators trigger deprecation warning instead of exception.
+
+        Generators can only be consumed once and would return empty list on second iteration,
+        potentially granting unauthorized access. This feature is deprecated and will be removed in v4.
+        """
+
+        # Test PermissionRequiredMixin
+        class GeneratorTestView(PermissionRequiredMixin, View):
+            def get(self, request):
+                return HttpResponse("secret content")
+
+        generator_perms = (perm for perm in ["testapp.change_post", "testapp.view_post"])
+        self.assertIsInstance(generator_perms, GeneratorType)
+
+        view = GeneratorTestView()
+        view.permission_required = generator_perms
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            perms = view.get_required_permissions()
+
+            # Should have issued a deprecation warning
+            self.assertEqual(len(w), 1)
+            self.assertTrue(issubclass(w[0].category, DeprecationWarning))
+            self.assertIn("deprecated and will be removed in v4", str(w[0].message))
+            self.assertIn("security issues", str(w[0].message))
+            self.assertIn("Use a list or tuple instead", str(w[0].message))
+
+            # Should still return the permissions (converted from generator)
+            self.assertEqual(perms, ["testapp.change_post", "testapp.view_post"])
+
+    def test_permission_list_mixin_generator_deprecation(self):
+        """Test that PermissionListMixin also triggers deprecation warning for generators."""
+        from types import GeneratorType
+
+        # Test PermissionListMixin
+        class GeneratorListView(PermissionListMixin, ListView):
+            model = Post
+            template_name = "list.html"
+
+        generator_perms = (perm for perm in ["testapp.change_post", "testapp.view_post"])
+        self.assertIsInstance(generator_perms, GeneratorType)
+
+        view = GeneratorListView()
+        view.permission_required = generator_perms
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            perms = view.get_required_permissions()
+
+            # Should have issued a deprecation warning
+            self.assertEqual(len(w), 1)
+            self.assertTrue(issubclass(w[0].category, DeprecationWarning))
+            self.assertIn("deprecated and will be removed in v4", str(w[0].message))
+            self.assertIn("security issues", str(w[0].message))
+
+            # Should still return the permissions (converted from generator)
+            self.assertEqual(perms, ["testapp.change_post", "testapp.view_post"])
