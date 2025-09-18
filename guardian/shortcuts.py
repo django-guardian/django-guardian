@@ -1042,6 +1042,201 @@ def transfer_group_perms(
     return stats
 
 
+def transfer_user_perms(
+    from_user: Any,
+    to_user: Any,
+    perms: Optional[Union[str, list[str]]] = None,
+    klass: Optional[Union[Type[Model], Manager, QuerySet]] = None,
+    remove_from_source: bool = True,
+) -> dict[str, int]:
+    """Transfer object permissions from one user to another user.
+
+    This function allows bulk transfer of permissions from a source user to a target user.
+    It's useful when transferring responsibilities or when users change roles.
+
+    Parameters:
+        from_user (User): Source user from which permissions will be transferred.
+        to_user (User): Target user that will receive the permissions.
+        perms (str | list[str] | None): Specific permission(s) to transfer.
+            If None, all permissions from the source user will be transferred.
+            Can be full permission names (app_label.codename) or just codenames.
+        klass (Model | Manager | QuerySet | None): Model class or queryset to limit
+            the transfer to specific object types. If None, all object types are considered.
+        remove_from_source (bool): Whether to remove permissions from the source user
+            after transferring. Default is True.
+
+    Returns:
+        dict: Statistics about the transfer operation with keys:
+            - 'transferred': Number of permissions transferred
+            - 'removed': Number of permissions removed from source (if remove_from_source=True)
+            - 'errors': Number of errors encountered
+
+    Raises:
+        ValueError: If from_user and to_user are the same.
+        NotUserNorGroup: If from_user or to_user are not valid user objects.
+    """
+    from guardian.exceptions import NotUserNorGroup
+    from guardian.utils import get_identity
+
+    # Validate users
+    try:
+        source_user, _ = get_identity(from_user)
+        target_user, _ = get_identity(to_user)
+    except NotUserNorGroup:
+        raise ValueError("Both from_user and to_user must be valid user objects")
+
+    if not source_user or not target_user:
+        raise ValueError("Both from_user and to_user must be valid user objects")
+
+    if source_user == target_user:
+        raise ValueError("Source and target users cannot be the same")
+
+    stats = {"transferred": 0, "removed": 0, "errors": 0}
+
+    # Get the user object permissions model
+    if klass is not None:
+        queryset = _get_queryset(klass)
+        user_model = get_user_obj_perms_model(queryset.model)
+        ctype = get_content_type(queryset.model)
+
+        # Filter permissions by content type and specific objects if queryset provided
+        base_filter = {
+            "user": source_user,
+            "permission__content_type": ctype,
+        }
+
+        if isinstance(klass, QuerySet):
+            # Limit to specific objects
+            if user_model.objects.is_generic():
+                object_pks = list(klass.values_list("pk", flat=True))
+                base_filter["object_pk__in"] = object_pks
+            else:
+                base_filter["content_object__in"] = klass
+    else:
+        # Process all content types
+        user_models = []
+        # Get all possible user object permission models
+        for model in apps.get_models():
+            try:
+                user_obj_model = get_user_obj_perms_model(model)
+                if user_obj_model not in user_models:
+                    user_models.append(user_obj_model)
+            except (AttributeError, LookupError):
+                continue
+
+        # Process each model separately
+        for user_model in user_models:
+            base_filter = {"user": source_user}
+
+    # Normalize permissions parameter
+    if perms is not None:
+        if isinstance(perms, str):
+            perms = [perms]
+
+        permission_filters = []
+        for perm in perms:
+            if "." in perm:
+                app_label, codename = perm.split(".", 1)
+                permission_filters.append(
+                    Q(permission__content_type__app_label=app_label) & Q(permission__codename=codename)
+                )
+            else:
+                permission_filters.append(Q(permission__codename=perm))
+
+        if permission_filters:
+            perm_filter = permission_filters[0]
+            for pf in permission_filters[1:]:
+                perm_filter |= pf
+        else:
+            perm_filter = Q()
+    else:
+        perm_filter = Q()
+
+    # If we're processing a specific model
+    if klass is not None:
+        # Get permissions to transfer
+        permissions_qs = user_model.objects.filter(**base_filter)
+        if perm_filter:
+            permissions_qs = permissions_qs.filter(perm_filter)
+
+        # Transfer each permission
+        for perm_obj in permissions_qs:
+            try:
+                # Create the permission for target user
+                if user_model.objects.is_generic():
+                    # Generic relation
+                    target_perm, created = user_model.objects.get_or_create(
+                        user=target_user,
+                        permission=perm_obj.permission,
+                        content_type=perm_obj.content_type,
+                        object_pk=perm_obj.object_pk,
+                    )
+                else:
+                    # Direct relation
+                    target_perm, created = user_model.objects.get_or_create(
+                        user=target_user,
+                        permission=perm_obj.permission,
+                        content_object=perm_obj.content_object,
+                    )
+
+                if created:
+                    stats["transferred"] += 1
+
+                # Remove from source if requested
+                if remove_from_source:
+                    perm_obj.delete()
+                    stats["removed"] += 1
+
+            except Exception:
+                stats["errors"] += 1
+    else:
+        # Process all models
+        for model in apps.get_models():
+            try:
+                user_model = get_user_obj_perms_model(model)
+                base_filter = {"user": source_user}
+
+                permissions_qs = user_model.objects.filter(**base_filter)
+                if perm_filter:
+                    permissions_qs = permissions_qs.filter(perm_filter)
+
+                # Transfer each permission
+                for perm_obj in permissions_qs:
+                    try:
+                        # Create the permission for target user
+                        if user_model.objects.is_generic():
+                            # Generic relation
+                            target_perm, created = user_model.objects.get_or_create(
+                                user=target_user,
+                                permission=perm_obj.permission,
+                                content_type=perm_obj.content_type,
+                                object_pk=perm_obj.object_pk,
+                            )
+                        else:
+                            # Direct relation
+                            target_perm, created = user_model.objects.get_or_create(
+                                user=target_user,
+                                permission=perm_obj.permission,
+                                content_object=perm_obj.content_object,
+                            )
+
+                        if created:
+                            stats["transferred"] += 1
+
+                        # Remove from source if requested
+                        if remove_from_source:
+                            perm_obj.delete()
+                            stats["removed"] += 1
+
+                    except Exception:
+                        stats["errors"] += 1
+            except (AttributeError, LookupError):
+                # Skip models that don't have guardian permissions
+                continue
+
+    return stats
+
+
 def copy_group_perms(
     from_group: Group,
     to_group: Group,
@@ -1060,16 +1255,32 @@ def copy_group_perms(
 
     Returns:
         dict: Statistics about the copy operation.
-
-    Example:
-        ```python
-        >>> from guardian.shortcuts import copy_group_perms
-        >>> result = copy_group_perms(admin_group, backup_admin_group)
-        ```
     """
     return transfer_group_perms(
         from_group=from_group, to_group=to_group, perms=perms, klass=klass, remove_from_source=False
     )
+
+
+def copy_user_perms(
+    from_user: Any,
+    to_user: Any,
+    perms: Optional[Union[str, list[str]]] = None,
+    klass: Optional[Union[Type[Model], Manager, QuerySet]] = None,
+) -> dict[str, int]:
+    """Copy object permissions from one user to another user without removing from source.
+
+    This is a convenience function that calls transfer_user_perms with remove_from_source=False.
+
+    Parameters:
+        from_user (User): Source user from which permissions will be copied.
+        to_user (User): Target user that will receive the permissions.
+        perms (str | list[str] | None): Specific permission(s) to copy.
+        klass (Model | Manager | QuerySet | None): Model class or queryset to limit the copy.
+
+    Returns:
+        dict: Statistics about the copy operation.
+    """
+    return transfer_user_perms(from_user=from_user, to_user=to_user, perms=perms, klass=klass, remove_from_source=False)
 
 
 def _handle_pk_field(queryset):
