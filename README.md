@@ -1,6 +1,7 @@
 # django-guardian
 
 [![Tests](https://github.com/django-guardian/django-guardian/actions/workflows/tests.yml/badge.svg)](https://github.com/django-guardian/django-guardian/actions/workflows/tests.yml)
+[![Coverage](https://img.shields.io/badge/coverage-0%25-red)](https://github.com/django-guardian/django-guardian/actions/workflows/coverage.yml)
 [![PyPI version](https://img.shields.io/pypi/v/django-guardian.svg)](https://pypi.python.org/pypi/django-guardian)
 [![Python versions](https://img.shields.io/pypi/pyversions/django-guardian.svg)](https://pypi.python.org/pypi/django-guardian)
 [![Published on Django Packages](https://img.shields.io/badge/Published%20on-Django%20Packages-0c3c26)](https://djangopackages.org/packages/p/django-guardian/)
