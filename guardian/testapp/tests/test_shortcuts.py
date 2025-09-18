@@ -16,6 +16,7 @@ from guardian.shortcuts import (
     _get_ct_cached,
     assign,
     assign_perm,
+    copy_group_perms,
     get_group_perms,
     get_groups_with_perms,
     get_objects_for_group,
@@ -25,6 +26,7 @@ from guardian.shortcuts import (
     get_user_perms,
     get_users_with_perms,
     remove_perm,
+    transfer_group_perms,
 )
 from guardian.testapp.models import CharPKModel, ChildTestModel, UUIDPKModel
 from guardian.testapp.tests.test_core import ObjectPermissionTestCase
@@ -1319,3 +1321,254 @@ class ContentTypeCacheTestCase(ContentTypeCacheMixin, TestCase):
 
 class ContentTypeCacheTransactionTestCase(ContentTypeCacheMixin, TransactionTestCase):
     """Test cache against TransactionTestCase"""
+
+
+class TransferGroupPermsTest(TestCase):
+    """
+    Tests transfer_group_perms and copy_group_perms functions.
+    """
+
+    def setUp(self):
+        self.obj1 = ContentType.objects.create(model="foo", app_label="guardian-tests")
+        self.obj2 = ContentType.objects.create(model="bar", app_label="guardian-tests")
+        self.obj3 = ContentType.objects.create(model="baz", app_label="guardian-tests")
+        self.admin_group = Group.objects.create(name="Admin")
+        self.manager_group = Group.objects.create(name="Manager")
+        self.support_group = Group.objects.create(name="Support")
+
+    def test_same_group_raises_error(self):
+        """Test that transferring to the same group raises ValueError."""
+        with self.assertRaises(ValueError) as cm:
+            transfer_group_perms(self.admin_group, self.admin_group)
+        self.assertEqual(str(cm.exception), "Source and target groups cannot be the same")
+
+    def test_transfer_all_permissions(self):
+        """Test transferring all permissions from one group to another."""
+        # Assign permissions to admin group
+        assign_perm("change_contenttype", self.admin_group, self.obj1)
+        assign_perm("delete_contenttype", self.admin_group, self.obj1)
+        assign_perm("view_contenttype", self.admin_group, self.obj2)
+
+        # Verify admin group has permissions
+        admin_checker = ObjectPermissionChecker(self.admin_group)
+        self.assertTrue(admin_checker.has_perm("change_contenttype", self.obj1))
+        self.assertTrue(admin_checker.has_perm("delete_contenttype", self.obj1))
+        self.assertTrue(admin_checker.has_perm("view_contenttype", self.obj2))
+
+        # Transfer all permissions
+        result = transfer_group_perms(self.admin_group, self.manager_group)
+
+        # Verify transfer statistics
+        self.assertEqual(result["transferred"], 3)
+        self.assertEqual(result["removed"], 3)
+        self.assertEqual(result["errors"], 0)
+
+        # Verify manager group now has permissions
+        manager_checker = ObjectPermissionChecker(self.manager_group)
+        self.assertTrue(manager_checker.has_perm("change_contenttype", self.obj1))
+        self.assertTrue(manager_checker.has_perm("delete_contenttype", self.obj1))
+        self.assertTrue(manager_checker.has_perm("view_contenttype", self.obj2))
+
+        # Verify admin group no longer has permissions
+        admin_checker = ObjectPermissionChecker(self.admin_group)
+        self.assertFalse(admin_checker.has_perm("change_contenttype", self.obj1))
+        self.assertFalse(admin_checker.has_perm("delete_contenttype", self.obj1))
+        self.assertFalse(admin_checker.has_perm("view_contenttype", self.obj2))
+
+    def test_transfer_specific_permissions(self):
+        """Test transferring only specific permissions."""
+        # Assign permissions to admin group
+        assign_perm("change_contenttype", self.admin_group, self.obj1)
+        assign_perm("delete_contenttype", self.admin_group, self.obj1)
+        assign_perm("view_contenttype", self.admin_group, self.obj2)
+
+        # Transfer only change_contenttype permission
+        result = transfer_group_perms(self.admin_group, self.manager_group, perms=["change_contenttype"])
+
+        # Verify transfer statistics
+        self.assertEqual(result["transferred"], 1)
+        self.assertEqual(result["removed"], 1)
+        self.assertEqual(result["errors"], 0)
+
+        # Verify manager group has only change_contenttype
+        manager_checker = ObjectPermissionChecker(self.manager_group)
+        self.assertTrue(manager_checker.has_perm("change_contenttype", self.obj1))
+        self.assertFalse(manager_checker.has_perm("delete_contenttype", self.obj1))
+        self.assertFalse(manager_checker.has_perm("view_contenttype", self.obj2))
+
+        # Verify admin group still has other permissions
+        admin_checker = ObjectPermissionChecker(self.admin_group)
+        self.assertFalse(admin_checker.has_perm("change_contenttype", self.obj1))
+        self.assertTrue(admin_checker.has_perm("delete_contenttype", self.obj1))
+        self.assertTrue(admin_checker.has_perm("view_contenttype", self.obj2))
+
+    def test_transfer_with_full_permission_names(self):
+        """Test transferring permissions using full permission names (app.codename)."""
+        assign_perm("change_contenttype", self.admin_group, self.obj1)
+        assign_perm("delete_contenttype", self.admin_group, self.obj1)
+
+        # Transfer using full permission name
+        result = transfer_group_perms(self.admin_group, self.manager_group, perms=["contenttypes.change_contenttype"])
+
+        # Verify only change_contenttype was transferred
+        self.assertEqual(result["transferred"], 1)
+        self.assertEqual(result["removed"], 1)
+        self.assertEqual(result["errors"], 0)
+
+        manager_checker = ObjectPermissionChecker(self.manager_group)
+        self.assertTrue(manager_checker.has_perm("change_contenttype", self.obj1))
+        self.assertFalse(manager_checker.has_perm("delete_contenttype", self.obj1))
+
+    def test_transfer_with_specific_objects_queryset(self):
+        """Test transferring permissions for specific objects using queryset."""
+        # Assign permissions to multiple objects
+        assign_perm("change_contenttype", self.admin_group, self.obj1)
+        assign_perm("change_contenttype", self.admin_group, self.obj2)
+        assign_perm("change_contenttype", self.admin_group, self.obj3)
+
+        # Transfer permissions only for obj1 and obj2
+        specific_objects = ContentType.objects.filter(id__in=[self.obj1.id, self.obj2.id])
+        result = transfer_group_perms(self.admin_group, self.manager_group, klass=specific_objects)
+
+        # Verify transfer statistics
+        self.assertEqual(result["transferred"], 2)
+        self.assertEqual(result["removed"], 2)
+        self.assertEqual(result["errors"], 0)
+
+        # Verify manager group has permissions for obj1 and obj2
+        manager_checker = ObjectPermissionChecker(self.manager_group)
+        self.assertTrue(manager_checker.has_perm("change_contenttype", self.obj1))
+        self.assertTrue(manager_checker.has_perm("change_contenttype", self.obj2))
+        self.assertFalse(manager_checker.has_perm("change_contenttype", self.obj3))
+
+        # Verify admin group still has permission for obj3
+        admin_checker = ObjectPermissionChecker(self.admin_group)
+        self.assertFalse(admin_checker.has_perm("change_contenttype", self.obj1))
+        self.assertFalse(admin_checker.has_perm("change_contenttype", self.obj2))
+        self.assertTrue(admin_checker.has_perm("change_contenttype", self.obj3))
+
+    def test_transfer_without_removing_from_source(self):
+        """Test transferring permissions without removing from source group."""
+        assign_perm("change_contenttype", self.admin_group, self.obj1)
+        assign_perm("delete_contenttype", self.admin_group, self.obj1)
+
+        # Transfer without removing from source
+        result = transfer_group_perms(self.admin_group, self.manager_group, remove_from_source=False)
+
+        # Verify transfer statistics
+        self.assertEqual(result["transferred"], 2)
+        self.assertEqual(result["removed"], 0)
+        self.assertEqual(result["errors"], 0)
+
+        # Verify both groups have permissions
+        admin_checker = ObjectPermissionChecker(self.admin_group)
+        manager_checker = ObjectPermissionChecker(self.manager_group)
+
+        self.assertTrue(admin_checker.has_perm("change_contenttype", self.obj1))
+        self.assertTrue(admin_checker.has_perm("delete_contenttype", self.obj1))
+        self.assertTrue(manager_checker.has_perm("change_contenttype", self.obj1))
+        self.assertTrue(manager_checker.has_perm("delete_contenttype", self.obj1))
+
+    def test_copy_group_perms(self):
+        """Test copy_group_perms function (should not remove from source)."""
+        assign_perm("change_contenttype", self.admin_group, self.obj1)
+        assign_perm("delete_contenttype", self.admin_group, self.obj1)
+
+        # Copy permissions
+        result = copy_group_perms(self.admin_group, self.support_group)
+
+        # Verify copy statistics
+        self.assertEqual(result["transferred"], 2)
+        self.assertEqual(result["removed"], 0)
+        self.assertEqual(result["errors"], 0)
+
+        # Verify both groups have permissions
+        admin_checker = ObjectPermissionChecker(self.admin_group)
+        support_checker = ObjectPermissionChecker(self.support_group)
+
+        self.assertTrue(admin_checker.has_perm("change_contenttype", self.obj1))
+        self.assertTrue(admin_checker.has_perm("delete_contenttype", self.obj1))
+        self.assertTrue(support_checker.has_perm("change_contenttype", self.obj1))
+        self.assertTrue(support_checker.has_perm("delete_contenttype", self.obj1))
+
+    def test_transfer_no_permissions(self):
+        """Test transferring when source group has no permissions."""
+        # Don't assign any permissions to admin group
+        result = transfer_group_perms(self.admin_group, self.manager_group)
+
+        # Should have no effect
+        self.assertEqual(result["transferred"], 0)
+        self.assertEqual(result["removed"], 0)
+        self.assertEqual(result["errors"], 0)
+
+    def test_transfer_with_existing_permissions(self):
+        """Test transferring when target group already has some permissions."""
+        # Assign same permission to both groups
+        assign_perm("change_contenttype", self.admin_group, self.obj1)
+        assign_perm("change_contenttype", self.manager_group, self.obj1)
+        assign_perm("delete_contenttype", self.admin_group, self.obj1)
+
+        result = transfer_group_perms(self.admin_group, self.manager_group)
+
+        # Should transfer only the delete permission (change already exists)
+        self.assertEqual(result["transferred"], 1)
+        self.assertEqual(result["removed"], 2)
+        self.assertEqual(result["errors"], 0)
+
+        # Verify manager group has both permissions
+        manager_checker = ObjectPermissionChecker(self.manager_group)
+        self.assertTrue(manager_checker.has_perm("change_contenttype", self.obj1))
+        self.assertTrue(manager_checker.has_perm("delete_contenttype", self.obj1))
+
+        # Verify admin group has no permissions
+        admin_checker = ObjectPermissionChecker(self.admin_group)
+        self.assertFalse(admin_checker.has_perm("change_contenttype", self.obj1))
+        self.assertFalse(admin_checker.has_perm("delete_contenttype", self.obj1))
+
+    def test_transfer_with_model_class_filter(self):
+        """Test transferring permissions with model class filter."""
+        # Create objects of different types
+        other_obj = Group.objects.create(name="test-group")
+
+        # Assign permissions to different object types
+        assign_perm("change_contenttype", self.admin_group, self.obj1)
+        assign_perm("change_group", self.admin_group, other_obj)
+
+        # Transfer only ContentType permissions
+        result = transfer_group_perms(self.admin_group, self.manager_group, klass=ContentType)
+
+        # Should transfer only ContentType permission
+        self.assertEqual(result["transferred"], 1)
+        self.assertEqual(result["removed"], 1)
+        self.assertEqual(result["errors"], 0)
+
+        # Verify manager group has ContentType permission
+        manager_checker = ObjectPermissionChecker(self.manager_group)
+        self.assertTrue(manager_checker.has_perm("change_contenttype", self.obj1))
+        self.assertFalse(manager_checker.has_perm("change_group", other_obj))
+
+        # Verify admin group still has Group permission
+        admin_checker = ObjectPermissionChecker(self.admin_group)
+        self.assertFalse(admin_checker.has_perm("change_contenttype", self.obj1))
+        self.assertTrue(admin_checker.has_perm("change_group", other_obj))
+
+    def test_transfer_single_permission_string(self):
+        """Test transferring with single permission as string instead of list."""
+        assign_perm("change_contenttype", self.admin_group, self.obj1)
+        assign_perm("delete_contenttype", self.admin_group, self.obj1)
+
+        # Transfer single permission as string
+        result = transfer_group_perms(self.admin_group, self.manager_group, perms="change_contenttype")
+
+        # Should transfer only one permission
+        self.assertEqual(result["transferred"], 1)
+        self.assertEqual(result["removed"], 1)
+        self.assertEqual(result["errors"], 0)
+
+        manager_checker = ObjectPermissionChecker(self.manager_group)
+        admin_checker = ObjectPermissionChecker(self.admin_group)
+
+        self.assertTrue(manager_checker.has_perm("change_contenttype", self.obj1))
+        self.assertFalse(manager_checker.has_perm("delete_contenttype", self.obj1))
+        self.assertFalse(admin_checker.has_perm("change_contenttype", self.obj1))
+        self.assertTrue(admin_checker.has_perm("delete_contenttype", self.obj1))
