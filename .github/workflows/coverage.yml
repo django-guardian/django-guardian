@@ -1,0 +1,148 @@
+name: Coverage
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          PGUSER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+        - 5432:5432
+
+    env:
+      DJANGO_SETTINGS_MODULE: guardian.testapp.testsettings
+      DATABASE_URL: postgres://postgres:postgres@localhost/django_guardian
+      DEPENDENCY_GROUP: ci
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+        cache-dependency-glob: pyproject.toml
+
+    - name: Install Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+
+    - name: Install tox
+      run: uv tool install --python-preference only-managed --python 3.13 tox --with . --with tox-uv --with tox-gh
+
+    - name: Create database
+      run: |
+        PGPASSWORD="postgres" psql -c 'create database django_guardian;' -h localhost -U postgres;
+        PGPASSWORD="postgres" psql -c 'create database test_django_guardian;' -h localhost -U postgres;
+
+    - name: Setup test suite
+      run: tox run -vv --notest --skip-missing-interpreters false
+      env:
+        TOX_GH_MAJOR_MINOR: '3.13'
+
+    - name: Run tests with coverage
+      env:
+        TOX_GH_MAJOR_MINOR: '3.13'
+        PYTEST_ADDOPTS: -vv --durations=20
+        DIFF_AGAINST: HEAD
+        UV_PYTHON_PREFERENCE: only-managed
+      run: tox run -vv --skip-pkg-install
+
+    - name: Code Coverage Summary Report
+      uses: irongut/CodeCoverageSummary@v1.3.0
+      with:
+        filename: coverage.xml
+        badge: true
+        fail_below_min: false
+        format: markdown
+        hide_branch_rate: false
+        hide_complexity: true
+        indicators: true
+        output: both
+        thresholds: 60 80
+
+    - name: Add Coverage PR Comment
+      uses: marocchino/sticky-pull-request-comment@v2
+      if: github.event_name == 'pull_request'
+      with:
+        recreate: true
+        path: code-coverage-results.md
+
+    - name: Write to Job Summary
+      run: cat code-coverage-results.md >> $GITHUB_STEP_SUMMARY
+
+    - name: Update Coverage Badge
+      if: github.ref == 'refs/heads/main'
+      run: |
+        # Extract coverage percentage from coverage.xml
+        COVERAGE=$(python -c "
+        import xml.etree.ElementTree as ET
+        tree = ET.parse('coverage.xml')
+        root = tree.getroot()
+        coverage = root.attrib['line-rate']
+        percentage = round(float(coverage) * 100, 1)
+        print(f'{percentage}')
+        ")
+
+        # Create coverage badge URL
+        if (( $(echo "$COVERAGE >= 90" | bc -l) )); then
+          COLOR="brightgreen"
+        elif (( $(echo "$COVERAGE >= 80" | bc -l) )); then
+          COLOR="green"
+        elif (( $(echo "$COVERAGE >= 70" | bc -l) )); then
+          COLOR="yellowgreen"
+        elif (( $(echo "$COVERAGE >= 60" | bc -l) )); then
+          COLOR="yellow"
+        else
+          COLOR="red"
+        fi
+
+        BADGE_URL="https://img.shields.io/badge/coverage-${COVERAGE}%25-${COLOR}"
+        echo "Coverage: ${COVERAGE}%, Badge URL: ${BADGE_URL}"
+        echo "COVERAGE_PERCENTAGE=${COVERAGE}" >> $GITHUB_ENV
+        echo "BADGE_URL=${BADGE_URL}" >> $GITHUB_ENV
+
+    - name: Update README with Coverage Badge
+      if: github.ref == 'refs/heads/main'
+      run: |
+        # Update README.md with the new coverage badge
+        sed -i 's|!\[Coverage\]([^)]*)|![Coverage]('"$BADGE_URL"')|g' README.md
+
+        # If no coverage badge exists, add it after the existing badges
+        if ! grep -q "Coverage" README.md; then
+          sed -i '/^\[\!\[Published on Django Packages\]/a [![Coverage]('"$BADGE_URL"')](https://github.com/django-guardian/django-guardian/actions/workflows/coverage.yml)' README.md
+        fi
+
+    - name: Commit and push if changed
+      if: github.ref == 'refs/heads/main'
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add README.md
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "Update coverage badge to ${{ env.COVERAGE_PERCENTAGE }}%"
+          git push
+        fi
