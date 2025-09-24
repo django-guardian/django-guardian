@@ -72,6 +72,62 @@ class GetIdentityTest(ObjectPermissionTestCase):
         self.assertIsInstance(group, list)
         self.assertIsNone(user)
 
+    def test_group_subclass_queryset(self):
+        """Test that Group subclasses work with QuerySet identity resolution."""
+
+        # Create a Group subclass to test the issubclass fix
+        class TestTeam(Group):
+            class Meta:
+                proxy = True
+
+        # Create a TestTeam instance
+        team = TestTeam.objects.create(name="Test Team Subclass")
+
+        # Test with QuerySet of Group subclass
+        team_qs = TestTeam.objects.filter(pk=team.pk)
+        user, group = get_identity(team_qs)
+        self.assertIsInstance(group, models.QuerySet)
+        self.assertIsNone(user)
+        self.assertEqual(group.model, TestTeam)
+
+        # Test with all TestTeams QuerySet
+        all_teams_qs = TestTeam.objects.all()
+        user, group = get_identity(all_teams_qs)
+        self.assertIsInstance(group, models.QuerySet)
+        self.assertIsNone(user)
+        self.assertEqual(group.model, TestTeam)
+
+        # Clean up
+        team.delete()
+
+    def test_user_subclass_queryset(self):
+        """Test that User subclasses work with QuerySet identity resolution."""
+
+        # Create a User subclass to test the issubclass fix
+        class TestCustomUser(User):
+            class Meta:
+                proxy = True
+
+        # Create a TestCustomUser instance
+        custom_user = TestCustomUser.objects.create(username="testcustomuser_subclass")
+
+        # Test with QuerySet of User subclass
+        custom_user_qs = TestCustomUser.objects.filter(pk=custom_user.pk)
+        user, group = get_identity(custom_user_qs)
+        self.assertIsInstance(user, models.QuerySet)
+        self.assertIsNone(group)
+        self.assertEqual(user.model, TestCustomUser)
+
+        # Test with all TestCustomUsers QuerySet
+        all_custom_users_qs = TestCustomUser.objects.all()
+        user, group = get_identity(all_custom_users_qs)
+        self.assertIsInstance(user, models.QuerySet)
+        self.assertIsNone(group)
+        self.assertEqual(user.model, TestCustomUser)
+
+        # Clean up
+        custom_user.delete()
+
 
 @skipUnlessTestApp
 class GetUserObjPermsModelTest(TestCase):
