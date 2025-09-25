@@ -38,3 +38,9 @@ class MultipleIdentityAndObjectError(GuardianError):
     """Raised when an operation is attempted on both user/group and object."""
 
     pass
+
+
+class GuardianConfigurationError(GuardianError):
+    """Raised when guardian is not configured correctly for the requested operation."""
+
+    pass

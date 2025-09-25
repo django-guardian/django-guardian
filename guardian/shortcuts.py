@@ -31,9 +31,11 @@ from django.db.models.expressions import Value
 from django.db.models.functions import Cast, Replace
 from django.shortcuts import _get_queryset
 
+from guardian.conf import settings as guardian_settings
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
 from guardian.exceptions import (
+    GuardianConfigurationError,
     MixedContentTypeError,
     MultipleIdentityAndObjectError,
     WrongAppError,
@@ -892,7 +894,11 @@ def transfer_group_perms(
     Raises:
         ValueError: If from_group and to_group are the same.
         MixedContentTypeError: If perms contain mixed content types.
+        GuardianConfigurationError: If custom permission models are configured.
     """
+    # Validate that default permission system is being used
+    _validate_default_permission_system()
+
     if from_group == to_group:
         raise ValueError("Source and target groups cannot be the same")
 
@@ -1074,7 +1080,11 @@ def transfer_user_perms(
     Raises:
         ValueError: If from_user and to_user are the same.
         NotUserNorGroup: If from_user or to_user are not valid user objects.
+        GuardianConfigurationError: If custom permission models are configured.
     """
+    # Validate that default permission system is being used
+    _validate_default_permission_system()
+
     from guardian.exceptions import NotUserNorGroup
     from guardian.utils import get_identity
 
@@ -1279,6 +1289,9 @@ def copy_user_perms(
 
     Returns:
         dict: Statistics about the copy operation.
+
+    Raises:
+        GuardianConfigurationError: If custom permission models are configured.
     """
     return transfer_user_perms(from_user=from_user, to_user=to_user, perms=perms, klass=klass, remove_from_source=False)
 
@@ -1335,3 +1348,31 @@ def filter_perms_queryset_by_objects(perms_queryset, objects):
         return perms_queryset.filter(**{"{}__in".format(field): objects})
     else:
         return perms_queryset
+
+
+def _validate_default_permission_system():
+    """Validate the project is using Django's default permission system.
+
+    This function checks if custom permission models are configured via
+    GUARDIAN_USER_OBJ_PERMS_MODEL or GUARDIAN_GROUP_OBJ_PERMS_MODEL settings.
+
+    Raises:
+        GuardianConfigurationError: If custom permission models are detected.
+    """
+    # Check if custom user permission model is configured
+    if guardian_settings.USER_OBJ_PERMS_MODEL != "guardian.UserObjectPermission":
+        raise GuardianConfigurationError(
+            "Permission copy/transfer functions only work with Django's default permission system. "
+            f"Custom user permission model detected: {guardian_settings.USER_OBJ_PERMS_MODEL}. "
+            "These functions assume the standard django-guardian permission model structure "
+            "and may not work correctly with custom permission models."
+        )
+
+    # Check if custom group permission model is configured
+    if guardian_settings.GROUP_OBJ_PERMS_MODEL != "guardian.GroupObjectPermission":
+        raise GuardianConfigurationError(
+            "Permission copy/transfer functions only work with Django's default permission system. "
+            f"Custom group permission model detected: {guardian_settings.GROUP_OBJ_PERMS_MODEL}. "
+            "These functions assume the standard django-guardian permission model structure "
+            "and may not work correctly with custom permission models."
+        )

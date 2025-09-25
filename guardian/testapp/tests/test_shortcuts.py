@@ -1752,9 +1752,10 @@ class TransferUserPermsTest(TestCase):
         self.assertFalse(self.manager_user.has_perm("change_contenttype", self.obj3))
 
         # Verify admin user still has permission for obj3
-        self.assertFalse(self.admin_user.has_perm("change_contenttype", self.obj1))
-        self.assertFalse(self.admin_user.has_perm("change_contenttype", self.obj2))
-        self.assertTrue(self.admin_user.has_perm("change_contenttype", self.obj3))
+        admin_checker = ObjectPermissionChecker(self.admin_user)
+        self.assertFalse(admin_checker.has_perm("change_contenttype", self.obj1))
+        self.assertFalse(admin_checker.has_perm("change_contenttype", self.obj2))
+        self.assertTrue(admin_checker.has_perm("change_contenttype", self.obj3))
 
     def test_transfer_without_removing_from_source(self):
         """Test transferring permissions without removing from source user."""
@@ -1823,8 +1824,9 @@ class TransferUserPermsTest(TestCase):
         self.assertTrue(self.manager_user.has_perm("delete_contenttype", self.obj1))
 
         # Verify admin user has no permissions
-        self.assertFalse(self.admin_user.has_perm("change_contenttype", self.obj1))
-        self.assertFalse(self.admin_user.has_perm("delete_contenttype", self.obj1))
+        admin_checker = ObjectPermissionChecker(self.admin_user)
+        self.assertFalse(admin_checker.has_perm("change_contenttype", self.obj1))
+        self.assertFalse(admin_checker.has_perm("delete_contenttype", self.obj1))
 
     def test_transfer_with_model_class_filter(self):
         """Test transferring permissions with model class filter."""
@@ -1848,8 +1850,9 @@ class TransferUserPermsTest(TestCase):
         self.assertFalse(self.manager_user.has_perm("change_group", other_obj))
 
         # Verify admin user still has Group permission
-        self.assertFalse(self.admin_user.has_perm("change_contenttype", self.obj1))
-        self.assertTrue(self.admin_user.has_perm("change_group", other_obj))
+        admin_checker = ObjectPermissionChecker(self.admin_user)
+        self.assertFalse(admin_checker.has_perm("change_contenttype", self.obj1))
+        self.assertTrue(admin_checker.has_perm("change_group", other_obj))
 
     def test_transfer_single_permission_string(self):
         """Test transferring with single permission as string instead of list."""
@@ -1927,3 +1930,266 @@ class TransferUserPermsTest(TestCase):
 
         self.assertTrue(self.manager_user.has_perm("change_contenttype", self.obj1))
         self.assertFalse(self.admin_user.has_perm("change_contenttype", self.obj1))
+
+
+class PermissionValidationTest(TestCase):
+    """
+    Tests that permission copy/transfer functions validate Django's default permission system.
+    """
+
+    def setUp(self):
+        self.obj1 = ContentType.objects.create(model="foo", app_label="guardian-tests")
+        self.admin_user = User.objects.create_user(username="admin", email="admin@test.com")
+        self.manager_user = User.objects.create_user(username="manager", email="manager@test.com")
+        self.admin_group = Group.objects.create(name="Admin")
+        self.manager_group = Group.objects.create(name="Manager")
+
+    def test_transfer_group_perms_with_default_system(self):
+        """Test that transfer_group_perms works with default permission system."""
+        # Assign permissions to admin group
+        assign_perm("change_contenttype", self.admin_group, self.obj1)
+
+        # This should work without raising any exceptions
+        result = transfer_group_perms(self.admin_group, self.manager_group)
+
+        # Verify it worked
+        self.assertEqual(result["transferred"], 1)
+        self.assertEqual(result["removed"], 1)
+        self.assertEqual(result["errors"], 0)
+
+    def test_transfer_user_perms_with_default_system(self):
+        """Test that transfer_user_perms works with default permission system."""
+        # Assign permissions to admin user
+        assign_perm("change_contenttype", self.admin_user, self.obj1)
+
+        # This should work without raising any exceptions
+        result = transfer_user_perms(self.admin_user, self.manager_user)
+
+        # Verify it worked
+        self.assertEqual(result["transferred"], 1)
+        self.assertEqual(result["removed"], 1)
+        self.assertEqual(result["errors"], 0)
+
+    def test_copy_group_perms_with_default_system(self):
+        """Test that copy_group_perms works with default permission system."""
+        # Assign permissions to admin group
+        assign_perm("change_contenttype", self.admin_group, self.obj1)
+
+        # This should work without raising any exceptions
+        result = copy_group_perms(self.admin_group, self.manager_group)
+
+        # Verify it worked
+        self.assertEqual(result["transferred"], 1)
+        self.assertEqual(result["removed"], 0)  # Copy doesn't remove
+        self.assertEqual(result["errors"], 0)
+
+    def test_copy_user_perms_with_default_system(self):
+        """Test that copy_user_perms works with default permission system."""
+        # Assign permissions to admin user
+        assign_perm("change_contenttype", self.admin_user, self.obj1)
+
+        # This should work without raising any exceptions
+        result = copy_user_perms(self.admin_user, self.manager_user)
+
+        # Verify it worked
+        self.assertEqual(result["transferred"], 1)
+        self.assertEqual(result["removed"], 0)  # Copy doesn't remove
+        self.assertEqual(result["errors"], 0)
+
+    def test_transfer_group_perms_with_custom_user_model(self):
+        """Test that transfer_group_perms fails with custom user permission model."""
+        from guardian.conf import settings as guardian_settings
+        from guardian.exceptions import GuardianConfigurationError
+
+        # Store original settings
+        original_user_model = guardian_settings.USER_OBJ_PERMS_MODEL
+
+        try:
+            # Simulate custom user permission model
+            guardian_settings.USER_OBJ_PERMS_MODEL = "myapp.CustomUserObjectPermission"
+
+            # This should raise GuardianConfigurationError
+            with self.assertRaises(GuardianConfigurationError) as cm:
+                transfer_group_perms(self.admin_group, self.manager_group)
+
+            # Verify error message
+            self.assertIn("Custom user permission model detected", str(cm.exception))
+            self.assertIn("myapp.CustomUserObjectPermission", str(cm.exception))
+
+        finally:
+            # Restore original settings
+            guardian_settings.USER_OBJ_PERMS_MODEL = original_user_model
+
+    def test_transfer_group_perms_with_custom_group_model(self):
+        """Test that transfer_group_perms fails with custom group permission model."""
+        from guardian.conf import settings as guardian_settings
+        from guardian.exceptions import GuardianConfigurationError
+
+        # Store original settings
+        original_group_model = guardian_settings.GROUP_OBJ_PERMS_MODEL
+
+        try:
+            # Simulate custom group permission model
+            guardian_settings.GROUP_OBJ_PERMS_MODEL = "myapp.CustomGroupObjectPermission"
+
+            # This should raise GuardianConfigurationError
+            with self.assertRaises(GuardianConfigurationError) as cm:
+                transfer_group_perms(self.admin_group, self.manager_group)
+
+            # Verify error message
+            self.assertIn("Custom group permission model detected", str(cm.exception))
+            self.assertIn("myapp.CustomGroupObjectPermission", str(cm.exception))
+
+        finally:
+            # Restore original settings
+            guardian_settings.GROUP_OBJ_PERMS_MODEL = original_group_model
+
+    def test_transfer_user_perms_with_custom_user_model(self):
+        """Test that transfer_user_perms fails with custom user permission model."""
+        from guardian.conf import settings as guardian_settings
+        from guardian.exceptions import GuardianConfigurationError
+
+        # Store original settings
+        original_user_model = guardian_settings.USER_OBJ_PERMS_MODEL
+
+        try:
+            # Simulate custom user permission model
+            guardian_settings.USER_OBJ_PERMS_MODEL = "myapp.CustomUserObjectPermission"
+
+            # This should raise GuardianConfigurationError
+            with self.assertRaises(GuardianConfigurationError) as cm:
+                transfer_user_perms(self.admin_user, self.manager_user)
+
+            # Verify error message
+            self.assertIn("Custom user permission model detected", str(cm.exception))
+            self.assertIn("myapp.CustomUserObjectPermission", str(cm.exception))
+
+        finally:
+            # Restore original settings
+            guardian_settings.USER_OBJ_PERMS_MODEL = original_user_model
+
+    def test_transfer_user_perms_with_custom_group_model(self):
+        """Test that transfer_user_perms fails with custom group permission model."""
+        from guardian.conf import settings as guardian_settings
+        from guardian.exceptions import GuardianConfigurationError
+
+        # Store original settings
+        original_group_model = guardian_settings.GROUP_OBJ_PERMS_MODEL
+
+        try:
+            # Simulate custom group permission model
+            guardian_settings.GROUP_OBJ_PERMS_MODEL = "myapp.CustomGroupObjectPermission"
+
+            # This should raise GuardianConfigurationError
+            with self.assertRaises(GuardianConfigurationError) as cm:
+                transfer_user_perms(self.admin_user, self.manager_user)
+
+            # Verify error message
+            self.assertIn("Custom group permission model detected", str(cm.exception))
+            self.assertIn("myapp.CustomGroupObjectPermission", str(cm.exception))
+
+        finally:
+            # Restore original settings
+            guardian_settings.GROUP_OBJ_PERMS_MODEL = original_group_model
+
+    def test_copy_group_perms_with_custom_model(self):
+        """Test that copy_group_perms fails with custom permission model."""
+        from guardian.conf import settings as guardian_settings
+        from guardian.exceptions import GuardianConfigurationError
+
+        # Store original settings
+        original_user_model = guardian_settings.USER_OBJ_PERMS_MODEL
+
+        try:
+            # Simulate custom user permission model
+            guardian_settings.USER_OBJ_PERMS_MODEL = "myapp.CustomUserObjectPermission"
+
+            # This should raise GuardianConfigurationError since copy_group_perms calls transfer_group_perms
+            with self.assertRaises(GuardianConfigurationError) as cm:
+                copy_group_perms(self.admin_group, self.manager_group)
+
+            # Verify error message
+            self.assertIn("Custom user permission model detected", str(cm.exception))
+
+        finally:
+            # Restore original settings
+            guardian_settings.USER_OBJ_PERMS_MODEL = original_user_model
+
+    def test_copy_user_perms_with_custom_model(self):
+        """Test that copy_user_perms fails with custom permission model."""
+        from guardian.conf import settings as guardian_settings
+        from guardian.exceptions import GuardianConfigurationError
+
+        # Store original settings
+        original_group_model = guardian_settings.GROUP_OBJ_PERMS_MODEL
+
+        try:
+            # Simulate custom group permission model
+            guardian_settings.GROUP_OBJ_PERMS_MODEL = "myapp.CustomGroupObjectPermission"
+
+            # This should raise GuardianConfigurationError since copy_user_perms calls transfer_user_perms
+            with self.assertRaises(GuardianConfigurationError) as cm:
+                copy_user_perms(self.admin_user, self.manager_user)
+
+            # Verify error message
+            self.assertIn("Custom group permission model detected", str(cm.exception))
+
+        finally:
+            # Restore original settings
+            guardian_settings.GROUP_OBJ_PERMS_MODEL = original_group_model
+
+    def test_validation_error_message_content(self):
+        """Test that validation error messages are informative."""
+        from guardian.conf import settings as guardian_settings
+        from guardian.exceptions import GuardianConfigurationError
+
+        # Store original settings
+        original_user_model = guardian_settings.USER_OBJ_PERMS_MODEL
+
+        try:
+            # Simulate custom user permission model
+            guardian_settings.USER_OBJ_PERMS_MODEL = "myapp.CustomUserObjectPermission"
+
+            with self.assertRaises(GuardianConfigurationError) as cm:
+                transfer_group_perms(self.admin_group, self.manager_group)
+
+            error_message = str(cm.exception)
+
+            # Verify error message contains all important information
+            self.assertIn(
+                "Permission copy/transfer functions only work with Django's default permission system", error_message
+            )
+            self.assertIn("myapp.CustomUserObjectPermission", error_message)
+            self.assertIn("standard django-guardian permission model structure", error_message)
+            self.assertIn("may not work correctly with custom permission models", error_message)
+
+        finally:
+            # Restore original settings
+            guardian_settings.USER_OBJ_PERMS_MODEL = original_user_model
+
+    def test_both_custom_models_detected(self):
+        """Test that validation detects custom models in the order they are checked."""
+        from guardian.conf import settings as guardian_settings
+        from guardian.exceptions import GuardianConfigurationError
+
+        # Store original settings
+        original_user_model = guardian_settings.USER_OBJ_PERMS_MODEL
+        original_group_model = guardian_settings.GROUP_OBJ_PERMS_MODEL
+
+        try:
+            # Set both custom models
+            guardian_settings.USER_OBJ_PERMS_MODEL = "myapp.CustomUserObjectPermission"
+            guardian_settings.GROUP_OBJ_PERMS_MODEL = "myapp.CustomGroupObjectPermission"
+
+            # Should fail on the first check (user model)
+            with self.assertRaises(GuardianConfigurationError) as cm:
+                transfer_group_perms(self.admin_group, self.manager_group)
+
+            # Should mention user model first since it's checked first
+            self.assertIn("Custom user permission model detected", str(cm.exception))
+            self.assertIn("myapp.CustomUserObjectPermission", str(cm.exception))
+
+        finally:
+            # Restore original settings
+            guardian_settings.USER_OBJ_PERMS_MODEL = original_user_model
+            guardian_settings.GROUP_OBJ_PERMS_MODEL = original_group_model
