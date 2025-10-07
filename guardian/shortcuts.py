@@ -260,7 +260,7 @@ def get_group_perms(user_or_group: Any, obj: Model) -> QuerySet[Permission]:
     return check.get_group_perms(obj)
 
 
-def get_perms_for_model(cls: Type[Model] | Model | str) -> QuerySet:
+def get_perms_for_model(cls: Union[Type[Model], Model, str]) -> QuerySet:
     """Get all permissions for a given model class.
 
     Returns:
