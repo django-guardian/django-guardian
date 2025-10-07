@@ -3,7 +3,7 @@
 from collections import defaultdict
 from functools import lru_cache, partial
 from itertools import groupby
-from typing import Any, Optional, Type, TypeVar, Union
+from typing import Any, List, Optional, Type, TypeVar, Union
 import warnings
 
 from django.apps import apps
@@ -226,7 +226,7 @@ def remove_perm(
         return model.objects.remove_perm(perm, group, obj)
 
 
-def get_perms(user_or_group: Any, obj: Model) -> list[str]:
+def get_perms(user_or_group: Any, obj: Model) -> List[str]:
     """Gets the permissions for given user/group and object pair,
 
     Returns:
@@ -260,7 +260,7 @@ def get_group_perms(user_or_group: Any, obj: Model) -> QuerySet[Permission]:
     return check.get_group_perms(obj)
 
 
-def get_perms_for_model(cls: Type[Model] | Model | str) -> QuerySet:
+def get_perms_for_model(cls: Union[Type[Model], Model, str]) -> QuerySet:
     """Get all permissions for a given model class.
 
     Returns:
@@ -281,8 +281,8 @@ def get_users_with_perms(
     attach_perms: bool = False,
     with_superusers: bool = False,
     with_group_users: bool = True,
-    only_with_perms_in: Optional[list[str]] = None,
-) -> Union[Any, list[str]]:
+    only_with_perms_in: Optional[List[str]] = None,
+) -> Union[Any, List[str]]:
     """Get all users with *any* object permissions for the given `obj`.
 
     Parameters:
@@ -380,7 +380,7 @@ def get_users_with_perms(
 
 
 def get_groups_with_perms(
-    obj: Model, attach_perms: bool = False, only_with_perms_in: Optional[list[str]] = None
+    obj: Model, attach_perms: bool = False, only_with_perms_in: Optional[List[str]] = None
 ) -> Union[Group, dict]:
     """Get all groups with *any* object permissions for the given `obj`.
 
@@ -455,7 +455,7 @@ T = TypeVar("T", bound=Model)
 
 def get_objects_for_user(
     user: Any,
-    perms: Union[str, list[str]],
+    perms: Union[str, List[str]],
     klass: Union[Type[T], Manager[T], QuerySet[T], None] = None,
     use_groups: bool = True,
     any_perm: bool = False,
@@ -703,7 +703,7 @@ def get_objects_for_user(
 
 def get_objects_for_group(
     group: Group,
-    perms: Union[str, list[str]],
+    perms: Union[str, List[str]],
     klass: Union[Model, Manager, QuerySet, None] = None,
     any_perm: bool = False,
     accept_global_perms: bool = True,
