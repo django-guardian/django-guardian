@@ -36,6 +36,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Install uv
       uses: astral-sh/setup-uv@v5
@@ -134,15 +136,20 @@ jobs:
           sed -i '/^\[\!\[Published on Django Packages\]/a [![Coverage]('"$BADGE_URL"')](https://github.com/django-guardian/django-guardian/actions/workflows/coverage.yml)' README.md
         fi
 
-    - name: Commit and push if changed
+    - name: Create Pull Request for Coverage Badge Update
       if: github.ref == 'refs/heads/main'
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add README.md
-        if git diff --staged --quiet; then
-          echo "No changes to commit"
-        else
-          git commit -m "Update coverage badge to ${{ env.COVERAGE_PERCENTAGE }}%"
-          git push
-        fi
+      uses: peter-evans/create-pull-request@v6
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: Update coverage badge to ${{ env.COVERAGE_PERCENTAGE }}%
+        title: 🤖 Update coverage badge to ${{ env.COVERAGE_PERCENTAGE }}%
+        body: |
+          This is an automated pull request to update the coverage badge in README.md.
+
+          **Coverage**: ${{ env.COVERAGE_PERCENTAGE }}%
+
+          This PR was automatically created by the coverage workflow.
+        branch: auto-update-coverage-badge
+        delete-branch: true
+        base: main
+        add-paths: README.md
