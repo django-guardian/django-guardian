@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.db import router
+from django.db import DatabaseError, router
 from django.db.models import signals
 from django.utils.module_loading import import_string
 
@@ -28,11 +28,20 @@ def create_anonymous_user(sender, **kwargs):
         return
     try:
         lookup = {User.USERNAME_FIELD: guardian_settings.ANONYMOUS_USER_NAME}
-        User.objects.using(kwargs["using"]).get(**lookup)
-    except User.DoesNotExist:
-        retrieve_anonymous_function = import_string(guardian_settings.GET_INIT_ANONYMOUS_USER)
-        user = retrieve_anonymous_function(User)
-        user.save(using=kwargs["using"])
+        # fixing #770
+        User.objects.using(kwargs["using"]).filter(**lookup).only(User.USERNAME_FIELD).get()
+    except (User.DoesNotExist, DatabaseError):
+        # Handle both cases: user doesn't exist AND table doesn't exist (rollback scenario)
+        try:
+            retrieve_anonymous_function = import_string(guardian_settings.GET_INIT_ANONYMOUS_USER)
+            user = retrieve_anonymous_function(User)
+            user.save(using=kwargs["using"])
+        except DatabaseError:
+            # If we still get a DatabaseError when trying to save,
+            # it means the table doesn't exist (rollback scenario)
+            # In this case, we should silently return as the migration
+            # will handle user creation when it's run again
+            return
 
 
 # Only create an anonymous user if support is enabled.

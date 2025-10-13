@@ -1,7 +1,7 @@
 """
 django-guardian helper functions.
 
-Functions defined within this module are a part of django-guardian’s internal functionality
+Functions defined within this module are a part of django-guardian's internal functionality
 and be considered unstable; their APIs may change in any future releases.
 """
 
@@ -17,6 +17,7 @@ from django.apps import apps as django_apps
 from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME, get_user_model
 from django.contrib.auth.models import AnonymousUser
+from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist, PermissionDenied
 from django.db.models import Model, QuerySet
 from django.http import HttpRequest, HttpResponse, HttpResponseForbidden, HttpResponseNotFound, HttpResponseRedirect
@@ -34,22 +35,58 @@ def abspath(*args):
     return os.path.abspath(os.path.join(*args))
 
 
+def _get_anonymous_user_cached() -> Any:
+    """Internal cached version of get_anonymous_user using Django's cache system."""
+    cache_key = f"guardian:anonymous_user:{guardian_settings.ANONYMOUS_USER_NAME}"
+
+    # Try to get from cache first
+    user = cache.get(cache_key)
+    if user is not None:
+        return user
+
+    # If not in cache, get from database and cache it
+    user_model = get_user_model()
+    lookup = {user_model.USERNAME_FIELD: guardian_settings.ANONYMOUS_USER_NAME}  # type: ignore[attr-defined]
+    user = user_model.objects.get(**lookup)
+
+    # Cache with TTL from settings
+    # -1 means cache indefinitely (None), positive number is TTL in seconds
+    ttl = None if guardian_settings.ANONYMOUS_USER_CACHE_TTL == -1 else guardian_settings.ANONYMOUS_USER_CACHE_TTL
+    cache.set(cache_key, user, ttl)
+    return user
+
+
+def _get_anonymous_user_uncached() -> Any:
+    """Internal uncached version of get_anonymous_user."""
+    user_model = get_user_model()
+    lookup = {user_model.USERNAME_FIELD: guardian_settings.ANONYMOUS_USER_NAME}  # type: ignore[attr-defined]
+    return user_model.objects.get(**lookup)
+
+
 def get_anonymous_user() -> Any:
     """Get the django-guardian equivalent of the anonymous user.
 
     It returns a `User` model instance (not `AnonymousUser`) depending on
     `ANONYMOUS_USER_NAME` configuration.
 
+    This function can be cached to avoid repetitive database queries based on the
+    `GUARDIAN_ANONYMOUS_USER_CACHE_TTL` setting:
+    - 0 (default): No caching, each call performs a fresh database query
+    - Positive number: Cache for that many seconds
+    - -1: Cache indefinitely (not recommended)
+
     See Also:
         See the configuration docs that explain that the Guardian anonymous user is
-        not equivalent to Django’s AnonymousUser.
+        not equivalent to Django's AnonymousUser.
 
         - [Guardian Configuration](https://django-guardian.readthedocs.io/en/stable/configuration.html)
         - [ANONYMOUS_USER_NAME configuration](https://django-guardian.readthedocs.io/en/stable/configuration.html#anonymous-user-nam)
+        - [ANONYMOUS_USER_CACHE_TTL configuration](https://django-guardian.readthedocs.io/en/stable/configuration.html#anonymous-user-cache-ttl)
     """
-    user_model = get_user_model()
-    lookup = {user_model.USERNAME_FIELD: guardian_settings.ANONYMOUS_USER_NAME}  # type: ignore[attr-defined]
-    return user_model.objects.get(**lookup)
+    if guardian_settings.ANONYMOUS_USER_CACHE_TTL > 0 or guardian_settings.ANONYMOUS_USER_CACHE_TTL == -1:
+        return _get_anonymous_user_cached()
+    else:
+        return _get_anonymous_user_uncached()
 
 
 def get_identity(identity: Model) -> tuple[Union[Any, None], Union[Any, None]]:
@@ -97,9 +134,9 @@ def get_identity(identity: Model) -> tuple[Union[Any, None], Union[Any, None]]:
     # get identity from queryset model type
     if isinstance(identity, QuerySet):
         identity_model_type = identity.model
-        if identity_model_type == get_user_model():
+        if issubclass(identity_model_type, get_user_model()):
             return identity, None
-        elif identity_model_type == group_model:
+        elif issubclass(identity_model_type, group_model):
             return None, identity
 
     # get identity from the first element in the list

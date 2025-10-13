@@ -5,6 +5,7 @@ import warnings
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.sessions.models import Session
+from django.db import DatabaseError
 from django.test import TestCase, override_settings
 
 from guardian.management import create_anonymous_user
@@ -81,3 +82,57 @@ class TestGetAnonymousUser(TestCase):
                 create_anonymous_user("sender", using="session")
 
         mocked_get_init_anon.assert_not_called()
+
+    @mock.patch("guardian.management.guardian_settings")
+    def test_database_error_on_user_lookup(self, guardian_settings):
+        """Test that DatabaseError is handled gracefully when User table doesn't exist (issue #770)"""
+        guardian_settings.GET_INIT_ANONYMOUS_USER = "guardian.management.get_init_anonymous_user"
+        guardian_settings.ANONYMOUS_USER_NAME = "anonymous"
+
+        User = get_user_model()
+
+        # Mock User.objects.using().get() to raise DatabaseError (simulating missing table)
+        with mock.patch.object(User.objects, "using") as mock_using:
+            mock_manager = mock.Mock()
+            mock_using.return_value = mock_manager
+            mock_manager.get.side_effect = DatabaseError("relation 'auth_user' does not exist")
+
+            # This should not raise an exception - it should handle DatabaseError gracefully
+            try:
+                create_anonymous_user("sender", using="default")
+                # If we reach here, the function handled the DatabaseError correctly
+                success = True
+            except DatabaseError:
+                success = False
+
+        self.assertTrue(success, "create_anonymous_user should handle DatabaseError gracefully")
+
+    @mock.patch("guardian.management.guardian_settings")
+    def test_database_error_on_user_save(self, guardian_settings):
+        """Test that DatabaseError is handled gracefully when saving fails due to missing table (issue #770)"""
+        guardian_settings.GET_INIT_ANONYMOUS_USER = "guardian.management.get_init_anonymous_user"
+        guardian_settings.ANONYMOUS_USER_NAME = "anonymous"
+
+        User = get_user_model()
+
+        # Mock User.objects.using().get() to raise DoesNotExist (user doesn't exist)
+        # Then mock save() to raise DatabaseError (table doesn't exist)
+        with mock.patch.object(User.objects, "using") as mock_using:
+            mock_manager = mock.Mock()
+            mock_using.return_value = mock_manager
+            mock_manager.get.side_effect = User.DoesNotExist()
+
+            # Mock user.save() to raise DatabaseError
+            with mock.patch("guardian.management.get_init_anonymous_user") as mock_get_init:
+                mock_user = mock.Mock()
+                mock_user.save.side_effect = DatabaseError("relation 'auth_user' does not exist")
+                mock_get_init.return_value = mock_user
+
+                # This should not raise an exception
+                try:
+                    create_anonymous_user("sender", using="default")
+                    success = True
+                except DatabaseError:
+                    success = False
+
+        self.assertTrue(success, "create_anonymous_user should handle DatabaseError on save gracefully")

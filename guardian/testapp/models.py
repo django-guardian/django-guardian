@@ -1,5 +1,6 @@
 import uuid
 
+from django.conf import settings
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth.models import AbstractBaseUser, AbstractUser
 from django.db import models
@@ -49,6 +50,22 @@ class Project(models.Model):
 
 
 Project.not_a_relation_descriptor = DynamicAccessor()
+
+
+# Simple model for testing inline admin functionality
+class UserProfile(models.Model):
+    """Simple model for testing inline admin functionality with Guardian permissions."""
+
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
+    bio = models.TextField(blank=True)
+    phone = models.CharField(max_length=20, blank=True)
+
+    class Meta:
+        # Ensure Django creates default permissions for this model
+        default_permissions = ("add", "change", "delete", "view")
+
+    def __str__(self):
+        return f"Profile for {self.user.username}"
 
 
 class MixedGroupObjectPermission(GroupObjectPermissionBase):

@@ -1101,6 +1101,64 @@ class GetObjectsForUser(TestCase):
         self.assertTrue(isinstance(objects, QuerySet))
         self.assertEqual(set(objects.values_list("pk", flat=True)), {obj_with_uuid_pk.pk})
 
+    def test_uuid_primary_key_accept_global_perms_false_bug_fix(self):
+        """
+        Test for the UUID bug fix where get_objects_for_user with accept_global_perms=False
+        fails to match UUID primary keys due to hyphen inconsistency.
+
+        This test reproduces the bug described in the issue where object_pk field
+        (with hyphens) was compared against transformed PKs (without hyphens).
+        """
+        # Create multiple UUID objects to test filtering
+        obj1 = UUIDPKModel.objects.create()
+        obj2 = UUIDPKModel.objects.create()
+        obj3 = UUIDPKModel.objects.create()
+
+        # Assign permissions to specific objects only
+        assign_perm("add_uuidpkmodel", self.user, obj1)
+        assign_perm("add_uuidpkmodel", self.user, obj2)
+        # obj3 deliberately has no permissions
+
+        # Create a queryset of all objects to pass as klass parameter
+        obj_queryset = UUIDPKModel.objects.all()
+
+        # This should only return obj1 and obj2, not obj3
+        objects = get_objects_for_user(
+            klass=obj_queryset,
+            user=self.user,
+            perms=["add_uuidpkmodel"],
+            accept_global_perms=False,
+        )
+
+        # Verify correct objects are returned
+        self.assertEqual(len(objects), 2)
+        self.assertTrue(isinstance(objects, QuerySet))
+        returned_pks = set(objects.values_list("pk", flat=True))
+        expected_pks = {obj1.pk, obj2.pk}
+        self.assertEqual(returned_pks, expected_pks)
+
+        # Ensure obj3 is not included
+        self.assertNotIn(obj3.pk, returned_pks)
+
+        # Also test with groups to ensure group permissions work correctly too
+        group_obj = UUIDPKModel.objects.create()
+        assign_perm("add_uuidpkmodel", self.group, group_obj)
+        self.user.groups.add(self.group)
+
+        objects_with_groups = get_objects_for_user(
+            klass=UUIDPKModel.objects.all(),
+            user=self.user,
+            perms=["add_uuidpkmodel"],
+            accept_global_perms=False,
+            use_groups=True,
+        )
+
+        # Should now include the group object too
+        self.assertEqual(len(objects_with_groups), 3)
+        group_returned_pks = set(objects_with_groups.values_list("pk", flat=True))
+        expected_group_pks = {obj1.pk, obj2.pk, group_obj.pk}
+        self.assertEqual(group_returned_pks, expected_group_pks)
+
     def test_exception_different_ctypes(self):
         self.assertRaises(
             MixedContentTypeError, get_objects_for_user, self.user, ["auth.change_permission", "auth.change_group"]
