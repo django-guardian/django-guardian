@@ -137,29 +137,6 @@ class ObjectPermissionBackend:
         check = ObjectPermissionChecker(user_obj)
         return set(check.get_group_perms(obj))
 
-    def has_module_perms(self, user_obj: Any, app_label: str) -> bool:
-        """Check if user has any permissions for the given app.
-
-        Since this backend only handles object-level permissions and not
-        model-level permissions, this method returns False for all cases
-        except when the user is a superuser.
-
-        Parameters:
-            user_obj (User): User instance.
-            app_label (str): Application label.
-
-        Returns:
-            False since this backend doesn't handle module-level permissions,
-            except for superusers who have all permissions.
-        """
-        # check if user is supported
-        user_support, user_obj = check_user_support(user_obj)
-        if not user_support:
-            return False
-
-        # Only superusers have module permissions through this backend
-        return user_obj.is_active and user_obj.is_superuser
-
     def get_all_permissions(self, user_obj: Any, obj: Optional[Model] = None) -> Iterable[str]:
         """Returns all permissions for a given object.
 

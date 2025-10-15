@@ -87,25 +87,6 @@ class ObjectPermissionBackendTest(TestCase):
         # Should return empty set for anonymous users (unless configured)
         self.assertEqual(set(), perms)
 
-    def test_has_module_perms_regular_user(self):
-        """Test has_module_perms method with regular user"""
-        # ObjectPermissionBackend doesn't handle module-level permissions for regular users
-        self.assertFalse(self.backend.has_module_perms(self.user, "testapp"))
-
-    def test_has_module_perms_superuser(self):
-        """Test has_module_perms method with superuser"""
-        # Superusers should have module permissions
-        self.assertTrue(self.backend.has_module_perms(self.superuser, "testapp"))
-
-    def test_has_module_perms_inactive_user(self):
-        """Test has_module_perms method with inactive user"""
-        self.assertFalse(self.backend.has_module_perms(self.inactive_user, "testapp"))
-
-    def test_has_module_perms_anonymous_user(self):
-        """Test has_module_perms method with anonymous user"""
-        anonymous = AnonymousUser()
-        self.assertFalse(self.backend.has_module_perms(anonymous, "testapp"))
-
     def test_get_all_permissions_with_object(self):
         """Test get_all_permissions method with object"""
         # No permissions initially
@@ -132,7 +113,7 @@ class ObjectPermissionBackendTest(TestCase):
         """Test get_all_permissions method with superuser"""
         perms = self.backend.get_all_permissions(self.superuser, self.project)
         # Superuser should have all permissions for the content type
-        self.assertGreater(len(perms), 0)
+        self.assertGreater(len(list(perms)), 0)
 
     def test_mixed_user_and_group_permissions(self):
         """Test that both user and group permissions are returned correctly"""

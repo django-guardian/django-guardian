@@ -46,14 +46,6 @@ class BackendIntegrationTest(TestCase):
         # but may include model-level permissions from ModelBackend
         self.assertIsInstance(group_perms, set)
 
-    def test_user_has_module_perms_integration(self):
-        """Test that user.has_module_perms() calls our backend correctly"""
-        # Regular user should not have module perms through our backend
-        self.assertFalse(self.user.has_module_perms("testapp"))
-
-        # Superuser should have module perms
-        self.assertTrue(self.superuser.has_module_perms("testapp"))
-
     def test_user_get_all_permissions_integration(self):
         """Test that user.get_all_permissions() includes our object permissions"""
         # Assign both user and group permissions
@@ -84,9 +76,6 @@ class BackendIntegrationTest(TestCase):
         from django.contrib.auth.models import AnonymousUser
 
         anonymous = AnonymousUser()
-
-        # Should not have module permissions
-        self.assertFalse(anonymous.has_module_perms("testapp"))
 
         # Should not have group permissions
         group_perms = anonymous.get_group_permissions(self.project)
