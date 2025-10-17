@@ -230,9 +230,8 @@ def get_perms(user_or_group: Any, obj: Model) -> list[str]:
     """Get all permissions for given user/group and object pair.
 
     This function returns a comprehensive list of all permissions that the user or group
-    has for the specified object. For users, this includes:
-    - Direct permissions assigned to the user
-    - Permissions inherited from groups the user belongs to
+    has for the specified object. For users, this includes both direct permissions
+    and permissions inherited from groups.
 
     Args:
         user_or_group: User, AnonymousUser, or Group instance
@@ -242,15 +241,8 @@ def get_perms(user_or_group: Any, obj: Model) -> list[str]:
         List of permission codenames (strings) for the given user/group and object pair.
 
     Note:
-        - For inactive users (is_active=False), returns empty list []
-        - For superusers, returns all available permissions for the object's model
-        - This function combines both direct user permissions AND group permissions
-        - Use get_user_perms() if you need only direct user permissions
-        - Use get_group_perms() if you need only group permissions
-
-    See Also:
-        get_user_perms(): Returns only direct user permissions
-        get_group_perms(): Returns only group permissions
+        For inactive users (is_active=False), returns empty list [].
+        For superusers, returns all available permissions for the object's model.
     """
     check = ObjectPermissionChecker(user_or_group)
     return check.get_perms(obj)
@@ -270,29 +262,9 @@ def get_user_perms(user: Any, obj: Model) -> QuerySet:
         QuerySet of permission codenames (strings) that are directly assigned
         to the user for the given object.
 
-    Important Notes:
-        - This function ONLY returns direct user permissions
-        - Group permissions are NOT included (even if user belongs to groups)
-        - For inactive users (is_active=False), returns empty QuerySet
-        - Return type is QuerySet, not list (unlike get_perms())
-
-    Common Confusion:
-        Many users expect this function to return the same results as get_perms(),
-        but that's incorrect. Here's the difference:
-
-        - get_perms(user, obj): Returns ALL permissions (user + group permissions)
-        - get_user_perms(user, obj): Returns ONLY direct user permissions
-        - get_group_perms(user, obj): Returns ONLY group permissions
-
-    Use Cases:
-        - When you need to distinguish between direct and inherited permissions
-        - When implementing permission management interfaces
-        - When auditing which permissions are directly assigned vs inherited
-        - When you need to remove only direct permissions without affecting group permissions
-
-    See Also:
-        get_perms(): Returns ALL permissions (user + group)
-        get_group_perms(): Returns only group permissions
+    Note:
+        For inactive users (is_active=False), returns empty QuerySet.
+        Return type is QuerySet, not list (unlike get_perms()).
     """
     check = ObjectPermissionChecker(user)
     return check.get_user_perms(obj)
@@ -313,30 +285,10 @@ def get_group_perms(user_or_group: Any, obj: Model) -> QuerySet[Permission]:
         QuerySet of permission codenames (strings) assigned to the group(s)
         for the given object.
 
-    Important Notes:
-        - For inactive users (is_active=False), returns empty QuerySet
-        - When passed a user: returns permissions from ALL groups the user belongs to
-        - When passed a group: returns permissions for that specific group only
-        - Return type is QuerySet, not list (unlike get_perms())
-        - Does NOT include direct user permissions (use get_user_perms() for that)
-
-    Relationship with Other Functions:
-        These three functions are complementary:
-        - get_perms(user, obj): Returns user permissions + group permissions (combined)
-        - get_user_perms(user, obj): Returns only direct user permissions
-        - get_group_perms(user, obj): Returns only group permissions
-
-        For any user: get_perms(user, obj) = get_user_perms(user, obj) + get_group_perms(user, obj)
-
-    Use Cases:
-        - When you need to see what permissions come from group membership
-        - When implementing permission management interfaces that show source of permissions
-        - When auditing group-based permissions
-        - When you need to understand permission inheritance
-
-    See Also:
-        get_perms(): Returns ALL permissions (user + group)
-        get_user_perms(): Returns only direct user permissions
+    Note:
+        For inactive users (is_active=False), returns empty QuerySet.
+        Return type is QuerySet, not list (unlike get_perms()).
+        Does NOT include direct user permissions.
     """
     check = ObjectPermissionChecker(user_or_group)
     return check.get_group_perms(obj)
