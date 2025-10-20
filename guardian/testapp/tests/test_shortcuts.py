@@ -26,7 +26,7 @@ from guardian.shortcuts import (
     get_users_with_perms,
     remove_perm,
 )
-from guardian.testapp.models import CharPKModel, ChildTestModel, UUIDPKModel
+from guardian.testapp.models import CharPKModel, ChildTestModel, ULIDPKModel, UUIDPKModel
 from guardian.testapp.tests.test_core import ObjectPermissionTestCase
 
 User = get_user_model()
@@ -1377,3 +1377,119 @@ class ContentTypeCacheTestCase(ContentTypeCacheMixin, TestCase):
 
 class ContentTypeCacheTransactionTestCase(ContentTypeCacheMixin, TransactionTestCase):
     """Test cache against TransactionTestCase"""
+
+
+class ULIDFieldTestCase(TestCase):
+    """
+    Test case for ULID field handling in django-guardian.
+
+    This test verifies that the fix for ULID primary key handling works correctly,
+    preventing PostgreSQL type mismatch errors when using ULID fields as primary keys.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user("testuser", "test@example.com", "pass")
+        self.group = Group.objects.create(name="testgroup")
+        self.user.groups.add(self.group)
+        self.obj = ULIDPKModel.objects.create()
+
+    def test_ulid_permission_assignment(self):
+        """Test that permissions can be assigned to objects with ULID primary keys."""
+        # This should not raise any errors
+        perm = assign_perm("change_ulidpkmodel", self.user, self.obj)
+        self.assertIsNotNone(perm)
+
+    def test_ulid_get_objects_for_user(self):
+        """Test that get_objects_for_user works with ULID primary keys."""
+        # Assign permission
+        assign_perm("add_ulidpkmodel", self.user, self.obj)
+
+        # This query should work without PostgreSQL type errors
+        objects = get_objects_for_user(self.user, "testapp.add_ulidpkmodel", ULIDPKModel.objects.all())
+
+        # Verify the object is returned
+        self.assertIn(self.obj, objects)
+        self.assertEqual(objects.count(), 1)
+
+    def test_ulid_multiple_objects(self):
+        """Test ULID handling with multiple objects."""
+        obj2 = ULIDPKModel.objects.create()
+        obj3 = ULIDPKModel.objects.create()
+
+        # Assign permissions to specific objects
+        assign_perm("change_ulidpkmodel", self.user, self.obj)
+        assign_perm("change_ulidpkmodel", self.user, obj2)
+        # obj3 deliberately has no permissions
+
+        # Get objects with permissions
+        objects = get_objects_for_user(self.user, "testapp.change_ulidpkmodel", ULIDPKModel.objects.all())
+
+        # Verify correct objects are returned
+        self.assertEqual(objects.count(), 2)
+        self.assertIn(self.obj, objects)
+        self.assertIn(obj2, objects)
+        self.assertNotIn(obj3, objects)
+
+    def test_ulid_with_any_perm(self):
+        """Test ULID handling with any_perm=True."""
+        obj2 = ULIDPKModel.objects.create()
+
+        # Assign different permissions to different objects
+        assign_perm("add_ulidpkmodel", self.user, self.obj)
+        assign_perm("change_ulidpkmodel", self.user, obj2)
+
+        # Get objects with any of the specified permissions
+        objects = get_objects_for_user(
+            self.user,
+            ["testapp.add_ulidpkmodel", "testapp.change_ulidpkmodel"],
+            ULIDPKModel.objects.all(),
+            any_perm=True,
+        )
+
+        # Verify both objects are returned
+        self.assertEqual(objects.count(), 2)
+        self.assertIn(self.obj, objects)
+        self.assertIn(obj2, objects)
+
+    def test_ulid_with_group_permissions(self):
+        """Test ULID handling with group permissions."""
+        # Assign permission to the group
+        assign_perm("delete_ulidpkmodel", self.group, self.obj)
+
+        # Get objects for user through group permission
+        objects = get_objects_for_user(self.user, "testapp.delete_ulidpkmodel", ULIDPKModel.objects.all())
+
+        # Verify the object is returned via group permission
+        self.assertIn(self.obj, objects)
+        self.assertEqual(objects.count(), 1)
+
+    def test_ulid_accept_global_perms_false(self):
+        """Test ULID handling with accept_global_perms=False."""
+        obj2 = ULIDPKModel.objects.create()
+
+        # Assign global permission
+        assign_perm("testapp.add_ulidpkmodel", self.user)
+        # Assign object-specific permission
+        assign_perm("add_ulidpkmodel", self.user, self.obj)
+
+        # With accept_global_perms=False, should only return objects with specific permissions
+        objects = get_objects_for_user(
+            self.user, "testapp.add_ulidpkmodel", ULIDPKModel.objects.all(), accept_global_perms=False
+        )
+
+        # Should only return obj (has specific permission), not obj2 (only global)
+        self.assertEqual(objects.count(), 1)
+        self.assertIn(self.obj, objects)
+        self.assertNotIn(obj2, objects)
+
+    def test_ulid_get_objects_for_group(self):
+        """Test that get_objects_for_group works with ULID primary keys."""
+        # Assign permission to group
+        assign_perm("view_ulidpkmodel", self.group, self.obj)
+
+        # Get objects for group
+        objects = get_objects_for_group(self.group, "testapp.view_ulidpkmodel", ULIDPKModel.objects.all())
+
+        # Verify the object is returned
+        self.assertIn(self.obj, objects)
+        self.assertEqual(objects.count(), 1)

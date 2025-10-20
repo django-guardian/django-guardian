@@ -128,6 +128,34 @@ class UUIDPKModel(models.Model):
     )
 
 
+# Mock ULID field for testing ULID primary key handling
+class ULIDField(models.CharField):
+    """Mock ULID field that mimics django-ulid's ULIDField."""
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("max_length", 26)
+        kwargs.setdefault("unique", True)
+        super().__init__(*args, **kwargs)
+
+
+def default_ulid():
+    """Generate a mock ULID (26 characters)."""
+    return str(uuid.uuid4()).replace("-", "")[:26].upper()
+
+
+class ULIDPKModel(models.Model):
+    """
+    Model for testing whether get_objects_for_user will work when the objects to
+    be returned have ULID primary keys (CharField-based ULIDs).
+    """
+
+    ulid_pk = ULIDField(
+        primary_key=True,
+        default=default_ulid,
+        editable=False,
+    )
+
+
 class CustomUser(AbstractUser, GuardianUserMixin):
     custom_id = models.AutoField(primary_key=True)
 

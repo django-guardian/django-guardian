@@ -889,6 +889,11 @@ def _handle_pk_field(queryset):
             output_field=CharField(),
         )
 
+    # Handle ULID fields and other CharField-based primary keys
+    # ULID fields are typically CharField-based and should be cast to CharField for consistent comparison
+    if isinstance(pk, CharField) or (hasattr(pk, "__class__") and "ULID" in pk.__class__.__name__):
+        return partial(Cast, output_field=CharField())
+
     return None
 
 
