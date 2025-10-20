@@ -891,6 +891,7 @@ def _handle_pk_field(queryset):
 
     # Handle ULID fields and other CharField-based primary keys
     # ULID fields are typically CharField-based and should be cast to CharField for consistent comparison
+    # https://github.com/django-guardian/django-guardian/issues/938
     if isinstance(pk, CharField) or (hasattr(pk, "__class__") and "ULID" in pk.__class__.__name__):
         return partial(Cast, output_field=CharField())
 
