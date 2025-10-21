@@ -14,11 +14,14 @@ from django.utils.translation import gettext_lazy as _
 
 from guardian.forms import GroupObjectPermissionsForm, UserObjectPermissionsForm
 from guardian.shortcuts import (
+    assign_perm,
     get_group_perms,
     get_groups_with_perms,
+    get_objects_for_user,
     get_perms_for_model,
     get_user_perms,
     get_users_with_perms,
+    remove_perm,
 )
 from guardian.utils import get_group_obj_perms_model
 
@@ -127,20 +130,172 @@ class GuardedModelAdminMixin:
     group_owned_objects_field: str = "group"
     include_object_permissions_urls: bool = True
 
+    def has_module_permission(self, request):
+        """Check if user has permission to access this module in admin.
+
+        Returns True if the user has global permissions or if they have
+        object-level permissions for any object of this model.
+        """
+        if super().has_module_permission(request):
+            return True
+        return self.get_model_objs(request).exists()
+
     def get_queryset(self, request):
+        """Get queryset filtered by user permissions."""
+        if request.user.is_superuser:
+            return super().get_queryset(request)
+
+        # Start with the base queryset
         qs = super().get_queryset(request)
 
-        if request.user.is_superuser:
-            return qs
-
+        # Apply user ownership filtering if enabled
         if self.user_can_access_owned_objects_only:
-            filters = {self.user_owned_objects_field: request.user}
-            qs = qs.filter(**filters)
-        if self.user_can_access_owned_by_group_objects_only:
-            qs_key = f"{self.group_owned_objects_field}__in"
-            filters = {qs_key: request.user.groups.all()}
-            qs = qs.filter(**filters)
+            filter_kwargs = {self.user_owned_objects_field: request.user}
+            qs = qs.filter(**filter_kwargs)
+
+        # Apply group ownership filtering if enabled
+        elif self.user_can_access_owned_by_group_objects_only:
+            user_groups = request.user.groups.all()
+            filter_kwargs = {f"{self.group_owned_objects_field}__in": user_groups}
+            qs = qs.filter(**filter_kwargs)
+
+        # If neither ownership filter is enabled, use object-level permissions
+        else:
+            # Use object-level permissions to filter queryset
+            data = self.get_model_objs(request)
+            return data
+
         return qs
+
+    def get_model_objs(self, request, action=None, klass=None):
+        """Get objects that the user has permission to access.
+
+        Args:
+            request: The HTTP request object
+            action: Specific action to check (e.g., 'view', 'change', 'delete')
+            klass: Model class to check permissions for
+
+        Returns:
+            QuerySet of objects the user has permission to access
+        """
+        opts = self.opts
+        actions = [action] if action else ["view", "change", "delete"]
+        klass = klass if klass else opts.model
+        model_name = klass._meta.model_name
+
+        perms = [f"{opts.app_label}.{perm}_{model_name}" for perm in actions]
+        return get_objects_for_user(user=request.user, perms=perms, klass=klass, any_perm=True)
+
+    def has_perm(self, request, obj, action):
+        """Check if user has specific permission for an object.
+
+        Args:
+            request: The HTTP request object
+            obj: The object to check permissions for (None for global permissions)
+            action: The action to check ('view', 'change', 'delete', etc.)
+
+        Returns:
+            bool: True if user has permission, False otherwise
+        """
+        opts = self.opts
+        codename = f"{action}_{opts.model_name}"
+        perm = f"{opts.app_label}.{codename}"
+
+        if obj:
+            return request.user.has_perm(perm, obj)
+        else:
+            return self.get_model_objs(request, action).exists()
+
+    def has_view_permission(self, request, obj=None):
+        """Check if user has view permission for the object."""
+        return self.has_perm(request, obj, "view")
+
+    def has_change_permission(self, request, obj=None):
+        """Check if user has change permission for the object."""
+        return self.has_perm(request, obj, "change")
+
+    def has_delete_permission(self, request, obj=None):
+        """Check if user has delete permission for the object."""
+        return self.has_perm(request, obj, "delete")
+
+    def has_object_permissions_access(self, request, obj=None):
+        """Check if user should have access to object permissions management.
+
+        By default, only superusers and users with change permission can
+        manage object permissions. Override this method to customize.
+
+        Args:
+            request: The HTTP request object
+            obj: The object to check permissions for
+
+        Returns:
+            bool: True if user should see object permissions button
+        """
+        if request.user.is_superuser:
+            return True
+
+        # User needs change permission to manage object permissions
+        return self.has_change_permission(request, obj)
+
+    def save_model(self, request, obj, form, change):
+        """Save model and optionally assign permissions to creator."""
+        result = super().save_model(request, obj, form, change)
+
+        # Auto-assign permissions to creator (if not superuser and it's a new object)
+        if not request.user.is_superuser and not change:
+            opts = self.opts
+            actions = ["view", "add", "change", "delete"]
+            for action in actions:
+                perm = f"{opts.app_label}.{action}_{opts.model_name}"
+                assign_perm(perm, request.user, obj)
+
+        return result
+
+    @staticmethod
+    def remove_obj_perms(obj):
+        """Remove all object permissions for the given object.
+
+        Args:
+            obj: The object to remove permissions for
+        """
+        # Get all users and groups with permissions for this object
+        users_perms = get_users_with_perms(obj, attach_perms=True)
+        groups_perms = get_groups_with_perms(obj, attach_perms=True)
+
+        # Remove permissions for users
+        for user, perms in users_perms.items():
+            for perm in perms:
+                remove_perm(perm, user, obj)
+
+        # Remove permissions for groups
+        for group, perms in groups_perms.items():
+            for perm in perms:
+                remove_perm(perm, group, obj)
+
+    def delete_model(self, request, obj):
+        """Delete model and clean up its object permissions."""
+        self.remove_obj_perms(obj)
+        return super().delete_model(request, obj)
+
+    def delete_queryset(self, request, queryset):
+        """Delete queryset and clean up object permissions for all objects."""
+        for obj in queryset:
+            self.remove_obj_perms(obj)
+        return super().delete_queryset(request, queryset)
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        """Override change_view to add object permissions access check to context."""
+        if extra_context is None:
+            extra_context = {}
+
+        try:
+            obj = self.get_object(request, object_id)
+            if obj:
+                extra_context["has_object_permissions_access"] = self.has_object_permissions_access(request, obj)
+        except Exception:
+            extra_context["has_object_permissions_access"] = False
+
+        return super().change_view(request, object_id, form_url, extra_context)
 
     def get_urls(self):
         """
@@ -197,6 +352,7 @@ class GuardedModelAdminMixin:
                 "opts": self.model._meta,
                 "original": str(obj),
                 "has_change_permission": self.has_change_permission(request, obj),
+                "has_object_permissions_access": self.has_object_permissions_access(request, obj),
                 "model_perms": get_perms_for_model(obj),
                 "title": _("Object permissions"),
             }
