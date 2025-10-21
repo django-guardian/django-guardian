@@ -1377,3 +1377,205 @@ class ContentTypeCacheTestCase(ContentTypeCacheMixin, TestCase):
 
 class ContentTypeCacheTransactionTestCase(ContentTypeCacheMixin, TransactionTestCase):
     """Test cache against TransactionTestCase"""
+
+
+class GetPermsVsGetUserPermsTest(TestCase):
+    """
+    Tests to investigate the reported issue where get_perms doesn't return a superset of get_user_perms.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user(username="testuser", email="test@example.com")
+        self.group = Group.objects.create(name="testgroup")
+        self.user.groups.add(self.group)
+
+        self.obj = ContentType.objects.create(model="test", app_label="guardian-tests")
+
+    def test_get_perms_should_be_superset_of_get_user_perms_no_permissions(self):
+        """Test Case 1: No permissions assigned - get_perms should be superset of get_user_perms."""
+        user_perms = list(get_user_perms(self.user, self.obj))
+        all_perms = get_perms(self.user, self.obj)
+
+        # get_perms should be a superset of get_user_perms
+        self.assertTrue(
+            set(all_perms).issuperset(set(user_perms)),
+            f"get_perms {all_perms} should be superset of get_user_perms {user_perms}",
+        )
+
+    def test_get_perms_should_be_superset_of_get_user_perms_user_only(self):
+        """Test Case 2: Only user permissions - get_perms should be superset of get_user_perms."""
+        assign_perm("change_contenttype", self.user, self.obj)
+        assign_perm("view_contenttype", self.user, self.obj)
+
+        user_perms = list(get_user_perms(self.user, self.obj))
+        all_perms = get_perms(self.user, self.obj)
+
+        # get_perms should be a superset of get_user_perms
+        self.assertTrue(
+            set(all_perms).issuperset(set(user_perms)),
+            f"get_perms {all_perms} should be superset of get_user_perms {user_perms}",
+        )
+
+        # They should be equal in this case (only user permissions)
+        self.assertEqual(
+            set(all_perms),
+            set(user_perms),
+            f"When only user permissions exist, get_perms {all_perms} should equal get_user_perms {user_perms}",
+        )
+
+    def test_get_perms_should_be_superset_of_get_user_perms_group_only(self):
+        """Test Case 3: Only group permissions - get_perms should include group perms, get_user_perms should be empty."""
+        assign_perm("change_contenttype", self.group, self.obj)
+        assign_perm("delete_contenttype", self.group, self.obj)
+
+        user_perms = list(get_user_perms(self.user, self.obj))
+        all_perms = get_perms(self.user, self.obj)
+        group_perms = list(get_group_perms(self.user, self.obj))
+
+        # get_perms should be a superset of get_user_perms
+        self.assertTrue(
+            set(all_perms).issuperset(set(user_perms)),
+            f"get_perms {all_perms} should be superset of get_user_perms {user_perms}",
+        )
+
+        # get_user_perms should be empty (no direct user permissions)
+        self.assertEqual(
+            user_perms, [], f"get_user_perms should be empty when no direct user permissions, got {user_perms}"
+        )
+
+        # get_perms should include group permissions
+        self.assertTrue(
+            set(group_perms).issubset(set(all_perms)), f"get_perms {all_perms} should include group_perms {group_perms}"
+        )
+
+        # This reproduces the reported issue scenario
+        self.assertGreater(len(all_perms), 0, "User should have permissions via group")
+        self.assertEqual(len(user_perms), 0, "User should have no direct permissions")
+
+    def test_get_perms_should_be_superset_of_get_user_perms_mixed(self):
+        """Test Case 4: Both user and group permissions - get_perms should be superset."""
+        # Add user permissions
+        assign_perm("change_contenttype", self.user, self.obj)
+        assign_perm("view_contenttype", self.user, self.obj)
+
+        # Add group permissions
+        assign_perm("delete_contenttype", self.group, self.obj)
+        assign_perm("add_contenttype", self.group, self.obj)
+
+        user_perms = list(get_user_perms(self.user, self.obj))
+        all_perms = get_perms(self.user, self.obj)
+        group_perms = list(get_group_perms(self.user, self.obj))
+
+        # get_perms should be a superset of get_user_perms
+        self.assertTrue(
+            set(all_perms).issuperset(set(user_perms)),
+            f"get_perms {all_perms} should be superset of get_user_perms {user_perms}",
+        )
+
+        # get_perms should include group permissions
+        self.assertTrue(
+            set(group_perms).issubset(set(all_perms)), f"get_perms {all_perms} should include group_perms {group_perms}"
+        )
+
+        # get_perms should be the union of user and group permissions
+        expected_all_perms = set(user_perms) | set(group_perms)
+        self.assertEqual(set(all_perms), expected_all_perms, "get_perms should be union of user and group perms")
+
+    def test_return_type_consistency(self):
+        """Test that return types are consistent with documentation."""
+        assign_perm("change_contenttype", self.user, self.obj)
+
+        user_perms = get_user_perms(self.user, self.obj)
+        all_perms = get_perms(self.user, self.obj)
+        group_perms = get_group_perms(self.user, self.obj)
+
+        # Check return types
+        self.assertIsInstance(all_perms, list, "get_perms should return a list")
+        self.assertIsInstance(user_perms, QuerySet, "get_user_perms should return a QuerySet")
+        self.assertIsInstance(group_perms, QuerySet, "get_group_perms should return a QuerySet")
+
+    def test_inactive_user_behavior(self):
+        """Test behavior with inactive user."""
+        assign_perm("change_contenttype", self.user, self.obj)
+        assign_perm("change_contenttype", self.group, self.obj)
+
+        # Make user inactive
+        self.user.is_active = False
+        self.user.save()
+
+        user_perms = list(get_user_perms(self.user, self.obj))
+        all_perms = get_perms(self.user, self.obj)
+        group_perms = list(get_group_perms(self.user, self.obj))
+
+        print(f"Inactive user - get_perms: {all_perms}, get_user_perms: {user_perms}, get_group_perms: {group_perms}")
+
+        # all functions should return empty for inactive users
+        self.assertEqual(all_perms, [], "get_perms should return empty list for inactive user")
+        self.assertEqual(user_perms, [], "get_user_perms should return empty list for inactive user")
+        self.assertEqual(group_perms, [], "get_group_perms should return empty list for inactive user")
+
+        # Now the superset relationship should hold correctly
+        self.assertTrue(
+            set(all_perms).issuperset(set(user_perms)),
+            f"get_perms {all_perms} should be superset of get_user_perms {user_perms}",
+        )
+        self.assertTrue(
+            set(all_perms).issuperset(set(group_perms)),
+            f"get_perms {all_perms} should be superset of get_group_perms {group_perms}",
+        )
+
+    def test_superuser_behavior(self):
+        """Test behavior with superuser."""
+        superuser = User.objects.create_superuser(username="superuser", email="super@example.com", password="pass")
+
+        user_perms = list(get_user_perms(superuser, self.obj))
+        all_perms = get_perms(superuser, self.obj)
+
+        # Superuser should have all permissions via get_perms
+        # Fix: self.obj is a ContentType, so we need to get permissions for ContentType model
+        from django.contrib.contenttypes.models import ContentType
+
+        ct = ContentType.objects.get_for_model(ContentType)
+        all_model_perms = list(Permission.objects.filter(content_type=ct).values_list("codename", flat=True))
+
+        self.assertEqual(
+            set(all_perms), set(all_model_perms), "Superuser should have all model permissions via get_perms"
+        )
+
+        # get_perms should be superset of get_user_perms
+        self.assertTrue(
+            set(all_perms).issuperset(set(user_perms)),
+            f"get_perms {all_perms} should be superset of get_user_perms {user_perms}",
+        )
+
+    def test_reported_issue_reproduction(self):
+        """Reproduce the exact issue reported in the feedback."""
+        # Create scenario where user has permissions via group but not directly
+        assign_perm("view_contenttype", self.group, self.obj)
+        assign_perm("change_contenttype", self.group, self.obj)
+        assign_perm("add_contenttype", self.group, self.obj)
+        assign_perm("delete_contenttype", self.group, self.obj)
+
+        # Simulate the user's script
+        perms = get_perms(self.user, self.obj)
+        user_perms = list(get_user_perms(self.user, self.obj))
+
+        # This reproduces the reported scenario
+        self.assertGreater(len(perms), 0, "User should have permissions via group")
+        self.assertEqual(len(user_perms), 0, "User should have no direct permissions")
+
+        # The user reported: "user_perms != perms"
+        # This is expected behavior, but let's verify the relationship
+        if user_perms != perms:
+            # This is the "issue" reported, but it's actually correct behavior
+            # get_perms includes group permissions, get_user_perms does not
+            pass
+
+        # The important test: get_perms should always be superset of get_user_perms
+        self.assertTrue(
+            set(perms).issuperset(set(user_perms)), "get_perms should always be a superset of get_user_perms"
+        )
+
+        # Verify that perms contains the group permissions
+        group_perms = list(get_group_perms(self.user, self.obj))
+        self.assertTrue(set(group_perms).issubset(set(perms)), "get_perms should include group permissions")

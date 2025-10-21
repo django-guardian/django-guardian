@@ -227,34 +227,68 @@ def remove_perm(
 
 
 def get_perms(user_or_group: Any, obj: Model) -> list[str]:
-    """Gets the permissions for given user/group and object pair,
+    """Get all permissions for given user/group and object pair.
+
+    This function returns a comprehensive list of all permissions that the user or group
+    has for the specified object. For users, this includes both direct permissions
+    and permissions inherited from groups.
+
+    Args:
+        user_or_group: User, AnonymousUser, or Group instance
+        obj: Django model instance for which to check permissions
 
     Returns:
-        List of permissions for the given user/group and object pair.
+        List of permission codenames (strings) for the given user/group and object pair.
+
+    Note:
+        For inactive users (is_active=False), returns empty list [].
+        For superusers, returns all available permissions for the object's model.
     """
     check = ObjectPermissionChecker(user_or_group)
     return check.get_perms(obj)
 
 
 def get_user_perms(user: Any, obj: Model) -> QuerySet:
-    """Get permissions for given a User-object pair.
+    """Get permissions assigned DIRECTLY to a user for a specific object.
 
-     Unlike `get_perms`, this function only returns permissions assigned directly to the user.
+    This function returns ONLY permissions that are explicitly assigned to the user
+    for the given object. It does NOT include permissions inherited from groups.
+
+    Args:
+        user: User or AnonymousUser instance
+        obj: Django model instance for which to check permissions
 
     Returns:
-        List of permissions for the given user and object pair.
+        QuerySet of permission codenames (strings) that are directly assigned
+        to the user for the given object.
+
+    Note:
+        For inactive users (is_active=False), returns empty QuerySet.
+        Return type is QuerySet, not list (unlike get_perms()).
     """
     check = ObjectPermissionChecker(user)
     return check.get_user_perms(obj)
 
 
 def get_group_perms(user_or_group: Any, obj: Model) -> QuerySet[Permission]:
-    """Get permissions for a given group and object pair.
+    """Get permissions assigned to groups for a specific object.
 
-    Unlike `get_perms`, this function only returns permissions assigned directly to the group.
+    This function returns permissions that are assigned to groups for the given object.
+    When called with a user, it returns permissions from ALL groups the user belongs to.
+    When called with a group, it returns permissions for that specific group only.
+
+    Args:
+        user_or_group: User, AnonymousUser, or Group instance
+        obj: Django model instance for which to check permissions
 
     Returns:
-        List of permissions for the given group and object pair.
+        QuerySet of permission codenames (strings) assigned to the group(s)
+        for the given object.
+
+    Note:
+        For inactive users (is_active=False), returns empty QuerySet.
+        Return type is QuerySet, not list (unlike get_perms()).
+        Does NOT include direct user permissions.
     """
     check = ObjectPermissionChecker(user_or_group)
     return check.get_group_perms(obj)
