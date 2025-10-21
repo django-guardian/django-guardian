@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import Type
+from typing import Any, Dict, Type
 
 from django import forms
 from django.conf import settings
@@ -177,7 +177,7 @@ class GuardedModelAdminMixin:
             urls = myurls + urls
         return urls
 
-    def get_obj_perms_base_context(self, request, obj):
+    def get_obj_perms_base_context(self, request, obj) -> Dict[str, Any]:
         """Get context dict with common admin and object permissions related content.
 
         Returns context dictionary with common admin and object permissions
@@ -395,7 +395,7 @@ class GuardedModelAdminMixin:
 
         return render(request, self.get_obj_perms_manage_group_template(), context)
 
-    def get_obj_perms_manage_group_template(self):
+    def get_obj_perms_manage_group_template(self) -> str:
         """Returns object permissions for group admin template.
 
         May be overridden if dynamic behavior is needed.
@@ -411,7 +411,7 @@ class GuardedModelAdminMixin:
             return "admin/guardian/contrib/grappelli/obj_perms_manage_group.html"
         return self.obj_perms_manage_group_template
 
-    def get_obj_perms_manage_group_form(self, request):
+    def get_obj_perms_manage_group_form(self, request) -> Type[forms.Form]:
         """Get the form class for group object permissions management.
 
         Parameters:

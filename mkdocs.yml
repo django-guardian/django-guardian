@@ -6,6 +6,106 @@ edit_uri: /blob/main/docs/
 plugins:
   - privacy:
   - search:
+  - i18n:
+      docs_structure: folder
+      fallback_to_default: true
+      reconfigure_material: true
+      reconfigure_search: true
+      languages:
+        - locale: en
+          default: true
+          name: English
+          build: true
+        - locale: de
+          name: Deutsch
+          build: true
+          nav_translations:
+            Home: Startseite
+            Installation: Installation
+            Configuration: Konfiguration
+            User Guide: Benutzerhandbuch
+            Contributing: Mitwirken
+            API Reference: API-Referenz
+        - locale: es
+          name: Español
+          build: true
+          nav_translations:
+            Home: Inicio
+            Installation: Instalación
+            Configuration: Configuración
+            User Guide: Guía del Usuario
+            Contributing: Contribuir
+            API Reference: Referencia de API
+        - locale: fr
+          name: Français
+          build: true
+          nav_translations:
+            Home: Accueil
+            Installation: Installation
+            Configuration: Configuration
+            User Guide: Guide Utilisateur
+            Contributing: Contribuer
+            API Reference: Référence API
+        - locale: ja
+          name: 日本語
+          build: true
+          nav_translations:
+            Home: ホーム
+            Installation: インストール
+            Configuration: 設定
+            User Guide: ユーザーガイド
+            Contributing: 貢献
+            API Reference: API リファレンス
+        - locale: ko
+          name: 한국어
+          build: true
+          nav_translations:
+            Home: 홈
+            Installation: 설치
+            Configuration: 설정
+            User Guide: 사용자 가이드
+            Contributing: 기여하기
+            API Reference: API 참조
+        - locale: pt
+          name: Português
+          build: true
+          nav_translations:
+            Home: Início
+            Installation: Instalação
+            Configuration: Configuração
+            User Guide: Guia do Usuário
+            Contributing: Contribuir
+            API Reference: Referência da API
+        - locale: ru
+          name: Русский
+          build: true
+          nav_translations:
+            Home: Главная
+            Installation: Установка
+            Configuration: Конфигурация
+            User Guide: Руководство пользователя
+            Contributing: Вклад в проект
+            API Reference: Справочник API
+        - locale: zh
+          name: 中文
+          build: true
+          nav_translations:
+            Home: 首页
+            Installation: 安装
+            Configuration: 配置
+            User Guide: 用户指南
+            Contributing: 贡献
+            API Reference: API 参考
+        - locale: tr
+          name: Türkçe
+          build: true
+          nav_translations:
+            Home: Ana Sayfa
+            Installation: Kurulum
+            Configuration: Yapılandırma
+            User Guide: Kullanıcı Kılavuzu
+            Contributing: Katkıda Bulunma
+            API Reference: API Referansı
   - mkdocstrings:
       handlers:
         python:
@@ -45,6 +145,7 @@ nav:
       - Assign Object Permissions: userguide/assign.md
       - Caveats: userguide/caveats.md
       - Checks Object Permissions: userguide/checks.md
+      - Shortcuts: userguide/shortcuts.md
       - Performance Tuning: userguide/performance.md
       - Remove Object Permissions: userguide/remove.md
       - Custom User Model: userguide/custom-user-model.md

@@ -48,7 +48,7 @@ class ObjectPermissionsNode(template.Node):
 
 
 @register.tag
-def get_obj_perms(parser, token):
+def get_obj_perms(parser, token) -> "ObjectPermissionsNode":
     """Get a list of permissions for a given user/group and object.
 
     Parses `get_obj_perms` tag which should be in format:
