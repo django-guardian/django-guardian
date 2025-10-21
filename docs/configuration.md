@@ -131,7 +131,7 @@ content type from objects and models. This is useful when a class or
 class hierarchy uses the `ContentType` framework in an non-standard way.
 Most applications will not have to change this setting.
 
-As an example, when using `django-polymorphic` it\'s useful to use a
+As an example, when using `django-polymorphic` it's useful to use a
 permission on the base model which applies to all child models. In this
 case, the custom function would return the `ContentType` of the base
 class for polymorphic models and the regular model `ContentType` for
