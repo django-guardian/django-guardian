@@ -1,5 +1,5 @@
 from itertools import chain
-from typing import Iterable, Optional
+from typing import Iterable, List, Optional
 
 from django.contrib.auth.models import Permission
 from django.db.models import Model
@@ -148,7 +148,7 @@ class ObjectPermissionChecker:
 
         return group_perms
 
-    def get_perms(self, obj: Model) -> list[str]:
+    def get_perms(self, obj: Model) -> List[str]:
         """Get a list of permissions for the given object.
 
         Parameters:
@@ -170,7 +170,7 @@ class ObjectPermissionChecker:
             if guardian_settings.AUTO_PREFETCH:
                 return []
             if self.user and self.user.is_superuser:
-                perms: list[str] = list(
+                perms: List[str] = list(
                     Permission.objects.filter(content_type=ctype).values_list("codename", flat=True)
                 )
             elif self.user:
@@ -178,9 +178,9 @@ class ObjectPermissionChecker:
                 # the results to avoid a slow query
                 user_perms = self.get_user_perms(obj)
                 group_perms = self.get_group_perms(obj)
-                perms: list[str] = list(set(chain(user_perms, group_perms)))  # type: ignore[no-redef]
+                perms: List[str] = list(set(chain(user_perms, group_perms)))  # type: ignore[no-redef]
             else:
-                perms: list[str] = list(set(self.get_group_perms(obj)))  # type: ignore[no-redef]
+                perms: List[str] = list(set(self.get_group_perms(obj)))  # type: ignore[no-redef]
             self._obj_perms_cache[key] = perms
         return self._obj_perms_cache[key]
 

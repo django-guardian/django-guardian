@@ -11,7 +11,7 @@ import logging
 from math import ceil
 import os
 import time
-from typing import Any, Optional, Union
+from typing import Any, List, Optional, Union
 
 from django.apps import apps as django_apps
 from django.conf import settings
@@ -155,7 +155,7 @@ def get_identity(identity: Model) -> tuple[Union[Any, None], Union[Any, None]]:
 
 def get_40x_or_None(
     request: HttpRequest,
-    perms: list[str],
+    perms: List[str],
     obj: Optional[Any] = None,
     login_url: Optional[Any] = None,
     redirect_field_name: Optional[str] = None,

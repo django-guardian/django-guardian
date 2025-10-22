@@ -191,6 +191,10 @@ build-backend = "setuptools.build_meta"
 ignore_missing_imports = true
 show_error_codes = true
 exclude = "example*|guardian/testapp/*"
+python_version = "3.9"
+warn_return_any = false
+warn_unused_ignores = false
+no_implicit_optional = false
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "guardian.testapp.testsettings"
