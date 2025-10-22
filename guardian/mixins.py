@@ -98,8 +98,8 @@ class PermissionRequiredMixin:
        must be listed under the list of authentication backends in your project.
 
     Attributes:
-        permission_required (str | list[str]): permissions to check
-            in form `"<app_label>.<permission codename>"`.
+        permission_required (str | List[str]): permissions to check
+            in format `"<app_label>.<permission codename>"`.
             Default is `None`.
         login_url (str): Default: `settings.LOGIN_URL`
         redirect_field_name (str): Default is `'next'`
@@ -114,7 +114,7 @@ class PermissionRequiredMixin:
         accept_global_perms (bool): Whether the mixin should first check for global perms.
             If none are found, proceed to check object level permissions.
             Default is `False`.
-        permission_object (None | object): Object against which test the permission;
+        permission_object (None or object): Object against which test the permission;
             if not set fallback to `self.get_permission_object()` which return `self.get_object()`
             or `self.object` by default.
             Default is `None`.
@@ -230,7 +230,7 @@ class PermissionRequiredMixin:
         Parameters:
             request (HttpRequest): Original request
             response (HttpResponse): 403 response returned by *check_permissions* method.
-            obj (Model | Any): Object that was fetched from the view (using `get_object`
+            obj (Model or Any): Object that was fetched from the view (using `get_object`
                 method or `object` attribute, in that order).
         """
 
@@ -294,7 +294,7 @@ class PermissionListMixin:
         ```
 
     Attributes:
-        permission_required (str | list[str]): permissions to check
+        permission_required (str | List[str]): permissions to check
             in format: `"<app_label>.<permission codename>"`.
             Default is `None`
         get_objects_for_user_extra_kwargs (dict): Extra params to pass to `guardian.shortcuts.get_objects_for_user`.

@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Type
 
 from django import forms
 from django.contrib.auth.models import Permission
@@ -18,7 +18,7 @@ class BaseObjectPermissionsForm(forms.Form):
         """Constructor for BaseObjectPermissionsForm.
 
         Parameters:
-            obj (Model | Any): Any instance which form would use to manage object permissions
+            obj (Model or Any): Any instance which form would use to manage object permissions
         """
         self.obj = obj
         super().__init__(*args, **kwargs)
@@ -77,7 +77,7 @@ class BaseObjectPermissionsForm(forms.Form):
         """
         return []
 
-    def get_obj_perms_field_class(self) -> type[forms.Field]:
+    def get_obj_perms_field_class(self) -> Type[forms.Field]:
         """Get object permissions management field's class.
 
         Returns:
@@ -86,7 +86,7 @@ class BaseObjectPermissionsForm(forms.Form):
         """
         return forms.MultipleChoiceField
 
-    def get_obj_perms_field_widget(self) -> type[forms.Widget]:
+    def get_obj_perms_field_widget(self) -> Type[forms.Widget]:
         """Get the widget class for object permissions management field.
 
         Returns:
