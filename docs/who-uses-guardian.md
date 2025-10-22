@@ -70,19 +70,6 @@ Seeing real-world usage helps demonstrate:
 - Multi-language content management with region-specific permissions
 - Real-time collaboration with granular access controls
 
-### Performance Achievements
-
-- **Sub-millisecond permission checks** in optimized deployments
-- **Horizontal scaling** across multiple database shards
-- **Cache-friendly architecture** enabling high-throughput applications
-
-## Community Metrics
-
-- **2,000+ GitHub repositories** depend on django-guardian
-- **Active in 50+ countries** across all continents
-- **10+ years** of continuous development and maintenance
-- **Thousands of production deployments** worldwide
-
 ## Getting Featured
 
 ### Open Source Projects
@@ -105,31 +92,6 @@ While we can't always feature commercial projects publicly, knowing about your u
 - **Improve performance and scalability**
 
 Feel free to reach out through our community channels.
-
-## Implementation Patterns
-
-Based on real-world usage, here are common implementation patterns:
-
-### Multi-Tenant Applications
-```python
-# Tenant-isolated permissions
-assign_perm('view_document', user, document, tenant_scope=request.tenant)
-```
-
-### Hierarchical Permissions
-```python
-# Inherit permissions from parent objects
-if user.has_perm('manage_project', project):
-    # Automatically grant task permissions
-    assign_perm('view_task', user, task)
-```
-
-### Dynamic Permission Groups
-```python
-# Role-based access with object context
-project_managers = Group.objects.get(name='project_managers')
-assign_perm('edit_project', project_managers, project)
-```
 
 ## Community Resources
 
