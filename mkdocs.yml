@@ -40,6 +40,7 @@ nav:
   - Home: index.md
   - Installation: installation.md
   - Configuration: configuration.md
+  - Who Uses Guardian: who-uses-guardian.md
   - User Guide:
       - Example Project: userguide/examples.md
       - Assign Object Permissions: userguide/assign.md
