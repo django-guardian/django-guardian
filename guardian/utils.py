@@ -11,7 +11,7 @@ import logging
 from math import ceil
 import os
 import time
-from typing import Any, List, Optional, Union
+from typing import Any, List, Optional, Tuple, Type, Union
 
 from django.apps import apps as django_apps
 from django.conf import settings
@@ -89,7 +89,7 @@ def get_anonymous_user() -> Any:
         return _get_anonymous_user_uncached()
 
 
-def get_identity(identity: Model) -> tuple[Union[Any, None], Union[Any, None]]:
+def get_identity(identity: Model) -> Tuple[Union[Any, None], Union[Any, None]]:
     """Get a tuple with the identity of the given input.
 
     Returns a tuple with one of the members set to `None` depending on whether the input is
@@ -216,7 +216,7 @@ def get_40x_or_None(
     return None
 
 
-def get_obj_perm_model_by_conf(setting_name: str) -> type[Model]:
+def get_obj_perm_model_by_conf(setting_name: str) -> Type[Model]:
     """Return the model that matches the guardian settings.
 
     Parameters:
@@ -412,7 +412,7 @@ def clean_orphan_obj_perms(
 # are defined
 
 
-def get_obj_perms_model(obj: Optional[Model], base_cls: type[Model], generic_cls: type[Model]) -> type[Model]:
+def get_obj_perms_model(obj: Optional[Model], base_cls: Type[Model], generic_cls: Type[Model]) -> Type[Model]:
     """Return the matching object permission model for the obj class.
 
     Defaults to returning the generic object permission when no direct foreignkey is defined, or obj is None.
@@ -444,7 +444,7 @@ def get_obj_perms_model(obj: Optional[Model], base_cls: type[Model], generic_cls
     return generic_cls
 
 
-def get_user_obj_perms_model(obj: Optional[Model] = None) -> type[Model]:
+def get_user_obj_perms_model(obj: Optional[Model] = None) -> Type[Model]:
     """Returns model class that connects given `obj` and User class.
 
     If obj is not specified, then the user generic object permission model
@@ -456,7 +456,7 @@ def get_user_obj_perms_model(obj: Optional[Model] = None) -> type[Model]:
     return get_obj_perms_model(obj, UserObjectPermissionBase, UserObjectPermission)
 
 
-def get_group_obj_perms_model(obj: Optional[Model] = None) -> type[Model]:
+def get_group_obj_perms_model(obj: Optional[Model] = None) -> Type[Model]:
     """Returns model class that connects given `obj` and Group class.
 
     If obj is not specified, then the group generic object permission model
