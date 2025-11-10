@@ -26,6 +26,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Operating System :: OS Independent",
     'Topic :: Security',
 ]
@@ -117,7 +118,7 @@ maintainers = [
 ]
 dependencies = [
     "django>=3.2",
-    "typing_extensions>=4.12.0; python_version<'3.13'",
+    "typing_extensions>=4.12.0; python_version<'3.14'",
 ]
 
 [project.urls]
