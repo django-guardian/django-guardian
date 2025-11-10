@@ -58,8 +58,21 @@ jobs:
       with:
         python-version: '3.13'
 
+    - name: Detect Python version
+      id: python_version
+      run: |
+        if command -v python3.14 &> /dev/null && python3.14 --version; then
+          echo "version=3.14" >> $GITHUB_OUTPUT
+          echo "detected_python=3.14" >> $GITHUB_OUTPUT
+          echo "Python 3.14 is available"
+        else
+          echo "version=3.13" >> $GITHUB_OUTPUT
+          echo "detected_python=3.13" >> $GITHUB_OUTPUT
+          echo "Python 3.14 not available, falling back to 3.13"
+        fi
+
     - name: Install tox
-      run: uv tool install --python-preference only-managed --python 3.14 tox --with . --with tox-uv --with tox-gh || uv tool install --python-preference only-managed --python 3.13 tox --with . --with tox-uv --with tox-gh
+      run: uv tool install --python-preference only-managed --python ${{ steps.python_version.outputs.detected_python }} tox --with . --with tox-uv --with tox-gh
 
     - name: Create database
       run: |
@@ -69,11 +82,23 @@ jobs:
     - name: Setup test suite
       run: tox run -vv --notest --skip-missing-interpreters false
       env:
-        TOX_GH_MAJOR_MINOR: '3.14'
+        TOX_GH_MAJOR_MINOR: ${{ steps.python_version.outputs.version }}
 
-    - name: Run tests with coverage
+    - name: Run tests with coverage (Python 3.14)
+      id: coverage_314
+      if: steps.python_version.outputs.version == '3.14'
+      continue-on-error: true
       env:
         TOX_GH_MAJOR_MINOR: '3.14'
+        PYTEST_ADDOPTS: -vv --durations=20
+        DIFF_AGAINST: HEAD
+        UV_PYTHON_PREFERENCE: only-managed
+      run: tox run -vv --skip-pkg-install
+
+    - name: Run tests with coverage (Python 3.13 fallback)
+      if: steps.python_version.outputs.version == '3.13' || steps.coverage_314.outcome == 'failure'
+      env:
+        TOX_GH_MAJOR_MINOR: '3.13'
         PYTEST_ADDOPTS: -vv --durations=20
         DIFF_AGAINST: HEAD
         UV_PYTHON_PREFERENCE: only-managed
