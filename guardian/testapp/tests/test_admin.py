@@ -501,7 +501,10 @@ class GuardedInlineAdminMixinTests(TestCase):
 
     def _create_request(self, user):
         """Helper method to create a mock request with user."""
-        request = HttpRequest()
+        from django.test import RequestFactory
+
+        factory = RequestFactory()
+        request = factory.get("/")
         request.user = user
         return request
 
@@ -830,3 +833,355 @@ class GuardedInlineAdminMixinTests(TestCase):
         self.assertFalse(inline.has_change_permission(request, other_profile))
         self.assertFalse(inline.has_add_permission(request, other_profile))
         self.assertFalse(inline.has_delete_permission(request, other_profile))
+
+
+class EnhancedGuardedModelAdminTests(TestCase):
+    """Test the enhanced GuardedModelAdmin functionality for object permissions access control."""
+
+    def setUp(self):
+        """Set up test data for enhanced admin functionality."""
+        self.user = User.objects.create_user("testuser", "test@example.com", "test")
+        self.superuser = User.objects.create_superuser("admin", "admin@example.com", "admin")
+        self.staff_user = User.objects.create_user("staff", "staff@example.com", "staff", is_staff=True)
+        self.regular_user = User.objects.create_user("regular", "regular@example.com", "regular")
+
+        # Create test object
+        self.content_type = ContentType.objects.create(model="testmodel", app_label="testapp")
+        self.admin = ContentTypeGuardedAdmin(ContentType, admin.site)
+
+        # Ensure permissions exist
+        from django.contrib.auth.models import Permission
+
+        content_type_ct = ContentType.objects.get_for_model(ContentType)
+
+        self.permissions = {}
+        for action in ["add", "change", "delete", "view"]:
+            codename = f"{action}_contenttype"
+            perm, created = Permission.objects.get_or_create(
+                codename=codename,
+                name=f"Can {action} content type",
+                content_type=content_type_ct,
+            )
+            self.permissions[action] = perm
+
+    def _create_request(self, user):
+        """Helper method to create a mock request with user."""
+        from django.test import RequestFactory
+
+        factory = RequestFactory()
+        request = factory.get("/")
+        request.user = user
+        return request
+
+    def test_has_object_permissions_access_superuser(self):
+        """Test that superuser always has access to object permissions."""
+        request = self._create_request(self.superuser)
+
+        result = self.admin.has_object_permissions_access(request, self.content_type)
+        self.assertTrue(result, "Superuser should always have access to object permissions")
+
+    def test_has_object_permissions_access_with_change_permission(self):
+        """Test that user with change permission has access to object permissions."""
+        request = self._create_request(self.staff_user)
+
+        # Assign change permission
+        assign_perm("contenttypes.change_contenttype", self.staff_user, self.content_type)
+
+        result = self.admin.has_object_permissions_access(request, self.content_type)
+        self.assertTrue(result, "User with change permission should have access to object permissions")
+
+    def test_has_object_permissions_access_without_permission(self):
+        """Test that user without change permission doesn't have access to object permissions."""
+        request = self._create_request(self.regular_user)
+
+        result = self.admin.has_object_permissions_access(request, self.content_type)
+        self.assertFalse(result, "User without change permission should not have access to object permissions")
+
+    def test_get_model_objs_filters_by_permissions(self):
+        """Test that get_model_objs returns only objects user has permission for."""
+        request = self._create_request(self.regular_user)
+
+        # Create another test object
+        content_type2 = ContentType.objects.create(model="testmodel2", app_label="testapp2")
+
+        # Give user view permission only for first object
+        assign_perm("contenttypes.view_contenttype", self.regular_user, self.content_type)
+
+        objects = self.admin.get_model_objs(request)
+
+        # Should only return the object user has permission for
+        self.assertIn(self.content_type, objects)
+        self.assertNotIn(content_type2, objects)
+
+    def test_enhanced_permission_checking_methods(self):
+        """Test the enhanced permission checking methods work correctly."""
+        request = self._create_request(self.staff_user)
+
+        # Initially user has no permissions
+        self.assertFalse(self.admin.has_view_permission(request, self.content_type))
+        self.assertFalse(self.admin.has_change_permission(request, self.content_type))
+        self.assertFalse(self.admin.has_delete_permission(request, self.content_type))
+
+        # Assign view permission
+        assign_perm("contenttypes.view_contenttype", self.staff_user, self.content_type)
+        self.assertTrue(self.admin.has_view_permission(request, self.content_type))
+
+        # Assign change permission
+        assign_perm("contenttypes.change_contenttype", self.staff_user, self.content_type)
+        self.assertTrue(self.admin.has_change_permission(request, self.content_type))
+
+        # Assign delete permission
+        assign_perm("contenttypes.delete_contenttype", self.staff_user, self.content_type)
+        self.assertTrue(self.admin.has_delete_permission(request, self.content_type))
+
+    def test_has_module_permission_enhanced(self):
+        """Test enhanced has_module_permission checks both global and object-level permissions."""
+        request = self._create_request(self.regular_user)
+
+        # User has no global permissions
+        self.assertFalse(self.admin.has_module_permission(request))
+
+        # Give user object-level permission
+        assign_perm("contenttypes.view_contenttype", self.regular_user, self.content_type)
+
+        # Now should have module permission due to object-level access
+        self.assertTrue(self.admin.has_module_permission(request))
+
+    def test_get_queryset_enhanced_filtering(self):
+        """Test enhanced get_queryset filtering for non-superusers."""
+        request = self._create_request(self.regular_user)
+
+        # Create multiple objects
+        content_type2 = ContentType.objects.create(model="testmodel2", app_label="testapp2")
+        content_type3 = ContentType.objects.create(model="testmodel3", app_label="testapp3")
+
+        # Give user permission only to first object
+        assign_perm("contenttypes.view_contenttype", self.regular_user, self.content_type)
+
+        # Get filtered queryset
+        qs = self.admin.get_queryset(request)
+
+        # Should only contain objects user has permission for
+        self.assertIn(self.content_type, qs)
+        self.assertNotIn(content_type2, qs)
+        self.assertNotIn(content_type3, qs)
+
+    def test_superuser_get_queryset_unfiltered(self):
+        """Test that superuser gets unfiltered queryset."""
+        request = self._create_request(self.superuser)
+
+        # Create multiple objects
+        content_type2 = ContentType.objects.create(model="testmodel2", app_label="testapp2")
+
+        # Get queryset - should include all objects for superuser
+        qs = self.admin.get_queryset(request)
+
+        # Should contain all objects
+        self.assertIn(self.content_type, qs)
+        self.assertIn(content_type2, qs)
+
+    def test_save_model_auto_assign_permissions(self):
+        """Test that save_model auto-assigns permissions to creator for new objects."""
+        request = self._create_request(self.staff_user)
+
+        # Create new object
+        new_obj = ContentType(model="newmodel", app_label="newapp")
+
+        # Save through admin (simulates creating new object)
+        self.admin.save_model(request, new_obj, None, change=False)
+
+        # User should now have all permissions on the new object
+        self.assertTrue(self.staff_user.has_perm("contenttypes.view_contenttype", new_obj))
+        self.assertTrue(self.staff_user.has_perm("contenttypes.add_contenttype", new_obj))
+        self.assertTrue(self.staff_user.has_perm("contenttypes.change_contenttype", new_obj))
+        self.assertTrue(self.staff_user.has_perm("contenttypes.delete_contenttype", new_obj))
+
+    def test_save_model_no_auto_assign_for_superuser(self):
+        """Test that save_model doesn't auto-assign permissions for superuser."""
+        request = self._create_request(self.superuser)
+
+        # Create new object
+        new_obj = ContentType(model="newmodel2", app_label="newapp2")
+
+        # Save through admin
+        self.admin.save_model(request, new_obj, None, change=False)
+
+        # Check that no explicit object permissions were assigned (superuser doesn't need them)
+        from guardian.shortcuts import get_users_with_perms
+
+        users_with_perms = get_users_with_perms(new_obj, attach_perms=True)
+
+        # Superuser should not be in the explicit permissions list
+        self.assertNotIn(self.superuser, users_with_perms)
+
+    def test_save_model_no_auto_assign_for_existing_objects(self):
+        """Test that save_model doesn't auto-assign permissions when editing existing objects."""
+        request = self._create_request(self.staff_user)
+
+        # Save existing object (change=True)
+        self.admin.save_model(request, self.content_type, None, change=True)
+
+        # User should not have automatic permissions on existing object
+        self.assertFalse(self.staff_user.has_perm("contenttypes.view_contenttype", self.content_type))
+
+    def test_remove_obj_perms_static_method(self):
+        """Test the remove_obj_perms static method removes all permissions."""
+        # Assign permissions to multiple users and groups
+        assign_perm("contenttypes.view_contenttype", self.user, self.content_type)
+        assign_perm("contenttypes.change_contenttype", self.staff_user, self.content_type)
+
+        group = Group.objects.create(name="testgroup")
+        assign_perm("contenttypes.delete_contenttype", group, self.content_type)
+
+        # Verify permissions exist using guardian's methods
+        self.assertTrue(self.user.has_perm("contenttypes.view_contenttype", self.content_type))
+        self.assertTrue(self.staff_user.has_perm("contenttypes.change_contenttype", self.content_type))
+
+        # Check group permissions using guardian's get_group_perms
+        from guardian.shortcuts import get_group_perms
+
+        group_perms = get_group_perms(group, self.content_type)
+        self.assertIn("delete_contenttype", group_perms)
+
+        # Remove all permissions
+        self.admin.remove_obj_perms(self.content_type)
+
+        # Verify permissions are removed
+        self.assertFalse(self.user.has_perm("contenttypes.view_contenttype", self.content_type))
+        self.assertFalse(self.staff_user.has_perm("contenttypes.change_contenttype", self.content_type))
+
+        # Check group permissions are removed
+        group_perms_after = get_group_perms(group, self.content_type)
+        self.assertNotIn("delete_contenttype", group_perms_after)
+
+    def test_delete_model_cleans_permissions(self):
+        """Test that delete_model cleans up object permissions."""
+        # Assign permissions
+        assign_perm("contenttypes.view_contenttype", self.user, self.content_type)
+        assign_perm("contenttypes.change_contenttype", self.staff_user, self.content_type)
+
+        # Verify permissions exist
+        self.assertTrue(self.user.has_perm("contenttypes.view_contenttype", self.content_type))
+
+        # Delete through admin
+        request = self._create_request(self.superuser)
+        self.admin.delete_model(request, self.content_type)
+
+        # Object should be deleted, and permissions should be cleaned up
+        self.assertFalse(ContentType.objects.filter(pk=self.content_type.pk).exists())
+
+    def test_delete_queryset_cleans_permissions(self):
+        """Test that delete_queryset cleans up permissions for all objects."""
+        # Create multiple objects with permissions
+        content_type2 = ContentType.objects.create(model="testmodel2", app_label="testapp2")
+
+        assign_perm("contenttypes.view_contenttype", self.user, self.content_type)
+        assign_perm("contenttypes.view_contenttype", self.user, content_type2)
+
+        # Create queryset and delete
+        queryset = ContentType.objects.filter(pk__in=[self.content_type.pk, content_type2.pk])
+        request = self._create_request(self.superuser)
+        self.admin.delete_queryset(request, queryset)
+
+        # Objects should be deleted
+        self.assertFalse(ContentType.objects.filter(pk__in=[self.content_type.pk, content_type2.pk]).exists())
+
+    def test_change_view_context_has_object_permissions_access(self):
+        """Test that change_view adds has_object_permissions_access to context."""
+        request = self._create_request(self.staff_user)
+
+        # Assign change permission so user can access the object
+        assign_perm("contenttypes.change_contenttype", self.staff_user, self.content_type)
+
+        # Store reference to content_type for closure
+        test_content_type = self.content_type
+
+        # Mock get_object method to return our test object
+        def mock_get_object(admin_self, request, object_id, to_field=None):
+            return test_content_type
+
+        original_get_object = self.admin.get_object
+        self.admin.get_object = mock_get_object.__get__(self.admin, type(self.admin))
+
+        try:
+            # Call change_view with extra_context
+            extra_context = {}
+            self.admin.change_view(request, str(self.content_type.pk), "", extra_context)
+
+            # Verify has_object_permissions_access is in extra_context
+            self.assertIn("has_object_permissions_access", extra_context)
+            self.assertTrue(extra_context["has_object_permissions_access"])
+        finally:
+            # Restore original method
+            self.admin.get_object = original_get_object
+
+    def test_change_view_context_no_object_permissions_access(self):
+        """Test that change_view correctly sets has_object_permissions_access to False."""
+        request = self._create_request(self.regular_user)
+
+        # Give user basic view permission to access the change view
+        assign_perm("contenttypes.view_contenttype", self.regular_user, self.content_type)
+
+        # Store reference to content_type for closure
+        test_content_type = self.content_type
+
+        # Mock get_object method to return our test object
+        def mock_get_object(admin_self, request, object_id, to_field=None):
+            return test_content_type
+
+        original_get_object = self.admin.get_object
+        self.admin.get_object = mock_get_object.__get__(self.admin, type(self.admin))
+
+        try:
+            # Call change_view with extra_context
+            extra_context = {}
+            self.admin.change_view(request, str(self.content_type.pk), "", extra_context)
+
+            # Verify has_object_permissions_access is in extra_context and False
+            self.assertIn("has_object_permissions_access", extra_context)
+            self.assertFalse(extra_context["has_object_permissions_access"])
+        finally:
+            # Restore original method
+            self.admin.get_object = original_get_object
+
+    def test_has_perm_with_global_permissions(self):
+        """Test has_perm method with global permissions when obj is None."""
+        request = self._create_request(self.staff_user)
+
+        # No objects exist that user has permission for
+        self.assertFalse(self.admin.has_perm(request, None, "view"))
+
+        # Give user permission to an object
+        assign_perm("contenttypes.view_contenttype", self.staff_user, self.content_type)
+
+        # Now should return True for global check
+        self.assertTrue(self.admin.has_perm(request, None, "view"))
+
+    def test_object_permissions_button_visibility_integration(self):
+        """Test that the template context properly controls Object Permissions button visibility."""
+        request = self._create_request(self.staff_user)
+
+        # Test without change permission
+        context = self.admin.get_obj_perms_base_context(request, self.content_type)
+        self.assertFalse(context["has_object_permissions_access"])
+
+        # Test with change permission
+        assign_perm("contenttypes.change_contenttype", self.staff_user, self.content_type)
+        context = self.admin.get_obj_perms_base_context(request, self.content_type)
+        self.assertTrue(context["has_object_permissions_access"])
+
+    def test_permission_isolation_between_objects(self):
+        """Test that permissions on one object don't affect another object."""
+        request = self._create_request(self.regular_user)
+
+        # Create another object
+        content_type2 = ContentType.objects.create(model="testmodel2", app_label="testapp2")
+
+        # Assign permission only to first object
+        assign_perm("contenttypes.change_contenttype", self.regular_user, self.content_type)
+
+        # Should have permission on first object
+        self.assertTrue(self.admin.has_object_permissions_access(request, self.content_type))
+
+        # Should NOT have permission on second object
+        self.assertFalse(self.admin.has_object_permissions_access(request, content_type2))
