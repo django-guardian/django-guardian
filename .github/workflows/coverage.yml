@@ -49,9 +49,17 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.14'
+      continue-on-error: true
+      id: python314
+
+    - name: Install Python (fallback)
+      if: steps.python314.outcome == 'failure'
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
 
     - name: Install tox
-      run: uv tool install --python-preference only-managed --python 3.14 tox --with . --with tox-uv --with tox-gh
+      run: uv tool install --python-preference only-managed --python 3.14 tox --with . --with tox-uv --with tox-gh || uv tool install --python-preference only-managed --python 3.13 tox --with . --with tox-uv --with tox-gh
 
     - name: Create database
       run: |

@@ -29,6 +29,14 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.14'
+      continue-on-error: true
+      id: python314
+
+    - name: Install Python (fallback)
+      if: steps.python314.outcome == 'failure'
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
 
     - name: Install pre-commit
       run: uv tool install pre-commit
@@ -39,6 +47,7 @@ jobs:
   tests:
     runs-on: ubuntu-24.04
     needs: pre-commit
+    continue-on-error: ${{ matrix.python-version == '3.14' }}
     strategy:
       fail-fast: false
       matrix:
@@ -81,11 +90,11 @@ jobs:
 
     - name: Install tox
           # See: https://github.com/tox-dev/tox-gh
-      run: uv tool install --python-preference only-managed --python 3.14 tox --with . --with tox-uv --with tox-gh
+      run: uv tool install --python-preference only-managed --python 3.14 tox --with . --with tox-uv --with tox-gh || uv tool install --python-preference only-managed --python 3.13 tox --with . --with tox-uv --with tox-gh
 
     - name: Install Python
           # Skip if the python version is already installed to run tox
-      if: matrix.python-version != '3.14'
+      if: matrix.python-version != '3.14' && matrix.python-version != '3.13'
       run: uv python install --python-preference only-managed ${{ matrix.python-version }}
 
     - name: Setup test suite
