@@ -28,7 +28,7 @@ jobs:
     - name: Install Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.13'
+        python-version: '3.14'
 
     - name: Install pre-commit
       run: uv tool install pre-commit
@@ -42,7 +42,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
         database-engine: [sqlite, mariadb, postgres]
 
     services:
@@ -81,11 +81,11 @@ jobs:
 
     - name: Install tox
           # See: https://github.com/tox-dev/tox-gh
-      run: uv tool install --python-preference only-managed --python 3.13 tox --with . --with tox-uv --with tox-gh
+      run: uv tool install --python-preference only-managed --python 3.14 tox --with . --with tox-uv --with tox-gh
 
     - name: Install Python
           # Skip if the python version is already installed to run tox
-      if: matrix.python-version != '3.13'
+      if: matrix.python-version != '3.14'
       run: uv python install --python-preference only-managed ${{ matrix.python-version }}
 
     - name: Setup test suite

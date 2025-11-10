@@ -86,7 +86,7 @@ Here is a quick how to:
 
 2. Install tox tool and its plugins into your local environment:
     ```
-    uv tool install --python-preference only-managed --python 3.13 tox --with . --with tox-uv
+    uv tool install --python-preference only-managed --python 3.14 tox --with . --with tox-uv
     ```
 
 3. First check all the test environments will install for you (without actually running the tests):

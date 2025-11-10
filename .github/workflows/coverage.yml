@@ -48,10 +48,10 @@ jobs:
     - name: Install Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.13'
+        python-version: '3.14'
 
     - name: Install tox
-      run: uv tool install --python-preference only-managed --python 3.13 tox --with . --with tox-uv --with tox-gh
+      run: uv tool install --python-preference only-managed --python 3.14 tox --with . --with tox-uv --with tox-gh
 
     - name: Create database
       run: |
@@ -61,11 +61,11 @@ jobs:
     - name: Setup test suite
       run: tox run -vv --notest --skip-missing-interpreters false
       env:
-        TOX_GH_MAJOR_MINOR: '3.13'
+        TOX_GH_MAJOR_MINOR: '3.14'
 
     - name: Run tests with coverage
       env:
-        TOX_GH_MAJOR_MINOR: '3.13'
+        TOX_GH_MAJOR_MINOR: '3.14'
         PYTEST_ADDOPTS: -vv --durations=20
         DIFF_AGAINST: HEAD
         UV_PYTHON_PREFERENCE: only-managed
