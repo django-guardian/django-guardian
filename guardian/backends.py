@@ -1,9 +1,9 @@
 from typing import Any, Iterable, Optional
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.backends import BaseBackend
 from django.db import models
 from django.db.models import Model
-from django.http import HttpRequest
 
 from guardian.conf import settings
 from guardian.core import ObjectPermissionChecker
@@ -55,15 +55,12 @@ def check_support(user_obj: Any, obj: Model) -> Any:
     return obj_support and user_support, user_obj
 
 
-class ObjectPermissionBackend:
+class ObjectPermissionBackend(BaseBackend):
     """Django backend for checking object-level permissions."""
 
     supports_object_permissions = True
     supports_anonymous_user = True
     supports_inactive_user = True
-
-    def authenticate(self, request: HttpRequest, username: Optional[str] = None, password: Optional[str] = None) -> Any:
-        return None
 
     def has_perm(self, user_obj: Any, perm: str, obj: Optional[Model] = None) -> bool:
         """Check if a user has the permission for a given object.
