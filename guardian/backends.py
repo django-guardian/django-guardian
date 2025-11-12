@@ -1,6 +1,7 @@
 from collections.abc import Iterable
 from typing import Any
 
+from django.contrib.auth.backends import BaseBackend
 from django.db import models
 from django.db.models import Model
 from django.http import HttpRequest
@@ -55,7 +56,7 @@ def check_support(user_obj: Any, obj: Model) -> Any:
     return obj_support and user_support, user_obj
 
 
-class ObjectPermissionBackend:
+class ObjectPermissionBackend(BaseBackend):
     """Django backend for checking object-level permissions."""
 
     supports_object_permissions = True
