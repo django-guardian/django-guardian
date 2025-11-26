@@ -9,6 +9,7 @@ from django.test import TestCase
 
 from guardian.backends import ObjectPermissionBackend
 from guardian.conf import settings as guardian_settings
+from guardian.exceptions import WrongAppError
 from guardian.shortcuts import assign_perm, remove_perm
 from guardian.testapp.models import Project
 
@@ -69,6 +70,36 @@ class ObjectPermissionBackendTest(TestCase):
         await sync_to_async(assign_perm)("change_project", self.user, self.project)
         has_perm = await self.backend.ahas_perm(self.user, "change_project", self.project)
         self.assertTrue(has_perm)
+
+    def test_has_perm_with_full_permission_name(self):
+        """Test has_perm method with permission string including app name"""
+        # Assign permission
+        assign_perm("change_project", self.user, self.project)
+        self.assertTrue(self.backend.has_perm(self.user, "testapp.change_project", self.project))
+
+    @skipIf(django.VERSION < (5, 2), "Async backends are supported on Django 5.2 and above")
+    async def test_ahas_perm_with_full_permission_name(self):
+        """Test ahas_perm method with permission string including app name"""
+        # Assign permission
+        await sync_to_async(assign_perm)("change_project", self.user, self.project)
+        has_perm = await self.backend.ahas_perm(self.user, "testapp.change_project", self.project)
+        self.assertTrue(has_perm)
+
+    def test_has_perm_wrong_app_name(self):
+        """Test has_perm method with permission string including and invalid app name"""
+        # Assign permission
+        assign_perm("change_project", self.user, self.project)
+
+        with self.assertRaises(WrongAppError):
+            self.backend.has_perm(self.user, "wrongapp.change_project", self.project)
+
+    @skipIf(django.VERSION < (5, 2), "Async backends are supported on Django 5.2 and above")
+    async def test_ahas_perm_wrong_app_name(self):
+        """Test ahas_perm method with permission string including and invalid app name"""
+        # Assign permission
+        await sync_to_async(assign_perm)("change_project", self.user, self.project)
+        with self.assertRaises(WrongAppError):
+            await self.backend.ahas_perm(self.user, "wrongapp.change_project", self.project)
 
     def test_has_perm_without_object(self):
         """Test has_perm method without object (should return False)"""
