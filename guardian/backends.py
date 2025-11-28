@@ -1,6 +1,6 @@
 from typing import Any, Iterable, Optional
 
-import django
+from asgiref.sync import sync_to_async
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import BaseBackend
 from django.db import models
@@ -111,38 +111,35 @@ class ObjectPermissionBackend(BaseBackend):
         check = ObjectPermissionChecker(user_obj)
         return check.has_perm(perm, obj)
 
-    if django.VERSION >= (5, 2):
+    async def ahas_perm(self, user_obj: Any, perm: str, obj: Optional[Model] = None) -> bool:
+        """Check if a user has the permission for a given object.
 
-        async def ahas_perm(self, user_obj: Any, perm: str, obj: Optional[Model] = None) -> bool:
-            """Check if a user has the permission for a given object.
+        Async version of :meth:`ObjectPermissionBackend.has_perm`.
 
-            Async version of :meth:`ObjectPermissionBackend.has_perm`.
+        Returns `True` if given `user_obj` has `perm` for `obj`.
+        If no `obj` is given, `False` is returned.
+        The main difference between Django's `ModelBackend` is that we can pass
+        `obj` instance here and `perm` doesn't have to contain
+        `app_label` as it can be retrieved from given `obj`.
 
-            Returns `True` if given `user_obj` has `perm` for `obj`.
-            If no `obj` is given, `False` is returned.
-            The main difference between Django's `ModelBackend` is that we can pass
-            `obj` instance here and `perm` doesn't have to contain
-            `app_label` as it can be retrieved from given `obj`.
+        **Inactive user support**
 
-            **Inactive user support**
+        If `user` is authenticated but inactive at the same time, all checks
+        always return `False`.
 
-            If `user` is authenticated but inactive at the same time, all checks
-            always return `False`.
+        Note:
+            Remember, that if user is not *active*, all checks would return `False`.
 
-            Note:
-               Remember, that if user is not *active*, all checks would return `False`.
+        Parameters:
+            user_obj (User): User instance.
+            perm (str): Permission string.
+            obj (Model): Model instance.
 
-            Parameters:
-                user_obj (User): User instance.
-                perm (str): Permission string.
-                obj (Model): Model instance.
+        Returns:
+            `True` if `user_obj` has permission, `False` otherwise.
+        """
 
-            Returns:
-                `True` if `user_obj` has permission, `False` otherwise.
-            """
-            from asgiref.sync import sync_to_async
-
-            return await sync_to_async(self.has_perm)(user_obj, perm, obj)
+        return await sync_to_async(self.has_perm)(user_obj, perm, obj)
 
     def get_user_permissions(self, user_obj: Any, obj: Optional[Model] = None) -> Iterable[str]:
         """Returns user permissions for a given object.
@@ -155,11 +152,6 @@ class ObjectPermissionBackend(BaseBackend):
         Returns:
              a set of permission strings that the given specific `user_obj` has for `obj`.
         """
-        # This backend only handles object-level permissions
-        if obj is None:
-            return set()
-
-        # check if user_obj and object are supported
         support, user_obj = check_support(user_obj, obj)
         if not support:
             return set()
