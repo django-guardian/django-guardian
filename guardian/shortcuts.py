@@ -722,7 +722,11 @@ def get_objects_for_user(
         field_pk = "obj_pk"
 
     values = values.values_list(field_pk, flat=True)
-    q = Q(pk__in=values)
+    if handle_pk_field is not None:
+        q = Q(pk__in=values)
+    else:
+        queryset = queryset.annotate(str_pk=Cast("pk", CharField()))
+        q = Q(str_pk__in=values)
     if use_groups:
         field_pk = group_fields[0]
         values = groups_obj_perms_queryset
@@ -730,8 +734,11 @@ def get_objects_for_user(
             values = values.annotate(obj_pk=handle_pk_field(expression=field_pk))
             field_pk = "obj_pk"
         values = values.values_list(field_pk, flat=True)
-        q |= Q(pk__in=values)
-
+        if handle_pk_field is not None:
+            q |= Q(pk__in=values)
+        else:
+            queryset = queryset.annotate(str_pk=Cast("pk", CharField()))
+            q |= Q(str_pk__in=values)
     return queryset.filter(q)
 
 
@@ -889,9 +896,14 @@ def get_objects_for_group(
     if handle_pk_field is not None:
         values = values.annotate(obj_pk=handle_pk_field(expression=field_pk))
         field_pk = "obj_pk"
+    else:
+        queryset = queryset.annotate(str_pk=Cast("pk", CharField()))
 
     values = values.values_list(field_pk, flat=True)
-    return queryset.filter(pk__in=values)
+    if handle_pk_field is not None:
+        return queryset.filter(pk__in=values)
+    else:
+        return queryset.filter(str_pk__in=values)
 
 
 def _handle_pk_field(queryset):
