@@ -737,7 +737,6 @@ def get_objects_for_user(
         if handle_pk_field is not None:
             q |= Q(pk__in=values)
         else:
-            queryset = queryset.annotate(str_pk=Cast("pk", CharField()))
             q |= Q(str_pk__in=values)
     return queryset.filter(q)
 
