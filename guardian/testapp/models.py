@@ -7,7 +7,11 @@ from django.db import models
 from django.utils import timezone
 
 from guardian.mixins import GuardianUserMixin
-from guardian.models import GroupObjectPermissionAbstract, GroupObjectPermissionBase, UserObjectPermissionBase
+from guardian.models import (
+    GroupObjectPermissionAbstract,
+    GroupObjectPermissionBase,
+    UserObjectPermissionBase,
+)
 
 
 class Post(models.Model):
@@ -56,7 +60,9 @@ Project.not_a_relation_descriptor = DynamicAccessor()
 class UserProfile(models.Model):
     """Simple model for testing inline admin functionality with Guardian permissions."""
 
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile"
+    )
     bio = models.TextField(blank=True)
     phone = models.CharField(max_length=20, blank=True)
 
@@ -101,7 +107,9 @@ class ReverseMixed(models.Model):
 
 
 class LogEntryWithGroup(LogEntry):
-    group = models.ForeignKey("auth.Group", null=True, blank=True, on_delete=models.CASCADE)
+    group = models.ForeignKey(
+        "auth.Group", null=True, blank=True, on_delete=models.CASCADE
+    )
 
     objects = models.Manager()
 
@@ -148,5 +156,17 @@ class ParentTestModel(models.Model):
 
 
 class ChildTestModel(ParentTestModel):
-    parent_id = models.OneToOneField(ParentTestModel, on_delete=models.CASCADE, parent_link=True)
+    parent_id = models.OneToOneField(
+        ParentTestModel, on_delete=models.CASCADE, parent_link=True
+    )
     name = models.CharField(max_length=31)
+
+
+class TextPKModel(models.Model):
+    """
+    Model for testing whether get_objects_for_user and get_objects_for_group
+    will work when the objects have TextField primary keys.
+    This simulates non-standard PK types like macaddr, inet, etc.
+    """
+
+    text_pk = models.TextField(primary_key=True)
