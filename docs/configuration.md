@@ -281,3 +281,61 @@ GroupObjectPermission = get_user_obj_perms_model()
 ```
 
 Defaults to `'guardian.GroupObjectPermission'`.
+
+## `GUARDIAN_WORK_ONLY_ACTIVE_USERS`
+
+!!! abstract "Added in version 2.4.0"
+
+When set to `True`, functions that return users with permissions (like
+`get_users_with_perms`) will only return active users (`is_active=True`).
+This filter applies to all permission-related functions that retrieve users,
+including direct user permissions, group permissions, and superuser permissions.
+
+This setting is particularly useful in applications where inactive users should
+not be considered when retrieving users with permissions, even if they technically
+still have permission assignments in the database.
+
+```python
+# Default behavior - return all users with permissions
+GUARDIAN_WORK_ONLY_ACTIVE_USERS = False
+
+# Only return active users with permissions
+GUARDIAN_WORK_ONLY_ACTIVE_USERS = True
+```
+
+!!! example "Usage example"
+
+    ```python
+    from guardian.shortcuts import get_users_with_perms, assign_perm
+    from django.contrib.auth import get_user_model
+
+    User = get_user_model()
+
+    # Create users
+    active_user = User.objects.create_user('active', is_active=True)
+    inactive_user = User.objects.create_user('inactive', is_active=False)
+
+    # Assign permissions to both users
+    assign_perm('change_model', active_user, my_object)
+    assign_perm('change_model', inactive_user, my_object)
+
+    # With GUARDIAN_WORK_ONLY_ACTIVE_USERS = False (default)
+    users = get_users_with_perms(my_object)  # Returns both users
+
+    # With GUARDIAN_WORK_ONLY_ACTIVE_USERS = True
+    users = get_users_with_perms(my_object)  # Returns only active_user
+    ```
+
+!!! tip "Performance consideration"
+
+    This setting adds a filter to the database query, so there is a minimal
+    performance impact. However, the benefit of filtering out inactive users
+    often outweighs this small overhead.
+
+!!! warning "Backward compatibility"
+
+    Existing permission assignments for inactive users remain in the database
+    and are not automatically removed. This setting only affects the retrieval
+    of users, not the permission assignments themselves.
+
+Defaults to `False`.

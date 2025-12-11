@@ -7,6 +7,7 @@ from typing import Any, Optional, Type, TypeVar, Union
 import warnings
 
 from django.apps import apps
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
@@ -395,7 +396,10 @@ def get_users_with_perms(
             qset = qset | Q(groups__in=group_ids)
         if with_superusers:
             qset = qset | Q(is_superuser=True)
-        return get_user_model().objects.filter(qset).distinct()
+        queryset = get_user_model().objects.filter(qset)
+        if getattr(settings, "GUARDIAN_WORK_ONLY_ACTIVE_USERS", False):
+            queryset = queryset.filter(is_active=True)
+        return queryset.distinct()
     else:
         # TODO: Do not hit db for each user!
         users = {}

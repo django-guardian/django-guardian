@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.query import QuerySet
-from django.test import TestCase, TransactionTestCase
+from django.test import TestCase, TransactionTestCase, override_settings
 
 from guardian.compat import get_user_permission_full_codename
 from guardian.core import ObjectPermissionChecker
@@ -616,6 +616,92 @@ class GetUsersWithPermsTest(TestCase):
         result = get_users_with_perms(self.obj1, with_group_users=False, with_superusers=True)
         expected = [admin]
         self.assertEqual(set(result), set(expected))
+
+    def test_work_only_active_users_default_behavior(self):
+        """Test that by default both active and inactive users are returned."""
+        # Create inactive user
+        inactive_user = User.objects.create(username="inactive_user", is_active=False)
+
+        # Assign permissions to both active and inactive users
+        assign_perm("change_contenttype", self.user1, self.obj1)
+        assign_perm("change_contenttype", inactive_user, self.obj1)
+
+        result = get_users_with_perms(self.obj1)
+        result_usernames = list(result.values_list("username", flat=True))
+
+        # Both users should be in the result by default
+        self.assertIn(self.user1.username, result_usernames)
+        self.assertIn(inactive_user.username, result_usernames)
+        self.assertEqual(len(result), 2)
+
+    @override_settings(GUARDIAN_WORK_ONLY_ACTIVE_USERS=True)
+    def test_work_only_active_users_enabled(self):
+        """Test that only active users are returned when GUARDIAN_WORK_ONLY_ACTIVE_USERS=True."""
+        # Create inactive user
+        inactive_user = User.objects.create(username="inactive_user", is_active=False)
+
+        # Assign permissions to both active and inactive users
+        assign_perm("change_contenttype", self.user1, self.obj1)
+        assign_perm("change_contenttype", inactive_user, self.obj1)
+
+        result = get_users_with_perms(self.obj1)
+        result_usernames = list(result.values_list("username", flat=True))
+
+        # Only active user should be in the result
+        self.assertIn(self.user1.username, result_usernames)
+        self.assertNotIn(inactive_user.username, result_usernames)
+        self.assertEqual(len(result), 1)
+
+    @override_settings(GUARDIAN_WORK_ONLY_ACTIVE_USERS=True)
+    def test_work_only_active_users_with_groups(self):
+        """Test that inactive users are filtered even when they have group permissions."""
+        # Create inactive user and add to group
+        inactive_user = User.objects.create(username="inactive_user", is_active=False)
+        inactive_user.groups.add(self.group1)
+        self.user1.groups.add(self.group1)
+
+        # Assign permission to group
+        assign_perm("change_contenttype", self.group1, self.obj1)
+
+        result = get_users_with_perms(self.obj1, with_group_users=True)
+        result_usernames = list(result.values_list("username", flat=True))
+
+        # Only active user should be in the result
+        self.assertIn(self.user1.username, result_usernames)
+        self.assertNotIn(inactive_user.username, result_usernames)
+        self.assertEqual(len(result), 1)
+
+    @override_settings(GUARDIAN_WORK_ONLY_ACTIVE_USERS=True)
+    def test_work_only_active_users_with_superuser(self):
+        """Test that inactive superusers are also filtered out."""
+        # Create inactive superuser
+        inactive_superuser = User.objects.create(username="inactive_super", is_superuser=True, is_active=False)
+        active_superuser = User.objects.create(username="active_super", is_superuser=True, is_active=True)
+
+        result = get_users_with_perms(self.obj1, with_superusers=True)
+        result_usernames = list(result.values_list("username", flat=True))
+
+        # Only active superuser should be in the result
+        self.assertIn(active_superuser.username, result_usernames)
+        self.assertNotIn(inactive_superuser.username, result_usernames)
+        self.assertEqual(len(result), 1)
+
+    @override_settings(GUARDIAN_WORK_ONLY_ACTIVE_USERS=True)
+    def test_work_only_active_users_attach_perms(self):
+        """Test that inactive users are filtered when attach_perms=True."""
+        # Create inactive user
+        inactive_user = User.objects.create(username="inactive_user", is_active=False)
+
+        # Assign permissions to both active and inactive users
+        assign_perm("change_contenttype", self.user1, self.obj1)
+        assign_perm("change_contenttype", inactive_user, self.obj1)
+
+        result = get_users_with_perms(self.obj1, attach_perms=True)
+
+        # Only active user should be in the result
+        self.assertIn(self.user1, result.keys())
+        self.assertNotIn(inactive_user, result.keys())
+        self.assertEqual(len(result), 1)
 
 
 class GetGroupsWithPerms(TestCase):
