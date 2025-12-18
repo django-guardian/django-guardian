@@ -703,6 +703,32 @@ class GetUsersWithPermsTest(TestCase):
         self.assertNotIn(inactive_user, result.keys())
         self.assertEqual(len(result), 1)
 
+    @override_settings(GUARDIAN_WORK_ONLY_ACTIVE_USERS=True)
+    def test_work_only_active_users_with_group_users_false(self):
+        """Test that inactive users with direct permissions are filtered when with_group_users=False."""
+        # Create inactive user with direct permission
+        inactive_user = User.objects.create(username="inactive_user", is_active=False)
+
+        # Create a group and add both active and inactive users to it
+        self.user1.groups.add(self.group1)
+        inactive_user.groups.add(self.group1)
+
+        # Assign direct permissions to both users
+        assign_perm("change_contenttype", self.user1, self.obj1)
+        assign_perm("change_contenttype", inactive_user, self.obj1)
+
+        # Also assign permission to the group
+        assign_perm("change_contenttype", self.group1, self.obj1)
+
+        # Get users with direct permissions only (with_group_users=False)
+        result = get_users_with_perms(self.obj1, with_group_users=False)
+        result_usernames = list(result.values_list("username", flat=True))
+
+        # Only active user should be in the result, inactive user should be filtered out
+        self.assertIn(self.user1.username, result_usernames)
+        self.assertNotIn(inactive_user.username, result_usernames)
+        self.assertEqual(len(result), 1)
+
 
 class GetGroupsWithPerms(TestCase):
     """
