@@ -150,10 +150,10 @@ def assign_perm(
     if isinstance(user_or_group, (QuerySet, list)):
         if user:
             model = get_user_obj_perms_model(obj)
-            return model.objects.assign_perm_to_many(perm, user, obj)
+            return model.objects.assign_perm_to_many(perm, user, obj, ignore_conflicts=True)
         if group:
             model = get_group_obj_perms_model(obj)
-            return model.objects.assign_perm_to_many(perm, group, obj)
+            return model.objects.assign_perm_to_many(perm, group, obj, ignore_conflicts=True)
 
     if user:
         model = get_user_obj_perms_model(obj)
