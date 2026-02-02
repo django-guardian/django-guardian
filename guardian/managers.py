@@ -41,6 +41,7 @@ class BaseObjectPermissionManager(models.Manager):
         if self.is_generic():
             kwargs["content_type"] = ctype
             kwargs["object_pk"] = obj.pk
+            kwargs["defaults"] = {"content_object": obj}
         else:
             kwargs["content_object"] = obj
         obj_perm, _ = self.get_or_create(**kwargs)
