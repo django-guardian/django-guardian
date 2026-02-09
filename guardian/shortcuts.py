@@ -182,13 +182,19 @@ def remove_perm(
     """Removes permission from user/group and object pair.
 
     Parameters:
-        perm (str): Permission for `obj`, in format `app_label.codename` or `codename`.
+        perm (str): permission to remove for the given `obj`, in format: `app_label.codename` or `codename`.
             If `obj` is not given, must be in format `app_label.codename`.
-        user_or_group (User | AnonymousUser | Group): The user or group to remove the permission from.
-            passing any other object would raise`guardian.exceptions.NotUserNorGroup` exception
-        obj (Model | QuerySet | None): Django `Model` instance or QuerySet.
-            Use `None` if assigning global permission.
+        user_or_group (User | AnonymousUser | Group | list | QuerySet):
+            instance of `User`, `AnonymousUser`, `Group`,
+            list of `User` or `Group`, or queryset of `User` or `Group`;
+            passing any other object would raise a `guardian.exceptions.NotUserNorGroup` exception
+        obj (Model | QuerySet | None): Django's `Model` instance or QuerySet or
+            a list of Django `Model` instances or `None` if removing global permission.
+            *Default* is `None`.
     """
+    if obj is None and isinstance(user_or_group, (QuerySet, list)):
+        raise MultipleIdentityAndObjectError("Bulk global permissions removal is not supported")
+
     user, group = get_identity(user_or_group)
     if obj is None:
         if not isinstance(perm, Permission):
@@ -209,13 +215,26 @@ def remove_perm(
     if not isinstance(perm, Permission):
         perm = perm.split(".")[-1]
 
-    if isinstance(obj, QuerySet):
+    if isinstance(obj, list) and not obj:
+        return
+
+    if isinstance(obj, (QuerySet, list)):
+        if isinstance(user_or_group, (QuerySet, list)):
+            raise MultipleIdentityAndObjectError("Only bulk operations on either users/groups OR objects are supported")
         if user:
-            model = get_user_obj_perms_model(obj.model)
+            model = get_user_obj_perms_model(obj[0] if isinstance(obj, list) else obj.model)
             return model.objects.bulk_remove_perm(perm, user, obj)
         if group:
-            model = get_group_obj_perms_model(obj.model)
+            model = get_group_obj_perms_model(obj[0] if isinstance(obj, list) else obj.model)
             return model.objects.bulk_remove_perm(perm, group, obj)
+
+    if isinstance(user_or_group, (QuerySet, list)):
+        if user:
+            model = get_user_obj_perms_model(obj)
+            return model.objects.remove_perm_from_many(perm, user, obj)
+        if group:
+            model = get_group_obj_perms_model(obj)
+            return model.objects.remove_perm_from_many(perm, group, obj)
 
     if user:
         model = get_user_obj_perms_model(obj)
