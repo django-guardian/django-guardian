@@ -175,15 +175,15 @@ def assign(perm, user_or_group, obj=None):
 
 
 def remove_perm(
-    perm: str,
+    perm: Union[str, Permission],
     user_or_group: Any = None,
     obj: Union[Model, QuerySet, None] = None,
 ) -> None:
     """Removes permission from user/group and object pair.
 
     Parameters:
-        perm (str): permission to remove for the given `obj`, in format: `app_label.codename` or `codename`.
-            If `obj` is not given, must be in format `app_label.codename`.
+        perm (str | Permission): permission to remove for the given `obj`, in format: `app_label.codename` or `codename` or `Permission` instance.
+            If `obj` is not given, must be in format `app_label.codename` or `Permission` instance.
         user_or_group (User | AnonymousUser | Group | list | QuerySet):
             instance of `User`, `AnonymousUser`, `Group`,
             list of `User` or `Group`, or queryset of `User` or `Group`;
