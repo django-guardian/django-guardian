@@ -585,6 +585,13 @@ def get_objects_for_user(
 
             - If `accept_global_perms` is `True`: An empty list is returned.
             - If `accept_global_perms` is `False`: An empty list is returned.
+
+    Note: Primary key types
+        Standard PK types (integer family, ``UUIDField``, ``CharField``) use
+        optimised native casts. Non-standard PK types (e.g. ``TextField``,
+        PostgreSQL ``macaddr``/``inet``) are automatically handled via a
+        ``Cast("pk", CharField())`` fallback, so models with any PK type are
+        supported without extra configuration.
     """
     if isinstance(perms, str):
         perms = [perms]
@@ -805,6 +812,13 @@ def get_objects_for_group(
         >>> get_objects_for_group(group, ['tasker.change_task'], accept_global_perms=False)
         [<Task some task>]
         ```
+
+    Note: Primary key types
+        Standard PK types (integer family, ``UUIDField``, ``CharField``) use
+        optimised native casts. Non-standard PK types (e.g. ``TextField``,
+        PostgreSQL ``macaddr``/``inet``) are automatically handled via a
+        ``Cast("pk", CharField())`` fallback, so models with any PK type are
+        supported without extra configuration.
     """
     if isinstance(perms, str):
         perms = [perms]

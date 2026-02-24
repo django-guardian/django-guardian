@@ -100,6 +100,13 @@ It is also possible to provide list of permissions rather than single
 string, own queryset (as `klass` argument) or control if result should
 be computed with (default) or without user's groups permissions.
 
+!!! note "Non-standard primary keys"
+
+    `get_objects_for_user` supports models with any primary key type, including
+    non-standard types like `TextField` or PostgreSQL-specific fields.
+    See [Primary key types](caveats.md#primary-key-types) for details and
+    performance considerations.
+
 !!! tip "See Also"
     Documentation for `get_objects_for_user`
 
