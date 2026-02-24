@@ -7,7 +7,6 @@ from typing import Any, Optional, Type, TypeVar, Union
 import warnings
 
 from django.apps import apps
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
@@ -32,6 +31,7 @@ from django.db.models.expressions import Value
 from django.db.models.functions import Cast, Replace
 from django.shortcuts import _get_queryset
 
+from guardian.conf import settings as guardian_settings
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
 from guardian.exceptions import (
@@ -397,7 +397,7 @@ def get_users_with_perms(
         if with_superusers:
             qset = qset | Q(is_superuser=True)
         queryset = get_user_model().objects.filter(qset)
-        if getattr(settings, "GUARDIAN_ACTIVE_USERS_ONLY", False):
+        if guardian_settings.ACTIVE_USERS_ONLY:
             queryset = queryset.filter(is_active=True)
         return queryset.distinct()
     else:

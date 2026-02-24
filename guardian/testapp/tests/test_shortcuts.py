@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.query import QuerySet
-from django.test import TestCase, TransactionTestCase, override_settings
+from django.test import TestCase, TransactionTestCase
 
 from guardian.compat import get_user_permission_full_codename
 from guardian.core import ObjectPermissionChecker
@@ -658,7 +658,7 @@ class GetUsersWithPermsTest(TestCase):
         self.assertIn(inactive_user.username, result_usernames)
         self.assertEqual(len(result), 2)
 
-    @override_settings(GUARDIAN_ACTIVE_USERS_ONLY=True)
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
     def test_active_users_only_enabled(self):
         """Test that only active users are returned when GUARDIAN_ACTIVE_USERS_ONLY=True."""
         # Create inactive user
@@ -676,7 +676,7 @@ class GetUsersWithPermsTest(TestCase):
         self.assertNotIn(inactive_user.username, result_usernames)
         self.assertEqual(len(result), 1)
 
-    @override_settings(GUARDIAN_ACTIVE_USERS_ONLY=True)
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
     def test_active_users_only_with_groups(self):
         """Test that inactive users are filtered even when they have group permissions."""
         # Create inactive user and add to group
@@ -695,7 +695,7 @@ class GetUsersWithPermsTest(TestCase):
         self.assertNotIn(inactive_user.username, result_usernames)
         self.assertEqual(len(result), 1)
 
-    @override_settings(GUARDIAN_ACTIVE_USERS_ONLY=True)
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
     def test_active_users_only_with_superuser(self):
         """Test that inactive superusers are also filtered out."""
         # Create inactive superuser
@@ -710,7 +710,7 @@ class GetUsersWithPermsTest(TestCase):
         self.assertNotIn(inactive_superuser.username, result_usernames)
         self.assertEqual(len(result), 1)
 
-    @override_settings(GUARDIAN_ACTIVE_USERS_ONLY=True)
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
     def test_active_users_only_attach_perms(self):
         """Test that inactive users are filtered when attach_perms=True."""
         # Create inactive user
@@ -727,7 +727,7 @@ class GetUsersWithPermsTest(TestCase):
         self.assertNotIn(inactive_user, result.keys())
         self.assertEqual(len(result), 1)
 
-    @override_settings(GUARDIAN_ACTIVE_USERS_ONLY=True)
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
     def test_active_users_only_with_group_users_false(self):
         """Test that inactive users with direct permissions are filtered when with_group_users=False."""
         # Create inactive user with direct permission
