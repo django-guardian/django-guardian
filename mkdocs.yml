@@ -50,6 +50,7 @@ nav:
       - Remove Object Permissions: userguide/remove.md
       - Custom User Model: userguide/custom-user-model.md
       - Custom Group Model: userguide/custom-group-model.md
+      - Shortcuts: userguide/shortcuts.md
       - Admin Integration: userguide/admin-integration.md
   - Contributing:
       - Overview: develop/overview.md

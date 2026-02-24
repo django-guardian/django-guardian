@@ -7,7 +7,11 @@ from django.db import models
 from django.utils import timezone
 
 from guardian.mixins import GuardianUserMixin
-from guardian.models import GroupObjectPermissionAbstract, GroupObjectPermissionBase, UserObjectPermissionBase
+from guardian.models import (
+    GroupObjectPermissionAbstract,
+    GroupObjectPermissionBase,
+    UserObjectPermissionBase,
+)
 
 
 class Post(models.Model):
@@ -150,3 +154,13 @@ class ParentTestModel(models.Model):
 class ChildTestModel(ParentTestModel):
     parent_id = models.OneToOneField(ParentTestModel, on_delete=models.CASCADE, parent_link=True)
     name = models.CharField(max_length=31)
+
+
+class TextPKModel(models.Model):
+    """
+    Model for testing whether get_objects_for_user and get_objects_for_group
+    will work when the objects have TextField primary keys.
+    This simulates non-standard PK types like macaddr, inet, etc.
+    """
+
+    text_pk = models.TextField(primary_key=True)
