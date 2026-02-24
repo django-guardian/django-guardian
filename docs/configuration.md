@@ -286,8 +286,9 @@ Defaults to `'guardian.GroupObjectPermission'`.
 
 !!! abstract "Added in version 3.3.0"
 
-When set to `True`, functions that return users with permissions (like
-`get_users_with_perms`) will only return active users (`is_active=True`).
+When set to `True`, functions like `get_users_with_perms` will only return
+active users (`is_active=True`), and `get_objects_for_user` will return an
+empty queryset for inactive users.
 This filter applies to all permission-related functions that retrieve users,
 including direct user permissions, group permissions, and superuser permissions.
 
@@ -324,6 +325,13 @@ GUARDIAN_ACTIVE_USERS_ONLY = True
 
     # With GUARDIAN_ACTIVE_USERS_ONLY = True
     users = get_users_with_perms(my_object)  # Returns only active_user
+
+    # get_objects_for_user also respects the setting
+    from guardian.shortcuts import get_objects_for_user
+
+    # With GUARDIAN_ACTIVE_USERS_ONLY = True
+    objects = get_objects_for_user(inactive_user, 'change_model', MyModel)  # Returns empty queryset
+    objects = get_objects_for_user(active_user, 'change_model', MyModel)    # Returns objects normally
     ```
 
 !!! tip "Performance consideration"
