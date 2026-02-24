@@ -52,6 +52,7 @@ nav:
       - Custom Group Model: userguide/custom-group-model.md
       - Shortcuts: userguide/shortcuts.md
       - Admin Integration: userguide/admin-integration.md
+      - Signals: userguide/signals.md
   - Contributing:
       - Overview: develop/overview.md
       - Testing: develop/testing.md
