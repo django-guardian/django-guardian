@@ -346,4 +346,10 @@ GUARDIAN_ACTIVE_USERS_ONLY = True
     and are not automatically removed. This setting only affects the retrieval
     of users, not the permission assignments themselves.
 
+!!! warning "Custom user models"
+
+    This setting requires the user model to have an `is_active` field.
+    If the user model does not have an `is_active` field, the setting will
+    have no effect and a system check warning (`guardian.W002`) will be raised.
+
 Defaults to `False`.
