@@ -30,10 +30,26 @@ class MyAppConfig(AppConfig):
     def ready(self):
         from guardian.models import UserObjectPermission, GroupObjectPermission
 
-        post_save.connect(self.handle_perm_change, sender=UserObjectPermission)
-        post_save.connect(self.handle_perm_change, sender=GroupObjectPermission)
-        post_delete.connect(self.handle_perm_change, sender=UserObjectPermission)
-        post_delete.connect(self.handle_perm_change, sender=GroupObjectPermission)
+        post_save.connect(
+            self.handle_perm_change,
+            sender=UserObjectPermission,
+            dispatch_uid="myapp.handle_perm_change.userobjectpermission.post_save",
+        )
+        post_save.connect(
+            self.handle_perm_change,
+            sender=GroupObjectPermission,
+            dispatch_uid="myapp.handle_perm_change.groupobjectpermission.post_save",
+        )
+        post_delete.connect(
+            self.handle_perm_change,
+            sender=UserObjectPermission,
+            dispatch_uid="myapp.handle_perm_change.userobjectpermission.post_delete",
+        )
+        post_delete.connect(
+            self.handle_perm_change,
+            sender=GroupObjectPermission,
+            dispatch_uid="myapp.handle_perm_change.groupobjectpermission.post_delete",
+        )
 
     @staticmethod
     def handle_perm_change(sender, instance, **kwargs):
