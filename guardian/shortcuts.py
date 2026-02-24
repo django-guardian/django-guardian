@@ -216,16 +216,16 @@ def remove_perm(
             perm = Permission.objects.get(content_type__app_label=app_label, codename=codename)
         if user:
             user.user_permissions.remove(perm)
-            return
+            return None
         if group:
             group.permissions.remove(perm)
-            return
+            return None
 
     if not isinstance(perm, Permission):
         perm = perm.split(".")[-1]
 
     if isinstance(obj, list) and not obj:
-        return
+        return None
 
     if isinstance(obj, (QuerySet, list)):
         if isinstance(user_or_group, (QuerySet, list)):
@@ -252,6 +252,7 @@ def remove_perm(
     if group:
         model = get_group_obj_perms_model(obj)
         return model.objects.remove_perm(perm, group, obj)
+    return None
 
 
 def get_perms(user_or_group: Any, obj: Model) -> list[str]:
