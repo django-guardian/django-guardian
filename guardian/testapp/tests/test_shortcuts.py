@@ -1396,6 +1396,51 @@ class GetObjectsForUser(TestCase):
         self.assertTrue(isinstance(objects, QuerySet))
         self.assertEqual(set(objects), set(groups))
 
+    def test_active_users_only_default_behavior(self):
+        """Without ACTIVE_USERS_ONLY, an inactive user should still get objects."""
+        inactive_user = User.objects.create(username="inactive_user", is_active=False)
+        assign_perm("change_contenttype", inactive_user, self.ctype)
+
+        objects = get_objects_for_user(inactive_user, ["contenttypes.change_contenttype"], ContentType)
+        self.assertEqual(set(objects), {self.ctype})
+
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
+    def test_active_users_only_inactive_user(self):
+        """With ACTIVE_USERS_ONLY=True, an inactive user should get empty queryset."""
+        inactive_user = User.objects.create(username="inactive_user", is_active=False)
+        assign_perm("change_contenttype", inactive_user, self.ctype)
+
+        objects = get_objects_for_user(inactive_user, ["contenttypes.change_contenttype"], ContentType)
+        self.assertEqual(len(objects), 0)
+
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
+    def test_active_users_only_active_user(self):
+        """With ACTIVE_USERS_ONLY=True, an active user should get objects normally."""
+        assign_perm("change_contenttype", self.user, self.ctype)
+
+        objects = get_objects_for_user(self.user, ["contenttypes.change_contenttype"], ContentType)
+        self.assertEqual(set(objects), {self.ctype})
+
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
+    def test_active_users_only_inactive_superuser(self):
+        """With ACTIVE_USERS_ONLY=True, an inactive superuser should get empty queryset."""
+        inactive_superuser = User.objects.create(username="inactive_super", is_superuser=True, is_active=False)
+
+        objects = get_objects_for_user(
+            inactive_superuser, ["contenttypes.change_contenttype"], ContentType, with_superuser=True
+        )
+        self.assertEqual(len(objects), 0)
+
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
+    def test_active_users_only_with_group_perms(self):
+        """With ACTIVE_USERS_ONLY=True, an inactive user with group perms should get empty queryset."""
+        inactive_user = User.objects.create(username="inactive_user", is_active=False)
+        inactive_user.groups.add(self.group)
+        assign_perm("change_contenttype", self.group, self.ctype)
+
+        objects = get_objects_for_user(inactive_user, ["contenttypes.change_contenttype"], ContentType)
+        self.assertEqual(len(objects), 0)
+
 
 class GetObjectsForGroup(TestCase):
     """
