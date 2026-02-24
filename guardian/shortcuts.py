@@ -585,6 +585,13 @@ def get_objects_for_user(
 
             - If `accept_global_perms` is `True`: An empty list is returned.
             - If `accept_global_perms` is `False`: An empty list is returned.
+
+    Note: Primary key types
+        Standard PK types (integer family, ``UUIDField``, ``CharField``) use
+        optimised native casts. Non-standard PK types (e.g. ``TextField``,
+        PostgreSQL ``macaddr``/``inet``) are automatically handled via a
+        ``Cast("pk", CharField())`` fallback, so models with any PK type are
+        supported without extra configuration.
     """
     if isinstance(perms, str):
         perms = [perms]
@@ -722,7 +729,11 @@ def get_objects_for_user(
         field_pk = "obj_pk"
 
     values = values.values_list(field_pk, flat=True)
-    q = Q(pk__in=values)
+    if handle_pk_field is not None:
+        q = Q(pk__in=values)
+    else:
+        queryset = queryset.annotate(str_pk=Cast("pk", CharField()))
+        q = Q(str_pk__in=values)
     if use_groups:
         field_pk = group_fields[0]
         values = groups_obj_perms_queryset
@@ -730,8 +741,10 @@ def get_objects_for_user(
             values = values.annotate(obj_pk=handle_pk_field(expression=field_pk))
             field_pk = "obj_pk"
         values = values.values_list(field_pk, flat=True)
-        q |= Q(pk__in=values)
-
+        if handle_pk_field is not None:
+            q |= Q(pk__in=values)
+        else:
+            q |= Q(str_pk__in=values)
     return queryset.filter(q)
 
 
@@ -799,6 +812,13 @@ def get_objects_for_group(
         >>> get_objects_for_group(group, ['tasker.change_task'], accept_global_perms=False)
         [<Task some task>]
         ```
+
+    Note: Primary key types
+        Standard PK types (integer family, ``UUIDField``, ``CharField``) use
+        optimised native casts. Non-standard PK types (e.g. ``TextField``,
+        PostgreSQL ``macaddr``/``inet``) are automatically handled via a
+        ``Cast("pk", CharField())`` fallback, so models with any PK type are
+        supported without extra configuration.
     """
     if isinstance(perms, str):
         perms = [perms]
@@ -889,9 +909,14 @@ def get_objects_for_group(
     if handle_pk_field is not None:
         values = values.annotate(obj_pk=handle_pk_field(expression=field_pk))
         field_pk = "obj_pk"
+    else:
+        queryset = queryset.annotate(str_pk=Cast("pk", CharField()))
 
     values = values.values_list(field_pk, flat=True)
-    return queryset.filter(pk__in=values)
+    if handle_pk_field is not None:
+        return queryset.filter(pk__in=values)
+    else:
+        return queryset.filter(str_pk__in=values)
 
 
 def _handle_pk_field(queryset):
