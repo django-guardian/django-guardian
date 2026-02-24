@@ -1751,8 +1751,9 @@ class GetPermsVsGetUserPermsTest(TestCase):
         self.assertIsInstance(user_perms, QuerySet, "get_user_perms should return a QuerySet")
         self.assertIsInstance(group_perms, QuerySet, "get_group_perms should return a QuerySet")
 
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
     def test_inactive_user_behavior(self):
-        """Test behavior with inactive user."""
+        """With ACTIVE_USERS_ONLY=True, all functions return empty for inactive users."""
         assign_perm("change_contenttype", self.user, self.obj)
         assign_perm("change_contenttype", self.group, self.obj)
 
@@ -1764,22 +1765,29 @@ class GetPermsVsGetUserPermsTest(TestCase):
         all_perms = get_perms(self.user, self.obj)
         group_perms = list(get_group_perms(self.user, self.obj))
 
-        print(f"Inactive user - get_perms: {all_perms}, get_user_perms: {user_perms}, get_group_perms: {group_perms}")
-
         # all functions should return empty for inactive users
         self.assertEqual(all_perms, [], "get_perms should return empty list for inactive user")
         self.assertEqual(user_perms, [], "get_user_perms should return empty list for inactive user")
         self.assertEqual(group_perms, [], "get_group_perms should return empty list for inactive user")
 
-        # Now the superset relationship should hold correctly
-        self.assertTrue(
-            set(all_perms).issuperset(set(user_perms)),
-            f"get_perms {all_perms} should be superset of get_user_perms {user_perms}",
-        )
-        self.assertTrue(
-            set(all_perms).issuperset(set(group_perms)),
-            f"get_perms {all_perms} should be superset of get_group_perms {group_perms}",
-        )
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", False)
+    def test_inactive_user_behavior_default_setting(self):
+        """With ACTIVE_USERS_ONLY=False (default), inactive users still have perms."""
+        assign_perm("change_contenttype", self.user, self.obj)
+        assign_perm("change_contenttype", self.group, self.obj)
+
+        # Make user inactive
+        self.user.is_active = False
+        self.user.save()
+
+        user_perms = list(get_user_perms(self.user, self.obj))
+        all_perms = get_perms(self.user, self.obj)
+        group_perms = list(get_group_perms(self.user, self.obj))
+
+        # all functions should still return perms for inactive users
+        self.assertIn("change_contenttype", all_perms)
+        self.assertIn("change_contenttype", user_perms)
+        self.assertIn("change_contenttype", group_perms)
 
     def test_superuser_behavior(self):
         """Test behavior with superuser."""
