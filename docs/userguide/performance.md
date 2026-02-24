@@ -81,15 +81,26 @@ class Project(models.Model):
     name = models.CharField(max_length=128, unique=True)
 
 class ProjectUserObjectPermission(UserObjectPermissionBase):
-    content_object = models.ForeignKey(Project, on_delete=models.CASCADE)
+    content_object = models.ForeignKey(
+        Project, on_delete=models.CASCADE, related_name='user_object_permissions'
+    )
 
 class ProjectGroupObjectPermission(GroupObjectPermissionBase):
-    content_object = models.ForeignKey(Project, on_delete=models.CASCADE)
+    content_object = models.ForeignKey(
+        Project, on_delete=models.CASCADE, related_name='group_object_permissions'
+    )
 ```
 
 !!! danger "Important"
     Name of the `ForeignKey` field is important and it should be
     `content_object` as underlying queries depends on it.
+
+!!! warning "Reverse accessor clashes"
+    If `content_object` points to the same model as the inherited `user`
+    or `group` foreign key (e.g., you are assigning permissions on a custom
+    User model), Django will raise a reverse accessor clash error. To fix
+    this, set a unique `related_name` on the `content_object` field as
+    shown in the example above.
 
 From now on, `guardian` will figure out that `Project` model has direct
 relation for user/group object permissions and will use those models. It
