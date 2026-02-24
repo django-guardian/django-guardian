@@ -51,7 +51,7 @@ USER_OBJ_PERMS_MODEL = getattr(settings, "GUARDIAN_USER_OBJ_PERMS_MODEL", "guard
 GROUP_OBJ_PERMS_MODEL = getattr(settings, "GUARDIAN_GROUP_OBJ_PERMS_MODEL", "guardian.GroupObjectPermission")
 
 # Only work with active users when retrieving users with permissions
-WORK_ONLY_ACTIVE_USERS = getattr(settings, "GUARDIAN_WORK_ONLY_ACTIVE_USERS", False)
+ACTIVE_USERS_ONLY = getattr(settings, "GUARDIAN_ACTIVE_USERS_ONLY", False)
 
 
 def check_configuration():

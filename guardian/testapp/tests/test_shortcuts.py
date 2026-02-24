@@ -641,7 +641,7 @@ class GetUsersWithPermsTest(TestCase):
         expected = [admin]
         self.assertEqual(set(result), set(expected))
 
-    def test_work_only_active_users_default_behavior(self):
+    def test_active_users_only_default_behavior(self):
         """Test that by default both active and inactive users are returned."""
         # Create inactive user
         inactive_user = User.objects.create(username="inactive_user", is_active=False)
@@ -658,9 +658,9 @@ class GetUsersWithPermsTest(TestCase):
         self.assertIn(inactive_user.username, result_usernames)
         self.assertEqual(len(result), 2)
 
-    @override_settings(GUARDIAN_WORK_ONLY_ACTIVE_USERS=True)
-    def test_work_only_active_users_enabled(self):
-        """Test that only active users are returned when GUARDIAN_WORK_ONLY_ACTIVE_USERS=True."""
+    @override_settings(GUARDIAN_ACTIVE_USERS_ONLY=True)
+    def test_active_users_only_enabled(self):
+        """Test that only active users are returned when GUARDIAN_ACTIVE_USERS_ONLY=True."""
         # Create inactive user
         inactive_user = User.objects.create(username="inactive_user", is_active=False)
 
@@ -676,8 +676,8 @@ class GetUsersWithPermsTest(TestCase):
         self.assertNotIn(inactive_user.username, result_usernames)
         self.assertEqual(len(result), 1)
 
-    @override_settings(GUARDIAN_WORK_ONLY_ACTIVE_USERS=True)
-    def test_work_only_active_users_with_groups(self):
+    @override_settings(GUARDIAN_ACTIVE_USERS_ONLY=True)
+    def test_active_users_only_with_groups(self):
         """Test that inactive users are filtered even when they have group permissions."""
         # Create inactive user and add to group
         inactive_user = User.objects.create(username="inactive_user", is_active=False)
@@ -695,8 +695,8 @@ class GetUsersWithPermsTest(TestCase):
         self.assertNotIn(inactive_user.username, result_usernames)
         self.assertEqual(len(result), 1)
 
-    @override_settings(GUARDIAN_WORK_ONLY_ACTIVE_USERS=True)
-    def test_work_only_active_users_with_superuser(self):
+    @override_settings(GUARDIAN_ACTIVE_USERS_ONLY=True)
+    def test_active_users_only_with_superuser(self):
         """Test that inactive superusers are also filtered out."""
         # Create inactive superuser
         inactive_superuser = User.objects.create(username="inactive_super", is_superuser=True, is_active=False)
@@ -710,8 +710,8 @@ class GetUsersWithPermsTest(TestCase):
         self.assertNotIn(inactive_superuser.username, result_usernames)
         self.assertEqual(len(result), 1)
 
-    @override_settings(GUARDIAN_WORK_ONLY_ACTIVE_USERS=True)
-    def test_work_only_active_users_attach_perms(self):
+    @override_settings(GUARDIAN_ACTIVE_USERS_ONLY=True)
+    def test_active_users_only_attach_perms(self):
         """Test that inactive users are filtered when attach_perms=True."""
         # Create inactive user
         inactive_user = User.objects.create(username="inactive_user", is_active=False)
@@ -727,8 +727,8 @@ class GetUsersWithPermsTest(TestCase):
         self.assertNotIn(inactive_user, result.keys())
         self.assertEqual(len(result), 1)
 
-    @override_settings(GUARDIAN_WORK_ONLY_ACTIVE_USERS=True)
-    def test_work_only_active_users_with_group_users_false(self):
+    @override_settings(GUARDIAN_ACTIVE_USERS_ONLY=True)
+    def test_active_users_only_with_group_users_false(self):
         """Test that inactive users with direct permissions are filtered when with_group_users=False."""
         # Create inactive user with direct permission
         inactive_user = User.objects.create(username="inactive_user", is_active=False)

@@ -282,7 +282,7 @@ GroupObjectPermission = get_user_obj_perms_model()
 
 Defaults to `'guardian.GroupObjectPermission'`.
 
-## `GUARDIAN_WORK_ONLY_ACTIVE_USERS`
+## `GUARDIAN_ACTIVE_USERS_ONLY`
 
 !!! abstract "Added in version 3.2.0"
 
@@ -297,10 +297,10 @@ still have permission assignments in the database.
 
 ```python
 # Default behavior - return all users with permissions
-GUARDIAN_WORK_ONLY_ACTIVE_USERS = False
+GUARDIAN_ACTIVE_USERS_ONLY = False
 
 # Only return active users with permissions
-GUARDIAN_WORK_ONLY_ACTIVE_USERS = True
+GUARDIAN_ACTIVE_USERS_ONLY = True
 ```
 
 !!! example "Usage example"
@@ -319,10 +319,10 @@ GUARDIAN_WORK_ONLY_ACTIVE_USERS = True
     assign_perm('change_model', active_user, my_object)
     assign_perm('change_model', inactive_user, my_object)
 
-    # With GUARDIAN_WORK_ONLY_ACTIVE_USERS = False (default)
+    # With GUARDIAN_ACTIVE_USERS_ONLY = False (default)
     users = get_users_with_perms(my_object)  # Returns both users
 
-    # With GUARDIAN_WORK_ONLY_ACTIVE_USERS = True
+    # With GUARDIAN_ACTIVE_USERS_ONLY = True
     users = get_users_with_perms(my_object)  # Returns only active_user
     ```
 

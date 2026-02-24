@@ -397,7 +397,7 @@ def get_users_with_perms(
         if with_superusers:
             qset = qset | Q(is_superuser=True)
         queryset = get_user_model().objects.filter(qset)
-        if getattr(settings, "GUARDIAN_WORK_ONLY_ACTIVE_USERS", False):
+        if getattr(settings, "GUARDIAN_ACTIVE_USERS_ONLY", False):
             queryset = queryset.filter(is_active=True)
         return queryset.distinct()
     else:
