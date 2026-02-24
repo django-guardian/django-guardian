@@ -177,8 +177,8 @@ def assign(perm, user_or_group, obj=None):
 def remove_perm(
     perm: Union[str, Permission],
     user_or_group: Any = None,
-    obj: Union[Model, QuerySet, None] = None,
-) -> None:
+    obj: Union[Model, QuerySet, list, None] = None,
+) -> Union[tuple[int, dict], None]:
     """Removes permission from user/group and object pair.
 
     Parameters:
