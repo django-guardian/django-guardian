@@ -1285,6 +1285,82 @@ class GetObjectsForUser(TestCase):
         expected_group_pks = {obj1.pk, obj2.pk, group_obj.pk}
         self.assertEqual(group_returned_pks, expected_group_pks)
 
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
+    def test_inactive_superuser_gets_no_objects(self):
+        """An inactive superuser should get no objects even with with_superuser=True."""
+        self.user.is_superuser = True
+        self.user.is_active = False
+        self.user.save()
+        objects = get_objects_for_user(
+            self.user,
+            ["contenttypes.change_contenttype"],
+            ContentType.objects.all(),
+            with_superuser=True,
+        )
+        self.assertEqual(len(objects), 0)
+
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
+    def test_active_superuser_still_gets_objects(self):
+        """An active superuser should still get all objects with with_superuser=True."""
+        self.user.is_superuser = True
+        self.user.is_active = True
+        self.user.save()
+        all_ctypes = ContentType.objects.all()
+        objects = get_objects_for_user(
+            self.user,
+            ["contenttypes.change_contenttype"],
+            all_ctypes,
+            with_superuser=True,
+        )
+        self.assertEqual(set(objects), set(all_ctypes))
+
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
+    def test_inactive_superuser_consistent_across_shortcuts(self):
+        """get_objects_for_user and get_users_with_perms should agree:
+        an inactive superuser should be excluded from both."""
+        inactive_superuser = User.objects.create(username="inactive_super", is_superuser=True, is_active=False)
+        active_superuser = User.objects.create(username="active_super", is_superuser=True, is_active=True)
+        obj = ContentType.objects.create(model="testobj", app_label="guardian-consistency-test")
+        assign_perm("change_contenttype", active_superuser, obj)
+
+        # get_users_with_perms should exclude the inactive superuser
+        users = get_users_with_perms(obj, with_superusers=True)
+        self.assertNotIn(inactive_superuser, users)
+        self.assertIn(active_superuser, users)
+
+        # get_objects_for_user should return nothing for the inactive superuser
+        objects = get_objects_for_user(
+            inactive_superuser,
+            ["contenttypes.change_contenttype"],
+            ContentType.objects.all(),
+            with_superuser=True,
+        )
+        self.assertEqual(len(objects), 0)
+
+        # get_objects_for_user should return objects for the active superuser
+        objects = get_objects_for_user(
+            active_superuser,
+            ["contenttypes.change_contenttype"],
+            ContentType.objects.all(),
+            with_superuser=True,
+        )
+        self.assertGreater(len(objects), 0)
+
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", False)
+    def test_inactive_superuser_not_filtered_when_setting_disabled(self):
+        """When ACTIVE_USERS_ONLY is False, inactive superusers should still get objects."""
+        self.user.is_superuser = True
+        self.user.is_active = False
+        self.user.save()
+        all_ctypes = ContentType.objects.all()
+        objects = get_objects_for_user(
+            self.user,
+            ["contenttypes.change_contenttype"],
+            all_ctypes,
+            with_superuser=True,
+        )
+        self.assertEqual(set(objects), set(all_ctypes))
+
     def test_exception_different_ctypes(self):
         self.assertRaises(
             MixedContentTypeError, get_objects_for_user, self.user, ["auth.change_permission", "auth.change_group"]

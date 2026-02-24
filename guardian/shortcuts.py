@@ -635,6 +635,10 @@ def get_objects_for_user(
     # match which means: ctype.model_class() == queryset.model
     # we should also have `codenames` list
 
+    # Check if active user filtering is set and user is inactive
+    if guardian_settings.ACTIVE_USERS_ONLY and not user.is_active:
+        return queryset.none()
+
     # First check if user is superuser and if so, return queryset immediately
     if with_superuser and user.is_superuser:
         return queryset
