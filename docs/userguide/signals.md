@@ -28,8 +28,13 @@ class MyAppConfig(AppConfig):
     name = "myapp"
 
     def ready(self):
-        from guardian.models import UserObjectPermission, GroupObjectPermission
+        from guardian.utils import (
+            get_user_obj_perms_model,
+            get_group_obj_perms_model,
+        )
 
+        UserObjectPermission = get_user_obj_perms_model()
+        GroupObjectPermission = get_group_obj_perms_model()
         post_save.connect(
             self.handle_perm_change,
             sender=UserObjectPermission,
