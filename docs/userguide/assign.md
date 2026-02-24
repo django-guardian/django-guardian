@@ -56,12 +56,12 @@ After we call management commands `makemigrations` and `migrate` our
     django](https://docs.djangoproject.com/en/stable/topics/auth/). Now we
     can move to `assigning object permissions <assign-obj-perms>`
 
-## Assign object permissions
+## Using shortcuts
 
 We can assign permissions for any user or group and object pairs
 using the convenient function: `guardian.shortcuts.assign_perm()`
 
-### For user
+### For a single object
 
 Continuing our example we now can allow Joe user to assign some task:
 
@@ -83,10 +83,8 @@ Well, not so fast Joe, let us create an object permission finally:
 True
 ```
 
-### For group
-
-This case doesn't really differ from user permissions assignment.
-The only difference is we have to pass `Group` instance rather than `User`.
+This case doesn't really differ for group permissions assignment.
+The only difference is we have to pass a `Group` instance rather than `User`.
 
 ``` python
 >>> from django.contrib.auth.models import Group
@@ -100,34 +98,90 @@ False
 True
 ```
 
-Another example:
+### For multiple objects
+
+You can assign a permission to a single user or group across many objects at
+once by passing a QuerySet as the `obj` argument:
 
 ``` python
->>> from django.contrib.auth.models import User, Group
->>> from guardian.shortcuts import assign_perm
-# fictional companies
->>> company_a = Company.objects.create(name="Company A")
->>> company_b = Company.objects.create(name="Company B")
-# create groups
->>> company_user_group_a = Group.objects.create(name="Company User Group A")
->>> company_user_group_b = Group.objects.create(name="Company User Group B")
-# assign object specific permissions to groups
->>> assign_perm('change_company', company_user_group_a, company_a)
->>> assign_perm('change_company', company_user_group_b, company_b)
-# create user and add it to one group for testing
->>> user_a = User.objects.create(username="User A")
->>> user_a.groups.add(company_user_group_a)
->>> user_a.has_perm('change_company', company_a)
-True
->>> user_a.has_perm('change_company', company_b)
-False
->>> user_b = User.objects.create(username="User B")
->>> user_b.groups.add(company_user_group_b)
->>> user_b.has_perm('change_company', company_a)
-False
->>> user_b.has_perm('change_company', company_b)
-True
+>>> tasks = Task.objects.filter(reported_by=boss)
+>>> assign_perm('change_task', joe, tasks)
 ```
+
+### For multiple users or groups
+
+You can assign a permission on a single object to many users or groups at once
+by passing a QuerySet as the `user_or_group` argument:
+
+``` python
+>>> users = User.objects.filter(groups__name='employees')
+>>> assign_perm('change_task', users, task)
+```
+
+## Using model managers
+
+For more direct control you can call methods on the object-permission model
+manager instead of going through the shortcut. First, obtain the permission
+model for your object:
+
+``` python
+>>> from guardian.utils import get_user_obj_perms_model, get_group_obj_perms_model
+>>> UserObjectPermission = get_user_obj_perms_model(task)
+>>> GroupObjectPermission = get_group_obj_perms_model(task)
+```
+
+### For a single object
+
+``` python
+>>> UserObjectPermission.objects.assign_perm('change_task', joe, task)
+```
+
+For a group:
+
+``` python
+>>> GroupObjectPermission.objects.assign_perm('change_task', group, task)
+```
+
+### For multiple objects
+
+Use `bulk_assign_perm` to assign a permission to one user or group across a
+QuerySet of objects:
+
+``` python
+>>> tasks = Task.objects.filter(reported_by=boss)
+>>> UserObjectPermission.objects.bulk_assign_perm('change_task', joe, tasks)
+```
+
+### For multiple users or groups
+
+Use `assign_perm_to_many` to assign a permission on one object to many users or
+groups at once:
+
+``` python
+>>> users = User.objects.filter(groups__name='employees')
+>>> UserObjectPermission.objects.assign_perm_to_many('change_task', users, task)
+```
+
+## Limitations
+
+!!! warning
+
+    **No bulk global permissions.** Passing a list or QuerySet of users/groups
+    without an object is not supported. Assign global permissions one
+    user/group at a time.
+
+!!! warning
+
+    **No dual-bulk operations.** You cannot pass lists for both
+    `user_or_group` *and* `obj` at the same time. One side must be a single
+    instance. Passing lists for both raises
+    `guardian.exceptions.MultipleIdentityAndObjectError`.
+
+!!! note
+
+    **Bulk operations do not fire `post_save` signals.** Bulk assignments use
+    `bulk_create()` internally, so per-object `post_save` signals are not
+    sent. If you rely on signals, assign permissions individually instead.
 
 ## Assigning Permissions inside Signals
 

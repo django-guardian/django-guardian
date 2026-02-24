@@ -197,7 +197,7 @@ class AssignPermTest(ObjectPermissionTestCase):
             self.assertTrue(check.has_perm("delete_contenttype", obj))
 
 
-class MultipleIdentitiesOperationsTest(ObjectPermissionTestCase):
+class MultipleIdentitiesAssignTest(ObjectPermissionTestCase):
     """
     Tests assignment of permission to multiple users or groups
     """
@@ -263,6 +263,16 @@ class MultipleIdentitiesOperationsTest(ObjectPermissionTestCase):
         with self.assertRaises(MultipleIdentityAndObjectError):
             assign_perm("add_contenttype", self.users_qs, self.ctype_qset)
 
+    def test_user_assign_perm_empty_user_list(self):
+        """Passing user_or_group=[] should be a no-op, not raise IndexError."""
+        result = assign_perm("change_contenttype", [], self.ctype)
+        self.assertIsNone(result)
+
+    def test_user_assign_perm_empty_obj_list(self):
+        """Passing obj=[] should be a no-op, not raise IndexError."""
+        result = assign_perm("change_contenttype", self.user, [])
+        self.assertIsNone(result)
+
 
 class RemovePermTest(ObjectPermissionTestCase):
     """
@@ -314,6 +324,19 @@ class RemovePermTest(ObjectPermissionTestCase):
         for obj in self.ctype_qset:
             self.assertTrue(self.user.has_perm("change_contenttype", obj))
 
+    def test_user_remove_perm_empty_list(self):
+        assign_perm("change_contenttype", self.user, self.ctype_qset)
+        remove_perm("change_contenttype", self.user, [])
+
+        for obj in self.ctype_qset:
+            self.assertTrue(self.user.has_perm("change_contenttype", obj))
+
+    def test_user_remove_perm_empty_user_list(self):
+        """Passing user_or_group=[] should be a no-op, not raise IndexError."""
+        assign_perm("change_contenttype", self.user, self.ctype)
+        remove_perm("change_contenttype", [], self.ctype)
+        self.assertTrue(self.user.has_perm("change_contenttype", self.ctype))
+
     def test_group_remove_perm_queryset(self):
         assign_perm("change_contenttype", self.group, self.ctype_qset)
         remove_perm("change_contenttype", self.group, self.ctype_qset)
@@ -321,6 +344,43 @@ class RemovePermTest(ObjectPermissionTestCase):
         check = ObjectPermissionChecker(self.group)
         for obj in self.ctype_qset:
             self.assertFalse(check.has_perm("change_contenttype", obj))
+
+    def test_user_remove_perm_list(self):
+        """
+        Test that one is able to remove permissions for a list of objects
+        from a user
+        """
+        self.user.groups.add(self.group)
+
+        # Assign perms first
+        assign_perm("add_contenttype", self.user, self.ctype_list)
+        assign_perm("change_contenttype", self.group, self.ctype_list)
+        assign_perm(self.get_permission("delete_contenttype"), self.user, self.ctype_list)
+        remove_perm("add_contenttype", self.user, self.ctype_list)
+        remove_perm("change_contenttype", self.group, self.ctype_list)
+        remove_perm(self.get_permission("delete_contenttype"), self.user, self.ctype_list)
+        for obj in self.ctype_list:
+            self.assertFalse(self.user.has_perm("add_contenttype", obj))
+            self.assertFalse(self.user.has_perm("change_contenttype", obj))
+            self.assertFalse(self.user.has_perm("delete_contenttype", obj))
+
+    def test_group_remove_perm_list(self):
+        """
+        Test that one is able to remove permissions for a list of
+        objects from a group
+        """
+        # Assign perms first
+        assign_perm("add_contenttype", self.group, self.ctype_list)
+        assign_perm("change_contenttype", self.group, self.ctype_list)
+        assign_perm(self.get_permission("delete_contenttype"), self.group, self.ctype_list)
+        remove_perm("add_contenttype", self.group, self.ctype_list)
+        remove_perm("change_contenttype", self.group, self.ctype_list)
+        remove_perm(self.get_permission("delete_contenttype"), self.group, self.ctype_list)
+        check = ObjectPermissionChecker(self.group)
+        for obj in self.ctype_list:
+            self.assertFalse(check.has_perm("add_contenttype", obj))
+            self.assertFalse(check.has_perm("change_contenttype", obj))
+            self.assertFalse(check.has_perm("delete_contenttype", obj))
 
     def test_user_remove_perm_global(self):
         # assign perm first
@@ -341,6 +401,88 @@ class RemovePermTest(ObjectPermissionTestCase):
         app_label, codename = perm.split(".")
         perm_obj = Permission.objects.get(codename=codename, content_type__app_label=app_label)
         self.assertFalse(perm_obj in self.group.permissions.all())
+
+
+class MultipleIdentitiesRemoveTest(ObjectPermissionTestCase):
+    """
+    Tests removal of permission from multiple users or groups
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.users_list = jim, bob = [
+            User.objects.create_user(username="jim"),
+            User.objects.create_user(username="bob"),
+        ]
+        self.groups_list = jim_group, bob_group = [
+            Group.objects.create(name="jimgroup"),
+            Group.objects.create(name="bobgroup"),
+        ]
+        jim_group.user_set.add(jim)
+        bob_group.user_set.add(bob)
+        self.users_qs = User.objects.filter(pk__in=[jim.pk, bob.pk])
+        self.groups_qs = Group.objects.filter(pk__in=[jim_group.pk, bob_group.pk])
+
+    def test_remove_from_many_users_queryset(self):
+        # Assign perms first
+        assign_perm("add_contenttype", self.users_qs, self.ctype)
+        assign_perm(self.get_permission("delete_contenttype"), self.users_qs, self.ctype)
+        remove_perm("add_contenttype", self.users_qs, self.ctype)
+        remove_perm(self.get_permission("delete_contenttype"), self.users_qs, self.ctype)
+        for user in self.users_list:
+            self.assertFalse(user.has_perm("add_contenttype", self.ctype))
+            self.assertFalse(user.has_perm("delete_contenttype", self.ctype))
+
+    def test_remove_from_many_users_list(self):
+        # Assign perms first
+        assign_perm("add_contenttype", self.users_list, self.ctype)
+        assign_perm(self.get_permission("delete_contenttype"), self.users_list, self.ctype)
+        remove_perm("add_contenttype", self.users_list, self.ctype)
+        remove_perm(self.get_permission("delete_contenttype"), self.users_list, self.ctype)
+        for user in self.users_list:
+            self.assertFalse(user.has_perm("add_contenttype", self.ctype))
+            self.assertFalse(user.has_perm("delete_contenttype", self.ctype))
+
+    def test_remove_from_many_groups_queryset(self):
+        # Assign perms first
+        assign_perm("add_contenttype", self.groups_qs, self.ctype)
+        assign_perm(self.get_permission("delete_contenttype"), self.groups_qs, self.ctype)
+        remove_perm("add_contenttype", self.groups_qs, self.ctype)
+        remove_perm(self.get_permission("delete_contenttype"), self.groups_qs, self.ctype)
+        for user in self.users_list:
+            self.assertFalse(user.has_perm("add_contenttype", self.ctype))
+            self.assertFalse(user.has_perm("delete_contenttype", self.ctype))
+
+    def test_remove_from_many_groups_list(self):
+        # Assign perms first
+        assign_perm("add_contenttype", self.groups_list, self.ctype)
+        assign_perm(self.get_permission("delete_contenttype"), self.groups_list, self.ctype)
+        remove_perm("add_contenttype", self.groups_list, self.ctype)
+        remove_perm(self.get_permission("delete_contenttype"), self.groups_list, self.ctype)
+        for user in self.users_list:
+            self.assertFalse(user.has_perm("add_contenttype", self.ctype))
+            self.assertFalse(user.has_perm("delete_contenttype", self.ctype))
+
+    def test_remove_from_many_empty_users_list(self):
+        """Passing user_or_group=[] should be a no-op, not raise IndexError."""
+        assign_perm("add_contenttype", self.users_list, self.ctype)
+        remove_perm("add_contenttype", [], self.ctype)
+        for user in self.users_list:
+            self.assertTrue(user.has_perm("add_contenttype", self.ctype))
+
+    def test_remove_from_multiple_identity_and_obj(self):
+        with self.assertRaises(MultipleIdentityAndObjectError):
+            remove_perm("add_contenttype", self.users_list, self.ctype_qset)
+        with self.assertRaises(MultipleIdentityAndObjectError):
+            remove_perm("add_contenttype", self.users_qs, self.ctype_qset)
+
+    def test_remove_global_from_many_users_unsupported(self):
+        with self.assertRaises(MultipleIdentityAndObjectError):
+            remove_perm("contenttypes.add_contenttype", self.users_list)
+
+    def test_remove_global_from_many_groups_unsupported(self):
+        with self.assertRaises(MultipleIdentityAndObjectError):
+            remove_perm("contenttypes.add_contenttype", self.groups_qs)
 
 
 class GetPermsTest(ObjectPermissionTestCase):

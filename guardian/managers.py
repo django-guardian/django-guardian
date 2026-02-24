@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Union
 import warnings
 
 from django.contrib.auth.models import Permission
@@ -138,7 +138,9 @@ class BaseObjectPermissionManager(models.Manager):
             filters &= Q(content_object__pk=obj.pk)
         return self.filter(filters).delete()
 
-    def bulk_remove_perm(self, perm: str, user_or_group: Any, queryset: QuerySet) -> tuple[int, dict]:
+    def bulk_remove_perm(
+        self, perm: Union[str, Permission], user_or_group: Any, queryset: Union[QuerySet, list]
+    ) -> tuple[int, dict]:
         """
         Removes permission `perm` for a `queryset` and given `user_or_group`.
 
@@ -148,16 +150,48 @@ class BaseObjectPermissionManager(models.Manager):
         """
         filters = Q(**{self.user_or_group_field: user_or_group})
 
+        if isinstance(queryset, list):
+            if not queryset:
+                return (0, {})
+            ctype = get_content_type(queryset[0])
+        else:
+            ctype = get_content_type(queryset.model)
+
         if isinstance(perm, Permission):
             filters &= Q(permission=perm)
         else:
-            ctype = get_content_type(queryset.model)
             filters &= Q(permission__codename=perm, permission__content_type=ctype)
 
         if self.is_generic():
-            filters &= Q(object_pk__in=[str(pk) for pk in queryset.values_list("pk", flat=True)])
+            if isinstance(queryset, list):
+                filters &= Q(object_pk__in=[str(obj.pk) for obj in queryset])
+            else:
+                filters &= Q(object_pk__in=[str(pk) for pk in queryset.values_list("pk", flat=True)])
         else:
             filters &= Q(content_object__in=queryset)
+
+        return self.filter(filters).delete()
+
+    def remove_perm_from_many(self, perm: Union[str, Permission], users_or_groups: Any, obj: Model) -> tuple[int, dict]:
+        """
+        Bulk removes given `perm` for the object `obj` from a set of users or a set of groups.
+        """
+        ctype = get_content_type(obj)
+        if isinstance(perm, Permission):
+            filters = Q(permission=perm)
+        else:
+            filters = Q(permission__codename=perm, permission__content_type=ctype)
+        if self.is_generic():
+            filters &= Q(object_pk=str(obj.pk))
+        else:
+            filters &= Q(content_object=obj)
+
+        if isinstance(users_or_groups, list):
+            to_remove = [item.pk for item in users_or_groups]
+        else:
+            to_remove = users_or_groups.values_list("pk", flat=True)
+
+        filters &= Q(**{f"{self.user_or_group_field}_id__in": to_remove})
 
         return self.filter(filters).delete()
 
