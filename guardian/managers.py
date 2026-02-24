@@ -176,12 +176,9 @@ class BaseObjectPermissionManager(models.Manager):
         """
         ctype = get_content_type(obj)
         if isinstance(perm, Permission):
-            permission = perm
+            filters = Q(permission=perm)
         else:
-            permission = Permission.objects.get(content_type=ctype, codename=perm)
-
-        filters = Q(permission=permission)
-
+            filters = Q(permission__codename=perm, permission__content_type=ctype)
         if self.is_generic():
             filters &= Q(object_pk=str(obj.pk))
         else:
