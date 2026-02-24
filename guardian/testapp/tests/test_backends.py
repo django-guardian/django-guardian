@@ -1,3 +1,5 @@
+from unittest import mock
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, Group
 from django.test import TestCase
@@ -53,10 +55,17 @@ class ObjectPermissionBackendTest(TestCase):
         """Test has_perm method with superuser"""
         self.assertTrue(self.backend.has_perm(self.superuser, "change_project", self.project))
 
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
     def test_has_perm_inactive_user(self):
-        """Test has_perm method with inactive user"""
+        """Test has_perm method with inactive user when ACTIVE_USERS_ONLY=True"""
         assign_perm("change_project", self.inactive_user, self.project)
         self.assertFalse(self.backend.has_perm(self.inactive_user, "change_project", self.project))
+
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", False)
+    def test_has_perm_inactive_user_default_setting(self):
+        """With ACTIVE_USERS_ONLY=False (default), inactive users still have perms."""
+        assign_perm("change_project", self.inactive_user, self.project)
+        self.assertTrue(self.backend.has_perm(self.inactive_user, "change_project", self.project))
 
     def test_get_group_permissions_with_object(self):
         """Test get_group_permissions method with object"""
@@ -74,11 +83,21 @@ class ObjectPermissionBackendTest(TestCase):
         perms = self.backend.get_group_permissions(self.user)
         self.assertEqual(set(), perms)
 
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
     def test_get_group_permissions_inactive_user(self):
-        """Test get_group_permissions method with inactive user"""
+        """Test get_group_permissions method with inactive user when ACTIVE_USERS_ONLY=True"""
+        self.inactive_user.groups.add(self.group)
         assign_perm("change_project", self.group, self.project)
         perms = self.backend.get_group_permissions(self.inactive_user, self.project)
         self.assertEqual(set(), perms)
+
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", False)
+    def test_get_group_permissions_inactive_user_default_setting(self):
+        """With ACTIVE_USERS_ONLY=False (default), inactive users still get group perms."""
+        self.inactive_user.groups.add(self.group)
+        assign_perm("change_project", self.group, self.project)
+        perms = self.backend.get_group_permissions(self.inactive_user, self.project)
+        self.assertIn("change_project", perms)
 
     def test_get_group_permissions_anonymous_user(self):
         """Test get_group_permissions method with anonymous user"""

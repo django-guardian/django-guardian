@@ -73,7 +73,7 @@ class ObjectPermissionChecker:
         Returns:
             True if user/group has the permission, False otherwise
         """
-        if self.user and not self.user.is_active:
+        if guardian_settings.ACTIVE_USERS_ONLY and self.user and not getattr(self.user, "is_active", True):
             return False
         elif self.user and self.user.is_superuser:
             return True
@@ -123,7 +123,7 @@ class ObjectPermissionChecker:
         return user_filters
 
     def get_user_perms(self, obj: Model) -> QuerySet[Permission]:
-        if self.user and not self.user.is_active:
+        if guardian_settings.ACTIVE_USERS_ONLY and self.user and not getattr(self.user, "is_active", True):
             return Permission.objects.none().values_list("codename", flat=True)
 
         ctype = get_content_type(obj)
@@ -136,7 +136,7 @@ class ObjectPermissionChecker:
         return user_perms
 
     def get_group_perms(self, obj: Model) -> QuerySet[Permission]:
-        if self.user and not self.user.is_active:
+        if guardian_settings.ACTIVE_USERS_ONLY and self.user and not getattr(self.user, "is_active", True):
             return Permission.objects.none().values_list("codename", flat=True)
 
         ctype = get_content_type(obj)
@@ -157,7 +157,7 @@ class ObjectPermissionChecker:
         Returns:
             list of codenames for all permissions for given `obj`.
         """
-        if self.user and not self.user.is_active:
+        if guardian_settings.ACTIVE_USERS_ONLY and self.user and not getattr(self.user, "is_active", True):
             return []
 
         if guardian_settings.AUTO_PREFETCH:
@@ -195,7 +195,7 @@ class ObjectPermissionChecker:
         Parameters:
             objects (list[Model]): Iterable of Django model objects.
         """
-        if self.user and not self.user.is_active:
+        if guardian_settings.ACTIVE_USERS_ONLY and self.user and not getattr(self.user, "is_active", True):
             return []
 
         pks, model, ctype = _get_pks_model_and_ctype(objects)

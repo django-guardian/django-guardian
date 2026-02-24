@@ -281,3 +281,75 @@ GroupObjectPermission = get_user_obj_perms_model()
 ```
 
 Defaults to `'guardian.GroupObjectPermission'`.
+
+## `GUARDIAN_ACTIVE_USERS_ONLY`
+
+!!! abstract "Added in version 3.3.0"
+
+When set to `True`, functions like `get_users_with_perms` will only return
+active users (`is_active=True`), and `get_objects_for_user` will return an
+empty queryset for inactive users.
+This filter applies to all permission-related functions that retrieve users,
+including direct user permissions, group permissions, and superuser permissions.
+
+This setting is particularly useful in applications where inactive users should
+not be considered when retrieving users with permissions, even if they technically
+still have permission assignments in the database.
+
+```python
+# Default behavior - return all users with permissions
+GUARDIAN_ACTIVE_USERS_ONLY = False
+
+# Only return active users with permissions
+GUARDIAN_ACTIVE_USERS_ONLY = True
+```
+
+!!! example "Usage example"
+
+    ```python
+    from guardian.shortcuts import get_users_with_perms, assign_perm
+    from django.contrib.auth import get_user_model
+
+    User = get_user_model()
+
+    # Create users
+    active_user = User.objects.create_user('active', is_active=True)
+    inactive_user = User.objects.create_user('inactive', is_active=False)
+
+    # Assign permissions to both users
+    assign_perm('change_model', active_user, my_object)
+    assign_perm('change_model', inactive_user, my_object)
+
+    # With GUARDIAN_ACTIVE_USERS_ONLY = False (default)
+    users = get_users_with_perms(my_object)  # Returns both users
+
+    # With GUARDIAN_ACTIVE_USERS_ONLY = True
+    users = get_users_with_perms(my_object)  # Returns only active_user
+
+    # get_objects_for_user also respects the setting
+    from guardian.shortcuts import get_objects_for_user
+
+    # With GUARDIAN_ACTIVE_USERS_ONLY = True
+    objects = get_objects_for_user(inactive_user, 'change_model', MyModel)  # Returns empty queryset
+    objects = get_objects_for_user(active_user, 'change_model', MyModel)    # Returns objects normally
+    ```
+
+!!! tip "Performance consideration"
+
+    This setting adds a filter to the database query, so there is a minimal
+    performance impact. However, the benefit of filtering out inactive users
+    often outweighs this small overhead.
+
+!!! warning "Backward compatibility"
+
+    Existing permission assignments for inactive users remain in the database
+    and are not automatically removed. This setting only affects the retrieval
+    of users, not the permission assignments themselves.
+
+!!! warning "Custom user models"
+
+    This setting requires the user model to have an `is_active` field.
+    If the user model does not have an `is_active` field, the setting will
+    have no effect and a system check warning (`guardian.W002`) will be raised.
+
+Defaults to `False`.

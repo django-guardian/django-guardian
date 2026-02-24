@@ -641,6 +641,118 @@ class GetUsersWithPermsTest(TestCase):
         expected = [admin]
         self.assertEqual(set(result), set(expected))
 
+    def test_active_users_only_default_behavior(self):
+        """Test that by default both active and inactive users are returned."""
+        # Create inactive user
+        inactive_user = User.objects.create(username="inactive_user", is_active=False)
+
+        # Assign permissions to both active and inactive users
+        assign_perm("change_contenttype", self.user1, self.obj1)
+        assign_perm("change_contenttype", inactive_user, self.obj1)
+
+        result = get_users_with_perms(self.obj1)
+        result_usernames = list(result.values_list("username", flat=True))
+
+        # Both users should be in the result by default
+        self.assertIn(self.user1.username, result_usernames)
+        self.assertIn(inactive_user.username, result_usernames)
+        self.assertEqual(len(result), 2)
+
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
+    def test_active_users_only_enabled(self):
+        """Test that only active users are returned when GUARDIAN_ACTIVE_USERS_ONLY=True."""
+        # Create inactive user
+        inactive_user = User.objects.create(username="inactive_user", is_active=False)
+
+        # Assign permissions to both active and inactive users
+        assign_perm("change_contenttype", self.user1, self.obj1)
+        assign_perm("change_contenttype", inactive_user, self.obj1)
+
+        result = get_users_with_perms(self.obj1)
+        result_usernames = list(result.values_list("username", flat=True))
+
+        # Only active user should be in the result
+        self.assertIn(self.user1.username, result_usernames)
+        self.assertNotIn(inactive_user.username, result_usernames)
+        self.assertEqual(len(result), 1)
+
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
+    def test_active_users_only_with_groups(self):
+        """Test that inactive users are filtered even when they have group permissions."""
+        # Create inactive user and add to group
+        inactive_user = User.objects.create(username="inactive_user", is_active=False)
+        inactive_user.groups.add(self.group1)
+        self.user1.groups.add(self.group1)
+
+        # Assign permission to group
+        assign_perm("change_contenttype", self.group1, self.obj1)
+
+        result = get_users_with_perms(self.obj1, with_group_users=True)
+        result_usernames = list(result.values_list("username", flat=True))
+
+        # Only active user should be in the result
+        self.assertIn(self.user1.username, result_usernames)
+        self.assertNotIn(inactive_user.username, result_usernames)
+        self.assertEqual(len(result), 1)
+
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
+    def test_active_users_only_with_superuser(self):
+        """Test that inactive superusers are also filtered out."""
+        # Create inactive superuser
+        inactive_superuser = User.objects.create(username="inactive_super", is_superuser=True, is_active=False)
+        active_superuser = User.objects.create(username="active_super", is_superuser=True, is_active=True)
+
+        result = get_users_with_perms(self.obj1, with_superusers=True)
+        result_usernames = list(result.values_list("username", flat=True))
+
+        # Only active superuser should be in the result
+        self.assertIn(active_superuser.username, result_usernames)
+        self.assertNotIn(inactive_superuser.username, result_usernames)
+        self.assertEqual(len(result), 1)
+
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
+    def test_active_users_only_attach_perms(self):
+        """Test that inactive users are filtered when attach_perms=True."""
+        # Create inactive user
+        inactive_user = User.objects.create(username="inactive_user", is_active=False)
+
+        # Assign permissions to both active and inactive users
+        assign_perm("change_contenttype", self.user1, self.obj1)
+        assign_perm("change_contenttype", inactive_user, self.obj1)
+
+        result = get_users_with_perms(self.obj1, attach_perms=True)
+
+        # Only active user should be in the result
+        self.assertIn(self.user1, result.keys())
+        self.assertNotIn(inactive_user, result.keys())
+        self.assertEqual(len(result), 1)
+
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
+    def test_active_users_only_with_group_users_false(self):
+        """Test that inactive users with direct permissions are filtered when with_group_users=False."""
+        # Create inactive user with direct permission
+        inactive_user = User.objects.create(username="inactive_user", is_active=False)
+
+        # Create a group and add both active and inactive users to it
+        self.user1.groups.add(self.group1)
+        inactive_user.groups.add(self.group1)
+
+        # Assign direct permissions to both users
+        assign_perm("change_contenttype", self.user1, self.obj1)
+        assign_perm("change_contenttype", inactive_user, self.obj1)
+
+        # Also assign permission to the group
+        assign_perm("change_contenttype", self.group1, self.obj1)
+
+        # Get users with direct permissions only (with_group_users=False)
+        result = get_users_with_perms(self.obj1, with_group_users=False)
+        result_usernames = list(result.values_list("username", flat=True))
+
+        # Only active user should be in the result, inactive user should be filtered out
+        self.assertIn(self.user1.username, result_usernames)
+        self.assertNotIn(inactive_user.username, result_usernames)
+        self.assertEqual(len(result), 1)
+
 
 class GetGroupsWithPerms(TestCase):
     """
@@ -1173,6 +1285,82 @@ class GetObjectsForUser(TestCase):
         expected_group_pks = {obj1.pk, obj2.pk, group_obj.pk}
         self.assertEqual(group_returned_pks, expected_group_pks)
 
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
+    def test_inactive_superuser_gets_no_objects(self):
+        """An inactive superuser should get no objects even with with_superuser=True."""
+        self.user.is_superuser = True
+        self.user.is_active = False
+        self.user.save()
+        objects = get_objects_for_user(
+            self.user,
+            ["contenttypes.change_contenttype"],
+            ContentType.objects.all(),
+            with_superuser=True,
+        )
+        self.assertEqual(len(objects), 0)
+
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
+    def test_active_superuser_still_gets_objects(self):
+        """An active superuser should still get all objects with with_superuser=True."""
+        self.user.is_superuser = True
+        self.user.is_active = True
+        self.user.save()
+        all_ctypes = ContentType.objects.all()
+        objects = get_objects_for_user(
+            self.user,
+            ["contenttypes.change_contenttype"],
+            all_ctypes,
+            with_superuser=True,
+        )
+        self.assertEqual(set(objects), set(all_ctypes))
+
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
+    def test_inactive_superuser_consistent_across_shortcuts(self):
+        """get_objects_for_user and get_users_with_perms should agree:
+        an inactive superuser should be excluded from both."""
+        inactive_superuser = User.objects.create(username="inactive_super", is_superuser=True, is_active=False)
+        active_superuser = User.objects.create(username="active_super", is_superuser=True, is_active=True)
+        obj = ContentType.objects.create(model="testobj", app_label="guardian-consistency-test")
+        assign_perm("change_contenttype", active_superuser, obj)
+
+        # get_users_with_perms should exclude the inactive superuser
+        users = get_users_with_perms(obj, with_superusers=True)
+        self.assertNotIn(inactive_superuser, users)
+        self.assertIn(active_superuser, users)
+
+        # get_objects_for_user should return nothing for the inactive superuser
+        objects = get_objects_for_user(
+            inactive_superuser,
+            ["contenttypes.change_contenttype"],
+            ContentType.objects.all(),
+            with_superuser=True,
+        )
+        self.assertEqual(len(objects), 0)
+
+        # get_objects_for_user should return objects for the active superuser
+        objects = get_objects_for_user(
+            active_superuser,
+            ["contenttypes.change_contenttype"],
+            ContentType.objects.all(),
+            with_superuser=True,
+        )
+        self.assertGreater(len(objects), 0)
+
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", False)
+    def test_inactive_superuser_not_filtered_when_setting_disabled(self):
+        """When ACTIVE_USERS_ONLY is False, inactive superusers should still get objects."""
+        self.user.is_superuser = True
+        self.user.is_active = False
+        self.user.save()
+        all_ctypes = ContentType.objects.all()
+        objects = get_objects_for_user(
+            self.user,
+            ["contenttypes.change_contenttype"],
+            all_ctypes,
+            with_superuser=True,
+        )
+        self.assertEqual(set(objects), set(all_ctypes))
+
     def test_exception_different_ctypes(self):
         self.assertRaises(
             MixedContentTypeError, get_objects_for_user, self.user, ["auth.change_permission", "auth.change_group"]
@@ -1207,6 +1395,51 @@ class GetObjectsForUser(TestCase):
         self.assertEqual(len(objects), len(groups))
         self.assertTrue(isinstance(objects, QuerySet))
         self.assertEqual(set(objects), set(groups))
+
+    def test_active_users_only_default_behavior(self):
+        """Without ACTIVE_USERS_ONLY, an inactive user should still get objects."""
+        inactive_user = User.objects.create(username="inactive_user", is_active=False)
+        assign_perm("change_contenttype", inactive_user, self.ctype)
+
+        objects = get_objects_for_user(inactive_user, ["contenttypes.change_contenttype"], ContentType)
+        self.assertEqual(set(objects), {self.ctype})
+
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
+    def test_active_users_only_inactive_user(self):
+        """With ACTIVE_USERS_ONLY=True, an inactive user should get empty queryset."""
+        inactive_user = User.objects.create(username="inactive_user", is_active=False)
+        assign_perm("change_contenttype", inactive_user, self.ctype)
+
+        objects = get_objects_for_user(inactive_user, ["contenttypes.change_contenttype"], ContentType)
+        self.assertEqual(len(objects), 0)
+
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
+    def test_active_users_only_active_user(self):
+        """With ACTIVE_USERS_ONLY=True, an active user should get objects normally."""
+        assign_perm("change_contenttype", self.user, self.ctype)
+
+        objects = get_objects_for_user(self.user, ["contenttypes.change_contenttype"], ContentType)
+        self.assertEqual(set(objects), {self.ctype})
+
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
+    def test_active_users_only_inactive_superuser(self):
+        """With ACTIVE_USERS_ONLY=True, an inactive superuser should get empty queryset."""
+        inactive_superuser = User.objects.create(username="inactive_super", is_superuser=True, is_active=False)
+
+        objects = get_objects_for_user(
+            inactive_superuser, ["contenttypes.change_contenttype"], ContentType, with_superuser=True
+        )
+        self.assertEqual(len(objects), 0)
+
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
+    def test_active_users_only_with_group_perms(self):
+        """With ACTIVE_USERS_ONLY=True, an inactive user with group perms should get empty queryset."""
+        inactive_user = User.objects.create(username="inactive_user", is_active=False)
+        inactive_user.groups.add(self.group)
+        assign_perm("change_contenttype", self.group, self.ctype)
+
+        objects = get_objects_for_user(inactive_user, ["contenttypes.change_contenttype"], ContentType)
+        self.assertEqual(len(objects), 0)
 
 
 class GetObjectsForGroup(TestCase):
@@ -1518,8 +1751,9 @@ class GetPermsVsGetUserPermsTest(TestCase):
         self.assertIsInstance(user_perms, QuerySet, "get_user_perms should return a QuerySet")
         self.assertIsInstance(group_perms, QuerySet, "get_group_perms should return a QuerySet")
 
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
     def test_inactive_user_behavior(self):
-        """Test behavior with inactive user."""
+        """With ACTIVE_USERS_ONLY=True, all functions return empty for inactive users."""
         assign_perm("change_contenttype", self.user, self.obj)
         assign_perm("change_contenttype", self.group, self.obj)
 
@@ -1531,22 +1765,29 @@ class GetPermsVsGetUserPermsTest(TestCase):
         all_perms = get_perms(self.user, self.obj)
         group_perms = list(get_group_perms(self.user, self.obj))
 
-        print(f"Inactive user - get_perms: {all_perms}, get_user_perms: {user_perms}, get_group_perms: {group_perms}")
-
         # all functions should return empty for inactive users
         self.assertEqual(all_perms, [], "get_perms should return empty list for inactive user")
         self.assertEqual(user_perms, [], "get_user_perms should return empty list for inactive user")
         self.assertEqual(group_perms, [], "get_group_perms should return empty list for inactive user")
 
-        # Now the superset relationship should hold correctly
-        self.assertTrue(
-            set(all_perms).issuperset(set(user_perms)),
-            f"get_perms {all_perms} should be superset of get_user_perms {user_perms}",
-        )
-        self.assertTrue(
-            set(all_perms).issuperset(set(group_perms)),
-            f"get_perms {all_perms} should be superset of get_group_perms {group_perms}",
-        )
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", False)
+    def test_inactive_user_behavior_default_setting(self):
+        """With ACTIVE_USERS_ONLY=False (default), inactive users still have perms."""
+        assign_perm("change_contenttype", self.user, self.obj)
+        assign_perm("change_contenttype", self.group, self.obj)
+
+        # Make user inactive
+        self.user.is_active = False
+        self.user.save()
+
+        user_perms = list(get_user_perms(self.user, self.obj))
+        all_perms = get_perms(self.user, self.obj)
+        group_perms = list(get_group_perms(self.user, self.obj))
+
+        # all functions should still return perms for inactive users
+        self.assertIn("change_contenttype", all_perms)
+        self.assertIn("change_contenttype", user_perms)
+        self.assertIn("change_contenttype", group_perms)
 
     def test_superuser_behavior(self):
         """Test behavior with superuser."""

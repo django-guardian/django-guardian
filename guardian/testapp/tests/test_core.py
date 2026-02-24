@@ -1,4 +1,5 @@
 from itertools import chain
+from unittest import mock
 
 from django.apps import apps as django_apps
 from django.conf import settings
@@ -121,6 +122,7 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
         for perm in perms:
             self.assertTrue(check.has_perm(perm, self.ctype))
 
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
     def test_not_active_superuser(self):
         user = User.objects.create(username="not_active_superuser", is_superuser=True, is_active=False)
         check = ObjectPermissionChecker(user)
@@ -130,6 +132,18 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
         for perm in perms:
             self.assertFalse(check.has_perm(perm, self.ctype))
 
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", False)
+    def test_not_active_superuser_default_setting(self):
+        """With ACTIVE_USERS_ONLY=False (default), inactive superusers still get all perms."""
+        user = User.objects.create(username="not_active_superuser", is_superuser=True, is_active=False)
+        check = ObjectPermissionChecker(user)
+        ctype = ContentType.objects.get_for_model(self.ctype)
+        perms = sorted(chain(*Permission.objects.filter(content_type=ctype).values_list("codename")))
+        self.assertEqual(perms, check.get_perms(self.ctype))
+        for perm in perms:
+            self.assertTrue(check.has_perm(perm, self.ctype))
+
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
     def test_not_active_user(self):
         user = User.objects.create(username="notactive")
         assign_perm("change_contenttype", user, self.ctype)
@@ -148,6 +162,17 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
         self.assertTrue(check.has_perm("change_contenttype", self.ctype))
         user.is_active = False
         self.assertFalse(check.has_perm("change_contenttype", self.ctype))
+
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", False)
+    def test_not_active_user_default_setting(self):
+        """With ACTIVE_USERS_ONLY=False (default), inactive users still have perms."""
+        user = User.objects.create(username="notactive")
+        assign_perm("change_contenttype", user, self.ctype)
+
+        check = ObjectPermissionChecker(user)
+        self.assertTrue(check.has_perm("change_contenttype", self.ctype))
+        user.is_active = False
+        self.assertTrue(check.has_perm("change_contenttype", self.ctype))
 
     def test_get_perms(self):
         group = Group.objects.create(name="group")

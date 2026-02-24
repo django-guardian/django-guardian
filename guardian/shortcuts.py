@@ -31,6 +31,8 @@ from django.db.models.expressions import Value
 from django.db.models.functions import Cast, Replace
 from django.shortcuts import _get_queryset
 
+from guardian.checks import _user_model_has_is_active_field
+from guardian.conf import settings as guardian_settings
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
 from guardian.exceptions import (
@@ -395,7 +397,10 @@ def get_users_with_perms(
             qset = qset | Q(groups__in=group_ids)
         if with_superusers:
             qset = qset | Q(is_superuser=True)
-        return get_user_model().objects.filter(qset).distinct()
+        queryset = get_user_model().objects.filter(qset)
+        if guardian_settings.ACTIVE_USERS_ONLY and _user_model_has_is_active_field():
+            queryset = queryset.filter(is_active=True)
+        return queryset.distinct()
     else:
         # TODO: Do not hit db for each user!
         users = {}
@@ -630,6 +635,10 @@ def get_objects_for_user(
     # At this point, we should have both ctype and queryset and they should
     # match which means: ctype.model_class() == queryset.model
     # we should also have `codenames` list
+
+    # Check if active user filtering is set and user is inactive
+    if guardian_settings.ACTIVE_USERS_ONLY and not getattr(user, "is_active", True):
+        return queryset.none()
 
     # First check if user is superuser and if so, return queryset immediately
     if with_superuser and user.is_superuser:
