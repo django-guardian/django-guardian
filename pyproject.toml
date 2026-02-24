@@ -1,11 +1,11 @@
 [project]
 name = "django-guardian"
-version = "3.2.0"
+version = "3.3.0"
 description = "Per object permissions for Django"
 keywords = ["django", "permissions", "authorization", "object", "row", "level"]
 readme = "README.md"
 license = { text = "BSD-2-Clause" }
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
@@ -21,7 +21,6 @@ classifiers = [
     'Framework :: Django :: 5.2',
     'Programming Language :: Python',
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
