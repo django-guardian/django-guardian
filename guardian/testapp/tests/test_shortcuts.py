@@ -263,6 +263,16 @@ class MultipleIdentitiesAssignTest(ObjectPermissionTestCase):
         with self.assertRaises(MultipleIdentityAndObjectError):
             assign_perm("add_contenttype", self.users_qs, self.ctype_qset)
 
+    def test_user_assign_perm_empty_user_list(self):
+        """Passing user_or_group=[] should be a no-op, not raise IndexError."""
+        result = assign_perm("change_contenttype", [], self.ctype)
+        self.assertIsNone(result)
+
+    def test_user_assign_perm_empty_obj_list(self):
+        """Passing obj=[] should be a no-op, not raise IndexError."""
+        result = assign_perm("change_contenttype", self.user, [])
+        self.assertIsNone(result)
+
 
 class RemovePermTest(ObjectPermissionTestCase):
     """
@@ -320,6 +330,12 @@ class RemovePermTest(ObjectPermissionTestCase):
 
         for obj in self.ctype_qset:
             self.assertTrue(self.user.has_perm("change_contenttype", obj))
+
+    def test_user_remove_perm_empty_user_list(self):
+        """Passing user_or_group=[] should be a no-op, not raise IndexError."""
+        assign_perm("change_contenttype", self.user, self.ctype)
+        remove_perm("change_contenttype", [], self.ctype)
+        self.assertTrue(self.user.has_perm("change_contenttype", self.ctype))
 
     def test_group_remove_perm_queryset(self):
         assign_perm("change_contenttype", self.group, self.ctype_qset)
@@ -446,6 +462,13 @@ class MultipleIdentitiesRemoveTest(ObjectPermissionTestCase):
         for user in self.users_list:
             self.assertFalse(user.has_perm("add_contenttype", self.ctype))
             self.assertFalse(user.has_perm("delete_contenttype", self.ctype))
+
+    def test_remove_from_many_empty_users_list(self):
+        """Passing user_or_group=[] should be a no-op, not raise IndexError."""
+        assign_perm("add_contenttype", self.users_list, self.ctype)
+        remove_perm("add_contenttype", [], self.ctype)
+        for user in self.users_list:
+            self.assertTrue(user.has_perm("add_contenttype", self.ctype))
 
     def test_remove_from_multiple_identity_and_obj(self):
         with self.assertRaises(MultipleIdentityAndObjectError):

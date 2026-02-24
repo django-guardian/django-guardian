@@ -114,6 +114,12 @@ def assign_perm(
         ```
 
     """
+    if isinstance(user_or_group, list) and not user_or_group:
+        return None
+
+    if isinstance(obj, list) and not obj:
+        return None
+
     user, group = get_identity(user_or_group)
     # If obj is None we try to operate on global permissions
     if obj is None:
@@ -192,6 +198,9 @@ def remove_perm(
             a list of Django `Model` instances or `None` if removing global permission.
             *Default* is `None`.
     """
+    if isinstance(user_or_group, list) and not user_or_group:
+        return None
+
     if obj is None and isinstance(user_or_group, (QuerySet, list)):
         raise MultipleIdentityAndObjectError("Bulk global permissions removal is not supported")
 
