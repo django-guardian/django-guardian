@@ -284,7 +284,7 @@ Defaults to `'guardian.GroupObjectPermission'`.
 
 ## `GUARDIAN_ACTIVE_USERS_ONLY`
 
-!!! abstract "Added in version 3.2.0"
+!!! abstract "Added in version 3.3.0"
 
 When set to `True`, functions that return users with permissions (like
 `get_users_with_perms`) will only return active users (`is_active=True`).
