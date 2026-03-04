@@ -35,7 +35,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -46,7 +46,7 @@ jobs:
         cache-dependency-glob: pyproject.toml
 
     - name: Install Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.13'
 
@@ -132,7 +132,7 @@ jobs:
 
     - name: Create Pull Request for Coverage Badge Update
       if: github.ref == 'refs/heads/main'
-      uses: peter-evans/create-pull-request@v6
+      uses: peter-evans/create-pull-request@v8
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         commit-message: Update coverage badge to ${{ env.COVERAGE_PERCENTAGE }}%
