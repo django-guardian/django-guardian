@@ -21,7 +21,7 @@ jobs:
       contents: write
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         ref: ${{ inputs.ref }}
 
@@ -29,7 +29,7 @@ jobs:
       uses: astral-sh/setup-uv@v5
 
     - name: Install python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
           # Installs the latest version compatible with the requires-python field
         python-version-file: pyproject.toml
@@ -91,7 +91,7 @@ jobs:
     needs: release
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         ref: ${{ inputs.ref }}
 
@@ -99,7 +99,7 @@ jobs:
       uses: astral-sh/setup-uv@v5
 
     - name: Install python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
           # Installs the latest version compatible with the requires-python field
         python-version-file: pyproject.toml
