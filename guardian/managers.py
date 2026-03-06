@@ -69,12 +69,14 @@ class BaseObjectPermissionManager(models.Manager):
 
     def bulk_assign_perm(
         self, perm: _PermType, user_or_group: Any, queryset: Union[QuerySet, list], ignore_conflicts: bool = False
-    ) -> Any:
+    ) -> list:
         """
         Bulk assigns permissions with given `perm` for an objects in `queryset` and
         `user_or_group`.
         """
         if isinstance(queryset, list):
+            if not queryset:
+                return []
             ctype = get_content_type(queryset[0])
         else:
             ctype = get_content_type(queryset.model)
