@@ -203,8 +203,11 @@ class GuardedModelAdminMixin:
 
         if obj:
             return request.user.has_perm(perm, obj)
-        else:
-            return self.get_model_objs(request, action).exists()
+        # When no specific object is provided, first honor global model permissions.
+        if request.user.has_perm(perm):
+            return True
+        # Fall back to object-level existence as an enhancement.
+        return self.get_model_objs(request, action).exists()
 
     def has_view_permission(self, request, obj=None):
         """Check if user has view permission for the object."""
