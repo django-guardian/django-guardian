@@ -150,9 +150,7 @@ class TestAssignPermCustomContentType(TestCase):
             "guardian.conf.settings.GET_CONTENT_TYPE",
             "guardian.testapp.tests.test_managers.get_parent_content_type",
         ):
-            obj_perm = UserObjectPermission.objects.assign_perm(
-                "change_parenttestmodel", self.user, self.child
-            )
+            obj_perm = UserObjectPermission.objects.assign_perm("change_parenttestmodel", self.user, self.child)
 
         self.assertEqual(
             obj_perm.content_type,
@@ -172,9 +170,7 @@ class TestAssignPermCustomContentType(TestCase):
             "guardian.conf.settings.GET_CONTENT_TYPE",
             "guardian.testapp.tests.test_managers.get_parent_content_type",
         ):
-            obj_perm = GroupObjectPermission.objects.assign_perm(
-                "change_parenttestmodel", self.group, self.child
-            )
+            obj_perm = GroupObjectPermission.objects.assign_perm("change_parenttestmodel", self.group, self.child)
 
         self.assertEqual(
             obj_perm.content_type,
