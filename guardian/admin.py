@@ -262,16 +262,23 @@ class GuardedModelAdminMixin:
         users_perms = get_users_with_perms(obj, attach_perms=True)
         groups_perms = get_groups_with_perms(obj, attach_perms=True)
 
-        # Remove permissions for users
+        # Group users by permission to allow bulk removal per permission
+        perm_to_users = {}
         for user, perms in users_perms.items():
             for perm in perms:
-                remove_perm(perm, user, obj)
+                perm_to_users.setdefault(perm, []).append(user)
 
-        # Remove permissions for groups
+        for perm, users in perm_to_users.items():
+            remove_perm(perm, users, obj)
+
+        # Group groups by permission to allow bulk removal per permission
+        perm_to_groups = {}
         for group, perms in groups_perms.items():
             for perm in perms:
-                remove_perm(perm, group, obj)
+                perm_to_groups.setdefault(perm, []).append(group)
 
+        for perm, groups in perm_to_groups.items():
+            remove_perm(perm, groups, obj)
     def delete_model(self, request, obj):
         """Delete model and clean up its object permissions."""
         self.remove_obj_perms(obj)
