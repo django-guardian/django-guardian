@@ -7,6 +7,7 @@ from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models import Model, Q, QuerySet
 
+from guardian.conf import settings as guardian_settings
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
 from guardian.exceptions import ObjectNotPersisted
@@ -61,7 +62,8 @@ class BaseObjectPermissionManager(models.Manager):
         if self.is_generic():
             kwargs["content_type"] = ctype
             kwargs["object_pk"] = obj.pk
-            kwargs["defaults"] = {"content_object": obj}
+            if guardian_settings.GET_CONTENT_TYPE == "guardian.ctypes.get_default_content_type":
+                kwargs["defaults"] = {"content_object": obj}
         else:
             kwargs["content_object"] = obj
         obj_perm, _ = self.get_or_create(**kwargs)
