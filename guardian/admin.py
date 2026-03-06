@@ -295,13 +295,12 @@ class GuardedModelAdminMixin:
         if extra_context is None:
             extra_context = {}
 
-        try:
-            obj = self.get_object(request, object_id)
-            if obj:
-                extra_context["has_object_permissions_access"] = self.has_object_permissions_access(request, obj)
-        except Exception:
-            extra_context["has_object_permissions_access"] = False
+        # Default to no object permissions access; override if we can check on an existing object.
+        extra_context["has_object_permissions_access"] = False
 
+        obj = self.get_object(request, object_id)
+        if obj:
+            extra_context["has_object_permissions_access"] = self.has_object_permissions_access(request, obj)
         return super().change_view(request, object_id, form_url, extra_context)
 
     def get_urls(self):
