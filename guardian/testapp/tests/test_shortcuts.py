@@ -10,7 +10,12 @@ from django.test import TestCase, TransactionTestCase
 
 from guardian.compat import get_user_permission_full_codename
 from guardian.core import ObjectPermissionChecker
-from guardian.exceptions import MixedContentTypeError, MultipleIdentityAndObjectError, NotUserNorGroup, WrongAppError
+from guardian.exceptions import (
+    MixedContentTypeError,
+    MultipleIdentityAndObjectError,
+    NotUserNorGroup,
+    WrongAppError,
+)
 from guardian.models import Group, Permission
 from guardian.shortcuts import (
     _get_ct_cached,
@@ -26,7 +31,12 @@ from guardian.shortcuts import (
     get_users_with_perms,
     remove_perm,
 )
-from guardian.testapp.models import CharPKModel, ChildTestModel, UUIDPKModel
+from guardian.testapp.models import (
+    CharPKModel,
+    ChildTestModel,
+    TextPKModel,
+    UUIDPKModel,
+)
 from guardian.testapp.tests.test_core import ObjectPermissionTestCase
 
 User = get_user_model()
@@ -47,11 +57,13 @@ class ShortcutsTests(ObjectPermissionTestCase):
 
         model_str = "contenttypes.ContentType"
         self.assertEqual(
-            sorted(get_perms_for_model(model_str).values_list()), sorted(get_perms_for_model(ContentType).values_list())
+            sorted(get_perms_for_model(model_str).values_list()),
+            sorted(get_perms_for_model(ContentType).values_list()),
         )
         obj = ContentType()
         self.assertEqual(
-            sorted(get_perms_for_model(model_str).values_list()), sorted(get_perms_for_model(obj).values_list())
+            sorted(get_perms_for_model(model_str).values_list()),
+            sorted(get_perms_for_model(obj).values_list()),
         )
 
 
@@ -62,7 +74,11 @@ class AssignPermTest(ObjectPermissionTestCase):
 
     def test_not_model(self):
         self.assertRaises(
-            NotUserNorGroup, assign_perm, perm="change_object", user_or_group="Not a Model", obj=self.ctype
+            NotUserNorGroup,
+            assign_perm,
+            perm="change_object",
+            user_or_group="Not a Model",
+            obj=self.ctype,
         )
 
     def test_global_wrong_perm(self):
@@ -81,6 +97,11 @@ class AssignPermTest(ObjectPermissionTestCase):
         self.assertTrue(self.user.has_perm("change_contenttype", self.ctype))
         self.assertTrue(self.user.has_perm("delete_contenttype", self.ctype))
 
+    def test_user_assign_perm_twice(self):
+        assign_perm("add_contenttype", self.user, self.ctype)
+        assign_perm("add_contenttype", self.user, self.ctype)
+        self.assertTrue(self.user.has_perm("add_contenttype", self.ctype))
+
     def test_group_assign_perm(self):
         assign_perm("add_contenttype", self.group, self.ctype)
         assign_perm("change_contenttype", self.group, self.ctype)
@@ -90,6 +111,13 @@ class AssignPermTest(ObjectPermissionTestCase):
         self.assertTrue(check.has_perm("add_contenttype", self.ctype))
         self.assertTrue(check.has_perm("change_contenttype", self.ctype))
         self.assertTrue(check.has_perm("delete_contenttype", self.ctype))
+
+    def test_group_assign_perm_twice(self):
+        assign_perm("add_contenttype", self.group, self.ctype)
+        assign_perm("add_contenttype", self.group, self.ctype)
+
+        check = ObjectPermissionChecker(self.group)
+        self.assertTrue(check.has_perm("add_contenttype", self.ctype))
 
     def test_user_assign_perm_queryset(self):
         assign_perm("add_contenttype", self.user, self.ctype_qset)
@@ -126,7 +154,8 @@ class AssignPermTest(ObjectPermissionTestCase):
 
     def test_assign_perm_with_dots(self):
         Permission.objects.create(
-            codename="contenttype.reorder", content_type=ContentType.objects.get_for_model(self.ctype)
+            codename="contenttype.reorder",
+            content_type=ContentType.objects.get_for_model(self.ctype),
         )
 
         assign_perm("contenttypes.contenttype.reorder", self.user, self.ctype)
@@ -168,7 +197,7 @@ class AssignPermTest(ObjectPermissionTestCase):
             self.assertTrue(check.has_perm("delete_contenttype", obj))
 
 
-class MultipleIdentitiesOperationsTest(ObjectPermissionTestCase):
+class MultipleIdentitiesAssignTest(ObjectPermissionTestCase):
     """
     Tests assignment of permission to multiple users or groups
     """
@@ -202,6 +231,12 @@ class MultipleIdentitiesOperationsTest(ObjectPermissionTestCase):
             self.assertTrue(user.has_perm("add_contenttype", self.ctype))
             self.assertTrue(user.has_perm("delete_contenttype", self.ctype))
 
+    def test_assign_to_many_users_twice(self):
+        assign_perm("add_contenttype", self.users_list, self.ctype)
+        assign_perm("add_contenttype", self.users_list, self.ctype)
+        for user in self.users_list:
+            self.assertTrue(user.has_perm("add_contenttype", self.ctype))
+
     def test_assign_to_many_groups_queryset(self):
         assign_perm("add_contenttype", self.groups_qs, self.ctype)
         assign_perm(self.get_permission("delete_contenttype"), self.groups_qs, self.ctype)
@@ -216,11 +251,27 @@ class MultipleIdentitiesOperationsTest(ObjectPermissionTestCase):
             self.assertTrue(user.has_perm("add_contenttype", self.ctype))
             self.assertTrue(user.has_perm("delete_contenttype", self.ctype))
 
+    def test_assign_to_many_groups_twice(self):
+        assign_perm("add_contenttype", self.groups_list, self.ctype)
+        assign_perm("add_contenttype", self.groups_list, self.ctype)
+        for user in self.users_list:
+            self.assertTrue(user.has_perm("add_contenttype", self.ctype))
+
     def test_assign_to_multiple_identity_and_obj(self):
         with self.assertRaises(MultipleIdentityAndObjectError):
             assign_perm("add_contenttype", self.users_list, self.ctype_qset)
         with self.assertRaises(MultipleIdentityAndObjectError):
             assign_perm("add_contenttype", self.users_qs, self.ctype_qset)
+
+    def test_user_assign_perm_empty_user_list(self):
+        """Passing user_or_group=[] should be a no-op, not raise IndexError."""
+        result = assign_perm("change_contenttype", [], self.ctype)
+        self.assertIsNone(result)
+
+    def test_user_assign_perm_empty_obj_list(self):
+        """Passing obj=[] should be a no-op, not raise IndexError."""
+        result = assign_perm("change_contenttype", self.user, [])
+        self.assertIsNone(result)
 
 
 class RemovePermTest(ObjectPermissionTestCase):
@@ -230,7 +281,11 @@ class RemovePermTest(ObjectPermissionTestCase):
 
     def test_not_model(self):
         self.assertRaises(
-            NotUserNorGroup, remove_perm, perm="change_object", user_or_group="Not a Model", obj=self.ctype
+            NotUserNorGroup,
+            remove_perm,
+            perm="change_object",
+            user_or_group="Not a Model",
+            obj=self.ctype,
         )
 
     def test_global_wrong_perm(self):
@@ -269,6 +324,19 @@ class RemovePermTest(ObjectPermissionTestCase):
         for obj in self.ctype_qset:
             self.assertTrue(self.user.has_perm("change_contenttype", obj))
 
+    def test_user_remove_perm_empty_list(self):
+        assign_perm("change_contenttype", self.user, self.ctype_qset)
+        remove_perm("change_contenttype", self.user, [])
+
+        for obj in self.ctype_qset:
+            self.assertTrue(self.user.has_perm("change_contenttype", obj))
+
+    def test_user_remove_perm_empty_user_list(self):
+        """Passing user_or_group=[] should be a no-op, not raise IndexError."""
+        assign_perm("change_contenttype", self.user, self.ctype)
+        remove_perm("change_contenttype", [], self.ctype)
+        self.assertTrue(self.user.has_perm("change_contenttype", self.ctype))
+
     def test_group_remove_perm_queryset(self):
         assign_perm("change_contenttype", self.group, self.ctype_qset)
         remove_perm("change_contenttype", self.group, self.ctype_qset)
@@ -276,6 +344,43 @@ class RemovePermTest(ObjectPermissionTestCase):
         check = ObjectPermissionChecker(self.group)
         for obj in self.ctype_qset:
             self.assertFalse(check.has_perm("change_contenttype", obj))
+
+    def test_user_remove_perm_list(self):
+        """
+        Test that one is able to remove permissions for a list of objects
+        from a user
+        """
+        self.user.groups.add(self.group)
+
+        # Assign perms first
+        assign_perm("add_contenttype", self.user, self.ctype_list)
+        assign_perm("change_contenttype", self.group, self.ctype_list)
+        assign_perm(self.get_permission("delete_contenttype"), self.user, self.ctype_list)
+        remove_perm("add_contenttype", self.user, self.ctype_list)
+        remove_perm("change_contenttype", self.group, self.ctype_list)
+        remove_perm(self.get_permission("delete_contenttype"), self.user, self.ctype_list)
+        for obj in self.ctype_list:
+            self.assertFalse(self.user.has_perm("add_contenttype", obj))
+            self.assertFalse(self.user.has_perm("change_contenttype", obj))
+            self.assertFalse(self.user.has_perm("delete_contenttype", obj))
+
+    def test_group_remove_perm_list(self):
+        """
+        Test that one is able to remove permissions for a list of
+        objects from a group
+        """
+        # Assign perms first
+        assign_perm("add_contenttype", self.group, self.ctype_list)
+        assign_perm("change_contenttype", self.group, self.ctype_list)
+        assign_perm(self.get_permission("delete_contenttype"), self.group, self.ctype_list)
+        remove_perm("add_contenttype", self.group, self.ctype_list)
+        remove_perm("change_contenttype", self.group, self.ctype_list)
+        remove_perm(self.get_permission("delete_contenttype"), self.group, self.ctype_list)
+        check = ObjectPermissionChecker(self.group)
+        for obj in self.ctype_list:
+            self.assertFalse(check.has_perm("add_contenttype", obj))
+            self.assertFalse(check.has_perm("change_contenttype", obj))
+            self.assertFalse(check.has_perm("delete_contenttype", obj))
 
     def test_user_remove_perm_global(self):
         # assign perm first
@@ -296,6 +401,88 @@ class RemovePermTest(ObjectPermissionTestCase):
         app_label, codename = perm.split(".")
         perm_obj = Permission.objects.get(codename=codename, content_type__app_label=app_label)
         self.assertFalse(perm_obj in self.group.permissions.all())
+
+
+class MultipleIdentitiesRemoveTest(ObjectPermissionTestCase):
+    """
+    Tests removal of permission from multiple users or groups
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.users_list = jim, bob = [
+            User.objects.create_user(username="jim"),
+            User.objects.create_user(username="bob"),
+        ]
+        self.groups_list = jim_group, bob_group = [
+            Group.objects.create(name="jimgroup"),
+            Group.objects.create(name="bobgroup"),
+        ]
+        jim_group.user_set.add(jim)
+        bob_group.user_set.add(bob)
+        self.users_qs = User.objects.filter(pk__in=[jim.pk, bob.pk])
+        self.groups_qs = Group.objects.filter(pk__in=[jim_group.pk, bob_group.pk])
+
+    def test_remove_from_many_users_queryset(self):
+        # Assign perms first
+        assign_perm("add_contenttype", self.users_qs, self.ctype)
+        assign_perm(self.get_permission("delete_contenttype"), self.users_qs, self.ctype)
+        remove_perm("add_contenttype", self.users_qs, self.ctype)
+        remove_perm(self.get_permission("delete_contenttype"), self.users_qs, self.ctype)
+        for user in self.users_list:
+            self.assertFalse(user.has_perm("add_contenttype", self.ctype))
+            self.assertFalse(user.has_perm("delete_contenttype", self.ctype))
+
+    def test_remove_from_many_users_list(self):
+        # Assign perms first
+        assign_perm("add_contenttype", self.users_list, self.ctype)
+        assign_perm(self.get_permission("delete_contenttype"), self.users_list, self.ctype)
+        remove_perm("add_contenttype", self.users_list, self.ctype)
+        remove_perm(self.get_permission("delete_contenttype"), self.users_list, self.ctype)
+        for user in self.users_list:
+            self.assertFalse(user.has_perm("add_contenttype", self.ctype))
+            self.assertFalse(user.has_perm("delete_contenttype", self.ctype))
+
+    def test_remove_from_many_groups_queryset(self):
+        # Assign perms first
+        assign_perm("add_contenttype", self.groups_qs, self.ctype)
+        assign_perm(self.get_permission("delete_contenttype"), self.groups_qs, self.ctype)
+        remove_perm("add_contenttype", self.groups_qs, self.ctype)
+        remove_perm(self.get_permission("delete_contenttype"), self.groups_qs, self.ctype)
+        for user in self.users_list:
+            self.assertFalse(user.has_perm("add_contenttype", self.ctype))
+            self.assertFalse(user.has_perm("delete_contenttype", self.ctype))
+
+    def test_remove_from_many_groups_list(self):
+        # Assign perms first
+        assign_perm("add_contenttype", self.groups_list, self.ctype)
+        assign_perm(self.get_permission("delete_contenttype"), self.groups_list, self.ctype)
+        remove_perm("add_contenttype", self.groups_list, self.ctype)
+        remove_perm(self.get_permission("delete_contenttype"), self.groups_list, self.ctype)
+        for user in self.users_list:
+            self.assertFalse(user.has_perm("add_contenttype", self.ctype))
+            self.assertFalse(user.has_perm("delete_contenttype", self.ctype))
+
+    def test_remove_from_many_empty_users_list(self):
+        """Passing user_or_group=[] should be a no-op, not raise IndexError."""
+        assign_perm("add_contenttype", self.users_list, self.ctype)
+        remove_perm("add_contenttype", [], self.ctype)
+        for user in self.users_list:
+            self.assertTrue(user.has_perm("add_contenttype", self.ctype))
+
+    def test_remove_from_multiple_identity_and_obj(self):
+        with self.assertRaises(MultipleIdentityAndObjectError):
+            remove_perm("add_contenttype", self.users_list, self.ctype_qset)
+        with self.assertRaises(MultipleIdentityAndObjectError):
+            remove_perm("add_contenttype", self.users_qs, self.ctype_qset)
+
+    def test_remove_global_from_many_users_unsupported(self):
+        with self.assertRaises(MultipleIdentityAndObjectError):
+            remove_perm("contenttypes.add_contenttype", self.users_list)
+
+    def test_remove_global_from_many_groups_unsupported(self):
+        with self.assertRaises(MultipleIdentityAndObjectError):
+            remove_perm("contenttypes.add_contenttype", self.groups_qs)
 
 
 class GetPermsTest(ObjectPermissionTestCase):
@@ -405,7 +592,9 @@ class GetUsersWithPermsTest(TestCase):
         assign_perm("add_contenttype", self.group3, self.obj2)
 
         result = get_users_with_perms(
-            self.obj1, only_with_perms_in=("change_contenttype", "delete_contenttype"), with_group_users=True
+            self.obj1,
+            only_with_perms_in=("change_contenttype", "delete_contenttype"),
+            with_group_users=True,
         )
         result_vals = result.values_list("username", flat=True)
 
@@ -428,7 +617,9 @@ class GetUsersWithPermsTest(TestCase):
         assign_perm("change_contenttype", self.user2, self.obj1)
 
         result = get_users_with_perms(
-            self.obj1, only_with_perms_in=("change_contenttype", "delete_contenttype"), with_group_users=False
+            self.obj1,
+            only_with_perms_in=("change_contenttype", "delete_contenttype"),
+            with_group_users=False,
         )
         result_vals = result.values_list("username", flat=True)
 
@@ -573,10 +764,17 @@ class GetUsersWithPermsTest(TestCase):
         self.assertEqual(set(get_group_perms(self.group1, self.obj1)), {"delete_contenttype"})
         self.assertEqual(set(get_group_perms(self.group2, self.obj1)), set())
         self.assertEqual(set(get_group_perms(admin, self.obj1)), set())
-        expected_permissions = ["add_contenttype", "change_contenttype", "delete_contenttype"]
+        expected_permissions = [
+            "add_contenttype",
+            "change_contenttype",
+            "delete_contenttype",
+        ]
         expected_permissions.append("view_contenttype")
         self.assertEqual(set(get_perms(admin, self.obj1)), set(expected_permissions))
-        self.assertEqual(set(get_perms(self.user1, self.obj1)), {"change_contenttype", "delete_contenttype"})
+        self.assertEqual(
+            set(get_perms(self.user1, self.obj1)),
+            {"change_contenttype", "delete_contenttype"},
+        )
         self.assertEqual(set(get_perms(self.user2, self.obj1)), {"delete_contenttype"})
         self.assertEqual(set(get_perms(self.group1, self.obj1)), {"delete_contenttype"})
         self.assertEqual(set(get_perms(self.group2, self.obj1)), set())
@@ -709,12 +907,18 @@ class GetGroupsWithPerms(TestCase):
             self.assertEqual(set(perms), set(expected[key]))
 
     def test_custom_group_model(self):
-        with mock.patch("guardian.conf.settings.GROUP_OBJ_PERMS_MODEL", "testapp.GenericGroupObjectPermission"):
+        with mock.patch(
+            "guardian.conf.settings.GROUP_OBJ_PERMS_MODEL",
+            "testapp.GenericGroupObjectPermission",
+        ):
             result = get_groups_with_perms(self.obj1)
             self.assertEqual(len(result), 0)
 
     def test_custom_group_model_attach_perms(self):
-        with mock.patch("guardian.conf.settings.GROUP_OBJ_PERMS_MODEL", "testapp.GenericGroupObjectPermission"):
+        with mock.patch(
+            "guardian.conf.settings.GROUP_OBJ_PERMS_MODEL",
+            "testapp.GenericGroupObjectPermission",
+        ):
             result = get_groups_with_perms(self.obj1, attach_perms=True)
             expected = {}
             self.assertEqual(expected, result)
@@ -771,11 +975,18 @@ class GetObjectsForUser(TestCase):
         self.assertRaises(MixedContentTypeError, get_objects_for_user, self.user, codenames)
 
     def test_mixed_perms_and_klass(self):
-        self.assertRaises(MixedContentTypeError, get_objects_for_user, self.user, ["auth.change_group"], User)
+        self.assertRaises(
+            MixedContentTypeError,
+            get_objects_for_user,
+            self.user,
+            ["auth.change_group"],
+            User,
+        )
 
     def test_override_get_content_type(self):
         with mock.patch(
-            "guardian.conf.settings.GET_CONTENT_TYPE", "guardian.testapp.tests.test_shortcuts.get_group_content_type"
+            "guardian.conf.settings.GET_CONTENT_TYPE",
+            "guardian.testapp.tests.test_shortcuts.get_group_content_type",
         ):
             get_objects_for_user(self.user, ["auth.change_group"], User)
 
@@ -789,7 +1000,10 @@ class GetObjectsForUser(TestCase):
     def test_perms_single(self):
         perm = "auth.change_group"
         assign_perm(perm, self.user, self.group)
-        self.assertEqual(set(get_objects_for_user(self.user, perm)), set(get_objects_for_user(self.user, [perm])))
+        self.assertEqual(
+            set(get_objects_for_user(self.user, perm)),
+            set(get_objects_for_user(self.user, [perm])),
+        )
 
     def test_klass_as_model(self):
         assign_perm("contenttypes.change_contenttype", self.user, self.ctype)
@@ -855,7 +1069,10 @@ class GetObjectsForUser(TestCase):
         objects = get_objects_for_user(self.user, ["auth.change_group", "auth.delete_group"], any_perm=True)
         self.assertEqual(len(objects), 2)
         self.assertTrue(isinstance(objects, QuerySet))
-        self.assertEqual(set(objects.values_list("name", flat=True)), {groups[0].name, groups[2].name})
+        self.assertEqual(
+            set(objects.values_list("name", flat=True)),
+            {groups[0].name, groups[2].name},
+        )
 
     def test_groups_perms(self):
         group1 = Group.objects.create(name="group1")
@@ -879,15 +1096,22 @@ class GetObjectsForUser(TestCase):
         assign_perm("delete_contenttype", groups[0], ctypes[0])
 
         objects = get_objects_for_user(self.user, ["contenttypes.change_contenttype"])
-        self.assertEqual(set(objects.values_list("id", flat=True)), {ctypes[i].id for i in [0, 1, 3, 4]})
+        self.assertEqual(
+            set(objects.values_list("id", flat=True)),
+            {ctypes[i].id for i in [0, 1, 3, 4]},
+        )
 
         objects = get_objects_for_user(
-            self.user, ["contenttypes.change_contenttype", "contenttypes.delete_contenttype"]
+            self.user,
+            ["contenttypes.change_contenttype", "contenttypes.delete_contenttype"],
         )
         self.assertEqual(set(objects.values_list("id", flat=True)), {ctypes[i].id for i in [0, 1]})
 
         objects = get_objects_for_user(self.user, ["contenttypes.change_contenttype"])
-        self.assertEqual(set(objects.values_list("id", flat=True)), {ctypes[i].id for i in [0, 1, 3, 4]})
+        self.assertEqual(
+            set(objects.values_list("id", flat=True)),
+            {ctypes[i].id for i in [0, 1, 3, 4]},
+        )
 
     def test_has_global_permission_only(self):
         group_names = ["group1", "group2", "group3"]
@@ -957,9 +1181,14 @@ class GetObjectsForUser(TestCase):
         assign_perm("delete_contenttype", groups[0], ctypes[0])
 
         objects = get_objects_for_user(
-            self.user, ["contenttypes.change_contenttype", "contenttypes.delete_contenttype"], accept_global_perms=True
+            self.user,
+            ["contenttypes.change_contenttype", "contenttypes.delete_contenttype"],
+            accept_global_perms=True,
         )
-        self.assertEqual(set(objects.values_list("id", flat=True)), {ctypes[0].id, ctypes[1].id, ctypes[2].id})
+        self.assertEqual(
+            set(objects.values_list("id", flat=True)),
+            {ctypes[0].id, ctypes[1].id, ctypes[2].id},
+        )
 
     def test_object_based_permission_with_groups_3perms(self):
         group_names = ["group1", "group2", "group3"]
@@ -985,7 +1214,11 @@ class GetObjectsForUser(TestCase):
 
         objects = get_objects_for_user(
             self.user,
-            ["contenttypes.change_contenttype", "contenttypes.delete_contenttype", "contenttypes.add_contenttype"],
+            [
+                "contenttypes.change_contenttype",
+                "contenttypes.delete_contenttype",
+                "contenttypes.add_contenttype",
+            ],
             accept_global_perms=True,
         )
         self.assertEqual(set(objects.values_list("id", flat=True)), {ctypes[0].id, ctypes[1].id})
@@ -1025,7 +1258,9 @@ class GetObjectsForUser(TestCase):
         assign_perm("add_charpkmodel", self.user, obj_with_char_pk)
 
         objects = get_objects_for_user(
-            self.user, ["testapp.add_charpkmodel", "testapp.change_charpkmodel"], any_perm=True
+            self.user,
+            ["testapp.add_charpkmodel", "testapp.change_charpkmodel"],
+            any_perm=True,
         )
         self.assertEqual(len(objects), 1)
         self.assertTrue(isinstance(objects, QuerySet))
@@ -1040,7 +1275,9 @@ class GetObjectsForUser(TestCase):
         assign_perm("add_uuidpkmodel", self.user, obj_with_uuid_pk)
 
         objects = get_objects_for_user(
-            self.user, ["testapp.add_uuidpkmodel", "testapp.change_uuidpkmodel"], any_perm=True
+            self.user,
+            ["testapp.add_uuidpkmodel", "testapp.change_uuidpkmodel"],
+            any_perm=True,
         )
         self.assertEqual(len(objects), 1)
         self.assertTrue(isinstance(objects, QuerySet))
@@ -1057,7 +1294,9 @@ class GetObjectsForUser(TestCase):
         self.user.groups.add(self.group)
 
         objects = get_objects_for_user(
-            self.user, ["testapp.add_charpkmodel", "testapp.change_charpkmodel"], any_perm=True
+            self.user,
+            ["testapp.add_charpkmodel", "testapp.change_charpkmodel"],
+            any_perm=True,
         )
         self.assertEqual(len(objects), 1)
         self.assertTrue(isinstance(objects, QuerySet))
@@ -1085,7 +1324,9 @@ class GetObjectsForUser(TestCase):
         self.user.groups.add(self.group)
 
         objects = get_objects_for_user(
-            self.user, ["testapp.add_uuidpkmodel", "testapp.change_uuidpkmodel"], any_perm=True
+            self.user,
+            ["testapp.add_uuidpkmodel", "testapp.change_uuidpkmodel"],
+            any_perm=True,
         )
         self.assertEqual(len(objects), 1)
         self.assertTrue(isinstance(objects, QuerySet))
@@ -1151,7 +1392,10 @@ class GetObjectsForUser(TestCase):
 
     def test_exception_different_ctypes(self):
         self.assertRaises(
-            MixedContentTypeError, get_objects_for_user, self.user, ["auth.change_permission", "auth.change_group"]
+            MixedContentTypeError,
+            get_objects_for_user,
+            self.user,
+            ["auth.change_permission", "auth.change_group"],
         )
 
     def test_has_any_permissions(self):
@@ -1216,11 +1460,18 @@ class GetObjectsForGroup(TestCase):
         self.assertRaises(MixedContentTypeError, get_objects_for_group, self.group1, codenames)
 
     def test_mixed_perms_and_klass(self):
-        self.assertRaises(MixedContentTypeError, get_objects_for_group, self.group1, ["auth.change_group"], User)
+        self.assertRaises(
+            MixedContentTypeError,
+            get_objects_for_group,
+            self.group1,
+            ["auth.change_group"],
+            User,
+        )
 
     def test_override_get_content_type(self):
         with mock.patch(
-            "guardian.conf.settings.GET_CONTENT_TYPE", "guardian.testapp.tests.test_shortcuts.get_group_content_type"
+            "guardian.conf.settings.GET_CONTENT_TYPE",
+            "guardian.testapp.tests.test_shortcuts.get_group_content_type",
         ):
             get_objects_for_group(self.group1, ["auth.change_group"], User)
 
@@ -1233,7 +1484,10 @@ class GetObjectsForGroup(TestCase):
     def test_perms_single(self):
         perm = "contenttypes.change_contenttype"
         assign_perm(perm, self.group1, self.obj1)
-        self.assertEqual(set(get_objects_for_group(self.group1, perm)), set(get_objects_for_group(self.group1, [perm])))
+        self.assertEqual(
+            set(get_objects_for_group(self.group1, perm)),
+            set(get_objects_for_group(self.group1, [perm])),
+        )
 
     def test_klass_as_model(self):
         assign_perm("contenttypes.change_contenttype", self.group1, self.obj1)
@@ -1277,7 +1531,8 @@ class GetObjectsForGroup(TestCase):
         assign_perm("change_contenttype", self.group1, self.obj2)
 
         objects = get_objects_for_group(
-            self.group1, ["contenttypes.change_contenttype", "contenttypes.delete_contenttype"]
+            self.group1,
+            ["contenttypes.change_contenttype", "contenttypes.delete_contenttype"],
         )
         self.assertEqual(len(objects), 1)
         self.assertTrue(isinstance(objects, QuerySet))
@@ -1290,7 +1545,9 @@ class GetObjectsForGroup(TestCase):
         assign_perm("delete_contenttype", self.group1, self.obj3)
 
         objects = get_objects_for_group(
-            self.group1, ["contenttypes.change_contenttype", "contenttypes.delete_contenttype"], any_perm=True
+            self.group1,
+            ["contenttypes.change_contenttype", "contenttypes.delete_contenttype"],
+            any_perm=True,
         )
         self.assertTrue(isinstance(objects, QuerySet))
         self.assertEqual([obj for obj in objects.order_by("app_label", "id")], [self.obj1, self.obj3])
@@ -1299,9 +1556,18 @@ class GetObjectsForGroup(TestCase):
         assign_perm("change_contenttype", self.group1, self.obj1)
         assign_perm("delete_contenttype", self.group2, self.obj2)
 
-        self.assertEqual(set(get_objects_for_group(self.group1, "contenttypes.change_contenttype")), {self.obj1})
-        self.assertEqual(set(get_objects_for_group(self.group2, "contenttypes.change_contenttype")), set())
-        self.assertEqual(set(get_objects_for_group(self.group2, "contenttypes.delete_contenttype")), {self.obj2})
+        self.assertEqual(
+            set(get_objects_for_group(self.group1, "contenttypes.change_contenttype")),
+            {self.obj1},
+        )
+        self.assertEqual(
+            set(get_objects_for_group(self.group2, "contenttypes.change_contenttype")),
+            set(),
+        )
+        self.assertEqual(
+            set(get_objects_for_group(self.group2, "contenttypes.delete_contenttype")),
+            {self.obj2},
+        )
 
     def test_has_global_permission(self):
         assign_perm("contenttypes.change_contenttype", self.group1)
@@ -1314,7 +1580,9 @@ class GetObjectsForGroup(TestCase):
         assign_perm("contenttypes.delete_contenttype", self.group1, self.obj1)
 
         objects = get_objects_for_group(
-            self.group1, ["contenttypes.change_contenttype", "contenttypes.delete_contenttype"], any_perm=False
+            self.group1,
+            ["contenttypes.change_contenttype", "contenttypes.delete_contenttype"],
+            any_perm=False,
         )
         self.assertEqual(set(objects), {self.obj1})
 
@@ -1323,7 +1591,9 @@ class GetObjectsForGroup(TestCase):
         assign_perm("contenttypes.delete_contenttype", self.group1, self.obj1)
 
         objects = get_objects_for_group(
-            self.group1, ["contenttypes.change_contenttype", "contenttypes.delete_contenttype"], any_perm=True
+            self.group1,
+            ["contenttypes.change_contenttype", "contenttypes.delete_contenttype"],
+            any_perm=True,
         )
         self.assertEqual(set(objects), set(ContentType.objects.all()))
 
@@ -1334,14 +1604,21 @@ class GetObjectsForGroup(TestCase):
 
         objects = get_objects_for_group(
             self.group1,
-            ["contenttypes.change_contenttype", "contenttypes.delete_contenttype", "contenttypes.add_contenttype"],
+            [
+                "contenttypes.change_contenttype",
+                "contenttypes.delete_contenttype",
+                "contenttypes.add_contenttype",
+            ],
             any_perm=False,
         )
         self.assertEqual(set(objects), set())
 
     def test_exception_different_ctypes(self):
         self.assertRaises(
-            MixedContentTypeError, get_objects_for_group, self.group1, ["auth.change_permission", "auth.change_group"]
+            MixedContentTypeError,
+            get_objects_for_group,
+            self.group1,
+            ["auth.change_permission", "auth.change_group"],
         )
 
 
@@ -1440,12 +1717,15 @@ class GetPermsVsGetUserPermsTest(TestCase):
 
         # get_user_perms should be empty (no direct user permissions)
         self.assertEqual(
-            user_perms, [], f"get_user_perms should be empty when no direct user permissions, got {user_perms}"
+            user_perms,
+            [],
+            f"get_user_perms should be empty when no direct user permissions, got {user_perms}",
         )
 
         # get_perms should include group permissions
         self.assertTrue(
-            set(group_perms).issubset(set(all_perms)), f"get_perms {all_perms} should include group_perms {group_perms}"
+            set(group_perms).issubset(set(all_perms)),
+            f"get_perms {all_perms} should include group_perms {group_perms}",
         )
 
         # This reproduces the reported issue scenario
@@ -1474,12 +1754,17 @@ class GetPermsVsGetUserPermsTest(TestCase):
 
         # get_perms should include group permissions
         self.assertTrue(
-            set(group_perms).issubset(set(all_perms)), f"get_perms {all_perms} should include group_perms {group_perms}"
+            set(group_perms).issubset(set(all_perms)),
+            f"get_perms {all_perms} should include group_perms {group_perms}",
         )
 
         # get_perms should be the union of user and group permissions
         expected_all_perms = set(user_perms) | set(group_perms)
-        self.assertEqual(set(all_perms), expected_all_perms, "get_perms should be union of user and group perms")
+        self.assertEqual(
+            set(all_perms),
+            expected_all_perms,
+            "get_perms should be union of user and group perms",
+        )
 
     def test_return_type_consistency(self):
         """Test that return types are consistent with documentation."""
@@ -1512,7 +1797,11 @@ class GetPermsVsGetUserPermsTest(TestCase):
         # all functions should return empty for inactive users
         self.assertEqual(all_perms, [], "get_perms should return empty list for inactive user")
         self.assertEqual(user_perms, [], "get_user_perms should return empty list for inactive user")
-        self.assertEqual(group_perms, [], "get_group_perms should return empty list for inactive user")
+        self.assertEqual(
+            group_perms,
+            [],
+            "get_group_perms should return empty list for inactive user",
+        )
 
         # Now the superset relationship should hold correctly
         self.assertTrue(
@@ -1539,7 +1828,9 @@ class GetPermsVsGetUserPermsTest(TestCase):
         all_model_perms = list(Permission.objects.filter(content_type=ct).values_list("codename", flat=True))
 
         self.assertEqual(
-            set(all_perms), set(all_model_perms), "Superuser should have all model permissions via get_perms"
+            set(all_perms),
+            set(all_model_perms),
+            "Superuser should have all model permissions via get_perms",
         )
 
         # get_perms should be superset of get_user_perms
@@ -1573,9 +1864,370 @@ class GetPermsVsGetUserPermsTest(TestCase):
 
         # The important test: get_perms should always be superset of get_user_perms
         self.assertTrue(
-            set(perms).issuperset(set(user_perms)), "get_perms should always be a superset of get_user_perms"
+            set(perms).issuperset(set(user_perms)),
+            "get_perms should always be a superset of get_user_perms",
         )
 
         # Verify that perms contains the group permissions
         group_perms = list(get_group_perms(self.user, self.obj))
-        self.assertTrue(set(group_perms).issubset(set(perms)), "get_perms should include group permissions")
+        self.assertTrue(
+            set(group_perms).issubset(set(perms)),
+            "get_perms should include group permissions",
+        )
+
+
+class NonStandardPKTests(TestCase):
+    """
+    Tests for models with non-standard primary key types that are not handled
+    by _handle_pk_field (e.g., TextField, macaddr, inet, etc.)
+
+    These tests verify the fix for the issue where get_objects_for_user and
+    get_objects_for_group failed when the primary key type was not included
+    in _handle_pk_field. The fix casts the PK to CharField when it's not
+    a recognized type.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create(username="testuser")
+        self.group = Group.objects.create(name="testgroup")
+        self.user.groups.add(self.group)
+
+    def test_text_pk_get_objects_for_user_single_permission(self):
+        """
+        Test get_objects_for_user with TextField primary key and single permission.
+        """
+        # Create objects with TextField primary keys
+        obj1 = TextPKModel.objects.create(text_pk="00:00:00:00:00:01")  # Simulates macaddr
+        obj2 = TextPKModel.objects.create(text_pk="192.168.1.1")  # Simulates inet
+        obj3 = TextPKModel.objects.create(text_pk="some-text-id")
+
+        # Assign permission to specific objects
+        assign_perm("add_textpkmodel", self.user, obj1)
+        assign_perm("add_textpkmodel", self.user, obj2)
+        # obj3 deliberately has no permissions
+
+        # Test get_objects_for_user
+        objects = get_objects_for_user(self.user, "testapp.add_textpkmodel")
+
+        self.assertEqual(len(objects), 2)
+        self.assertTrue(isinstance(objects, QuerySet))
+        self.assertEqual(set(objects.values_list("text_pk", flat=True)), {obj1.text_pk, obj2.text_pk})
+        self.assertNotIn(obj3.text_pk, set(objects.values_list("text_pk", flat=True)))
+
+    def test_text_pk_get_objects_for_user_multiple_permissions(self):
+        """
+        Test get_objects_for_user with TextField primary key and multiple permissions.
+        """
+        obj1 = TextPKModel.objects.create(text_pk="00:00:00:00:00:01")
+        obj2 = TextPKModel.objects.create(text_pk="192.168.1.1")
+        TextPKModel.objects.create(text_pk="some-text-id")
+
+        # Assign multiple permissions to different objects
+        assign_perm("add_textpkmodel", self.user, obj1)
+        assign_perm("change_textpkmodel", self.user, obj1)
+        assign_perm("add_textpkmodel", self.user, obj2)
+        # obj2 doesn't have change permission
+        # obj3 has no permissions
+
+        # Test with multiple permissions (requires ALL)
+        objects = get_objects_for_user(self.user, ["testapp.add_textpkmodel", "testapp.change_textpkmodel"])
+
+        self.assertEqual(len(objects), 1)
+        self.assertEqual(list(objects.values_list("text_pk", flat=True)), [obj1.text_pk])
+
+    def test_text_pk_get_objects_for_user_any_perm(self):
+        """
+        Test get_objects_for_user with TextField primary key and any_perm=True.
+        """
+        obj1 = TextPKModel.objects.create(text_pk="00:00:00:00:00:01")
+        obj2 = TextPKModel.objects.create(text_pk="192.168.1.1")
+        obj3 = TextPKModel.objects.create(text_pk="some-text-id")
+
+        # Assign different permissions to different objects
+        assign_perm("add_textpkmodel", self.user, obj1)
+        assign_perm("change_textpkmodel", self.user, obj2)
+        # obj3 has no permissions
+
+        # Test with any_perm=True (requires ANY permission)
+        objects = get_objects_for_user(
+            self.user,
+            ["testapp.add_textpkmodel", "testapp.change_textpkmodel"],
+            any_perm=True,
+        )
+
+        self.assertEqual(len(objects), 2)
+        returned_pks = set(objects.values_list("text_pk", flat=True))
+        self.assertEqual(returned_pks, {obj1.text_pk, obj2.text_pk})
+        self.assertNotIn(obj3.text_pk, returned_pks)
+
+    def test_text_pk_get_objects_for_user_with_groups(self):
+        """
+        Test get_objects_for_user with TextField primary key and group permissions.
+        """
+        obj1 = TextPKModel.objects.create(text_pk="00:00:00:00:00:01")
+        obj2 = TextPKModel.objects.create(text_pk="192.168.1.1")
+        TextPKModel.objects.create(text_pk="some-text-id")
+
+        # Assign permission to user directly for obj1
+        assign_perm("add_textpkmodel", self.user, obj1)
+
+        # Assign permission to group for obj2
+        assign_perm("add_textpkmodel", self.group, obj2)
+
+        # Test with use_groups=True (default)
+        objects = get_objects_for_user(self.user, "testapp.add_textpkmodel", use_groups=True)
+
+        self.assertEqual(len(objects), 2)
+        returned_pks = set(objects.values_list("text_pk", flat=True))
+        self.assertEqual(returned_pks, {obj1.text_pk, obj2.text_pk})
+
+    def test_text_pk_get_objects_for_user_without_groups(self):
+        """
+        Test get_objects_for_user with TextField primary key and use_groups=False.
+        """
+        obj1 = TextPKModel.objects.create(text_pk="00:00:00:00:00:01")
+        obj2 = TextPKModel.objects.create(text_pk="192.168.1.1")
+
+        # Assign permission to user directly for obj1
+        assign_perm("add_textpkmodel", self.user, obj1)
+
+        # Assign permission to group for obj2
+        assign_perm("add_textpkmodel", self.group, obj2)
+
+        # Test with use_groups=False
+        objects = get_objects_for_user(self.user, "testapp.add_textpkmodel", use_groups=False)
+
+        self.assertEqual(len(objects), 1)
+        self.assertEqual(list(objects.values_list("text_pk", flat=True)), [obj1.text_pk])
+
+    def test_text_pk_get_objects_for_user_accept_global_perms_false(self):
+        """
+        Test get_objects_for_user with TextField primary key and accept_global_perms=False.
+        """
+        obj1 = TextPKModel.objects.create(text_pk="00:00:00:00:00:01")
+        obj2 = TextPKModel.objects.create(text_pk="192.168.1.1")
+        obj3 = TextPKModel.objects.create(text_pk="some-text-id")
+
+        # Assign object-level permissions
+        assign_perm("add_textpkmodel", self.user, obj1)
+        assign_perm("add_textpkmodel", self.user, obj2)
+
+        # Assign global permission (should be ignored with accept_global_perms=False)
+        assign_perm("testapp.add_textpkmodel", self.user)
+
+        # Test with accept_global_perms=False
+        objects = get_objects_for_user(self.user, "testapp.add_textpkmodel", accept_global_perms=False)
+
+        # Should only return objects with explicit permissions, not all objects
+        self.assertEqual(len(objects), 2)
+        returned_pks = set(objects.values_list("text_pk", flat=True))
+        self.assertEqual(returned_pks, {obj1.text_pk, obj2.text_pk})
+        self.assertNotIn(obj3.text_pk, returned_pks)
+
+    def test_text_pk_get_objects_for_group_single_permission(self):
+        """
+        Test get_objects_for_group with TextField primary key and single permission.
+        """
+        obj1 = TextPKModel.objects.create(text_pk="00:00:00:00:00:01")
+        obj2 = TextPKModel.objects.create(text_pk="192.168.1.1")
+        obj3 = TextPKModel.objects.create(text_pk="some-text-id")
+
+        # Assign permission to group for specific objects
+        assign_perm("add_textpkmodel", self.group, obj1)
+        assign_perm("add_textpkmodel", self.group, obj2)
+        # obj3 deliberately has no permissions
+
+        # Test get_objects_for_group
+        objects = get_objects_for_group(self.group, "testapp.add_textpkmodel")
+
+        self.assertEqual(len(objects), 2)
+        self.assertTrue(isinstance(objects, QuerySet))
+        returned_pks = set(objects.values_list("text_pk", flat=True))
+        self.assertEqual(returned_pks, {obj1.text_pk, obj2.text_pk})
+        self.assertNotIn(obj3.text_pk, returned_pks)
+
+    def test_text_pk_get_objects_for_group_multiple_permissions(self):
+        """
+        Test get_objects_for_group with TextField primary key and multiple permissions.
+        """
+        obj1 = TextPKModel.objects.create(text_pk="00:00:00:00:00:01")
+        obj2 = TextPKModel.objects.create(text_pk="192.168.1.1")
+        TextPKModel.objects.create(text_pk="some-text-id")
+
+        # Assign multiple permissions to different objects
+        assign_perm("add_textpkmodel", self.group, obj1)
+        assign_perm("change_textpkmodel", self.group, obj1)
+        assign_perm("add_textpkmodel", self.group, obj2)
+        # obj2 doesn't have change permission
+        # obj3 has no permissions
+
+        # Test with multiple permissions (requires ALL)
+        objects = get_objects_for_group(self.group, ["testapp.add_textpkmodel", "testapp.change_textpkmodel"])
+
+        self.assertEqual(len(objects), 1)
+        self.assertEqual(list(objects.values_list("text_pk", flat=True)), [obj1.text_pk])
+
+    def test_text_pk_get_objects_for_group_any_perm(self):
+        """
+        Test get_objects_for_group with TextField primary key and any_perm=True.
+        """
+        obj1 = TextPKModel.objects.create(text_pk="00:00:00:00:00:01")
+        obj2 = TextPKModel.objects.create(text_pk="192.168.1.1")
+        obj3 = TextPKModel.objects.create(text_pk="some-text-id")
+
+        # Assign different permissions to different objects
+        assign_perm("add_textpkmodel", self.group, obj1)
+        assign_perm("change_textpkmodel", self.group, obj2)
+        # obj3 has no permissions
+
+        # Test with any_perm=True (requires ANY permission)
+        objects = get_objects_for_group(
+            self.group,
+            ["testapp.add_textpkmodel", "testapp.change_textpkmodel"],
+            any_perm=True,
+        )
+
+        self.assertEqual(len(objects), 2)
+        returned_pks = set(objects.values_list("text_pk", flat=True))
+        self.assertEqual(returned_pks, {obj1.text_pk, obj2.text_pk})
+        self.assertNotIn(obj3.text_pk, returned_pks)
+
+    def test_text_pk_get_objects_for_group_accept_global_perms_false(self):
+        """
+        Test get_objects_for_group with TextField primary key and accept_global_perms=False.
+        """
+        obj1 = TextPKModel.objects.create(text_pk="00:00:00:00:00:01")
+        obj2 = TextPKModel.objects.create(text_pk="192.168.1.1")
+        obj3 = TextPKModel.objects.create(text_pk="some-text-id")
+
+        # Assign object-level permissions
+        assign_perm("add_textpkmodel", self.group, obj1)
+        assign_perm("add_textpkmodel", self.group, obj2)
+
+        # Assign global permission (should be ignored with accept_global_perms=False)
+        assign_perm("testapp.add_textpkmodel", self.group)
+
+        # Test with accept_global_perms=False
+        objects = get_objects_for_group(self.group, "testapp.add_textpkmodel", accept_global_perms=False)
+
+        # Should only return objects with explicit permissions, not all objects
+        self.assertEqual(len(objects), 2)
+        returned_pks = set(objects.values_list("text_pk", flat=True))
+        self.assertEqual(returned_pks, {obj1.text_pk, obj2.text_pk})
+        self.assertNotIn(obj3.text_pk, returned_pks)
+
+    def test_text_pk_mixed_user_and_group_permissions(self):
+        """
+        Test complex scenario with mixed user and group permissions on TextField PK models.
+        """
+        obj1 = TextPKModel.objects.create(text_pk="00:00:00:00:00:01")
+        obj2 = TextPKModel.objects.create(text_pk="192.168.1.1")
+        obj3 = TextPKModel.objects.create(text_pk="some-text-id")
+        TextPKModel.objects.create(text_pk="another-id")
+
+        # Mixed permissions scenario
+        assign_perm("add_textpkmodel", self.user, obj1)
+        assign_perm("change_textpkmodel", self.user, obj1)
+
+        assign_perm("add_textpkmodel", self.group, obj2)
+        assign_perm("change_textpkmodel", self.group, obj2)
+
+        assign_perm("add_textpkmodel", self.user, obj3)
+        assign_perm("change_textpkmodel", self.group, obj3)
+
+        # obj4 has no permissions
+
+        # Test multiple permissions with groups
+        objects = get_objects_for_user(
+            self.user,
+            ["testapp.add_textpkmodel", "testapp.change_textpkmodel"],
+            use_groups=True,
+        )
+
+        # Should return obj1 (user has both), obj2 (group has both), and obj3 (user has add, group has change)
+        self.assertEqual(len(objects), 3)
+        returned_pks = set(objects.values_list("text_pk", flat=True))
+        self.assertEqual(returned_pks, {obj1.text_pk, obj2.text_pk, obj3.text_pk})
+
+    def test_text_pk_queryset_parameter(self):
+        """
+        Test get_objects_for_user with TextField PK when passing a queryset as klass.
+        """
+        obj1 = TextPKModel.objects.create(text_pk="00:00:00:00:00:01")
+        obj2 = TextPKModel.objects.create(text_pk="192.168.1.1")
+        TextPKModel.objects.create(text_pk="some-text-id")
+
+        assign_perm("add_textpkmodel", self.user, obj1)
+        assign_perm("add_textpkmodel", self.user, obj2)
+
+        # Test with queryset as klass
+        queryset = TextPKModel.objects.all()
+        objects = get_objects_for_user(self.user, "testapp.add_textpkmodel", klass=queryset)
+
+        self.assertEqual(len(objects), 2)
+        returned_pks = set(objects.values_list("text_pk", flat=True))
+        self.assertEqual(returned_pks, {obj1.text_pk, obj2.text_pk})
+
+    def test_text_pk_empty_result(self):
+        """
+        Test that functions return empty querysets correctly for TextField PK models.
+        """
+        TextPKModel.objects.create(text_pk="00:00:00:00:00:01")
+        TextPKModel.objects.create(text_pk="192.168.1.1")
+
+        # No permissions assigned
+
+        # Test get_objects_for_user
+        objects = get_objects_for_user(self.user, "testapp.add_textpkmodel")
+        self.assertEqual(len(objects), 0)
+
+        # Test get_objects_for_group
+        objects = get_objects_for_group(self.group, "testapp.add_textpkmodel")
+        self.assertEqual(len(objects), 0)
+
+    def test_text_pk_special_characters(self):
+        """
+        Test TextField PK with special characters (like MAC addresses and IP addresses).
+        """
+        # Simulate various non-standard PK formats
+        mac_obj = TextPKModel.objects.create(text_pk="00:1A:2B:3C:4D:5E")
+        ipv4_obj = TextPKModel.objects.create(text_pk="192.168.1.100")
+        ipv6_obj = TextPKModel.objects.create(text_pk="2001:0db8:85a3:0000:0000:8a2e:0370:7334")
+
+        # Assign permissions
+        assign_perm("add_textpkmodel", self.user, mac_obj)
+        assign_perm("add_textpkmodel", self.user, ipv4_obj)
+        assign_perm("add_textpkmodel", self.group, ipv6_obj)
+
+        # Test get_objects_for_user with groups
+        objects = get_objects_for_user(self.user, "testapp.add_textpkmodel", use_groups=True)
+
+        self.assertEqual(len(objects), 3)
+        returned_pks = set(objects.values_list("text_pk", flat=True))
+        self.assertEqual(returned_pks, {mac_obj.text_pk, ipv4_obj.text_pk, ipv6_obj.text_pk})
+
+    def test_comparison_with_standard_pk_types(self):
+        """
+        Verify that the fix doesn't break existing functionality for standard PK types.
+        Compare behavior between CharField PK (handled by fix) and UUID PK (in _handle_pk_field).
+        """
+        # Test with UUID (standard, handled by _handle_pk_field)
+        uuid_obj1 = UUIDPKModel.objects.create()
+        UUIDPKModel.objects.create()
+
+        assign_perm("add_uuidpkmodel", self.user, uuid_obj1)
+
+        uuid_objects = get_objects_for_user(self.user, "testapp.add_uuidpkmodel")
+        self.assertEqual(len(uuid_objects), 1)
+
+        # Test with TextField (non-standard, uses fix)
+        text_obj1 = TextPKModel.objects.create(text_pk="text-id-1")
+        TextPKModel.objects.create(text_pk="text-id-2")
+
+        assign_perm("add_textpkmodel", self.user, text_obj1)
+
+        text_objects = get_objects_for_user(self.user, "testapp.add_textpkmodel")
+        self.assertEqual(len(text_objects), 1)
+
+        # Both should behave consistently
+        self.assertEqual(len(uuid_objects), len(text_objects))

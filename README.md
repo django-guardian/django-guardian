@@ -1,7 +1,7 @@
 # django-guardian
 
 [![Tests](https://github.com/django-guardian/django-guardian/actions/workflows/tests.yml/badge.svg)](https://github.com/django-guardian/django-guardian/actions/workflows/tests.yml)
-[![Coverage](https://img.shields.io/badge/coverage-97.6%25-brightgreen)](https://github.com/django-guardian/django-guardian/actions/workflows/coverage.yml)
+[![Coverage](https://img.shields.io/badge/coverage-97.7%25-brightgreen)](https://github.com/django-guardian/django-guardian/actions/workflows/coverage.yml)
 [![PyPI version](https://img.shields.io/pypi/v/django-guardian.svg)](https://pypi.python.org/pypi/django-guardian)
 [![Python versions](https://img.shields.io/pypi/pyversions/django-guardian.svg)](https://pypi.python.org/pypi/django-guardian)
 [![Published on Django Packages](https://img.shields.io/badge/Published%20on-Django%20Packages-0c3c26)](https://djangopackages.org/packages/p/django-guardian/)
@@ -12,6 +12,8 @@ of Django’s authorization backend. Read an introduction to per-object permissi
 ## Documentation
 
 Online documentation is available at [https://django-guardian.readthedocs.io/](https://django-guardian.readthedocs.io/).
+
+**See real-world usage**: Check out [Who Uses Guardian](https://django-guardian.readthedocs.io/en/latest/who-uses-guardian/) to see how thousands of projects worldwide use django-guardian in production.
 
 
 ## Installation

@@ -89,3 +89,58 @@ We would still **strongly** advise to remove orphaned object permissions explici
 This is not supported at present time due to a Django bug. See
 [288](https://github.com/django-guardian/django-guardian/issues/288) and
 [16281](https://code.djangoproject.com/ticket/16281).
+
+## Primary key types
+
+Guardian stores object primary keys as text in the `object_pk` column of its
+permission tables. When filtering querysets (e.g. in `get_objects_for_user` or
+`get_objects_for_group`), guardian must cast primary keys so that the stored
+text values can be compared against the model's actual PK column.
+
+The following PK types are natively supported with optimised casts:
+
+| PK field type | Cast strategy |
+|---|---|
+| `IntegerField`, `AutoField`, `BigIntegerField`, `SmallIntegerField`, `PositiveIntegerField`, `PositiveSmallIntegerField` | Cast to `BigIntegerField` |
+| `UUIDField` | Native UUID cast (or string with hyphens stripped on databases without native UUID support) |
+| `CharField` | No cast needed — already stored as text |
+
+For **any other primary key type** (e.g. `TextField`, PostgreSQL `macaddr` or
+`inet` fields), guardian automatically falls back to casting PKs with
+`Cast("pk", CharField())`. This means models with non-standard PK types work
+out of the box:
+
+```python
+from django.db import models
+
+class Device(models.Model):
+    mac = models.TextField(primary_key=True)
+
+    class Meta:
+        permissions = (("view_device", "Can view device"),)
+```
+
+```python
+from guardian.shortcuts import assign_perm, get_objects_for_user
+
+device = Device.objects.create(mac="00:1B:44:11:3A:B7")
+assign_perm("view_device", user, device)
+
+# Returns a queryset containing the device — no extra configuration needed
+devices = get_objects_for_user(user, "app.view_device")
+```
+
+!!! warning "Performance consideration"
+
+    The string-casting fallback adds a `Cast()` annotation to every query,
+    which prevents the database from using primary key indexes directly. For
+    large tables this can be noticeably slower than native type comparisons.
+    If performance is critical, consider using
+    [direct foreign keys](performance.md#direct-foreign-keys) instead.
+
+!!! note
+
+    Permission management functions such as `assign_perm`, `remove_perm`, and
+    `get_perms` work with any PK type without special handling. The
+    casting behaviour described above only applies to queryset-filtering
+    functions like `get_objects_for_user` and `get_objects_for_group`.
