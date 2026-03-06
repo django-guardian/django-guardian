@@ -6,12 +6,15 @@ from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ImproperlyConfigured, PermissionDenied
+from django.db.models import Q
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import path, reverse
 from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
 
+from guardian.ctypes import get_content_type
 from guardian.forms import GroupObjectPermissionsForm, UserObjectPermissionsForm
 from guardian.shortcuts import (
     assign_perm,
@@ -23,7 +26,7 @@ from guardian.shortcuts import (
     get_users_with_perms,
     remove_perm,
 )
-from guardian.utils import get_group_obj_perms_model
+from guardian.utils import get_group_obj_perms_model, get_user_obj_perms_model
 
 
 class GuardedInlineAdminMixin:
@@ -129,6 +132,8 @@ class GuardedModelAdminMixin:
     user_can_access_owned_by_group_objects_only: bool = False
     group_owned_objects_field: str = "group"
     include_object_permissions_urls: bool = True
+    auto_assign_perms_on_create: bool = False
+    auto_assign_perms: list = ["view", "change"]
 
     def has_module_permission(self, request):
         """Check if user has permission to access this module in admin.
@@ -147,6 +152,14 @@ class GuardedModelAdminMixin:
 
         # Start with the base queryset
         qs = super().get_queryset(request)
+
+        # Check for conflicting configuration
+        if self.user_can_access_owned_objects_only and self.user_can_access_owned_by_group_objects_only:
+            raise ImproperlyConfigured(
+                "Both 'user_can_access_owned_objects_only' and "
+                "'user_can_access_owned_by_group_objects_only' cannot be enabled at the same time. "
+                "Please enable only one of these options."
+            )
 
         # Apply user ownership filtering if enabled
         if self.user_can_access_owned_objects_only:
@@ -201,8 +214,14 @@ class GuardedModelAdminMixin:
         codename = f"{action}_{opts.model_name}"
         perm = f"{opts.app_label}.{codename}"
 
+        # When a specific object is provided, check both model-level and object-level permissions
         if obj:
+            # First check model-level permission (Django's default behavior)
+            if request.user.has_perm(perm):
+                return True
+            # Fall back to object-level permission
             return request.user.has_perm(perm, obj)
+
         # When no specific object is provided, first honor global model permissions.
         if request.user.has_perm(perm):
             return True
@@ -224,8 +243,9 @@ class GuardedModelAdminMixin:
     def has_object_permissions_access(self, request, obj=None):
         """Check if user should have access to object permissions management.
 
-        By default, only superusers and users with change permission can
-        manage object permissions. Override this method to customize.
+        By default, only superusers and users with object-level change permission
+        can manage object permissions. Model-level permissions are not sufficient.
+        Override this method to customize.
 
         Args:
             request: The HTTP request object
@@ -237,18 +257,36 @@ class GuardedModelAdminMixin:
         if request.user.is_superuser:
             return True
 
-        # User needs change permission to manage object permissions
-        return self.has_change_permission(request, obj)
+        if obj is None:
+            return False
+
+        # Check only object-level permission, not model-level
+        opts = self.opts
+        codename = f"change_{opts.model_name}"
+        perm = f"{opts.app_label}.{codename}"
+
+        # Use has_perm with obj to check object-level permission only
+        return request.user.has_perm(perm, obj)
 
     def save_model(self, request, obj, form, change):
-        """Save model and optionally assign permissions to creator."""
+        """Save model and optionally assign permissions to creator.
+
+        If `auto_assign_perms_on_create` is True, automatically assigns
+        object-level permissions defined in `auto_assign_perms` to the
+        creator when a new object is created (not on updates).
+
+        By default, this behavior is disabled. To enable it, set
+        `auto_assign_perms_on_create = True` in your admin class.
+
+        The permissions to assign can be customized via `auto_assign_perms`,
+        which defaults to ["view", "change"].
+        """
         result = super().save_model(request, obj, form, change)
 
-        # Auto-assign permissions to creator (if not superuser and it's a new object)
-        if not request.user.is_superuser and not change:
+        # Auto-assign permissions to creator (opt-in, only for new objects)
+        if self.auto_assign_perms_on_create and not request.user.is_superuser and not change:
             opts = self.opts
-            actions = ["view", "add", "change", "delete"]
-            for action in actions:
+            for action in self.auto_assign_perms:
                 perm = f"{opts.app_label}.{action}_{opts.model_name}"
                 assign_perm(perm, request.user, obj)
 
@@ -282,15 +320,43 @@ class GuardedModelAdminMixin:
 
         for perm, groups in perm_to_groups.items():
             remove_perm(perm, groups, obj)
+
     def delete_model(self, request, obj):
         """Delete model and clean up its object permissions."""
         self.remove_obj_perms(obj)
         return super().delete_model(request, obj)
 
     def delete_queryset(self, request, queryset):
-        """Delete queryset and clean up object permissions for all objects."""
-        for obj in queryset:
-            self.remove_obj_perms(obj)
+        """Delete queryset and clean up object permissions for all objects.
+
+        Uses bulk deletion to efficiently remove permissions for large querysets
+        without forcing queryset evaluation.
+        """
+        # Get the model to determine content type
+        if queryset.model:
+            ctype = get_content_type(queryset.model)
+
+            # Get the permission models for this object type
+            UserObjectPermission = get_user_obj_perms_model(queryset.model)
+            GroupObjectPermission = get_group_obj_perms_model(queryset.model)
+
+            # Extract PKs without evaluating the full queryset
+            pks = list(queryset.values_list("pk", flat=True))
+
+            # Build filter conditions for bulk deletion
+            if UserObjectPermission.objects.is_generic():
+                # For generic permissions, filter by content_type and object_pk
+                user_filters = Q(content_type=ctype, object_pk__in=[str(pk) for pk in pks])
+                group_filters = Q(content_type=ctype, object_pk__in=[str(pk) for pk in pks])
+            else:
+                # For direct foreign key permissions, filter by content_object id
+                user_filters = Q(content_object_id__in=pks)
+                group_filters = Q(content_object_id__in=pks)
+
+            # Bulk delete permissions in two queries instead of N queries
+            UserObjectPermission.objects.filter(user_filters).delete()
+            GroupObjectPermission.objects.filter(group_filters).delete()
+
         return super().delete_queryset(request, queryset)
 
     def change_view(self, request, object_id, form_url="", extra_context=None):
@@ -382,6 +448,11 @@ class GuardedModelAdminMixin:
         from django.contrib.admin.utils import unquote
 
         obj = get_object_or_404(self.get_queryset(request), pk=unquote(object_pk))
+
+        # Check if user has object-level permissions access
+        if not self.has_object_permissions_access(request, obj):
+            raise PermissionDenied
+
         users_perms = OrderedDict(
             sorted(
                 get_users_with_perms(obj, attach_perms=True, with_group_users=False).items(),
@@ -454,6 +525,10 @@ class GuardedModelAdminMixin:
 
         user = get_object_or_404(get_user_model(), pk=user_id)
         obj = get_object_or_404(self.get_queryset(request), pk=object_pk)
+
+        # Check if user has object-level permissions access
+        if not self.has_object_permissions_access(request, obj):
+            raise PermissionDenied
         form_class = self.get_obj_perms_manage_user_form(request)
         form = form_class(user, obj, request.POST or None)
 
@@ -534,6 +609,11 @@ class GuardedModelAdminMixin:
             return redirect(post_url)
 
         obj = get_object_or_404(self.get_queryset(request), pk=object_pk)
+
+        # Check if user has object-level permissions access
+        if not self.has_object_permissions_access(request, obj):
+            raise PermissionDenied
+
         GroupModel = get_group_obj_perms_model(obj).group.field.related_model
         group = get_object_or_404(GroupModel, id=group_id)
         form_class = self.get_obj_perms_manage_group_form(request)
@@ -614,6 +694,12 @@ class GuardedModelAdmin(GuardedModelAdminMixin, admin.ModelAdmin):
         include_object_permissions_urls (bool): *Default*: `True`
             Added in version 1.2.
             If `False` guardian-specific URLs are **NOT** included in the admin
+        auto_assign_perms_on_create (bool): *Default*: `False`
+            If `True`, automatically assigns object-level permissions to the creator
+            when a new object is created via admin. Superusers are excluded.
+        auto_assign_perms (list): *Default*: `["view", "change"]`
+            List of permission actions to auto-assign when `auto_assign_perms_on_create` is `True`.
+            Only meaningful object-level permissions should be included (avoid "add").
 
     Warning:
        Setting `user_can_access_owned_objects_only` to `True` will **NOT** affect superusers!

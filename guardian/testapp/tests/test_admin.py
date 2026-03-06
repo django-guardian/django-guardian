@@ -1,5 +1,6 @@
 import copy
 import os
+import time
 import unittest
 
 from django import VERSION as DJANGO_VERSION
@@ -7,17 +8,25 @@ from django import forms
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.http import HttpRequest
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
 from django.test.client import Client
 from django.urls import reverse
 
 from guardian.admin import GuardedInlineAdminMixin, GuardedModelAdmin
-from guardian.models import Group
-from guardian.shortcuts import assign_perm, get_perms, get_perms_for_model, remove_perm
+from guardian.models import Group, GroupObjectPermission, UserObjectPermission
+from guardian.shortcuts import (
+    assign_perm,
+    get_group_perms,
+    get_perms,
+    get_perms_for_model,
+    get_users_with_perms,
+    remove_perm,
+)
 from guardian.testapp.models import LogEntryWithGroup as LogEntry
-from guardian.testapp.models import UserProfile
+from guardian.testapp.models import Project, ProjectGroupObjectPermission, ProjectUserObjectPermission, UserProfile
 from guardian.testapp.tests.conf import skipUnlessTestApp
 
 User = get_user_model()
@@ -483,8 +492,6 @@ class GuardedInlineAdminMixinTests(TestCase):
         self.profile = UserProfile.objects.create(user=self.user, bio="Test bio", phone="555-1234")
 
         # Ensure permissions exist for UserProfile model
-        from django.contrib.auth.models import Permission
-        from django.contrib.contenttypes.models import ContentType
 
         content_type = ContentType.objects.get_for_model(UserProfile)
 
@@ -501,7 +508,6 @@ class GuardedInlineAdminMixinTests(TestCase):
 
     def _create_request(self, user):
         """Helper method to create a mock request with user."""
-        from django.test import RequestFactory
 
         factory = RequestFactory()
         request = factory.get("/")
@@ -850,7 +856,6 @@ class EnhancedGuardedModelAdminTests(TestCase):
         self.admin = ContentTypeGuardedAdmin(ContentType, admin.site)
 
         # Ensure permissions exist
-        from django.contrib.auth.models import Permission
 
         content_type_ct = ContentType.objects.get_for_model(ContentType)
 
@@ -864,9 +869,11 @@ class EnhancedGuardedModelAdminTests(TestCase):
             )
             self.permissions[action] = perm
 
+        # Give staff_user model-level view and change permissions (required by Django admin)
+        self.staff_user.user_permissions.add(self.permissions["view"], self.permissions["change"])
+
     def _create_request(self, user):
         """Helper method to create a mock request with user."""
-        from django.test import RequestFactory
 
         factory = RequestFactory()
         request = factory.get("/")
@@ -915,7 +922,8 @@ class EnhancedGuardedModelAdminTests(TestCase):
 
     def test_enhanced_permission_checking_methods(self):
         """Test the enhanced permission checking methods work correctly."""
-        request = self._create_request(self.staff_user)
+        # Use regular_user who has no model-level permissions
+        request = self._create_request(self.regular_user)
 
         # Initially user has no permissions
         self.assertFalse(self.admin.has_view_permission(request, self.content_type))
@@ -923,15 +931,15 @@ class EnhancedGuardedModelAdminTests(TestCase):
         self.assertFalse(self.admin.has_delete_permission(request, self.content_type))
 
         # Assign view permission
-        assign_perm("contenttypes.view_contenttype", self.staff_user, self.content_type)
+        assign_perm("contenttypes.view_contenttype", self.regular_user, self.content_type)
         self.assertTrue(self.admin.has_view_permission(request, self.content_type))
 
         # Assign change permission
-        assign_perm("contenttypes.change_contenttype", self.staff_user, self.content_type)
+        assign_perm("contenttypes.change_contenttype", self.regular_user, self.content_type)
         self.assertTrue(self.admin.has_change_permission(request, self.content_type))
 
         # Assign delete permission
-        assign_perm("contenttypes.delete_contenttype", self.staff_user, self.content_type)
+        assign_perm("contenttypes.delete_contenttype", self.regular_user, self.content_type)
         self.assertTrue(self.admin.has_delete_permission(request, self.content_type))
 
     def test_has_module_permission_enhanced(self):
@@ -981,8 +989,11 @@ class EnhancedGuardedModelAdminTests(TestCase):
         self.assertIn(content_type2, qs)
 
     def test_save_model_auto_assign_permissions(self):
-        """Test that save_model auto-assigns permissions to creator for new objects."""
+        """Test that save_model auto-assigns permissions to creator for new objects when enabled."""
         request = self._create_request(self.staff_user)
+
+        # Enable auto-assign permissions feature
+        self.admin.auto_assign_perms_on_create = True
 
         # Create new object
         new_obj = ContentType(model="newmodel", app_label="newapp")
@@ -990,15 +1001,20 @@ class EnhancedGuardedModelAdminTests(TestCase):
         # Save through admin (simulates creating new object)
         self.admin.save_model(request, new_obj, None, change=False)
 
-        # User should now have all permissions on the new object
+        # User should now have permissions defined in auto_assign_perms (default: view, change)
         self.assertTrue(self.staff_user.has_perm("contenttypes.view_contenttype", new_obj))
-        self.assertTrue(self.staff_user.has_perm("contenttypes.add_contenttype", new_obj))
         self.assertTrue(self.staff_user.has_perm("contenttypes.change_contenttype", new_obj))
-        self.assertTrue(self.staff_user.has_perm("contenttypes.delete_contenttype", new_obj))
+
+        # add and delete should NOT be assigned by default
+        self.assertFalse(self.staff_user.has_perm("contenttypes.add_contenttype", new_obj))
+        self.assertFalse(self.staff_user.has_perm("contenttypes.delete_contenttype", new_obj))
 
     def test_save_model_no_auto_assign_for_superuser(self):
         """Test that save_model doesn't auto-assign permissions for superuser."""
         request = self._create_request(self.superuser)
+
+        # Enable auto-assign permissions feature
+        self.admin.auto_assign_perms_on_create = True
 
         # Create new object
         new_obj = ContentType(model="newmodel2", app_label="newapp2")
@@ -1007,7 +1023,6 @@ class EnhancedGuardedModelAdminTests(TestCase):
         self.admin.save_model(request, new_obj, None, change=False)
 
         # Check that no explicit object permissions were assigned (superuser doesn't need them)
-        from guardian.shortcuts import get_users_with_perms
 
         users_with_perms = get_users_with_perms(new_obj, attach_perms=True)
 
@@ -1018,11 +1033,52 @@ class EnhancedGuardedModelAdminTests(TestCase):
         """Test that save_model doesn't auto-assign permissions when editing existing objects."""
         request = self._create_request(self.staff_user)
 
+        # Enable auto-assign permissions feature
+        self.admin.auto_assign_perms_on_create = True
+
         # Save existing object (change=True)
         self.admin.save_model(request, self.content_type, None, change=True)
 
         # User should not have automatic permissions on existing object
         self.assertFalse(self.staff_user.has_perm("contenttypes.view_contenttype", self.content_type))
+
+    def test_save_model_no_auto_assign_when_disabled(self):
+        """Test that save_model doesn't auto-assign permissions when feature is disabled (default)."""
+        request = self._create_request(self.staff_user)
+
+        # Ensure auto-assign is disabled (default behavior)
+        self.admin.auto_assign_perms_on_create = False
+
+        # Create new object
+        new_obj = ContentType(model="newmodel_disabled", app_label="newapp_disabled")
+
+        # Save through admin
+        self.admin.save_model(request, new_obj, None, change=False)
+
+        # User should NOT have any automatic permissions
+        self.assertFalse(self.staff_user.has_perm("contenttypes.view_contenttype", new_obj))
+        self.assertFalse(self.staff_user.has_perm("contenttypes.change_contenttype", new_obj))
+
+    def test_save_model_custom_auto_assign_perms(self):
+        """Test that save_model respects custom auto_assign_perms list."""
+        request = self._create_request(self.staff_user)
+
+        # Enable auto-assign with custom permissions (including delete)
+        self.admin.auto_assign_perms_on_create = True
+        self.admin.auto_assign_perms = ["view", "change", "delete"]
+
+        # Create new object
+        new_obj = ContentType(model="newmodel_custom", app_label="newapp_custom")
+
+        # Save through admin
+        self.admin.save_model(request, new_obj, None, change=False)
+
+        # User should have the custom permissions
+        self.assertTrue(self.staff_user.has_perm("contenttypes.view_contenttype", new_obj))
+        self.assertTrue(self.staff_user.has_perm("contenttypes.change_contenttype", new_obj))
+        self.assertTrue(self.staff_user.has_perm("contenttypes.delete_contenttype", new_obj))
+        # add should NOT be assigned
+        self.assertFalse(self.staff_user.has_perm("contenttypes.add_contenttype", new_obj))
 
     def test_remove_obj_perms_static_method(self):
         """Test the remove_obj_perms static method removes all permissions."""
@@ -1038,7 +1094,6 @@ class EnhancedGuardedModelAdminTests(TestCase):
         self.assertTrue(self.staff_user.has_perm("contenttypes.change_contenttype", self.content_type))
 
         # Check group permissions using guardian's get_group_perms
-        from guardian.shortcuts import get_group_perms
 
         group_perms = get_group_perms(group, self.content_type)
         self.assertIn("delete_contenttype", group_perms)
@@ -1146,15 +1201,16 @@ class EnhancedGuardedModelAdminTests(TestCase):
 
     def test_has_perm_with_global_permissions(self):
         """Test has_perm method with global permissions when obj is None."""
-        request = self._create_request(self.staff_user)
+        # Use regular_user who has no model-level permissions
+        request = self._create_request(self.regular_user)
 
         # No objects exist that user has permission for
         self.assertFalse(self.admin.has_perm(request, None, "view"))
 
         # Give user permission to an object
-        assign_perm("contenttypes.view_contenttype", self.staff_user, self.content_type)
+        assign_perm("contenttypes.view_contenttype", self.regular_user, self.content_type)
 
-        # Now should return True for global check
+        # Now should return True for global check (because object-level perms exist)
         self.assertTrue(self.admin.has_perm(request, None, "view"))
 
     def test_object_permissions_button_visibility_integration(self):
@@ -1181,8 +1237,7 @@ class EnhancedGuardedModelAdminTests(TestCase):
         # Build change URL for the model managed by this admin
         model = self.admin.model
         change_url = reverse(
-            "admin:%s_%s_change"
-            % (model._meta.app_label, model._meta.model_name),
+            "admin:{}_{}_change".format(model._meta.app_label, model._meta.model_name),
             args=[self.content_type.pk],
         )
 
@@ -1213,8 +1268,7 @@ class EnhancedGuardedModelAdminTests(TestCase):
 
         model = self.admin.model
         permissions_url = reverse(
-            "admin:%s_%s_permissions"
-            % (model._meta.app_label, model._meta.model_name),
+            "admin:{}_{}_permissions".format(model._meta.app_label, model._meta.model_name),
             args=[self.content_type.pk],
         )
 
@@ -1222,6 +1276,7 @@ class EnhancedGuardedModelAdminTests(TestCase):
         # User is authenticated staff but lacks required object permissions;
         # the permissions view must deny access.
         self.assertEqual(response.status_code, 403)
+
     def test_permission_isolation_between_objects(self):
         """Test that permissions on one object don't affect another object."""
         request = self._create_request(self.regular_user)
@@ -1237,3 +1292,192 @@ class EnhancedGuardedModelAdminTests(TestCase):
 
         # Should NOT have permission on second object
         self.assertFalse(self.admin.has_object_permissions_access(request, content_type2))
+
+    def test_delete_model_removes_object_permissions(self):
+        """Test that delete_model removes all object permissions for the deleted object."""
+
+        request = self._create_request(self.superuser)
+
+        # Assign permissions to users and groups
+        user1 = User.objects.create_user("user1", "user1@example.com", "test")
+        user2 = User.objects.create_user("user2", "user2@example.com", "test")
+        group1 = Group.objects.create(name="testgroup1")
+
+        assign_perm("contenttypes.change_contenttype", user1, self.content_type)
+        assign_perm("contenttypes.delete_contenttype", user2, self.content_type)
+        assign_perm("contenttypes.view_contenttype", group1, self.content_type)
+
+        # Verify permissions exist
+        ctype = ContentType.objects.get_for_model(ContentType)
+        user_perms_before = UserObjectPermission.objects.filter(
+            content_type=ctype, object_pk=str(self.content_type.pk)
+        ).count()
+        group_perms_before = GroupObjectPermission.objects.filter(
+            content_type=ctype, object_pk=str(self.content_type.pk)
+        ).count()
+
+        self.assertEqual(user_perms_before, 2, "Should have 2 user permissions")
+        self.assertEqual(group_perms_before, 1, "Should have 1 group permission")
+
+        # Delete the object
+        self.admin.delete_model(request, self.content_type)
+
+        # Verify permissions are removed
+        user_perms_after = UserObjectPermission.objects.filter(
+            content_type=ctype, object_pk=str(self.content_type.pk)
+        ).count()
+        group_perms_after = GroupObjectPermission.objects.filter(
+            content_type=ctype, object_pk=str(self.content_type.pk)
+        ).count()
+
+        self.assertEqual(user_perms_after, 0, "All user permissions should be removed")
+        self.assertEqual(group_perms_after, 0, "All group permissions should be removed")
+
+    def test_delete_queryset_bulk_removes_permissions(self):
+        """Test that delete_queryset uses bulk operations to remove permissions efficiently."""
+
+        request = self._create_request(self.superuser)
+
+        # Create multiple objects
+        obj1 = ContentType.objects.create(model="testmodel1", app_label="testapp1")
+        obj2 = ContentType.objects.create(model="testmodel2", app_label="testapp2")
+        obj3 = ContentType.objects.create(model="testmodel3", app_label="testapp3")
+
+        # Create users and group
+        user1 = User.objects.create_user("bulkuser1", "bulkuser1@example.com", "test")
+        user2 = User.objects.create_user("bulkuser2", "bulkuser2@example.com", "test")
+        group1 = Group.objects.create(name="bulkgroup1")
+
+        # Assign permissions to multiple objects
+        for obj in [obj1, obj2, obj3]:
+            assign_perm("contenttypes.change_contenttype", user1, obj)
+            assign_perm("contenttypes.delete_contenttype", user2, obj)
+            assign_perm("contenttypes.view_contenttype", group1, obj)
+
+        # Verify permissions exist
+        ctype = ContentType.objects.get_for_model(ContentType)
+        pks = [str(obj.pk) for obj in [obj1, obj2, obj3]]
+        user_perms_before = UserObjectPermission.objects.filter(content_type=ctype, object_pk__in=pks).count()
+        group_perms_before = GroupObjectPermission.objects.filter(content_type=ctype, object_pk__in=pks).count()
+
+        self.assertEqual(user_perms_before, 6, "Should have 6 user permissions (2 per object)")
+        self.assertEqual(group_perms_before, 3, "Should have 3 group permissions (1 per object)")
+
+        # Delete objects using queryset
+        queryset = ContentType.objects.filter(pk__in=[obj1.pk, obj2.pk, obj3.pk])
+        self.admin.delete_queryset(request, queryset)
+
+        # Verify permissions are removed
+        user_perms_after = UserObjectPermission.objects.filter(content_type=ctype, object_pk__in=pks).count()
+        group_perms_after = GroupObjectPermission.objects.filter(content_type=ctype, object_pk__in=pks).count()
+
+        self.assertEqual(user_perms_after, 0, "All user permissions should be removed")
+        self.assertEqual(group_perms_after, 0, "All group permissions should be removed")
+
+    def test_delete_queryset_empty_queryset(self):
+        """Test that delete_queryset handles empty queryset gracefully."""
+        request = self._create_request(self.superuser)
+
+        # Create an empty queryset
+        queryset = ContentType.objects.none()
+
+        # Should not raise any errors
+        result = self.admin.delete_queryset(request, queryset)
+
+        # Result should be None (default return from super().delete_queryset())
+        self.assertIsNone(result)
+
+    def test_delete_queryset_performance_with_many_objects(self):
+        """Test that delete_queryset efficiently handles large number of objects."""
+
+        request = self._create_request(self.superuser)
+
+        # Create many objects (simulate a realistic bulk delete scenario)
+        objects = []
+        num_objects = 50  # Reasonable number for testing
+        for i in range(num_objects):
+            obj = ContentType.objects.create(model=f"perftest{i}", app_label=f"perfapp{i}")
+            objects.append(obj)
+
+        # Create multiple users to assign permissions
+        users = []
+        for i in range(5):
+            user = User.objects.create_user(f"perfuser{i}", f"perfuser{i}@example.com", "test")
+            users.append(user)
+
+        # Assign permissions to all objects
+        for obj in objects:
+            for user in users:
+                assign_perm("contenttypes.change_contenttype", user, obj)
+
+        # Verify permissions exist
+        ctype = ContentType.objects.get_for_model(ContentType)
+        pks = [str(obj.pk) for obj in objects]
+        perms_before = UserObjectPermission.objects.filter(content_type=ctype, object_pk__in=pks).count()
+
+        # Should have num_objects * num_users permissions
+        expected_perms = num_objects * len(users)
+        self.assertEqual(perms_before, expected_perms, f"Should have {expected_perms} permissions before deletion")
+
+        # Delete objects using queryset and measure time
+        queryset = ContentType.objects.filter(pk__in=[obj.pk for obj in objects])
+
+        start_time = time.time()
+        self.admin.delete_queryset(request, queryset)
+        elapsed_time = time.time() - start_time
+
+        # Verify permissions are removed
+        perms_after = UserObjectPermission.objects.filter(content_type=ctype, object_pk__in=pks).count()
+
+        self.assertEqual(perms_after, 0, "All permissions should be removed")
+
+        # Performance assertion: bulk operation should be fast
+        # With bulk operations, even 50 objects should complete in under 1 second
+        self.assertLess(
+            elapsed_time, 1.0, f"Bulk deletion took {elapsed_time:.2f}s, should be faster with bulk operations"
+        )
+
+    def test_delete_queryset_with_direct_foreign_key_permissions(self):
+        """Test bulk deletion works with non-generic (direct ForeignKey) permissions."""
+
+        # Create a test admin for Project model
+        project_admin = GuardedModelAdmin(Project, admin.site)
+        request = self._create_request(self.superuser)
+
+        # Create multiple projects
+        proj1 = Project.objects.create(name="Test Project 1")
+        proj2 = Project.objects.create(name="Test Project 2")
+        proj3 = Project.objects.create(name="Test Project 3")
+
+        # Create users and assign permissions
+        user1 = User.objects.create_user("projuser1", "projuser1@example.com", "test")
+        user2 = User.objects.create_user("projuser2", "projuser2@example.com", "test")
+        group1 = Group.objects.create(name="projgroup1")
+
+        # Assign permissions to projects
+        for proj in [proj1, proj2, proj3]:
+            assign_perm("testapp.change_project", user1, proj)
+            assign_perm("testapp.delete_project", user2, proj)
+            assign_perm("testapp.view_project", group1, proj)
+
+        # Verify permissions exist
+        pks = [proj1.pk, proj2.pk, proj3.pk]
+        user_perms_before = ProjectUserObjectPermission.objects.filter(content_object_id__in=pks).count()
+        group_perms_before = ProjectGroupObjectPermission.objects.filter(content_object_id__in=pks).count()
+
+        self.assertEqual(user_perms_before, 6, "Should have 6 user permissions (2 per project)")
+        self.assertEqual(group_perms_before, 3, "Should have 3 group permissions (1 per project)")
+
+        # Delete projects using queryset
+        queryset = Project.objects.filter(pk__in=pks)
+        project_admin.delete_queryset(request, queryset)
+
+        # Verify permissions are removed
+        user_perms_after = ProjectUserObjectPermission.objects.filter(content_object_id__in=pks).count()
+        group_perms_after = ProjectGroupObjectPermission.objects.filter(content_object_id__in=pks).count()
+
+        self.assertEqual(user_perms_after, 0, "All user permissions should be removed")
+        self.assertEqual(group_perms_after, 0, "All group permissions should be removed")
+
+        # Verify projects are also deleted
+        self.assertEqual(Project.objects.filter(pk__in=pks).count(), 0, "All projects should be deleted")
