@@ -1170,6 +1170,58 @@ class EnhancedGuardedModelAdminTests(TestCase):
         context = self.admin.get_obj_perms_base_context(request, self.content_type)
         self.assertTrue(context["has_object_permissions_access"])
 
+    def test_change_form_renders_object_permissions_link_based_on_access(self):
+        """
+        Integration test: render the admin change form and assert that the
+        "Object permissions" link is only shown when the user has access.
+        """
+        # Log in as staff user
+        self.client.force_login(self.staff_user)
+
+        # Build change URL for the model managed by this admin
+        model = self.admin.model
+        change_url = reverse(
+            "admin:%s_%s_change"
+            % (model._meta.app_label, model._meta.model_name),
+            args=[self.content_type.pk],
+        )
+
+        # Without object-level change permission, the link should not be present
+        response = self.client.get(change_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Object permissions")
+
+        # Grant object-level change permission
+        assign_perm(
+            "contenttypes.change_contenttype",
+            self.staff_user,
+            self.content_type,
+        )
+
+        # With permission, the "Object permissions" link should be visible
+        response = self.client.get(change_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Object permissions")
+
+    def test_unauthorized_user_cannot_access_object_permissions_view_directly(self):
+        """
+        Ensure that a staff user without object-level permissions cannot access
+        the /permissions/ admin view even if they guess the URL.
+        """
+        # Log in as staff user without object-level change permission
+        self.client.force_login(self.staff_user)
+
+        model = self.admin.model
+        permissions_url = reverse(
+            "admin:%s_%s_permissions"
+            % (model._meta.app_label, model._meta.model_name),
+            args=[self.content_type.pk],
+        )
+
+        response = self.client.get(permissions_url)
+        # User is authenticated staff but lacks required object permissions;
+        # the permissions view must deny access.
+        self.assertEqual(response.status_code, 403)
     def test_permission_isolation_between_objects(self):
         """Test that permissions on one object don't affect another object."""
         request = self._create_request(self.regular_user)
