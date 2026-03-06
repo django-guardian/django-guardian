@@ -7,9 +7,23 @@ from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 
 from guardian.managers import GroupObjectPermissionManager, UserObjectPermissionManager
+from guardian.models import GroupObjectPermission, UserObjectPermission
+from guardian.testapp.models import ChildTestModel, ParentTestModel
 from guardian.utils import get_group_obj_perms_model, get_user_obj_perms_model
 
 User = get_user_model()
+
+
+def get_parent_content_type(obj):
+    """
+    Custom GET_CONTENT_TYPE function simulating polymorphic model libraries
+    (e.g. django-polymorphic). Returns ParentTestModel's ContentType for
+    ChildTestModel instances instead of the concrete model's ContentType.
+    Used as the GUARDIAN_GET_CONTENT_TYPE target in regression tests.
+    """
+    if isinstance(obj, ChildTestModel):
+        return ContentType.objects.get_for_model(ParentTestModel)
+    return ContentType.objects.get_for_model(obj)
 
 
 class TestManagers(TestCase):
@@ -101,3 +115,71 @@ class TestManagerAssignPerm(TestCase):
         with self.assertNumQueries(1):
             assigned = GroupObjectPermission.objects.assign_perm_to_many(self.permission, [self.group], self.obj)
         self.assertEqual(assigned, [GroupObjectPermission.objects.get(group=self.group, permission=self.permission)])
+
+
+class TestAssignPermCustomContentType(TestCase):
+    """
+    Regression tests for the bug introduced in 3.3.0 where adding
+    ``defaults={"content_object": obj}`` to the ``get_or_create`` call in
+    ``assign_perm`` caused ``GenericForeignKey.__set__`` to silently overwrite
+    the ``content_type`` that was set by a custom ``GUARDIAN_GET_CONTENT_TYPE``
+    function with the object's own concrete ``ContentType``.
+
+    The ``GUARDIAN_GET_CONTENT_TYPE`` setting is authoritative; whatever
+    content type it returns must be the one persisted on the permission row.
+    This matters for polymorphic model setups where the custom function
+    deliberately returns a base/proxy content type instead of the concrete one.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user(username="testuser_ctype")
+        self.group = Group.objects.create(name="testgroup_ctype")
+        self.child = ChildTestModel.objects.create(name="polymorphic child")
+        self.parent_ctype = ContentType.objects.get_for_model(ParentTestModel)
+        self.child_ctype = ContentType.objects.get_for_model(ChildTestModel)
+        # Sanity: the two content types must differ for these tests to be meaningful.
+        self.assertNotEqual(self.parent_ctype, self.child_ctype)
+
+    def test_assign_perm_user_uses_custom_content_type(self):
+        """
+        UserObjectPermission.assign_perm must store the content_type returned
+        by GUARDIAN_GET_CONTENT_TYPE, not the content_type derived from the
+        GenericForeignKey assignment introduced by defaults={"content_object": obj}.
+        """
+        with mock.patch(
+            "guardian.conf.settings.GET_CONTENT_TYPE",
+            "guardian.testapp.tests.test_managers.get_parent_content_type",
+        ):
+            obj_perm = UserObjectPermission.objects.assign_perm(
+                "change_parenttestmodel", self.user, self.child
+            )
+
+        self.assertEqual(
+            obj_perm.content_type,
+            self.parent_ctype,
+            "assign_perm ignored GUARDIAN_GET_CONTENT_TYPE: content_type was overwritten "
+            "by GenericForeignKey.__set__ via defaults={'content_object': obj}",
+        )
+        self.assertNotEqual(obj_perm.content_type, self.child_ctype)
+
+    def test_assign_perm_group_uses_custom_content_type(self):
+        """
+        GroupObjectPermission.assign_perm must store the content_type returned
+        by GUARDIAN_GET_CONTENT_TYPE, not the content_type derived from the
+        GenericForeignKey assignment introduced by defaults={"content_object": obj}.
+        """
+        with mock.patch(
+            "guardian.conf.settings.GET_CONTENT_TYPE",
+            "guardian.testapp.tests.test_managers.get_parent_content_type",
+        ):
+            obj_perm = GroupObjectPermission.objects.assign_perm(
+                "change_parenttestmodel", self.group, self.child
+            )
+
+        self.assertEqual(
+            obj_perm.content_type,
+            self.parent_ctype,
+            "assign_perm ignored GUARDIAN_GET_CONTENT_TYPE: content_type was overwritten "
+            "by GenericForeignKey.__set__ via defaults={'content_object': obj}",
+        )
+        self.assertNotEqual(obj_perm.content_type, self.child_ctype)
