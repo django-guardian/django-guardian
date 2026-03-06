@@ -161,9 +161,9 @@ class GuardedModelAdminMixin:
 
         # If neither ownership filter is enabled, use object-level permissions
         else:
-            # Use object-level permissions to filter queryset
-            data = self.get_model_objs(request)
-            return data
+            # Use object-level permissions to further restrict the base queryset
+            permitted_pks = self.get_model_objs(request).values_list("pk", flat=True)
+            qs = qs.filter(pk__in=permitted_pks).distinct()
 
         return qs
 
