@@ -85,9 +85,9 @@ class TestManagerAssignPerm(TestCase):
             GroupObjectPermission.objects.bulk_assign_perm(self.permission, self.group, [self.obj])
 
     def test_group_bulk_assign_perm_empty_list(self):
-        UserObjectPermission = get_user_obj_perms_model(self.obj)
+        GroupObjectPermission = get_group_obj_perms_model(self.obj)
         with self.assertNumQueries(0):
-            UserObjectPermission.objects.bulk_assign_perm(self.permission, self.group, [])
+            GroupObjectPermission.objects.bulk_assign_perm(self.permission, self.group, [])
 
     def test_group_assign_perm_to_many(self):
         GroupObjectPermission = get_group_obj_perms_model(self.obj)
