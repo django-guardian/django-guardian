@@ -32,8 +32,8 @@ class CustomGroupPermissionsMixin(PermissionsMixin):
         related_query_name="user",
     )
 
-class Meta(PermissionsMixin.Meta):
-    abstract = True
+    class Meta(PermissionsMixin.Meta):
+        abstract = True
 ```
 
 This mixin will be used to override the `groups` field of the custom
