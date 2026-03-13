@@ -1,6 +1,8 @@
+from functools import wraps
 from typing import Any, Iterable, Optional
 
 from asgiref.sync import sync_to_async
+import django
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import BaseBackend
 from django.db import models
@@ -46,6 +48,14 @@ def check_user_support(user_obj: Any) -> tuple[bool, Any]:
     return True, user_obj
 
 
+def noop(f: Any) -> Any:
+    @wraps(f)
+    def raise_attr_error(self, *args: Any, **kwargs: Any):
+        raise AttributeError(f"'{type(self).__name__}' object has no attribute '{f.__name__}'")
+
+    return property(raise_attr_error)
+
+
 def check_support(user_obj: Any, obj: Model) -> Any:
     """Checks if given user and object are supported.
 
@@ -62,6 +72,16 @@ class ObjectPermissionBackend(BaseBackend):
     supports_object_permissions = True
     supports_anonymous_user = True
     supports_inactive_user = True
+
+    if django.VERSION < (6, 2):
+
+        @noop
+        def get_user(self, user_id: int) -> None:
+            pass
+
+        @noop
+        async def aget_user(self, user_id: int) -> None:
+            pass
 
     def has_perm(self, user_obj: Any, perm: str, obj: Optional[Model] = None) -> bool:
         """Check if a user has the permission for a given object.

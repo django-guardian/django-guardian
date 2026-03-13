@@ -1,4 +1,4 @@
-from unittest import skipIf
+from unittest import skipIf, skipUnless
 
 from asgiref.sync import sync_to_async
 import django
@@ -36,6 +36,9 @@ class ObjectPermissionBackendTest(TestCase):
         except User.DoesNotExist:
             self.anonymous_user = User.objects.create_user(username=guardian_settings.ANONYMOUS_USER_NAME)
 
+    def assertNotOverride(self, method, obj):
+        self.assertIs(getattr(type(obj), method.__name__, method), method)
+
     def test_is_authentication_backend(self):
         self.assertIsInstance(self.backend, BaseBackend)
 
@@ -50,16 +53,25 @@ class ObjectPermissionBackendTest(TestCase):
         result = await self.backend.aauthenticate(request=None, username="test", password="test")
         self.assertIsNone(result)
 
-    def test_get_user_returns_none(self):
-        """Backend should not retrieve users (returns None)"""
-        result = self.backend.get_user(self.user)
-        self.assertIsNone(result)
+    @skipIf(django.VERSION >= (6, 2), "Django 6.2 changed the way get_user is checked")
+    def test_get_user_not_exists(self):
+        """Backend should not retrieve users"""
+        self.assertFalse(hasattr(self.backend, "get_user"))
 
-    @skipIf(django.VERSION < (5, 2), "Async backends are supported on Django 5.2 and above")
-    async def test_aget_user_returns_none(self):
-        """Async backend should not retrieve users (returns None)"""
-        result = await self.backend.aget_user(self.user)
-        self.assertIsNone(result)
+    @skipUnless((5, 2) <= django.VERSION < (6, 2), "Django 6.2 changed the way aget_user is checked")
+    async def test_aget_user_not_exists(self):
+        """Async backend should not retrieve users"""
+        self.assertFalse(hasattr(self.backend, "aget_user"))
+
+    @skipIf(django.VERSION < (6, 2), "Django 6.2 changed the way get_user is checked")
+    def test_get_user_not_overridden(self):
+        """Backend should not override get_user"""
+        self.assertNotOverride(BaseBackend.get_user, self.backend)
+
+    @skipIf(django.VERSION < (6, 2), "Django 6.2 changed the way aget_user is checked")
+    async def test_aget_user_not_overridden(self):
+        """Async backend should not override aget_user"""
+        self.assertNotOverride(BaseBackend.aget_user, self.backend)
 
     def test_has_perm_with_object(self):
         """Test has_perm method with object permissions"""
@@ -97,7 +109,7 @@ class ObjectPermissionBackendTest(TestCase):
         self.assertTrue(has_perm)
 
     def test_has_perm_wrong_app_name(self):
-        """Test has_perm method with permission string including and invalid app name"""
+        """Test has_perm method with permission string including an invalid app name"""
         # Assign permission
         assign_perm("change_project", self.user, self.project)
 
@@ -106,7 +118,7 @@ class ObjectPermissionBackendTest(TestCase):
 
     @skipIf(django.VERSION < (5, 2), "Async backends are supported on Django 5.2 and above")
     async def test_ahas_perm_wrong_app_name(self):
-        """Test ahas_perm method with permission string including and invalid app name"""
+        """Test ahas_perm method with permission string including an invalid app name"""
         # Assign permission
         await sync_to_async(assign_perm)("change_project", self.user, self.project)
         with self.assertRaises(WrongAppError):
@@ -152,7 +164,7 @@ class ObjectPermissionBackendTest(TestCase):
         perms = self.backend.get_user_permissions(self.user, self.project)
         self.assertEqual(set(), perms)
 
-        # Assign permission to group
+        # Assign permission to user
         assign_perm("change_project", self.user, self.project)
         perms = self.backend.get_user_permissions(self.user, self.project)
         self.assertIn("change_project", perms)
@@ -164,20 +176,20 @@ class ObjectPermissionBackendTest(TestCase):
         perms = await self.backend.aget_user_permissions(self.user, self.project)
         self.assertEqual(set(), perms)
 
-        # Assign permission to group
+        # Assign permission to user
         await sync_to_async(assign_perm)("change_project", self.user, self.project)
         perms = await self.backend.aget_user_permissions(self.user, self.project)
         self.assertIn("change_project", perms)
 
     def test_get_user_permissions_without_object(self):
         """Test get_user_permissions method without object (should return empty set)"""
-        perms = self.backend.get_group_permissions(self.user)
+        perms = self.backend.get_user_permissions(self.user)
         self.assertEqual(set(), perms)
 
-    @skipIf(django.VERSION < (5, 2), "Async backends are supported on Django 5.")
+    @skipIf(django.VERSION < (5, 2), "Async backends are supported on Django 5.2 and above")
     async def test_aget_user_permissions_without_object(self):
         """Test aget_user_permissions method without object (should return empty set)"""
-        perms = await self.backend.aget_group_permissions(self.user)
+        perms = await self.backend.aget_user_permissions(self.user)
         self.assertEqual(set(), perms)
 
     def test_get_user_permissions_inactive_user(self):
