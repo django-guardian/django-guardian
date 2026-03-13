@@ -182,6 +182,7 @@ class ObjectPermissionBackendTests(TestCase):
         for obj in (Group, 666, "String", [2, 1, 5, 7], {}):
             self.assertFalse(self.backend.has_perm(self.user, "any perm", obj))
 
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", True)
     def test_not_active_user(self):
         user = User.objects.create(username="non active user")
         ctype = ContentType.objects.create(model="bar", app_label="fake-for-guardian-tests")
@@ -191,6 +192,18 @@ class ObjectPermissionBackendTests(TestCase):
         user.is_active = False
         user.save(update_fields=["is_active"])
         self.assertFalse(self.backend.has_perm(user, perm, ctype))
+
+    @mock.patch("guardian.conf.settings.ACTIVE_USERS_ONLY", False)
+    def test_not_active_user_default_setting(self):
+        """With ACTIVE_USERS_ONLY=False (default), inactive users still have perms."""
+        user = User.objects.create(username="non active user default")
+        ctype = ContentType.objects.create(model="baz", app_label="fake-for-guardian-tests-default")
+        perm = "change_contenttype"
+        UserObjectPermission.objects.assign_perm(perm, user, ctype)
+        self.assertTrue(self.backend.has_perm(user, perm, ctype))
+        user.is_active = False
+        user.save(update_fields=["is_active"])
+        self.assertTrue(self.backend.has_perm(user, perm, ctype))
 
 
 class GuardianBaseTests(TestCase):
