@@ -50,16 +50,14 @@ class ObjectPermissionBackendTest(TestCase):
         result = await self.backend.aauthenticate(request=None, username="test", password="test")
         self.assertIsNone(result)
 
-    def test_get_user_returns_none(self):
-        """Backend should not retrieve users (returns None)"""
-        result = self.backend.get_user(self.user)
-        self.assertIsNone(result)
+    def test_get_user_not_exists(self):
+        """Backend should not retrieve users"""
+        self.assertFalse(hasattr(self.backend, "get_user"))
 
     @skipIf(django.VERSION < (5, 2), "Async backends are supported on Django 5.2 and above")
-    async def test_aget_user_returns_none(self):
-        """Async backend should not retrieve users (returns None)"""
-        result = await self.backend.aget_user(self.user)
-        self.assertIsNone(result)
+    async def test_aget_user_not_exists(self):
+        """Async backend should not retrieve users"""
+        self.assertFalse(hasattr(self.backend, "aget_user"))
 
     def test_has_perm_with_object(self):
         """Test has_perm method with object permissions"""

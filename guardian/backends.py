@@ -63,6 +63,15 @@ class ObjectPermissionBackend(BaseBackend):
     supports_anonymous_user = True
     supports_inactive_user = True
 
+    def __getattribute__(self, name) -> Any:
+        if name in ("get_user", "aget_user"):
+            # Django's test Client.force_login and AsyncClient.aforce_login authenticate
+            # using the first backend that implements get_user or aget_user. Since this
+            # backend should not be responsible for authenticating users, we hide those
+            # methods so Django falls back to a backend that does.
+            raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
+        return super().__getattribute__(name)
+
     def has_perm(self, user_obj: Any, perm: str, obj: Optional[Model] = None) -> bool:
         """Check if a user has the permission for a given object.
 
