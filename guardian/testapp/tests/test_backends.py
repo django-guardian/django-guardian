@@ -95,7 +95,7 @@ class ObjectPermissionBackendTest(TestCase):
         self.assertTrue(has_perm)
 
     def test_has_perm_wrong_app_name(self):
-        """Test has_perm method with permission string including and invalid app name"""
+        """Test has_perm method with permission string including an invalid app name"""
         # Assign permission
         assign_perm("change_project", self.user, self.project)
 
@@ -104,7 +104,7 @@ class ObjectPermissionBackendTest(TestCase):
 
     @skipIf(django.VERSION < (5, 2), "Async backends are supported on Django 5.2 and above")
     async def test_ahas_perm_wrong_app_name(self):
-        """Test ahas_perm method with permission string including and invalid app name"""
+        """Test ahas_perm method with permission string including an invalid app name"""
         # Assign permission
         await sync_to_async(assign_perm)("change_project", self.user, self.project)
         with self.assertRaises(WrongAppError):
@@ -150,7 +150,7 @@ class ObjectPermissionBackendTest(TestCase):
         perms = self.backend.get_user_permissions(self.user, self.project)
         self.assertEqual(set(), perms)
 
-        # Assign permission to group
+        # Assign permission to user
         assign_perm("change_project", self.user, self.project)
         perms = self.backend.get_user_permissions(self.user, self.project)
         self.assertIn("change_project", perms)
@@ -162,20 +162,20 @@ class ObjectPermissionBackendTest(TestCase):
         perms = await self.backend.aget_user_permissions(self.user, self.project)
         self.assertEqual(set(), perms)
 
-        # Assign permission to group
+        # Assign permission to user
         await sync_to_async(assign_perm)("change_project", self.user, self.project)
         perms = await self.backend.aget_user_permissions(self.user, self.project)
         self.assertIn("change_project", perms)
 
     def test_get_user_permissions_without_object(self):
         """Test get_user_permissions method without object (should return empty set)"""
-        perms = self.backend.get_group_permissions(self.user)
+        perms = self.backend.get_user_permissions(self.user)
         self.assertEqual(set(), perms)
 
-    @skipIf(django.VERSION < (5, 2), "Async backends are supported on Django 5.")
+    @skipIf(django.VERSION < (5, 2), "Async backends are supported on Django 5.2 and above")
     async def test_aget_user_permissions_without_object(self):
         """Test aget_user_permissions method without object (should return empty set)"""
-        perms = await self.backend.aget_group_permissions(self.user)
+        perms = await self.backend.aget_user_permissions(self.user)
         self.assertEqual(set(), perms)
 
     def test_get_user_permissions_inactive_user(self):
