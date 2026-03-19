@@ -723,6 +723,36 @@ class GetUsersWithPermsTest(TestCase):
             {self.user1, admin},
         )
 
+    def test_active_user_inconsistency_in_group_perms(self):
+        """Test the active user check inconsistency when getting group perms"""
+        
+        self.user1.groups.add(self.group1)
+        assign_perm('change_contenttype', self.group1, self.obj1)
+
+        checker = ObjectPermissionChecker(self.user1)
+        
+        get_perms_result_active = checker.get_perms(self.obj1)
+        get_group_perms_result_active = checker.get_group_perms(self.obj1)
+        shortcuts_get_group_perms_result_active = get_group_perms(self.user1, self.obj1)
+        
+        self.assertEqual(list(get_perms_result_active), ['change_contenttype'], "get_perms should return the assigned permission for active user")
+        self.assertEqual(list(get_group_perms_result_active), ['change_contenttype'], "get_group_perms should return the assigned permission for active user")
+        self.assertEqual(list(shortcuts_get_group_perms_result_active), ['change_contenttype'], "get_group_perms shortcut should return the assigned permission for active user")
+
+        # Make user inactive
+        self.user1.is_active = False
+        self.user1.save()
+                
+        checker_inactive = ObjectPermissionChecker(self.user1)
+        
+        get_perms_result_inactive = checker_inactive.get_perms(self.obj1)
+        get_group_perms_result_inactive = checker_inactive.get_group_perms(self.obj1)
+        shortcuts_get_group_perms_result_inactive = get_group_perms(self.user1, self.obj1)
+        
+        self.assertEqual(list(get_perms_result_inactive), [], "get_perms should return empty list for inactive user")
+        self.assertEqual(list(get_group_perms_result_inactive), [], "get_group_perms should return empty list for inactive user")
+        self.assertEqual(list(shortcuts_get_group_perms_result_inactive), [], "get_group_perms shortcut should return empty list for inactive user")
+
     def test_without_group_users(self):
         self.user1.groups.add(self.group1)
         self.user2.groups.add(self.group2)
@@ -1812,6 +1842,35 @@ class GetPermsVsGetUserPermsTest(TestCase):
             set(all_perms).issuperset(set(group_perms)),
             f"get_perms {all_perms} should be superset of get_group_perms {group_perms}",
         )
+
+    def test_active_user_inconsistency(self):
+        """Test the active user check inconsistency"""
+        
+        assign_perm('change_contenttype', self.user, self.obj)
+
+        checker = ObjectPermissionChecker(self.user)
+        
+        get_perms_result_active = checker.get_perms(self.obj)
+        get_user_perms_result_active = checker.get_user_perms(self.obj)
+        shortcuts_get_user_perms_result_active = get_user_perms(self.user, self.obj)
+        
+        self.assertEqual(list(get_perms_result_active), ['change_contenttype'], "get_perms should return the assigned permission for active user")
+        self.assertEqual(list(get_user_perms_result_active), ['change_contenttype'], "get_user_perms should return the assigned permission for active user")
+        self.assertEqual(list(shortcuts_get_user_perms_result_active), ['change_contenttype'], "get_user_perms shortcut should return the assigned permission for active user")
+
+        # Make user inactive
+        self.user.is_active = False
+        self.user.save()
+                
+        checker_inactive = ObjectPermissionChecker(self.user)
+        
+        get_perms_result_inactive = checker_inactive.get_perms(self.obj)
+        get_user_perms_result_inactive = checker_inactive.get_user_perms(self.obj)
+        shortcuts_get_user_perms_result_inactive = get_user_perms(self.user, self.obj)
+        
+        self.assertEqual(list(get_perms_result_inactive), [], "get_perms should return empty list for inactive user")
+        self.assertEqual(list(get_user_perms_result_inactive), [], "get_user_perms should return empty list for inactive user")
+        self.assertEqual(list(shortcuts_get_user_perms_result_inactive), [], "get_user_perms shortcut should return empty list for inactive user")
 
     def test_superuser_behavior(self):
         """Test behavior with superuser."""
