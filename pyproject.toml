@@ -102,6 +102,7 @@ authors = [
   { name = "Columbia University, SIS Development and Application Services" },
   { name = "Cornelius Hoffmann", email = "coding@volucra.de" },
   { name = "Sezer BOZKIR", email = "admin@sezerbozkir.com"},
+  { name = "Paul Martin", email = "pauledwardmartin91@gmail.com"},
 ]
 maintainers = [
   {name = "Tom Clark", email = "django-guardian@octue.com"},
