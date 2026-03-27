@@ -50,6 +50,9 @@ ANONYMOUS_USER_CACHE_TTL = getattr(settings, "GUARDIAN_ANONYMOUS_USER_CACHE_TTL"
 USER_OBJ_PERMS_MODEL = getattr(settings, "GUARDIAN_USER_OBJ_PERMS_MODEL", "guardian.UserObjectPermission")
 GROUP_OBJ_PERMS_MODEL = getattr(settings, "GUARDIAN_GROUP_OBJ_PERMS_MODEL", "guardian.GroupObjectPermission")
 
+# Only work with active users when retrieving users with permissions
+ACTIVE_USERS_ONLY = getattr(settings, "GUARDIAN_ACTIVE_USERS_ONLY", False)
+
 
 def check_configuration():
     if RENDER_403 and RAISE_403:
