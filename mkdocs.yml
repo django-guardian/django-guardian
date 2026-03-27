@@ -56,6 +56,7 @@ nav:
   - Contributing:
       - Overview: develop/overview.md
       - Testing: develop/testing.md
+      - Release Process: develop/release.md
       - Makefile Commands: develop/makefile.md
   - API Reference:
     - Admin: api/admin.md
