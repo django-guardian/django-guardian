@@ -11,7 +11,10 @@ from guardian.managers import (
     UserObjectPermissionManager,
     _is_using_default_content_type,
 )
-from guardian.models import GroupObjectPermission, UserObjectPermission
+from guardian.models import (
+    GroupObjectPermission as DefaultGroupObjectPermission,
+    UserObjectPermission as DefaultUserObjectPermission,
+)
 from guardian.testapp.models import ChildTestModel, ParentTestModel
 from guardian.utils import get_group_obj_perms_model, get_user_obj_perms_model
 
