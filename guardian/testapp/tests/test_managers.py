@@ -208,30 +208,21 @@ class TestIsUsingDefaultContentType(TestCase):
         ):
             self.assertFalse(_is_using_default_content_type())
 
-    def test_returns_false_for_invalid_import_path(self):
-        """Should return False when the import path is invalid."""
-        with mock.patch("guardian.conf.settings.GET_CONTENT_TYPE", "nonexistent.module.function"):
-            self.assertFalse(_is_using_default_content_type())
+    def test_returns_false_for_any_non_default_path(self):
+        """Should return False for any setting value that doesn't equal the default path."""
+        for path in [
+            "nonexistent.module.function",
+            "fake_module.fake_function",
+            "guardian.ctypes.nonexistent_function",
+        ]:
+            with mock.patch("guardian.conf.settings.GET_CONTENT_TYPE", path):
+                self.assertFalse(_is_using_default_content_type())
 
-    def test_returns_false_for_nonexistent_module(self):
-        """Should return False when the module doesn't exist."""
-        with mock.patch("guardian.conf.settings.GET_CONTENT_TYPE", "fake_module.fake_function"):
-            self.assertFalse(_is_using_default_content_type())
-
-    def test_returns_false_for_nonexistent_attribute(self):
-        """Should return False when the attribute doesn't exist in the module."""
-        with mock.patch("guardian.conf.settings.GET_CONTENT_TYPE", "guardian.ctypes.nonexistent_function"):
-            self.assertFalse(_is_using_default_content_type())
-
-    def test_function_reference_comparison(self):
-        """
-        Should use both identity (is) and equality (==) checks.
-        This ensures compatibility with different import scenarios.
-        """
-        # Test that the actual implementation uses proper comparison
+    def test_string_comparison(self):
+        """Should compare the setting string directly against the default dotted path."""
         with mock.patch("guardian.conf.settings.GET_CONTENT_TYPE", "guardian.ctypes.get_default_content_type"):
             result = _is_using_default_content_type()
-            self.assertTrue(result, "Function should be recognized via identity or equality check")
+            self.assertTrue(result, "Default path string should be recognized")
 
     def test_not_cached_allows_dynamic_changes(self):
         """
