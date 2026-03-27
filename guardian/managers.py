@@ -9,12 +9,12 @@ from django.db.models import Model, Q, QuerySet
 
 from guardian.conf import settings as guardian_settings
 from guardian.core import ObjectPermissionChecker
-from guardian.ctypes import get_content_type
+from guardian.ctypes import get_content_type, get_default_content_type
 from guardian.exceptions import ObjectNotPersisted
 
 _PermType: TypeAlias = Union[Permission, str]
 
-_DEFAULT_CONTENT_TYPE_PATH = "guardian.ctypes.get_default_content_type"
+_DEFAULT_CONTENT_TYPE_PATH = f"{get_default_content_type.__module__}.{get_default_content_type.__name__}"
 
 
 def _is_using_default_content_type() -> bool:
