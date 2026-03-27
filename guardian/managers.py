@@ -6,13 +6,37 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models import Model, Q, QuerySet
+from django.utils.module_loading import import_string
 
 from guardian.conf import settings as guardian_settings
 from guardian.core import ObjectPermissionChecker
-from guardian.ctypes import get_content_type
+from guardian.ctypes import get_content_type, get_default_content_type
 from guardian.exceptions import ObjectNotPersisted
 
 _PermType: TypeAlias = Union[Permission, str]
+
+
+def _is_using_default_content_type() -> bool:
+    """Check if default content type function is being used.
+
+    Returns True if GUARDIAN_GET_CONTENT_TYPE setting points to the default
+    get_default_content_type function, False otherwise.
+
+    The check is necessary to avoid a regression where setting content_object
+    in get_or_create defaults causes Django's GenericForeignKey.__set__ to
+    overwrite the content_type that was explicitly set by a custom
+    GUARDIAN_GET_CONTENT_TYPE function.
+
+    Note: This function is not cached to allow dynamic changes during testing
+    (e.g., when using mock.patch).
+    """
+    try:
+        get_ct_func = import_string(guardian_settings.GET_CONTENT_TYPE)
+        # Use 'is' first for identity check, fallback to '==' for equality
+        return get_ct_func is get_default_content_type or get_ct_func == get_default_content_type
+    except (ImportError, AttributeError):
+        # If we can't import the function, assume it's not the default
+        return False
 
 
 def _ensure_permission(perm: _PermType, ctype: ContentType) -> Permission:
@@ -62,7 +86,7 @@ class BaseObjectPermissionManager(models.Manager):
         if self.is_generic():
             kwargs["content_type"] = ctype
             kwargs["object_pk"] = obj.pk
-            if guardian_settings.GET_CONTENT_TYPE == "guardian.ctypes.get_default_content_type":
+            if _is_using_default_content_type():
                 kwargs["defaults"] = {"content_object": obj}
         else:
             kwargs["content_object"] = obj

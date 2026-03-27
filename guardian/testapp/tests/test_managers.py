@@ -6,7 +6,11 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 
-from guardian.managers import GroupObjectPermissionManager, UserObjectPermissionManager
+from guardian.managers import (
+    GroupObjectPermissionManager,
+    UserObjectPermissionManager,
+    _is_using_default_content_type,
+)
 from guardian.models import GroupObjectPermission, UserObjectPermission
 from guardian.testapp.models import ChildTestModel, ParentTestModel
 from guardian.utils import get_group_obj_perms_model, get_user_obj_perms_model
@@ -179,3 +183,75 @@ class TestAssignPermCustomContentType(TestCase):
             "by GenericForeignKey.__set__ via defaults={'content_object': obj}",
         )
         self.assertNotEqual(obj_perm.content_type, self.child_ctype)
+
+
+class TestIsUsingDefaultContentType(TestCase):
+    """
+    Unit tests for the _is_using_default_content_type helper function.
+
+    This function determines whether the GUARDIAN_GET_CONTENT_TYPE setting
+    points to the default get_default_content_type function or a custom one.
+    This is critical for avoiding the GenericForeignKey content_type overwrite bug.
+    """
+
+    def test_returns_true_for_default_content_type(self):
+        """Should return True when using the default content type function."""
+        # Default setting should point to guardian.ctypes.get_default_content_type
+        with mock.patch("guardian.conf.settings.GET_CONTENT_TYPE", "guardian.ctypes.get_default_content_type"):
+            self.assertTrue(_is_using_default_content_type())
+
+    def test_returns_false_for_custom_content_type(self):
+        """Should return False when using a custom content type function."""
+        with mock.patch(
+            "guardian.conf.settings.GET_CONTENT_TYPE",
+            "guardian.testapp.tests.test_managers.get_parent_content_type",
+        ):
+            self.assertFalse(_is_using_default_content_type())
+
+    def test_returns_false_for_invalid_import_path(self):
+        """Should return False when the import path is invalid."""
+        with mock.patch("guardian.conf.settings.GET_CONTENT_TYPE", "nonexistent.module.function"):
+            self.assertFalse(_is_using_default_content_type())
+
+    def test_returns_false_for_nonexistent_module(self):
+        """Should return False when the module doesn't exist."""
+        with mock.patch("guardian.conf.settings.GET_CONTENT_TYPE", "fake_module.fake_function"):
+            self.assertFalse(_is_using_default_content_type())
+
+    def test_returns_false_for_nonexistent_attribute(self):
+        """Should return False when the attribute doesn't exist in the module."""
+        with mock.patch("guardian.conf.settings.GET_CONTENT_TYPE", "guardian.ctypes.nonexistent_function"):
+            self.assertFalse(_is_using_default_content_type())
+
+    def test_function_reference_comparison(self):
+        """
+        Should use both identity (is) and equality (==) checks.
+        This ensures compatibility with different import scenarios.
+        """
+        # Test that the actual implementation uses proper comparison
+        with mock.patch("guardian.conf.settings.GET_CONTENT_TYPE", "guardian.ctypes.get_default_content_type"):
+            result = _is_using_default_content_type()
+            self.assertTrue(result, "Function should be recognized via identity or equality check")
+
+    def test_not_cached_allows_dynamic_changes(self):
+        """
+        The function should not cache results to allow mock.patch during tests.
+        Each call should re-evaluate the setting.
+        """
+        # First call with default
+        with mock.patch("guardian.conf.settings.GET_CONTENT_TYPE", "guardian.ctypes.get_default_content_type"):
+            first_result = _is_using_default_content_type()
+            self.assertTrue(first_result)
+
+        # Second call with custom - should return different result
+        with mock.patch(
+            "guardian.conf.settings.GET_CONTENT_TYPE",
+            "guardian.testapp.tests.test_managers.get_parent_content_type",
+        ):
+            second_result = _is_using_default_content_type()
+            self.assertFalse(second_result)
+
+        # Third call with default again - should work without caching issues
+        with mock.patch("guardian.conf.settings.GET_CONTENT_TYPE", "guardian.ctypes.get_default_content_type"):
+            third_result = _is_using_default_content_type()
+            self.assertTrue(third_result)
