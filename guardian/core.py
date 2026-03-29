@@ -124,7 +124,7 @@ class ObjectPermissionChecker:
 
     def get_user_perms(self, obj: Model) -> QuerySet[Permission]:
         if self.user and not self.user.is_active:
-            return []
+            return Permission.objects.none()
 
         ctype = get_content_type(obj)
 
@@ -137,7 +137,7 @@ class ObjectPermissionChecker:
 
     def get_group_perms(self, obj: Model) -> QuerySet[Permission]:
         if self.user and not self.user.is_active:
-            return []
+            return Permission.objects.none()
 
         ctype = get_content_type(obj)
 
