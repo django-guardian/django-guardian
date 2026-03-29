@@ -724,7 +724,7 @@ class GetUsersWithPermsTest(TestCase):
         )
 
     def test_get_group_perms_consistent_inactive_user(self):
-        """Test that the get_group_perms shortcut returns the same results as the 
+        """Test that the get_group_perms shortcut returns the same results as the
         get_group_perms method of ObjectPermissionChecker for inactive user in a group."""
 
         self.user1.groups.add(self.group1)
@@ -742,18 +742,12 @@ class GetUsersWithPermsTest(TestCase):
         shortcuts_get_group_perms_result_inactive = get_group_perms(self.user1, self.obj1)
 
         self.assertTrue(
-            set(get_group_perms_result_active) 
-            == set(shortcuts_get_group_perms_result_active)
-            == {"change_contenttype"}
+            set(get_group_perms_result_active) == set(shortcuts_get_group_perms_result_active) == {"change_contenttype"}
         )
-        self.assertTrue(
-            set(get_group_perms_result_inactive)
-            == set(shortcuts_get_group_perms_result_inactive)
-            == set()
-        )
+        self.assertTrue(set(get_group_perms_result_inactive) == set(shortcuts_get_group_perms_result_inactive) == set())
 
     def test_get_perms_consistent_for_inactive_user(self):
-        """Test that the get_perms shortcut returns the same results as the 
+        """Test that the get_perms shortcut returns the same results as the
         get_perms method of ObjectPermissionChecker for inactive user in a group."""
 
         self.user1.groups.add(self.group1)
@@ -770,16 +764,8 @@ class GetUsersWithPermsTest(TestCase):
         get_perms_result_inactive = checker.get_perms(self.obj1)
         shortcuts_get_perms_result_inactive = get_perms(self.user1, self.obj1)
 
-        self.assertTrue(
-            get_perms_result_active
-            == shortcuts_get_perms_result_active
-            == ["change_contenttype"]
-        )
-        self.assertTrue(
-            get_perms_result_inactive
-            == shortcuts_get_perms_result_inactive
-            == []
-        )
+        self.assertTrue(get_perms_result_active == shortcuts_get_perms_result_active == ["change_contenttype"])
+        self.assertTrue(get_perms_result_inactive == shortcuts_get_perms_result_inactive == [])
 
     def test_without_group_users(self):
         self.user1.groups.add(self.group1)
@@ -1872,7 +1858,7 @@ class GetPermsVsGetUserPermsTest(TestCase):
         )
 
     def test_get_user_perms_consistent_inactive_user(self):
-        """Test that get_user_perms in ObjectPermissionChecker and the get_user_perms shortcut 
+        """Test that get_user_perms in ObjectPermissionChecker and the get_user_perms shortcut
         return consistent results for an inactive user."""
 
         assign_perm("change_contenttype", self.user, self.obj)
@@ -1890,18 +1876,14 @@ class GetPermsVsGetUserPermsTest(TestCase):
         shortcuts_get_user_perms_result_inactive = get_user_perms(self.user, self.obj)
 
         self.assertTrue(
-            set(get_user_perms_result_active)
-            == set(shortcuts_get_user_perms_result_active)
-            == {"change_contenttype"},
+            set(get_user_perms_result_active) == set(shortcuts_get_user_perms_result_active) == {"change_contenttype"},
         )
         self.assertTrue(
-            set(get_user_perms_result_inactive)
-            == set(shortcuts_get_user_perms_result_inactive)
-            == set(),
+            set(get_user_perms_result_inactive) == set(shortcuts_get_user_perms_result_inactive) == set(),
         )
 
     def test_get_group_perms_consistent_inactive_user(self):
-        """Test that get_perms in ObjectPermissionChecker and the get_perms shortcut 
+        """Test that get_perms in ObjectPermissionChecker and the get_perms shortcut
         return consistent results for an inactive user."""
 
         assign_perm("change_contenttype", self.user, self.obj)
@@ -1919,14 +1901,10 @@ class GetPermsVsGetUserPermsTest(TestCase):
         shortcuts_get_perms_result_inactive = get_perms(self.user, self.obj)
 
         self.assertTrue(
-            get_perms_result_active
-            == shortcuts_get_perms_result_active
-            == ["change_contenttype"],
+            get_perms_result_active == shortcuts_get_perms_result_active == ["change_contenttype"],
         )
         self.assertTrue(
-            get_perms_result_inactive
-            == shortcuts_get_perms_result_inactive
-            == [],
+            get_perms_result_inactive == shortcuts_get_perms_result_inactive == [],
         )
 
     def test_superuser_behavior(self):
