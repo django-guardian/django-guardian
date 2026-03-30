@@ -137,52 +137,7 @@ The CLI will provide you a link to view the documentation running locally (usual
 See the [ReadTheDocs' documentation on using MkDocs](https://docs.readthedocs.com/platform/stable/intro/mkdocs.html)
 for more information.
 
-## How do I make a release candidate?
+## How do I make a release?
 
-!!! warning
-    This workflow may only be triggered by project maintainers.
-
-To make a new _release candidate_ you should perform the following steps:
-
-- Be on any branch other than `main`, typically `next`
-- Update `pyproject.toml` with the new version identifier (see [Semantic Versioning 2.0](http://semver.org/)
-- Ensure the new identifier ends in `rc<x>`, eg `3.0.0rc1`
-- Push your changes to GitHub
-- Navigate to [the release-publish action](https://github.com/django-guardian/django-guardian/actions/workflows/release-publish.yml) on GitHub
-- Run the workflow manually:
-  - Use workflow from branch `devel`.
-  - Specify the branch name or commit sha to release
-  - Specify the tag to apply, which must match your version identifier (eg `3.0.0rc1`)
-- If it is a breaking release, edit release notes to include an "Upgrade Instructions" section
-
-This will:
-
-- build and upload the package to PyPI using a trusted publisher,
-- tag the repo, and
-- create a prerelease version in GitHub Releases.
-
-## How do I make a full release?
-
-!!! warning
-    This workflow may only be triggered by project maintainers.
-
-To make a new full release you should perform the following steps:
-
-- Start on a branch (typically `devel`) where:
-  - the tip is at your latest published release candidate and
-  - the branch is up to date with `main`
-- Update `pyproject.toml` to remove the `rc<x>` suffix from the version identifier
-- Commit this change and push to GitHub
-- Merge to `main`
-- Navigate to [the release-publish action](https://github.com/django-guardian/django-guardian/actions/workflows/release-publish.yml) on GitHub
-- Run the workflow manually:
-  - Use workflow from branch `main`.
-  - Specify the branch name `main`
-  - Specify the version identifier eg `3.0.0`
-- If it is a breaking release, edit release notes to include an "Upgrade Instructions" section (copy across from the release canditate notes)
-
-This will:
-
-- build and upload the package to PyPI using a trusted publisher,
-- tag the repo, and
-- create a full release version in GitHub Releases.
+See the dedicated [Release Process](release.md) page for full instructions on creating
+standard releases, release candidates, and hotfix releases.
