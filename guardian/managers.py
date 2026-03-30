@@ -7,11 +7,31 @@ from django.core.exceptions import FieldDoesNotExist
 from django.db import models
 from django.db.models import Model, Q, QuerySet
 
+from guardian.conf import settings as guardian_settings
 from guardian.core import ObjectPermissionChecker
-from guardian.ctypes import get_content_type
+from guardian.ctypes import get_content_type, get_default_content_type
 from guardian.exceptions import ObjectNotPersisted
 
 _PermType: TypeAlias = Union[Permission, str]
+
+_DEFAULT_CONTENT_TYPE_PATH = f"{get_default_content_type.__module__}.{get_default_content_type.__name__}"
+
+
+def _is_using_default_content_type() -> bool:
+    """Check if default content type function is being used.
+
+    Returns True if GUARDIAN_GET_CONTENT_TYPE setting points to the default
+    get_default_content_type function, False otherwise.
+
+    The check is necessary to avoid a regression where setting content_object
+    in get_or_create defaults causes Django's GenericForeignKey.__set__ to
+    overwrite the content_type that was explicitly set by a custom
+    GUARDIAN_GET_CONTENT_TYPE function.
+
+    Note: This function is not cached to allow dynamic changes during testing
+    (e.g., when using mock.patch).
+    """
+    return guardian_settings.GET_CONTENT_TYPE == _DEFAULT_CONTENT_TYPE_PATH
 
 
 def _ensure_permission(perm: _PermType, ctype: ContentType) -> Permission:
@@ -61,7 +81,8 @@ class BaseObjectPermissionManager(models.Manager):
         if self.is_generic():
             kwargs["content_type"] = ctype
             kwargs["object_pk"] = obj.pk
-            kwargs["defaults"] = {"content_object": obj}
+            if _is_using_default_content_type():
+                kwargs["defaults"] = {"content_object": obj}
         else:
             kwargs["content_object"] = obj
         obj_perm, _ = self.get_or_create(**kwargs)
