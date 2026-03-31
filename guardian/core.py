@@ -122,29 +122,29 @@ class ObjectPermissionChecker:
 
         return user_filters
 
-    def get_user_perms(self, obj: Model) -> QuerySet[Permission]:
+    def get_user_perms(self, obj: Model) -> QuerySet[str]:
         if self.user and not self.user.is_active:
-            return Permission.objects.none()
+            return Permission.objects.none().values_list("codename", flat=True)
 
         ctype = get_content_type(obj)
 
         perms_qs = Permission.objects.filter(content_type=ctype)
         user_filters = self.get_user_filters(obj)
         user_perms_qs = perms_qs.filter(**user_filters)
-        user_perms: QuerySet[Permission] = user_perms_qs.values_list("codename", flat=True)
+        user_perms: QuerySet[str] = user_perms_qs.values_list("codename", flat=True)
 
         return user_perms
 
-    def get_group_perms(self, obj: Model) -> QuerySet[Permission]:
+    def get_group_perms(self, obj: Model) -> QuerySet[str]:
         if self.user and not self.user.is_active:
-            return Permission.objects.none()
+            return Permission.objects.none().values_list("codename", flat=True)
 
         ctype = get_content_type(obj)
 
         perms_qs = Permission.objects.filter(content_type=ctype)
         group_filters = self.get_group_filters(obj)
         group_perms_qs = perms_qs.filter(**group_filters)
-        group_perms: QuerySet[Permission] = group_perms_qs.values_list("codename", flat=True)
+        group_perms: QuerySet[str] = group_perms_qs.values_list("codename", flat=True)
 
         return group_perms
 

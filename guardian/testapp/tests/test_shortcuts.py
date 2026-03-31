@@ -746,7 +746,7 @@ class GetUsersWithPermsTest(TestCase):
         )
         self.assertTrue(set(get_group_perms_result_inactive) == set(shortcuts_get_group_perms_result_inactive) == set())
 
-    def test_get_perms_consistent_for_inactive_user(self):
+    def test_get_perms_consistent_for_inactive_user_in_group(self):
         """Test that the get_perms shortcut returns the same results as the
         get_perms method of ObjectPermissionChecker for inactive user in a group."""
 
@@ -1882,7 +1882,7 @@ class GetPermsVsGetUserPermsTest(TestCase):
             set(get_user_perms_result_inactive) == set(shortcuts_get_user_perms_result_inactive) == set(),
         )
 
-    def test_get_group_perms_consistent_inactive_user(self):
+    def test_get_perms_consistent_inactive_user(self):
         """Test that get_perms in ObjectPermissionChecker and the get_perms shortcut
         return consistent results for an inactive user."""
 
