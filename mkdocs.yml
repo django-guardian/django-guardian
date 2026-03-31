@@ -42,20 +42,24 @@ nav:
   - Configuration: configuration.md
   - Who Uses Guardian: who-uses-guardian.md
   - User Guide:
-      - Example Project: userguide/examples.md
-      - Assign Object Permissions: userguide/assign.md
-      - Caveats: userguide/caveats.md
-      - Checks Object Permissions: userguide/checks.md
-      - Performance Tuning: userguide/performance.md
-      - Remove Object Permissions: userguide/remove.md
-      - Custom User Model: userguide/custom-user-model.md
-      - Custom Group Model: userguide/custom-group-model.md
-      - Shortcuts: userguide/shortcuts.md
-      - Admin Integration: userguide/admin-integration.md
-      - Signals: userguide/signals.md
+      - Basic Usage:
+          - Example Project: userguide/examples.md
+          - Assign Object Permissions: userguide/assign.md
+          - Checks Object Permissions: userguide/checks.md
+          - Remove Object Permissions: userguide/remove.md
+          - Shortcuts: userguide/shortcuts.md
+      - Advanced Usage:
+          - Caveats: userguide/caveats.md
+          - Performance Tuning: userguide/performance.md
+          - Upgrading to Direct Foreign Keys: userguide/upgrading-to-direct-foreign-keys.md
+          - Custom User Model: userguide/custom-user-model.md
+          - Custom Group Model: userguide/custom-group-model.md
+          - Admin Integration: userguide/admin-integration.md
+          - Signals: userguide/signals.md
   - Contributing:
       - Overview: develop/overview.md
       - Testing: develop/testing.md
+      - Release Process: develop/release.md
       - Makefile Commands: develop/makefile.md
   - API Reference:
     - Admin: api/admin.md
