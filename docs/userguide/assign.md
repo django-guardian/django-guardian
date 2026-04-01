@@ -36,6 +36,14 @@ class Task(models.Model):
         )
 ```
 
+!!! note
+
+    If using inheritance,
+    the `Meta` class with the custom permissions
+    **should** live in a abstract class.
+    We recommend users to read the section "[Meta inheritance](https://docs.djangoproject.com/en/stable/topics/db/models/#meta-inheritance)"
+    from the Django documentation.
+
 After we call management commands `makemigrations` and `migrate` our
 *assign_task* permission would be added to default set of permissions.
 
