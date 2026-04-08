@@ -13,7 +13,7 @@ of Django’s authorization backend. Read an introduction to per-object permissi
 
 Online documentation is available at [https://django-guardian.readthedocs.io/](https://django-guardian.readthedocs.io/).
 
-**See real-world usage**: Check out [Who Uses Guardian](https://django-guardian.readthedocs.io/en/latest/who-uses-guardian/) to see how thousands of projects worldwide use django-guardian in production.
+**See real-world usage**: Check out [Who Uses Guardian](https://django-guardian.readthedocs.io/en/stable/who-uses-guardian/) to see how thousands of projects worldwide use django-guardian in production.
 
 
 ## Installation
