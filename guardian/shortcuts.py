@@ -63,6 +63,27 @@ def _get_first(t):
     return t[0]
 
 
+def _ensure_permission(perm: Union[Permission, str]) -> Permission:
+    """Converts string permission to the corresponding django model, if required."""
+    if isinstance(perm, str):
+        try:
+            app_label, codename = perm.split(".", 1)
+        except ValueError:
+            raise ValueError(
+                f"For global permissions, first argument must be in format: 'app_label.codename' (is {perm!r})"
+            )
+        perm = Permission.objects.get(content_type__app_label=app_label, codename=codename)
+    return perm
+
+
+def _normalize_perm(perm: Union[Permission, str]) -> Union[Permission, str]:
+    """Normalizes permission codename, if it is a string."""
+    if isinstance(perm, str) and "." in perm:
+        _, perm = perm.split(".", 1)
+
+    return perm
+
+
 def assign_perm(
     perm: Union[str, Permission],
     user_or_group: Any,
@@ -123,15 +144,7 @@ def assign_perm(
     user, group = get_identity(user_or_group)
     # If obj is None we try to operate on global permissions
     if obj is None:
-        if not isinstance(perm, Permission):
-            try:
-                app_label, codename = perm.split(".", 1)
-            except ValueError:
-                raise ValueError(
-                    "For global permissions, first argument must be in format: 'app_label.codename' (is %r)" % perm
-                )
-            perm = Permission.objects.get(content_type__app_label=app_label, codename=codename)
-
+        perm = _ensure_permission(perm)
         if user:
             user.user_permissions.add(perm)
             return perm
@@ -139,10 +152,7 @@ def assign_perm(
             group.permissions.add(perm)
             return perm
 
-    if not isinstance(perm, Permission):
-        if "." in perm:
-            app_label, perm = perm.split(".", 1)
-
+    perm = _normalize_perm(perm)
     if isinstance(obj, (QuerySet, list)):
         if isinstance(user_or_group, (QuerySet, list)):
             raise MultipleIdentityAndObjectError("Only bulk operations on either users/groups OR objects supported")
@@ -206,14 +216,7 @@ def remove_perm(
 
     user, group = get_identity(user_or_group)
     if obj is None:
-        if not isinstance(perm, Permission):
-            try:
-                app_label, codename = perm.split(".", 1)
-            except ValueError:
-                raise ValueError(
-                    "For global permissions, first argument must be in format: 'app_label.codename' (is %r)" % perm
-                )
-            perm = Permission.objects.get(content_type__app_label=app_label, codename=codename)
+        perm = _ensure_permission(perm)
         if user:
             user.user_permissions.remove(perm)
             return None
@@ -221,9 +224,7 @@ def remove_perm(
             group.permissions.remove(perm)
             return None
 
-    if not isinstance(perm, Permission):
-        perm = perm.split(".")[-1]
-
+    perm = _normalize_perm(perm)
     if isinstance(obj, list) and not obj:
         return None
 
@@ -516,6 +517,56 @@ def get_groups_with_perms(
 T = TypeVar("T", bound=Model)
 
 
+def _compute_codenames_and_ctype(
+    perms: Union[str, list[str]],
+) -> tuple[Optional[ContentType], set[str]]:
+    """Extracts ContentType and codenames from given list of permissions."""
+    if isinstance(perms, str):
+        perms = [perms]
+    ctype = None
+    app_label = None
+    codenames = set()
+
+    # Compute codenames and set and ctype if possible
+    for perm in perms:
+        if "." in perm:
+            new_app_label, codename = perm.split(".", 1)
+            if app_label is not None and app_label != new_app_label:
+                raise MixedContentTypeError(f"Given perms must have same app label ({app_label} != {new_app_label})")
+            else:
+                app_label = new_app_label
+        else:
+            codename = perm
+        codenames.add(codename)
+        if app_label is not None:
+            new_ctype = _get_ct_cached(app_label, codename)
+            if ctype is not None and ctype != new_ctype:
+                raise MixedContentTypeError(f"ContentType was once computed to be {ctype} and another one {new_ctype}")
+            else:
+                ctype = new_ctype
+
+    return ctype, codenames
+
+
+def _compute_queryset(
+    ctype: Optional[ContentType],
+    klass: Union[Type[T], Manager[T], QuerySet[T], None],
+) -> tuple[ContentType, QuerySet[T]]:
+    """Computes QuerySet and ContentType if still missing"""
+    if ctype is None and klass is not None:
+        queryset = _get_queryset(klass)
+        ctype = get_content_type(queryset.model)
+    elif ctype is not None and klass is None:
+        queryset = _get_queryset(ctype.model_class())
+    elif klass is None:
+        raise WrongAppError("Cannot determine content type")
+    else:
+        queryset = _get_queryset(klass)
+        if ctype != get_content_type(queryset.model):
+            raise MixedContentTypeError("Content type for given perms and klass differs")
+    return ctype, queryset
+
+
 def get_objects_for_user(
     user: Any,
     perms: Union[str, list[str]],
@@ -622,46 +673,8 @@ def get_objects_for_user(
         ``Cast("pk", CharField())`` fallback, so models with any PK type are
         supported without extra configuration.
     """
-    if isinstance(perms, str):
-        perms = [perms]
-    ctype = None
-    app_label = None
-    codenames = set()
-
-    # Compute codenames and set and ctype if possible
-    for perm in perms:
-        if "." in perm:
-            new_app_label, codename = perm.split(".", 1)
-            if app_label is not None and app_label != new_app_label:
-                raise MixedContentTypeError(
-                    "Given perms must have same app label ({} != {})".format(app_label, new_app_label)
-                )
-            else:
-                app_label = new_app_label
-        else:
-            codename = perm
-        codenames.add(codename)
-        if app_label is not None:
-            new_ctype = new_ctype = _get_ct_cached(app_label, codename)
-            if ctype is not None and ctype != new_ctype:
-                raise MixedContentTypeError(
-                    "ContentType was once computed to be {} and another one {}".format(ctype, new_ctype)
-                )
-            else:
-                ctype = new_ctype
-
-    # Compute queryset and ctype if still missing
-    if ctype is None and klass is not None:
-        queryset = _get_queryset(klass)
-        ctype = get_content_type(queryset.model)
-    elif ctype is not None and klass is None:
-        queryset = _get_queryset(ctype.model_class())
-    elif klass is None:
-        raise WrongAppError("Cannot determine content type")
-    else:
-        queryset = _get_queryset(klass)
-        if ctype != get_content_type(queryset.model):
-            raise MixedContentTypeError("Content type for given perms and klass differs")
+    ctype, codenames = _compute_codenames_and_ctype(perms)
+    ctype, queryset = _compute_queryset(ctype, klass)
 
     # At this point, we should have both ctype and queryset and they should
     # match which means: ctype.model_class() == queryset.model
@@ -780,10 +793,10 @@ def get_objects_for_user(
 def get_objects_for_group(
     group: Group,
     perms: Union[str, list[str]],
-    klass: Union[Model, Manager, QuerySet, None] = None,
+    klass: Union[Type[T], Manager[T], QuerySet[T], None] = None,
     any_perm: bool = False,
     accept_global_perms: bool = True,
-) -> QuerySet:
+) -> QuerySet[T]:
     """Get objects that a group has *all* the supplied permissions for.
 
     Parameters:
@@ -849,46 +862,8 @@ def get_objects_for_group(
         ``Cast("pk", CharField())`` fallback, so models with any PK type are
         supported without extra configuration.
     """
-    if isinstance(perms, str):
-        perms = [perms]
-    ctype = None
-    app_label = None
-    codenames = set()
-
-    # Compute the codenames and set ctype if possible
-    for perm in perms:
-        if "." in perm:
-            new_app_label, codename = perm.split(".", 1)
-            if app_label is not None and app_label != new_app_label:
-                raise MixedContentTypeError(
-                    "Given perms must have same app label ({} != {})".format(app_label, new_app_label)
-                )
-            else:
-                app_label = new_app_label
-        else:
-            codename = perm
-        codenames.add(codename)
-        if app_label is not None:
-            new_ctype = _get_ct_cached(app_label, codename)
-            if ctype is not None and ctype != new_ctype:
-                raise MixedContentTypeError(
-                    "ContentType was once computed to be {} and another one {}".format(ctype, new_ctype)
-                )
-            else:
-                ctype = new_ctype
-
-    # Compute queryset and ctype if still missing
-    if ctype is None and klass is not None:
-        queryset = _get_queryset(klass)
-        ctype = get_content_type(queryset.model)
-    elif ctype is not None and klass is None:
-        queryset = _get_queryset(ctype.model_class())
-    elif klass is None:
-        raise WrongAppError("Cannot determine content type")
-    else:
-        queryset = _get_queryset(klass)
-        if ctype != get_content_type(queryset.model):
-            raise MixedContentTypeError("Content type for given perms and klass differs")
+    ctype, codenames = _compute_codenames_and_ctype(perms)
+    ctype, queryset = _compute_queryset(ctype, klass)
 
     # At this point, we should have both ctype and queryset and they should
     # match which means: ctype.model_class() == queryset.model
