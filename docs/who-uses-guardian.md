@@ -20,6 +20,12 @@ Seeing real-world usage helps demonstrate:
 
 ### Open Source Projects
 
+**[Paperless-ngx](https://paperless-ngx.com/)**
+- **Description**: A document management system that helps manage digital documents efficiently.
+- **GitHub**: [github.com/paperless-ngx/paperless-ngx](https://github.com/paperless-ngx/paperless-ngx)
+- **Usage**: Uses django-guardian for fine-grained access control to all objects including documents and more.
+- **Scale**: Deployed in environments ranging from homelabs to large organizations, handling many users and thousands of documents.
+
 *This section will be populated with real projects as the community contributes them. Here's an example of the format we'll use:*
 
 #### Example Category
