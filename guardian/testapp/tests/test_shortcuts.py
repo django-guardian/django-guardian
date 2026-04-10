@@ -402,6 +402,16 @@ class RemovePermTest(ObjectPermissionTestCase):
         perm_obj = Permission.objects.get(codename=codename, content_type__app_label=app_label)
         self.assertFalse(perm_obj in self.group.permissions.all())
 
+    def test_remove_perm_with_dots(self):
+        Permission.objects.create(
+            codename="contenttype.reorder",
+            content_type=ContentType.objects.get_for_model(self.ctype),
+        )
+
+        assign_perm("contenttypes.contenttype.reorder", self.user, self.ctype)
+        remove_perm("contenttypes.contenttype.reorder", self.user, self.ctype)
+        self.assertFalse(self.user.has_perm("contenttypes.contenttype.reorder", self.ctype))
+
 
 class MultipleIdentitiesRemoveTest(ObjectPermissionTestCase):
     """
