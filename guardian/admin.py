@@ -6,6 +6,7 @@ from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
+from django.db.models import Model
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import path, reverse
@@ -116,6 +117,14 @@ class AdminGroupObjectPermissionsForm(GroupObjectPermissionsForm):
 
 class GuardedModelAdminMixin:
     """Mixin helper for custom subclassing `admin.ModelAdmin`."""
+
+    # These attributes are provided by admin.ModelAdmin at runtime.
+    admin_site: admin.AdminSite
+    media: forms.Media
+    model: type[Model]
+
+    def has_change_permission(self, request: HttpRequest, obj: object = None) -> bool:
+        raise NotImplementedError
 
     change_form_template: str = "admin/guardian/model/change_form.html"
     obj_perms_manage_template: str = "admin/guardian/model/obj_perms_manage.html"
