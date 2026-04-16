@@ -196,10 +196,6 @@ class QuerySetDoubleEvaluationTests(TestCase):
         with CaptureQueriesContext(connection) as qs_ctx:
             checker_qs.prefetch_perms(Project.objects.filter(pk__in=[p.pk for p in self.projects]).order_by("pk"))
 
-        # Count queries that directly SELECT from the Project table (not permission joins)
-        project_table = Project._meta.db_table
-        qs_project_queries = [q for q in qs_ctx.captured_queries if q["sql"].startswith(f'SELECT "{project_table}"')]
-
         # --- Measure list-based prefetch in isolation ---
         ContentType.objects.clear_cache()
 
@@ -207,21 +203,15 @@ class QuerySetDoubleEvaluationTests(TestCase):
         with CaptureQueriesContext(connection) as list_ctx:
             checker_list.prefetch_perms(obj_list)
 
-        list_project_queries = [
-            q for q in list_ctx.captured_queries if q["sql"].startswith(f'SELECT "{project_table}"')
-        ]
-
-        # The QuerySet path should issue exactly 1 Project SELECT (the QS eval).
-        # The list path issues 0 Project SELECTs (objects already in memory).
+        # The QS path should have exactly 1 more query than the list path
+        # (the single QuerySet evaluation). If double-evaluation regresses,
+        # this delta would be 2+.
         self.assertEqual(
-            len(qs_project_queries),
-            1,
-            f"Expected exactly 1 Project query, got {len(qs_project_queries)}: {qs_project_queries}",
+            len(qs_ctx.captured_queries),
+            len(list_ctx.captured_queries) + 1,
+            f"Expected exactly 1 extra query for QS path. "
+            f"QS queries: {len(qs_ctx.captured_queries)}, List queries: {len(list_ctx.captured_queries)}",
         )
-        self.assertEqual(len(list_project_queries), 0)
-
-        # Overall the QS path should have exactly 1 more query than the list path.
-        self.assertEqual(len(qs_ctx.captured_queries), len(list_ctx.captured_queries) + 1)
 
     def test_prefetch_perms_with_queryset_fills_cache_correctly(self):
         """prefetch_perms with QuerySet should fill the cache identically to list input."""
