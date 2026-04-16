@@ -15,6 +15,12 @@ Online documentation is available at [https://django-guardian.readthedocs.io/](h
 
 **See real-world usage**: Check out [Who Uses Guardian](https://django-guardian.readthedocs.io/en/stable/who-uses-guardian/) to see how thousands of projects worldwide use django-guardian in production.
 
+## Contributing
+
+Please read [`CONTRIBUTING.md`](./CONTRIBUTING.md) before opening a pull request. It documents the repository's issue-first workflow, branch targeting rules, local `uv` setup, required test and lint commands, documentation expectations, and AI/LLM contribution policy.
+
+If you need to report a security issue, do **not** open a public issue. Follow [`SECURITY.md`](./SECURITY.md) and use the repository's [private vulnerability reporting flow](https://github.com/django-guardian/django-guardian/security).
+
 
 ## Installation
 
