@@ -101,18 +101,16 @@ class GetPksModelAndCtypeTests(TestCase):
         self.assertEqual(model, Project)
 
     def test_queryset_is_cached_after_call(self):
-        """After _get_pks_model_and_ctype, the QuerySet's _result_cache should be populated."""
+        """After _get_pks_model_and_ctype, iterating the QuerySet again should not hit the DB."""
         projects = [Project.objects.create(name=f"proj{i}") for i in range(3)]
         qs = Project.objects.filter(pk__in=[p.pk for p in projects])
 
-        # Before the call, cache should be None
-        self.assertIsNone(qs._result_cache)
-
         _get_pks_model_and_ctype(qs)
 
-        # After the call, cache should be populated
-        self.assertIsNotNone(qs._result_cache)
-        self.assertEqual(len(qs._result_cache), 3)
+        with CaptureQueriesContext(connection) as ctx:
+            results = list(qs)
+        self.assertEqual(len(results), 3)
+        self.assertEqual(len(ctx), 0)
 
     def test_pks_are_strings(self):
         """All returned PKs should be strings (via force_str)."""
