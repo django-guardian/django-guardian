@@ -19,7 +19,7 @@ This page focuses specifically on running the test and verification tooling used
     Instead, follow the process in the project's [security policy](https://github.com/django-guardian/django-guardian/blob/main/SECURITY.md)
     and use the repository's [private vulnerability reporting flow](https://github.com/django-guardian/django-guardian/security).
 
-If you find a non-security related bug in this application,
+If you find a non-security related bug in this project,
 please take a minute and file a ticket in our
 [issue tracker](https://github.com/django-guardian/django-guardian/issues).
 

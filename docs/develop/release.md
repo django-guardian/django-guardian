@@ -21,9 +21,9 @@ Before starting a release, make sure you have:
 - A local clone of the repository, up to date with the remote
 - The development environment synced locally:
 
-```shell
-uv sync --group dev
-```
+    ```shell
+    uv sync --group dev
+    ```
 
 ## Step 1: Run Tests Locally
 

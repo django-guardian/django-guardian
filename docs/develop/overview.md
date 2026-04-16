@@ -1,3 +1,4 @@
+---
 title: Contributing
 description: Where to find the canonical contributor guide and the supporting development docs.
 ---
