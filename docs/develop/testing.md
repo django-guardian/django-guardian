@@ -5,47 +5,70 @@ description: How to run the test harness, generate coverage reports, and other c
 
 # Testing
 
-## Introduction
+The full contributor workflow, branch policy, PR expectations, and AI/LLM policy are documented in the root [`CONTRIBUTING.md`](https://github.com/django-guardian/django-guardian/blob/main/CONTRIBUTING.md).
 
-According to [OWASP](http://www.owasp.org/),
-[broken authentication](http://www.owasp.org/index.php/Top_10_2010-A3) is one of
-the most common security issues exposed in web applications.
+This page focuses specifically on running the test and verification tooling used by this repository.
 
-`django-guardian` extends the capabilities of Django's authorization facilities,
-as such it has to be tested thoroughly.
-It is extremely important that Guardian provides the simplest `api` as possible,
-with a have a high test scenario coverage.
+`django-guardian` extends Django's authorization framework, so regressions can have security implications. Changes in permission logic should be treated as security-sensitive and verified thoroughly.
 
 !!! danger "Security Risks"
     If you spot a *security risk* or a bug that might affect security of systems that use `django-guardian`,
 
     **DO NOT create a public issue**.
 
-    Instead, contact the Guardian maintainer team directly.
-    You can find contact information in the [SECURITY.md file](https://github.com/django-guardian/django-guardian/blob/devel/.github/SECURITY.md)
+    Instead, follow the process in the project's [security policy](https://github.com/django-guardian/django-guardian/blob/main/SECURITY.md)
+    and use the repository's [private vulnerability reporting flow](https://github.com/django-guardian/django-guardian/security).
 
 If you find a non-security related bug in this application,
 please take a minute and file a ticket in our
-[issue-tracker](http://github.com/django-guardian/django-guardian).
+[issue tracker](https://github.com/django-guardian/django-guardian/issues).
+
+## Local setup
+
+Install [`uv`](https://docs.astral.sh/uv/getting-started/installation/) and sync the development environment:
+
+```shell
+uv sync --group dev
+```
+
+If you need the optional database dependencies used by the broader CI matrix, sync the `ci` dependency group instead:
+
+```shell
+uv sync --group ci
+```
 
 ## Running tests
 
-Tests are run by Django's building test runner. To call it simply run:
+The fastest local test command is the main `pytest` suite with coverage:
 
 ```shell
-$ python setup.py test
+uv run pytest --cov=guardian --cov-report=xml --cov-report=term
 ```
 
-or inside a project with `guardian` set at `INSTALLED_APPS`:
+Makefile alias:
 
 ```shell
-$ python manage.py test guardian
+make test
 ```
 
-or using the bundled `testapp` project:
+If you want full matrix parity with the environments defined in `tox.ini`, run:
 
 ```shell
-$ python manage.py test
+uv run tox run
+```
+
+To run a specific environment only:
+
+```shell
+uv run tox run -e core-py313-django51
+uv run tox run -e type-py313
+uv run tox run -e docs-py313-django51
+```
+
+Makefile alias for the full matrix:
+
+```shell
+make test-all
 ```
 
 ## Coverage support
@@ -59,69 +82,59 @@ specification of almost all applications requires some unique scenarios
 to be tested). On the other hand it definitely helps to track missing
 parts.
 
-To run tests with [coverage](http://nedbatchelder.com/code/coverage/)
-support and show the report after we have provided simple bash script
-which can by called by running:
+The repository's standard coverage command is already included in the default pytest invocation:
 
 ```shell
-$ ./run_test_and_report.sh
+uv run pytest --cov=guardian --cov-report=xml --cov-report=term
 ```
 
-Result should be somehow similar to following:
+This produces:
 
-```shell
-(...)
-................................................
-----------------------------------------------------------------------
-Ran 48 tests in 2.516s
-
-OK
-Destroying test database 'default'...
-Name                                  Stmts   Exec  Cover   Missing
--------------------------------------------------------------------
-guardian/__init__                         4      4   100%
-guardian/backends                        20     20   100%
-guardian/conf/__init__                    1      1   100%
-guardian/core                            29     29   100%
-guardian/exceptions                       8      8   100%
-guardian/management/__init__             10     10   100%
-guardian/managers                        40     40   100%
-guardian/models                          36     36   100%
-guardian/shortcuts                       30     30   100%
-guardian/templatetags/__init__            1      1   100%
-guardian/templatetags/guardian_tags      39     39   100%
-guardian/utils                           13     13   100%
--------------------------------------------------------------------
-TOTAL                                   231    231   100%
-```
+- terminal coverage output for quick review
+- `coverage.xml` for CI/reporting integrations
 
 ## Tox
 
-
-!!! abstract "Added in version 1.0.4"
-
-We also started using [tox](http://pypi.python.org/pypi/tox) to ensure
-`django-guardian`'s tests would pass on all supported Python and Django
-versions (see `supported-versions`).
+`tox` is the canonical way to exercise the supported Python/Django combinations,
+type-checking environment, docs build environment, and example project checks.
 
 ```shell
-pip install tox
+uv run tox run
 ```
 
-and run it within `django-guardian` checkout directory:
+Useful examples:
 
 ```shell
-tox
+uv run tox run -e core-py314-django52
+uv run tox run -e core-py312-djangomain
+uv run tox run -e example-py313-django51
+uv run tox run -e examplegroup-py313-django51
 ```
 
-First time contributors should take some time (it needs to create separate virtual
-environments and pull dependencies) but would ensure everything is fine.
+If you change models or permission schema state, also run the migration sanity check used by the Django tox environments:
+
+```shell
+uv run python manage.py makemigrations --check --dry-run
+```
+
+## Linting, typing, and docs verification
+
+Repository changes should usually be verified with more than just tests.
+
+```shell
+uv run ruff check .
+uv run mypy ./guardian
+uv run mkdocs build
+```
+
+Makefile aliases:
+
+```shell
+make lint
+make docs
+```
 
 ## GitHub Actions
 
-!!! abstract "Added in version 2.4.0"
-
-[![image](https://github.com/django-guardian/django-guardian/workflows/Tests/badge.svg?branch=devel)](https://github.com/django-guardian/django-guardian/actions/workflows/tests.yml)
-
 We have support for [GitHub Actions](https://github.com/django-guardian/django-guardian/actions)
-to make it easy to follow if test fails with new commits.
+to run the same general checks in CI. Local verification with `pytest`, `tox`, `ruff`, `mypy`, and `mkdocs` helps catch problems before you open or update a pull request.
