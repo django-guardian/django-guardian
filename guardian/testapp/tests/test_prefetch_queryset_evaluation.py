@@ -16,6 +16,7 @@ from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.test import TestCase, override_settings
+from django.test.utils import CaptureQueriesContext
 from django.utils.encoding import force_str
 
 from guardian.core import ObjectPermissionChecker, _get_pks_model_and_ctype
@@ -183,32 +184,46 @@ class QuerySetDoubleEvaluationTests(TestCase):
     @override_settings(DEBUG=True)
     def test_prefetch_perms_queryset_query_count(self):
         """
-        prefetch_perms with a QuerySet should not produce extra queries
-        compared to a list input for the object iteration part.
+        prefetch_perms with a QuerySet should cause at most 1 extra query
+        compared to the list path (the QuerySet evaluation itself).
+        The pre-fix code caused 2 extra queries (values_list + iteration);
+        after the fix only 1 (a single iteration that populates the cache).
         """
         obj_list = list(Project.objects.filter(pk__in=[p.pk for p in self.projects]).order_by("pk"))
 
         # --- Measure queryset-based prefetch in isolation ---
         ContentType.objects.clear_cache()
-        connection.queries_log.clear()
 
         checker_qs = ObjectPermissionChecker(self.user)
-        q_before_qs = len(connection.queries)
-        checker_qs.prefetch_perms(Project.objects.filter(pk__in=[p.pk for p in self.projects]).order_by("pk"))
-        qs_query_count = len(connection.queries) - q_before_qs
+        with CaptureQueriesContext(connection) as qs_ctx:
+            checker_qs.prefetch_perms(Project.objects.filter(pk__in=[p.pk for p in self.projects]).order_by("pk"))
+
+        # Count queries that directly SELECT from the Project table (not permission joins)
+        project_table = Project._meta.db_table
+        qs_project_queries = [q for q in qs_ctx.captured_queries if q["sql"].startswith(f'SELECT "{project_table}"')]
 
         # --- Measure list-based prefetch in isolation ---
         ContentType.objects.clear_cache()
-        connection.queries_log.clear()
 
         checker_list = ObjectPermissionChecker(self.user)
-        q_before_list = len(connection.queries)
-        checker_list.prefetch_perms(obj_list)
-        list_query_count = len(connection.queries) - q_before_list
+        with CaptureQueriesContext(connection) as list_ctx:
+            checker_list.prefetch_perms(obj_list)
 
-        # QuerySet path should use at most 2 extra queries compared to list path
-        # (1 for the initial QS evaluation + possible content type cache miss).
-        self.assertLessEqual(qs_query_count, list_query_count + 2)
+        list_project_queries = [
+            q for q in list_ctx.captured_queries if q["sql"].startswith(f'SELECT "{project_table}"')
+        ]
+
+        # The QuerySet path should issue exactly 1 Project SELECT (the QS eval).
+        # The list path issues 0 Project SELECTs (objects already in memory).
+        self.assertEqual(
+            len(qs_project_queries),
+            1,
+            f"Expected exactly 1 Project query, got {len(qs_project_queries)}: {qs_project_queries}",
+        )
+        self.assertEqual(len(list_project_queries), 0)
+
+        # Overall the QS path should have exactly 1 more query than the list path.
+        self.assertEqual(len(qs_ctx.captured_queries), len(list_ctx.captured_queries) + 1)
 
     def test_prefetch_perms_with_queryset_fills_cache_correctly(self):
         """prefetch_perms with QuerySet should fill the cache identically to list input."""
