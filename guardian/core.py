@@ -23,8 +23,8 @@ def _get_pks_model_and_ctype(objects):
 
     if isinstance(objects, QuerySet):
         model = objects.model
-        pks = [force_str(pk) for pk in objects.values_list("pk", flat=True)]
         ctype = get_content_type(model)
+        pks = [force_str(obj.pk) for obj in objects]
     else:
         pks = []
         for idx, obj in enumerate(objects):
