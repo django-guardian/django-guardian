@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import Type
+from typing import Type, cast
 
 from django import forms
 from django.conf import settings
@@ -124,7 +124,8 @@ class GuardedModelAdminMixin:
     model: type[Model]
 
     def has_change_permission(self, request: HttpRequest, obj: object = None) -> bool:
-        raise NotImplementedError
+        model_admin = cast(admin.ModelAdmin, super())
+        return model_admin.has_change_permission(request, obj)
 
     change_form_template: str = "admin/guardian/model/change_form.html"
     obj_perms_manage_template: str = "admin/guardian/model/obj_perms_manage.html"
@@ -420,7 +421,7 @@ class GuardedModelAdminMixin:
             return "admin/guardian/contrib/grappelli/obj_perms_manage_group.html"
         return self.obj_perms_manage_group_template
 
-    def get_obj_perms_manage_group_form(self, request) -> Type[forms.Form]:
+    def get_obj_perms_manage_group_form(self, request: HttpRequest) -> Type[forms.Form]:
         """Get the form class for group object permissions management.
 
         Parameters:
