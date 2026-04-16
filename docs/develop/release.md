@@ -19,6 +19,11 @@ Before starting a release, make sure you have:
 - Write access to the [django-guardian repository](https://github.com/django-guardian/django-guardian)
 - Permission to trigger GitHub Actions workflows
 - A local clone of the repository, up to date with the remote
+- The development environment synced locally:
+
+    ```shell
+    uv sync --group dev
+    ```
 
 ## Step 1: Run Tests Locally
 
@@ -26,13 +31,13 @@ Before any release, all tests **must** pass. For extra safety, run the test suit
 pushing any version bump:
 
 ```shell
-tox run
+uv run tox run
 ```
 
 Or if you want to run a quick check with a single Python/Django combination:
 
 ```shell
-pytest
+uv run pytest --cov=guardian --cov-report=xml --cov-report=term
 ```
 
 !!! tip

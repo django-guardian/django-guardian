@@ -125,7 +125,7 @@ dependencies = [
 Homepage = "https://github.com/django-guardian/django-guardian"
 Documentation = "https://django-guardian.readthedocs.io/"
 Repository = "https://github.com/django-guardian/django-guardian"
-Issues = "https://github.com/me/spam/issues"
+Issues = "https://github.com/django-guardian/django-guardian/issues"
 Changelog = "https://github.com/django-guardian/django-guardian/releases"
 
 [dependency-groups]
