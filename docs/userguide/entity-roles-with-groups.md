@@ -63,14 +63,17 @@ class SchoolsConfig(AppConfig):
             Group.objects.get_or_create(name=f"{instance.slug}-teachers")
             Group.objects.get_or_create(name=f"{instance.slug}-students")
 
-        post_save.connect(ensure_school_role_groups, sender=School)
+        # weak=False prevents the nested function from being garbage-collected.
+        post_save.connect(ensure_school_role_groups, sender=School, weak=False)
 ```
 
-!!! warning
+!!! note
 
-    Do **not** pass a string like `sender="schools.School"` to `@receiver`.
-    Django's `post_save` signal dispatches using the actual model class, so
-    a string sender will never match and the receiver will silently never fire.
+    Django model signals such as `post_save` **do** support string senders in
+    the `"app_label.ModelName"` form, so `sender="schools.School"` can work.
+    That said, using the actual model class (or connecting the signal in
+    `AppConfig.ready()`) is often clearer and easier to follow when reading the
+    code, especially in larger projects.
 
 ## Step 2: Add users to the correct role groups
 
