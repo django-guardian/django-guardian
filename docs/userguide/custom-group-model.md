@@ -5,7 +5,7 @@ description: Using a custom group model with django-guardian.
 
 # Custom Group Model
 
-!!! note "Added in 2.6"
+!!! note "Added in 3.3.1"
 
 Django does not provide the same ability to create a custom `auth.Group`
 model as the `AbstractUser` model and probably never will:
