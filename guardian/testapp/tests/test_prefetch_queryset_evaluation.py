@@ -11,12 +11,11 @@ _result_cache. The second iteration in prefetch_perms then uses the cache
 instead of hitting the database again.
 """
 
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.utils.encoding import force_str
 
 from guardian.core import ObjectPermissionChecker, _get_pks_model_and_ctype
@@ -151,76 +150,65 @@ class QuerySetDoubleEvaluationTests(TestCase):
         assign_perm("change_project", self.user, self.projects[1])
         assign_perm("delete_project", self.user, self.projects[2])
 
+    @override_settings(DEBUG=True)
     def test_queryset_single_evaluation_in_get_pks(self):
         """_get_pks_model_and_ctype should only cause one DB query for a QuerySet."""
-        settings.DEBUG = True
-        try:
-            qs = Project.objects.filter(pk__in=[p.pk for p in self.projects])
+        # Warm the ContentType cache to avoid counting that lookup
+        ContentType.objects.get_for_model(Project)
 
-            query_count_before = len(connection.queries)
-            _get_pks_model_and_ctype(qs)
-            query_count_after = len(connection.queries)
+        qs = Project.objects.filter(pk__in=[p.pk for p in self.projects])
 
-            # Only 1 query should be executed (SELECT for the objects)
-            self.assertEqual(query_count_after - query_count_before, 1)
-        finally:
-            settings.DEBUG = False
+        query_count_before = len(connection.queries)
+        _get_pks_model_and_ctype(qs)
+        query_count_after = len(connection.queries)
 
+        # Only 1 query should be executed (SELECT for the objects)
+        self.assertEqual(query_count_after - query_count_before, 1)
+
+    @override_settings(DEBUG=True)
     def test_queryset_no_extra_query_on_second_iteration(self):
         """After _get_pks_model_and_ctype evaluates the QS, iterating again should not hit DB."""
-        settings.DEBUG = True
-        try:
-            qs = Project.objects.filter(pk__in=[p.pk for p in self.projects])
+        qs = Project.objects.filter(pk__in=[p.pk for p in self.projects])
 
-            _get_pks_model_and_ctype(qs)
+        _get_pks_model_and_ctype(qs)
 
-            # Second iteration should use cache
-            query_count_before = len(connection.queries)
-            for obj in qs:
-                pass  # iterate without hitting DB
-            query_count_after = len(connection.queries)
+        # Second iteration should use cache
+        query_count_before = len(connection.queries)
+        for obj in qs:
+            pass  # iterate without hitting DB
+        query_count_after = len(connection.queries)
 
-            self.assertEqual(query_count_after - query_count_before, 0)
-        finally:
-            settings.DEBUG = False
+        self.assertEqual(query_count_after - query_count_before, 0)
 
+    @override_settings(DEBUG=True)
     def test_prefetch_perms_queryset_query_count(self):
         """
         prefetch_perms with a QuerySet should not produce extra queries
         compared to a list input for the object iteration part.
         """
-        settings.DEBUG = True
-        try:
-            ContentType.objects.clear_cache()
+        obj_list = list(Project.objects.filter(pk__in=[p.pk for p in self.projects]).order_by("pk"))
 
-            checker_qs = ObjectPermissionChecker(self.user)
-            checker_list = ObjectPermissionChecker(self.user)
+        # --- Measure queryset-based prefetch in isolation ---
+        ContentType.objects.clear_cache()
+        connection.queries_log.clear()
 
-            qs = Project.objects.filter(pk__in=[p.pk for p in self.projects]).order_by("pk")
-            obj_list = list(qs)  # evaluate once to get list
+        checker_qs = ObjectPermissionChecker(self.user)
+        q_before_qs = len(connection.queries)
+        checker_qs.prefetch_perms(Project.objects.filter(pk__in=[p.pk for p in self.projects]).order_by("pk"))
+        qs_query_count = len(connection.queries) - q_before_qs
 
-            # Reset query log
-            connection.queries_log.clear()
+        # --- Measure list-based prefetch in isolation ---
+        ContentType.objects.clear_cache()
+        connection.queries_log.clear()
 
-            # Count queries for queryset-based prefetch
-            q_before_qs = len(connection.queries)
-            checker_qs.prefetch_perms(Project.objects.filter(pk__in=[p.pk for p in self.projects]).order_by("pk"))
-            q_after_qs = len(connection.queries)
-            qs_query_count = q_after_qs - q_before_qs
+        checker_list = ObjectPermissionChecker(self.user)
+        q_before_list = len(connection.queries)
+        checker_list.prefetch_perms(obj_list)
+        list_query_count = len(connection.queries) - q_before_list
 
-            # Count queries for list-based prefetch
-            q_before_list = len(connection.queries)
-            checker_list.prefetch_perms(obj_list)
-            q_after_list = len(connection.queries)
-            list_query_count = q_after_list - q_before_list
-
-            # QuerySet path should use at most 2 extra queries compared to list path
-            # (1 for the initial QS evaluation + possible content type cache miss).
-            # Previously, the old code used values_list() which caused an additional
-            # unnecessary query on top of these.
-            self.assertLessEqual(qs_query_count, list_query_count + 2)
-        finally:
-            settings.DEBUG = False
+        # QuerySet path should use at most 2 extra queries compared to list path
+        # (1 for the initial QS evaluation + possible content type cache miss).
+        self.assertLessEqual(qs_query_count, list_query_count + 2)
 
     def test_prefetch_perms_with_queryset_fills_cache_correctly(self):
         """prefetch_perms with QuerySet should fill the cache identically to list input."""
@@ -260,21 +248,18 @@ class QuerySetDoubleEvaluationTests(TestCase):
         self.assertFalse(checker.has_perm("change_project", self.projects[3]))
         self.assertFalse(checker.has_perm("change_project", self.projects[4]))
 
+    @override_settings(DEBUG=True)
     def test_prefetch_perms_queryset_no_queries_after_prefetch(self):
         """After prefetch_perms, has_perm calls should not hit the DB."""
-        settings.DEBUG = True
-        try:
-            checker = ObjectPermissionChecker(self.user)
-            qs = Project.objects.filter(pk__in=[p.pk for p in self.projects])
-            checker.prefetch_perms(qs)
+        checker = ObjectPermissionChecker(self.user)
+        qs = Project.objects.filter(pk__in=[p.pk for p in self.projects])
+        checker.prefetch_perms(qs)
 
-            query_count = len(connection.queries)
-            for project in self.projects:
-                checker.has_perm("change_project", project)
-                checker.has_perm("delete_project", project)
-            self.assertEqual(len(connection.queries), query_count)
-        finally:
-            settings.DEBUG = False
+        query_count = len(connection.queries)
+        for project in self.projects:
+            checker.has_perm("change_project", project)
+            checker.has_perm("delete_project", project)
+        self.assertEqual(len(connection.queries), query_count)
 
 
 class PrefetchPermsWithQuerySetGroupTests(TestCase):
@@ -300,20 +285,17 @@ class PrefetchPermsWithQuerySetGroupTests(TestCase):
         self.assertFalse(checker.has_perm("change_project", self.projects[2]))
         self.assertFalse(checker.has_perm("change_project", self.projects[3]))
 
+    @override_settings(DEBUG=True)
     def test_group_prefetch_queryset_no_extra_queries(self):
         """Group prefetch with QuerySet should not cause extra queries on has_perm."""
-        settings.DEBUG = True
-        try:
-            checker = ObjectPermissionChecker(self.group)
-            qs = Project.objects.filter(pk__in=[p.pk for p in self.projects])
-            checker.prefetch_perms(qs)
+        checker = ObjectPermissionChecker(self.group)
+        qs = Project.objects.filter(pk__in=[p.pk for p in self.projects])
+        checker.prefetch_perms(qs)
 
-            query_count = len(connection.queries)
-            for project in self.projects:
-                checker.has_perm("change_project", project)
-            self.assertEqual(len(connection.queries), query_count)
-        finally:
-            settings.DEBUG = False
+        query_count = len(connection.queries)
+        for project in self.projects:
+            checker.has_perm("change_project", project)
+        self.assertEqual(len(connection.queries), query_count)
 
     def test_group_prefetch_cache_has_all_objects(self):
         """Cache should contain entries for all objects in the QuerySet."""
@@ -351,20 +333,17 @@ class PrefetchPermsSuperuserQuerySetTests(TestCase):
 
         self.assertEqual(len(checker._obj_perms_cache), len(self.projects))
 
+    @override_settings(DEBUG=True)
     def test_superuser_prefetch_no_queries_after(self):
         """After prefetch, superuser has_perm should not hit DB."""
-        settings.DEBUG = True
-        try:
-            checker = ObjectPermissionChecker(self.superuser)
-            qs = Project.objects.filter(pk__in=[p.pk for p in self.projects])
-            checker.prefetch_perms(qs)
+        checker = ObjectPermissionChecker(self.superuser)
+        qs = Project.objects.filter(pk__in=[p.pk for p in self.projects])
+        checker.prefetch_perms(qs)
 
-            query_count = len(connection.queries)
-            for project in self.projects:
-                checker.has_perm("change_project", project)
-            self.assertEqual(len(connection.queries), query_count)
-        finally:
-            settings.DEBUG = False
+        query_count = len(connection.queries)
+        for project in self.projects:
+            checker.has_perm("change_project", project)
+        self.assertEqual(len(connection.queries), query_count)
 
 
 class PrefetchPermsInactiveUserTests(TestCase):
@@ -414,21 +393,18 @@ class PrefetchPermsGenericRelationQuerySetTests(TestCase):
 
         self.assertEqual(len(checker._obj_perms_cache), len(self.groups))
 
+    @override_settings(DEBUG=True)
     def test_generic_relation_queryset_no_queries_after_prefetch(self):
         """After prefetch, has_perm should not hit DB for generic relations."""
-        settings.DEBUG = True
-        try:
-            checker = ObjectPermissionChecker(self.user)
-            qs = Group.objects.filter(pk__in=[g.pk for g in self.groups])
-            checker.prefetch_perms(qs)
+        checker = ObjectPermissionChecker(self.user)
+        qs = Group.objects.filter(pk__in=[g.pk for g in self.groups])
+        checker.prefetch_perms(qs)
 
-            query_count = len(connection.queries)
-            for group in self.groups:
-                checker.has_perm("change_group", group)
-                checker.has_perm("delete_group", group)
-            self.assertEqual(len(connection.queries), query_count)
-        finally:
-            settings.DEBUG = False
+        query_count = len(connection.queries)
+        for group in self.groups:
+            checker.has_perm("change_group", group)
+            checker.has_perm("delete_group", group)
+        self.assertEqual(len(connection.queries), query_count)
 
 
 class PrefetchPermsFilteredQuerySetTests(TestCase):
@@ -467,6 +443,7 @@ class PrefetchPermsFilteredQuerySetTests(TestCase):
         self.assertTrue(checker.has_perm("change_project", self.projects[4]))
         self.assertFalse(checker.has_perm("change_project", self.projects[5]))
 
+    @override_settings(DEBUG=True)
     def test_prefetch_with_large_queryset(self):
         """Prefetch should handle larger QuerySets efficiently."""
         extra_projects = [Project.objects.create(name=f"large{i}") for i in range(20)]
@@ -481,11 +458,7 @@ class PrefetchPermsFilteredQuerySetTests(TestCase):
 
         self.assertEqual(len(checker._obj_perms_cache), len(all_projects))
 
-        settings.DEBUG = True
-        try:
-            query_count = len(connection.queries)
-            for p in all_projects:
-                checker.has_perm("change_project", p)
-            self.assertEqual(len(connection.queries), query_count)
-        finally:
-            settings.DEBUG = False
+        query_count = len(connection.queries)
+        for p in all_projects:
+            checker.has_perm("change_project", p)
+        self.assertEqual(len(connection.queries), query_count)
