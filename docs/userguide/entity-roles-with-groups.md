@@ -21,12 +21,17 @@ Instead, define permissions for the target model (or related models) and grant t
 
 Create one group per role for each entity instance.
 
+Option A — import the model directly (simplest):
+
 ```python
 from django.contrib.auth.models import Group
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-@receiver(post_save, sender="schools.School")
+from schools.models import School  # import the actual class
+
+
+@receiver(post_save, sender=School)
 def ensure_school_role_groups(sender, instance, created, **kwargs):
     if not created:
         return
@@ -35,6 +40,37 @@ def ensure_school_role_groups(sender, instance, created, **kwargs):
     Group.objects.get_or_create(name=f"{instance.slug}-teachers")
     Group.objects.get_or_create(name=f"{instance.slug}-students")
 ```
+
+Option B — connect in `AppConfig.ready()` to avoid circular imports:
+
+```python
+# schools/apps.py
+from django.apps import AppConfig
+
+
+class SchoolsConfig(AppConfig):
+    name = "schools"
+
+    def ready(self):
+        from django.contrib.auth.models import Group
+        from django.db.models.signals import post_save
+
+        School = self.get_model("School")
+
+        def ensure_school_role_groups(sender, instance, created, **kwargs):
+            if not created:
+                return
+            Group.objects.get_or_create(name=f"{instance.slug}-teachers")
+            Group.objects.get_or_create(name=f"{instance.slug}-students")
+
+        post_save.connect(ensure_school_role_groups, sender=School)
+```
+
+!!! warning
+
+    Do **not** pass a string like `sender="schools.School"` to `@receiver`.
+    Django's `post_save` signal dispatches using the actual model class, so
+    a string sender will never match and the receiver will silently never fire.
 
 ## Step 2: Add users to the correct role groups
 
