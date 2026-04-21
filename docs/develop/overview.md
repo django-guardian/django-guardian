@@ -10,7 +10,7 @@ The canonical contributor guide for this repository lives in the root [`CONTRIBU
 That file is the source of truth for:
 
 - issue-first contribution workflow
-- `next` vs `main` pull request targeting
+- `main` pull request targeting
 - local setup with `uv`
 - required test, lint, type-check, and docs commands
 - review expectations and AI/LLM contribution policy

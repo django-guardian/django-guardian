@@ -24,25 +24,28 @@ Follow the process in `SECURITY.md` and use GitHub's private vulnerability repor
 
 ## Branching and pull requests
 
-`django-guardian` uses two important long-lived branches:
+`django-guardian` uses a single long-lived branch:
 
-- `main`: latest stable release branch
-- `next`: integration branch for upcoming release candidates and unreleased work
+- `main`: active development and release branch
 
 ### Which branch should my PR target?
 
-Unless a maintainer explicitly asks otherwise, open pull requests against `next`.
+Unless a maintainer explicitly asks otherwise, open pull requests against `main`.
 
-`main` should stay production-ready. New features and normal fixes should land in `next` first and then roll into the next release. If an urgent hotfix is needed for `main`, coordinate with the maintainers before opening the PR.
+All regular fixes and features are developed and merged on `main`.
+
+### How are releases created?
+
+When a new version is ready, maintainers cut the release from the GitHub web interface and create the corresponding version tag there.
 
 ### Recommended workflow
 
 1. Fork the repository.
 2. Clone your fork locally.
-3. Create a focused branch from `next`.
+3. Create a focused branch from `main`.
 4. Make the change with tests and documentation updates where relevant.
 5. Run the local checks listed below.
-6. Push your branch and open a PR against `next`.
+6. Push your branch and open a PR against `main`.
 
 ## Development environment
 
@@ -193,7 +196,6 @@ If you would like to be credited as a contributor, add your name to the end of t
 
 Before requesting review, make sure your PR:
 
-- targets `next` unless a maintainer asked for `main`
 - links the relevant issue or clearly explains the context
 - includes tests for code changes
 - passes formatting, linting, typing, and relevant test commands locally

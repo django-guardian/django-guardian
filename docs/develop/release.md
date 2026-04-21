@@ -92,7 +92,7 @@ Type the **branch name** or **commit SHA** of the code you want to release:
 | Scenario               | Value to enter                                      |
 |------------------------|-----------------------------------------------------|
 | Standard release       | `main`                                              |
-| Release candidate (RC) | The feature/RC branch name (e.g. `next`, `rc/3.4`)  |
+| Release candidate (RC) | `main` (or a specific commit SHA from `main`)        |
 | Hotfix release         | The hotfix branch name or a specific commit SHA      |
 
 ### 3.3 Tag
@@ -129,12 +129,12 @@ A standard release ships stable, production-ready code from the `main` branch.
 
 A release candidate allows testing a new version before making it generally available.
 
-1. Create or use an existing branch (e.g. `next` or `rc/3.4`).
+1. Keep changes on `main` and prepare the RC version there.
 2. Update `pyproject.toml` → `version` with an `rc` suffix (e.g. `3.4.0rc1`).
-3. Commit and push to the RC branch.
+3. Commit and push to `main`.
 4. Trigger the workflow:
     - **Workflow branch (dropdown):** the branch containing the workflow file you want to use
-    - **Branch to release:** the RC branch name (e.g. `next`)
+    - **Branch to release:** `main` (or a specific commit SHA from `main`)
     - **Tag:** the RC version (e.g. `3.4.0rc1`)
 
 !!! info
@@ -149,7 +149,7 @@ For urgent fixes that need to go out outside the normal release cycle:
 2. Apply the fix and update `pyproject.toml` → `version` (increment the patch version).
 3. Run tests locally and push.
 4. Trigger the workflow with the hotfix branch name or commit SHA.
-5. After a successful release, merge the hotfix back into `main` and `next`.
+5. After a successful release, merge the hotfix back into `main`.
 
 ---
 
