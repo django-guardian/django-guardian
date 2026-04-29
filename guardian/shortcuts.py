@@ -766,27 +766,37 @@ def get_objects_for_user(
     values = user_obj_perms_queryset
 
     handle_pk_field = _handle_pk_field(queryset)
-    if handle_pk_field is not None:
+    use_str_pk_for_user = handle_pk_field is None or (
+        user_model.objects.is_generic() and _casts_to_bigint(handle_pk_field)
+    )
+    if not use_str_pk_for_user:
         values = values.annotate(obj_pk=handle_pk_field(expression=field_pk))
         field_pk = "obj_pk"
 
     values = values.values_list(field_pk, flat=True)
-    if handle_pk_field is not None:
-        q = Q(pk__in=values)
-    else:
+    str_pk_annotated = False
+    if use_str_pk_for_user:
         queryset = queryset.annotate(str_pk=Cast("pk", CharField()))
+        str_pk_annotated = True
         q = Q(str_pk__in=values)
+    else:
+        q = Q(pk__in=values)
     if use_groups:
         field_pk = group_fields[0]
         values = groups_obj_perms_queryset
-        if handle_pk_field is not None:
+        use_str_pk_for_group = handle_pk_field is None or (
+            group_model.objects.is_generic() and _casts_to_bigint(handle_pk_field)
+        )
+        if not use_str_pk_for_group:
             values = values.annotate(obj_pk=handle_pk_field(expression=field_pk))
             field_pk = "obj_pk"
         values = values.values_list(field_pk, flat=True)
-        if handle_pk_field is not None:
-            q |= Q(pk__in=values)
-        else:
+        if use_str_pk_for_group:
+            if not str_pk_annotated:
+                queryset = queryset.annotate(str_pk=Cast("pk", CharField()))
             q |= Q(str_pk__in=values)
+        else:
+            q |= Q(pk__in=values)
     return queryset.filter(q)
 
 
@@ -910,14 +920,15 @@ def get_objects_for_group(
     values = groups_obj_perms_queryset
 
     handle_pk_field = _handle_pk_field(queryset)
-    if handle_pk_field is not None:
+    use_str_pk = handle_pk_field is None or (group_model.objects.is_generic() and _casts_to_bigint(handle_pk_field))
+    if not use_str_pk:
         values = values.annotate(obj_pk=handle_pk_field(expression=field_pk))
         field_pk = "obj_pk"
     else:
         queryset = queryset.annotate(str_pk=Cast("pk", CharField()))
 
     values = values.values_list(field_pk, flat=True)
-    if handle_pk_field is not None:
+    if not use_str_pk:
         return queryset.filter(pk__in=values)
     else:
         return queryset.filter(str_pk__in=values)
@@ -955,6 +966,14 @@ def _handle_pk_field(queryset):
     return None
 
 
+def _casts_to_bigint(handle_pk_field):
+    return (
+        isinstance(handle_pk_field, partial)
+        and handle_pk_field.func is Cast
+        and isinstance(handle_pk_field.keywords.get("output_field"), BigIntegerField)
+    )
+
+
 def filter_perms_queryset_by_objects(perms_queryset, objects):
     if isinstance(objects, QuerySet):
         field = "content_object__pk"
@@ -962,12 +981,18 @@ def filter_perms_queryset_by_objects(perms_queryset, objects):
             field = "object_pk"
             handle_pk_field = _handle_pk_field(objects)
             if handle_pk_field is not None:
-                objects = objects.values(_pk=Cast(handle_pk_field("pk"), output_field=CharField()))
-                # Apply the same transformation to the object_pk field for consistent comparison (#930)
-                perms_queryset = perms_queryset.annotate(
-                    _transformed_object_pk=Cast(handle_pk_field(field), output_field=CharField())
-                )
-                field = "_transformed_object_pk"
+                if _casts_to_bigint(handle_pk_field):
+                    # Keep object_pk untouched to avoid CAST(object_pk AS bigint)
+                    # scans on large guardian tables. We only stringify model PKs.
+                    objects = objects.values(_pk=Cast("pk", output_field=CharField()))
+                    field = "object_pk"
+                else:
+                    objects = objects.values(_pk=Cast(handle_pk_field("pk"), output_field=CharField()))
+                    # Apply the same transformation to the object_pk field for consistent comparison (#930)
+                    perms_queryset = perms_queryset.annotate(
+                        _transformed_object_pk=Cast(handle_pk_field(field), output_field=CharField())
+                    )
+                    field = "_transformed_object_pk"
             else:
                 objects = objects.values("pk")
         else:

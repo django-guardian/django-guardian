@@ -1,3 +1,4 @@
+import re
 from unittest import mock
 import warnings
 
@@ -1075,6 +1076,16 @@ class GetObjectsForUser(TestCase):
         objects = get_objects_for_user(self.user, ["auth.change_group"], Group.objects.all())
         self.assertEqual([obj.name for obj in objects], [self.group.name])
 
+    def test_generic_subquery_does_not_cast_object_pk_to_bigint(self):
+        assign_perm("auth.change_group", self.user, self.group)
+        query = str(get_objects_for_user(self.user, ["auth.change_group"]).query).lower()
+        self.assertIsNone(re.search(r"cast\([^)]*object_pk[^)]*bigint", query))
+
+    def test_generic_subquery_does_not_cast_object_pk_to_bigint_for_queryset_klass(self):
+        assign_perm("auth.change_group", self.user, self.group)
+        query = str(get_objects_for_user(self.user, ["auth.change_group"], Group.objects.all()).query).lower()
+        self.assertIsNone(re.search(r"cast\([^)]*object_pk[^)]*bigint", query))
+
     def test_ensure_returns_queryset(self):
         objects = get_objects_for_user(self.user, ["auth.change_group"])
         self.assertTrue(isinstance(objects, QuerySet))
@@ -1558,6 +1569,11 @@ class GetObjectsForGroup(TestCase):
         assign_perm("contenttypes.change_contenttype", self.group1, self.obj1)
         objects = get_objects_for_group(self.group1, ["change_contenttype"], ContentType.objects.all())
         self.assertEqual(list(objects), [self.obj1])
+
+    def test_generic_subquery_does_not_cast_object_pk_to_bigint(self):
+        assign_perm("contenttypes.change_contenttype", self.group1, self.obj1)
+        query = str(get_objects_for_group(self.group1, ["contenttypes.change_contenttype"]).query).lower()
+        self.assertIsNone(re.search(r"cast\([^)]*object_pk[^)]*bigint", query))
 
     def test_ensure_returns_queryset(self):
         objects = get_objects_for_group(self.group1, ["contenttypes.change_contenttype"])
