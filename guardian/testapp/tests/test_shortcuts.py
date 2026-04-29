@@ -1079,12 +1079,16 @@ class GetObjectsForUser(TestCase):
     def test_generic_subquery_does_not_cast_object_pk(self):
         assign_perm("auth.change_group", self.user, self.group)
         query = str(get_objects_for_user(self.user, ["auth.change_group"]).query).lower()
-        self.assertIsNone(re.search(r"cast\([^)]*object_pk[^)]*\)", query))
+        self.assertIsNone(
+            re.search(r"(cast\([^)]*object_pk[^)]*\b(?:bigint|int8)\b[^)]*\))|(object_pk::(?:bigint|int8)\b)", query)
+        )
 
     def test_generic_subquery_does_not_cast_object_pk_for_queryset_klass(self):
         assign_perm("auth.change_group", self.user, self.group)
         query = str(get_objects_for_user(self.user, ["auth.change_group"], Group.objects.all()).query).lower()
-        self.assertIsNone(re.search(r"cast\([^)]*object_pk[^)]*\)", query))
+        self.assertIsNone(
+            re.search(r"(cast\([^)]*object_pk[^)]*\b(?:bigint|int8)\b[^)]*\))|(object_pk::(?:bigint|int8)\b)", query)
+        )
 
     def test_ensure_returns_queryset(self):
         objects = get_objects_for_user(self.user, ["auth.change_group"])
