@@ -1573,7 +1573,7 @@ class GetObjectsForGroup(TestCase):
     def test_generic_subquery_does_not_cast_object_pk(self):
         assign_perm("contenttypes.change_contenttype", self.group1, self.obj1)
         query = str(get_objects_for_group(self.group1, ["contenttypes.change_contenttype"]).query).lower()
-        self.assertIsNone(re.search(r"cast\([^)]*object_pk[^)]*\)", query))
+        self.assertIsNone(re.search(r"cast\([^)]*object_pk[^)]*\)|object_pk\s*::\s*(?:bigint|int8)", query))
 
     def test_ensure_returns_queryset(self):
         objects = get_objects_for_group(self.group1, ["contenttypes.change_contenttype"])
