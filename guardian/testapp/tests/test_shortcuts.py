@@ -1,6 +1,6 @@
 import re
-from unittest import mock
 import warnings
+from unittest import mock
 
 import django
 from django.contrib.auth import get_user_model
