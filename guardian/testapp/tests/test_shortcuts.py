@@ -1079,8 +1079,8 @@ class GetObjectsForUser(TestCase):
     def assert_query_does_not_cast_object_pk_to_integer(self, query):
         self.assertIsNone(
             re.search(
-                r"(cast\([^)]*\bobject_pk\b[^)]*\))|"
-                r"(\bobject_pk\b::[a-z_][a-z0-9_]*)",
+                r"(cast\([^)]*\bobject_pk\b[^)]*\bas\s+(?:smallint|int|int4|integer|bigint|int8)\b[^)]*\))|"
+                r"(\bobject_pk\b::(?:smallint|int|int4|integer|bigint|int8)\b)",
                 query,
             )
         )
