@@ -1,6 +1,6 @@
 import re
-import warnings
 from unittest import mock
+import warnings
 
 import django
 from django.contrib.auth import get_user_model
@@ -1076,19 +1076,24 @@ class GetObjectsForUser(TestCase):
         objects = get_objects_for_user(self.user, ["auth.change_group"], Group.objects.all())
         self.assertEqual([obj.name for obj in objects], [self.group.name])
 
+    def assert_query_does_not_cast_object_pk_to_integer(self, query):
+        self.assertIsNone(
+            re.search(
+                r"(cast\([^)]*\bobject_pk\b[^)]*\))|"
+                r"(\bobject_pk\b::[a-z_][a-z0-9_]*)",
+                query,
+            )
+        )
+
     def test_generic_subquery_does_not_cast_object_pk(self):
         assign_perm("auth.change_group", self.user, self.group)
         query = str(get_objects_for_user(self.user, ["auth.change_group"]).query).lower()
-        self.assertIsNone(
-            re.search(r"(cast\([^)]*object_pk[^)]*\b(?:bigint|int8)\b[^)]*\))|(object_pk::(?:bigint|int8)\b)", query)
-        )
+        self.assert_query_does_not_cast_object_pk_to_integer(query)
 
     def test_generic_subquery_does_not_cast_object_pk_for_queryset_klass(self):
         assign_perm("auth.change_group", self.user, self.group)
         query = str(get_objects_for_user(self.user, ["auth.change_group"], Group.objects.all()).query).lower()
-        self.assertIsNone(
-            re.search(r"(cast\([^)]*object_pk[^)]*\b(?:bigint|int8)\b[^)]*\))|(object_pk::(?:bigint|int8)\b)", query)
-        )
+        self.assert_query_does_not_cast_object_pk_to_integer(query)
 
     def test_ensure_returns_queryset(self):
         objects = get_objects_for_user(self.user, ["auth.change_group"])
