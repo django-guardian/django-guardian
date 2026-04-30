@@ -18,6 +18,7 @@ from guardian.exceptions import (
     WrongAppError,
 )
 from guardian.models import Group, Permission
+import guardian.shortcuts as guardian_shortcuts
 from guardian.shortcuts import (
     _get_ct_cached,
     assign,
@@ -47,6 +48,16 @@ user_module_name = User._meta.model_name
 
 def get_group_content_type(obj):
     return ContentType.objects.get_for_model(Group)
+
+
+def assert_query_does_not_cast_object_pk(testcase, query):
+    testcase.assertIsNone(
+        re.search(
+            r"(cast\([^)]*\bobject_pk\b[^)]*\))|"
+            r"(\bobject_pk\b::[a-z_][a-z0-9_]*)",
+            query,
+        )
+    )
 
 
 class ShortcutsTests(ObjectPermissionTestCase):
@@ -1076,24 +1087,15 @@ class GetObjectsForUser(TestCase):
         objects = get_objects_for_user(self.user, ["auth.change_group"], Group.objects.all())
         self.assertEqual([obj.name for obj in objects], [self.group.name])
 
-    def assert_query_does_not_cast_object_pk_to_integer(self, query):
-        self.assertIsNone(
-            re.search(
-                r"(cast\([^)]*\bobject_pk\b[^)]*\bas\s+(?:smallint|int|int4|integer|bigint|int8)\b[^)]*\))|"
-                r"(\bobject_pk\b::(?:smallint|int|int4|integer|bigint|int8)\b)",
-                query,
-            )
-        )
-
     def test_generic_subquery_does_not_cast_object_pk(self):
         assign_perm("auth.change_group", self.user, self.group)
         query = str(get_objects_for_user(self.user, ["auth.change_group"]).query).lower()
-        self.assert_query_does_not_cast_object_pk_to_integer(query)
+        assert_query_does_not_cast_object_pk(self, query)
 
     def test_generic_subquery_does_not_cast_object_pk_for_queryset_klass(self):
         assign_perm("auth.change_group", self.user, self.group)
         query = str(get_objects_for_user(self.user, ["auth.change_group"], Group.objects.all()).query).lower()
-        self.assert_query_does_not_cast_object_pk_to_integer(query)
+        assert_query_does_not_cast_object_pk(self, query)
 
     def test_ensure_returns_queryset(self):
         objects = get_objects_for_user(self.user, ["auth.change_group"])
@@ -1582,12 +1584,19 @@ class GetObjectsForGroup(TestCase):
     def test_generic_subquery_does_not_cast_object_pk(self):
         assign_perm("contenttypes.change_contenttype", self.group1, self.obj1)
         query = str(get_objects_for_group(self.group1, ["contenttypes.change_contenttype"]).query).lower()
-        self.assertIsNone(
-            re.search(
-                r"cast\([^)]*object_pk[^)]*\)|object_pk\s*::\s*(?:bigint|int8|integer|int4)",
-                query,
-            )
-        )
+        assert_query_does_not_cast_object_pk(self, query)
+
+    def test_generic_subquery_does_not_cast_object_pk_for_queryset_klass(self):
+        assign_perm("contenttypes.change_contenttype", self.group1, self.obj1)
+        with mock.patch(
+            "guardian.shortcuts._casts_to_bigint",
+            wraps=guardian_shortcuts._casts_to_bigint,
+        ) as mocked_casts_to_bigint:
+            query = str(
+                get_objects_for_group(self.group1, ["change_contenttype"], ContentType.objects.all()).query
+            ).lower()
+        mocked_casts_to_bigint.assert_called()
+        assert_query_does_not_cast_object_pk(self, query)
 
     def test_ensure_returns_queryset(self):
         objects = get_objects_for_group(self.group1, ["contenttypes.change_contenttype"])
