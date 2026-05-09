@@ -245,8 +245,8 @@ class ObjectPermissionChecker:
             perms = group_model.objects.filter(**group_filters).select_related("permission")
 
         # initialize entry in '_obj_perms_cache' for all prefetched objects
-        for obj in objects:
-            key = self.get_local_cache_key(obj)
+        # The ctype is assumed above to be homogenous, so leave `objects` unevaluated.
+        for key in ((ctype.id, pk) for pk in pks):
             if key not in self._obj_perms_cache:
                 self._obj_perms_cache[key] = []
 
