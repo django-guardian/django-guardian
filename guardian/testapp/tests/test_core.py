@@ -614,11 +614,11 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
             settings.DEBUG = False
 
     def test_prefetch_performance(self):
-        GroupObjectPermission.objects.assign_perm("delete_contenttype", self.group, self.ctype)
-    
         checker = ObjectPermissionChecker(self.user)
         with CaptureQueriesContext(connection) as queries:
             checker.prefetch_perms(Group.objects.all())
 
-        group_selects = [q for q in queries if q["sql"].endswith('FROM "auth_group"')]
+        auth_group_from = "FROM %s" % connection.ops.quote_name("auth_group")
+        # Ignore other queries that JOIN this table.
+        group_selects = [q for q in queries if q["sql"].endswith(auth_group_from)]
         self.assertEqual(len(group_selects), 1)
