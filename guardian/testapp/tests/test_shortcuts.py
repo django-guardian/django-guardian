@@ -16,11 +16,12 @@ from guardian.exceptions import (
     NotUserNorGroup,
     WrongAppError,
 )
-from guardian.models import Group, Permission
+from guardian.models import Group, Permission, UserObjectPermission
 from guardian.shortcuts import (
     _get_ct_cached,
     assign,
     assign_perm,
+    filter_perms_queryset_by_objects,
     get_group_perms,
     get_groups_with_perms,
     get_objects_for_group,
@@ -1302,6 +1303,27 @@ class GetObjectsForUser(TestCase):
         self.assertEqual(len(objects), 1)
         self.assertTrue(isinstance(objects, QuerySet))
         self.assertEqual(set(objects.values_list("pk", flat=True)), {obj_with_uuid_pk.pk})
+
+    def test_joined_queryset_with_cast_primary_key(self):
+        assign_perm("auth.change_group", self.user, self.group)
+
+        objects = get_objects_for_user(
+            self.user,
+            "auth.change_group",
+            Group.objects.filter(user__isnull=True),
+        )
+
+        self.assertEqual(set(objects.values_list("pk", flat=True)), {self.group.pk})
+
+    def test_filter_perms_queryset_by_joined_objects(self):
+        assign_perm("auth.change_group", self.user, self.group)
+
+        perms = filter_perms_queryset_by_objects(
+            UserObjectPermission.objects.filter(user=self.user),
+            Group.objects.filter(user__isnull=True),
+        )
+
+        self.assertEqual(set(perms.values_list("object_pk", flat=True)), {str(self.group.pk)})
 
     def test_varchar_primary_key_with_any_perm(self):
         """
