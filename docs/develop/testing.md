@@ -121,7 +121,5 @@ environments and pull dependencies) but would ensure everything is fine.
 
 !!! abstract "Added in version 2.4.0"
 
-[![image](https://github.com/django-guardian/django-guardian/workflows/Tests/badge.svg?branch=devel)](https://github.com/django-guardian/django-guardian/actions/workflows/tests.yml)
-
 We have support for [GitHub Actions](https://github.com/django-guardian/django-guardian/actions)
 to make it easy to follow if test fails with new commits.
