@@ -435,8 +435,7 @@ def get_users_with_perms(
             only_with_perms_in=only_with_perms_in,
             with_superusers=with_superusers,
         ):
-            # TODO: Support the case of set with_group_users but not with_superusers.
-            if with_group_users or with_superusers:
+            if with_group_users or (with_superusers and user.is_superuser):
                 users[user] = sorted(get_perms(user, obj))
             else:
                 users[user] = sorted(get_user_perms(user, obj))

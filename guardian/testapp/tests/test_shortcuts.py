@@ -854,6 +854,28 @@ class GetUsersWithPermsTest(TestCase):
         expected = {self.user1: ["change_contenttype"], admin: ["delete_contenttype"]}
         self.assertEqual(result, expected)
 
+    def test_without_group_users_with_superusers_and_perms_attached(self):
+        admin = User.objects.create(username="admin", is_superuser=True)
+        self.user1.groups.add(self.group1)
+        self.user2.groups.add(self.group1)
+        assign_perm("change_contenttype", self.user1, self.obj1)
+        assign_perm("delete_contenttype", self.group1, self.obj1)
+
+        result = get_users_with_perms(self.obj1, attach_perms=True, with_superusers=True, with_group_users=False)
+        expected = {
+            self.user1: ["change_contenttype"],
+            admin: [
+                "add_contenttype",
+                "change_contenttype",
+                "delete_contenttype",
+                "view_contenttype",
+            ],
+        }
+
+        self.assertEqual(result.keys(), expected.keys())
+        for key, perms in result.items():
+            self.assertEqual(set(perms), set(expected[key]))
+
     def test_without_group_users_no_result(self):
         self.user1.groups.add(self.group1)
         assign_perm("change_contenttype", self.group1, self.obj1)
