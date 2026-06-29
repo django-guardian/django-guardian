@@ -273,11 +273,11 @@ Configure guardian to use the custom model in settings.py
 GUARDIAN_GROUP_OBJ_PERMS_MODEL = 'myapp.BigGroupObjectPermission'
 ```
 
-To access the model use `get_user_obj_perms_model()` with no parameters
+To access the model use `get_group_obj_perms_model()` with no parameters
 
 ```python
-from guardian.utils import get_user_obj_perms_model
-GroupObjectPermission = get_user_obj_perms_model()
+from guardian.utils import get_group_obj_perms_model
+GroupObjectPermission = get_group_obj_perms_model()
 ```
 
 Defaults to `'guardian.GroupObjectPermission'`.
