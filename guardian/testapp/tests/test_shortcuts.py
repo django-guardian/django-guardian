@@ -1,3 +1,4 @@
+import re
 from unittest import mock
 import warnings
 
@@ -17,6 +18,7 @@ from guardian.exceptions import (
     WrongAppError,
 )
 from guardian.models import Group, Permission
+import guardian.shortcuts as guardian_shortcuts
 from guardian.shortcuts import (
     _get_ct_cached,
     assign,
@@ -46,6 +48,16 @@ user_module_name = User._meta.model_name
 
 def get_group_content_type(obj):
     return ContentType.objects.get_for_model(Group)
+
+
+def assert_query_does_not_cast_object_pk(testcase, query):
+    testcase.assertIsNone(
+        re.search(
+            r"(cast\([^)]*\bobject_pk\b[^)]*\))|"
+            r"(\bobject_pk\b::[a-z_][a-z0-9_]*)",
+            query,
+        )
+    )
 
 
 class ShortcutsTests(ObjectPermissionTestCase):
@@ -1075,6 +1087,28 @@ class GetObjectsForUser(TestCase):
         objects = get_objects_for_user(self.user, ["auth.change_group"], Group.objects.all())
         self.assertEqual([obj.name for obj in objects], [self.group.name])
 
+    def test_generic_subquery_does_not_cast_object_pk(self):
+        assign_perm("auth.change_group", self.user, self.group)
+        other_group = Group.objects.create(name="group2")
+
+        objects = get_objects_for_user(self.user, ["auth.change_group"])
+        self.assertEqual(set(objects), {self.group})
+        self.assertNotIn(other_group, objects)
+
+        query = str(objects.query).lower()
+        assert_query_does_not_cast_object_pk(self, query)
+
+    def test_generic_subquery_does_not_cast_object_pk_for_queryset_klass(self):
+        assign_perm("auth.change_group", self.user, self.group)
+        other_group = Group.objects.create(name="group2")
+
+        objects = get_objects_for_user(self.user, ["auth.change_group"], Group.objects.all())
+        self.assertEqual(set(objects), {self.group})
+        self.assertNotIn(other_group, objects)
+
+        query = str(objects.query).lower()
+        assert_query_does_not_cast_object_pk(self, query)
+
     def test_ensure_returns_queryset(self):
         objects = get_objects_for_user(self.user, ["auth.change_group"])
         self.assertTrue(isinstance(objects, QuerySet))
@@ -1558,6 +1592,32 @@ class GetObjectsForGroup(TestCase):
         assign_perm("contenttypes.change_contenttype", self.group1, self.obj1)
         objects = get_objects_for_group(self.group1, ["change_contenttype"], ContentType.objects.all())
         self.assertEqual(list(objects), [self.obj1])
+
+    def test_generic_subquery_does_not_cast_object_pk(self):
+        assign_perm("contenttypes.change_contenttype", self.group1, self.obj1)
+        obj4 = ContentType.objects.create(model="qux", app_label="guardian-tests")
+
+        objects = get_objects_for_group(self.group1, ["contenttypes.change_contenttype"])
+        self.assertEqual(set(objects), {self.obj1})
+        self.assertNotIn(obj4, objects)
+
+        query = str(objects.query).lower()
+        assert_query_does_not_cast_object_pk(self, query)
+
+    def test_generic_subquery_does_not_cast_object_pk_for_queryset_klass(self):
+        assign_perm("contenttypes.change_contenttype", self.group1, self.obj1)
+        obj4 = ContentType.objects.create(model="qux", app_label="guardian-tests")
+
+        with mock.patch(
+            "guardian.shortcuts._casts_to_bigint",
+            wraps=guardian_shortcuts._casts_to_bigint,
+        ) as mocked_casts_to_bigint:
+            objects = get_objects_for_group(self.group1, ["change_contenttype"], ContentType.objects.all())
+            mocked_casts_to_bigint.assert_called()
+            query = str(objects.query).lower()
+        self.assertEqual(set(objects), {self.obj1})
+        self.assertNotIn(obj4, objects)
+        assert_query_does_not_cast_object_pk(self, query)
 
     def test_ensure_returns_queryset(self):
         objects = get_objects_for_group(self.group1, ["contenttypes.change_contenttype"])
@@ -2323,6 +2383,7 @@ class NonStandardPKTests(TestCase):
 
         uuid_objects = get_objects_for_user(self.user, "testapp.add_uuidpkmodel")
         self.assertEqual(len(uuid_objects), 1)
+        self.assertEqual(set(uuid_objects.values_list("pk", flat=True)), {uuid_obj1.pk})
 
         # Test with TextField (non-standard, uses fix)
         text_obj1 = TextPKModel.objects.create(text_pk="text-id-1")
@@ -2332,6 +2393,7 @@ class NonStandardPKTests(TestCase):
 
         text_objects = get_objects_for_user(self.user, "testapp.add_textpkmodel")
         self.assertEqual(len(text_objects), 1)
+        self.assertEqual(set(text_objects.values_list("pk", flat=True)), {text_obj1.pk})
 
         # Both should behave consistently
         self.assertEqual(len(uuid_objects), len(text_objects))
