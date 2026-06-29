@@ -6,7 +6,9 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.management import create_permissions
 from django.contrib.auth.models import AnonymousUser, Group, Permission
 from django.contrib.contenttypes.models import ContentType
+from django.db import connection
 from django.test import TestCase
+from django.test.utils import CaptureQueriesContext
 
 from guardian.conf import settings as guardian_settings
 from guardian.core import ObjectPermissionChecker
@@ -610,3 +612,13 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
             self.assertGreater(len(connection.queries), query_count)
         finally:
             settings.DEBUG = False
+
+    def test_prefetch_performance(self):
+        checker = ObjectPermissionChecker(self.user)
+        with CaptureQueriesContext(connection) as queries:
+            checker.prefetch_perms(Group.objects.all())
+
+        auth_group_from = "FROM %s" % connection.ops.quote_name("auth_group")
+        # Ignore other queries that JOIN this table.
+        group_selects = [q for q in queries if q["sql"].endswith(auth_group_from)]
+        self.assertEqual(len(group_selects), 1)

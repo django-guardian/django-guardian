@@ -136,5 +136,7 @@ make docs
 
 ## GitHub Actions
 
+!!! abstract "Added in version 2.4.0"
+
 We have support for [GitHub Actions](https://github.com/django-guardian/django-guardian/actions)
 to run the same general checks in CI. Local verification with `pytest`, `tox`, `ruff`, `mypy`, and `mkdocs` helps catch problems before you open or update a pull request.
