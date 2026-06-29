@@ -962,16 +962,18 @@ def filter_perms_queryset_by_objects(perms_queryset, objects):
             field = "object_pk"
             handle_pk_field = _handle_pk_field(objects)
             if handle_pk_field is not None:
-                objects = objects.values(_pk=Cast(handle_pk_field("pk"), output_field=CharField()))
+                objects = objects.annotate(_pk=Cast(handle_pk_field("pk"), output_field=CharField())).values_list(
+                    "_pk", flat=True
+                )
                 # Apply the same transformation to the object_pk field for consistent comparison (#930)
                 perms_queryset = perms_queryset.annotate(
                     _transformed_object_pk=Cast(handle_pk_field(field), output_field=CharField())
                 )
                 field = "_transformed_object_pk"
             else:
-                objects = objects.values("pk")
+                objects = objects.values_list("pk", flat=True)
         else:
-            objects = objects.values("pk")
+            objects = objects.values_list("pk", flat=True)
         return perms_queryset.filter(**{"{}__in".format(field): objects})
     else:
         return perms_queryset
