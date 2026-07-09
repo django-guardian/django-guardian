@@ -6,21 +6,27 @@ from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ImproperlyConfigured, PermissionDenied
+from django.db.models import Q
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import path, reverse
 from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
 
+from guardian.ctypes import get_content_type
 from guardian.forms import GroupObjectPermissionsForm, UserObjectPermissionsForm
 from guardian.shortcuts import (
+    assign_perm,
     get_group_perms,
     get_groups_with_perms,
+    get_objects_for_user,
     get_perms_for_model,
     get_user_perms,
     get_users_with_perms,
+    remove_perm,
 )
-from guardian.utils import get_group_obj_perms_model
+from guardian.utils import get_group_obj_perms_model, get_user_obj_perms_model
 
 
 class GuardedInlineAdminMixin:
@@ -126,21 +132,245 @@ class GuardedModelAdminMixin:
     user_can_access_owned_by_group_objects_only: bool = False
     group_owned_objects_field: str = "group"
     include_object_permissions_urls: bool = True
+    auto_assign_perms_on_create: bool = False
+    auto_assign_perms: list = ["view", "change"]
+
+    def has_module_permission(self, request):
+        """Check if user has permission to access this module in admin.
+
+        Returns True if the user has global permissions or if they have
+        object-level permissions for any object of this model.
+        """
+        if super().has_module_permission(request):
+            return True
+        return self.get_model_objs(request).exists()
 
     def get_queryset(self, request):
+        """Get queryset filtered by user permissions."""
+        if request.user.is_superuser:
+            return super().get_queryset(request)
+
+        # Start with the base queryset
         qs = super().get_queryset(request)
 
-        if request.user.is_superuser:
-            return qs
+        # Check for conflicting configuration
+        if self.user_can_access_owned_objects_only and self.user_can_access_owned_by_group_objects_only:
+            raise ImproperlyConfigured(
+                "Both 'user_can_access_owned_objects_only' and "
+                "'user_can_access_owned_by_group_objects_only' cannot be enabled at the same time. "
+                "Please enable only one of these options."
+            )
 
+        # Apply user ownership filtering if enabled
         if self.user_can_access_owned_objects_only:
-            filters = {self.user_owned_objects_field: request.user}
-            qs = qs.filter(**filters)
-        if self.user_can_access_owned_by_group_objects_only:
-            qs_key = f"{self.group_owned_objects_field}__in"
-            filters = {qs_key: request.user.groups.all()}
-            qs = qs.filter(**filters)
+            filter_kwargs = {self.user_owned_objects_field: request.user}
+            qs = qs.filter(**filter_kwargs)
+
+        # Apply group ownership filtering if enabled
+        elif self.user_can_access_owned_by_group_objects_only:
+            user_groups = request.user.groups.all()
+            filter_kwargs = {f"{self.group_owned_objects_field}__in": user_groups}
+            qs = qs.filter(**filter_kwargs)
+
+        # If neither ownership filter is enabled, use object-level permissions
+        else:
+            # Use object-level permissions to further restrict the base queryset
+            permitted_pks = self.get_model_objs(request).values_list("pk", flat=True)
+            qs = qs.filter(pk__in=permitted_pks).distinct()
+
         return qs
+
+    def get_model_objs(self, request, action=None, klass=None):
+        """Get objects that the user has permission to access.
+
+        Args:
+            request: The HTTP request object
+            action: Specific action to check (e.g., 'view', 'change', 'delete')
+            klass: Model class to check permissions for
+
+        Returns:
+            QuerySet of objects the user has permission to access
+        """
+        opts = self.opts
+        actions = [action] if action else ["view", "change", "delete"]
+        klass = klass if klass else opts.model
+        model_name = klass._meta.model_name
+
+        perms = [f"{opts.app_label}.{perm}_{model_name}" for perm in actions]
+        return get_objects_for_user(user=request.user, perms=perms, klass=klass, any_perm=True)
+
+    def has_perm(self, request, obj, action):
+        """Check if user has specific permission for an object.
+
+        Args:
+            request: The HTTP request object
+            obj: The object to check permissions for (None for global permissions)
+            action: The action to check ('view', 'change', 'delete', etc.)
+
+        Returns:
+            bool: True if user has permission, False otherwise
+        """
+        opts = self.opts
+        codename = f"{action}_{opts.model_name}"
+        perm = f"{opts.app_label}.{codename}"
+
+        # When a specific object is provided, check both model-level and object-level permissions
+        if obj:
+            # First check model-level permission (Django's default behavior)
+            if request.user.has_perm(perm):
+                return True
+            # Fall back to object-level permission
+            return request.user.has_perm(perm, obj)
+
+        # When no specific object is provided, first honor global model permissions.
+        if request.user.has_perm(perm):
+            return True
+        # Fall back to object-level existence as an enhancement.
+        return self.get_model_objs(request, action).exists()
+
+    def has_view_permission(self, request, obj=None):
+        """Check if user has view permission for the object."""
+        return self.has_perm(request, obj, "view")
+
+    def has_change_permission(self, request, obj=None):
+        """Check if user has change permission for the object."""
+        return self.has_perm(request, obj, "change")
+
+    def has_delete_permission(self, request, obj=None):
+        """Check if user has delete permission for the object."""
+        return self.has_perm(request, obj, "delete")
+
+    def has_object_permissions_access(self, request, obj=None):
+        """Check if user should have access to object permissions management.
+
+        By default, only superusers and users with object-level change permission
+        can manage object permissions. Model-level permissions are not sufficient.
+        Override this method to customize.
+
+        Args:
+            request: The HTTP request object
+            obj: The object to check permissions for
+
+        Returns:
+            bool: True if user should see object permissions button
+        """
+        if request.user.is_superuser:
+            return True
+
+        if obj is None:
+            return False
+
+        # Check only object-level permission, not model-level
+        opts = self.opts
+        codename = f"change_{opts.model_name}"
+        perm = f"{opts.app_label}.{codename}"
+
+        # Use has_perm with obj to check object-level permission only
+        return request.user.has_perm(perm, obj)
+
+    def save_model(self, request, obj, form, change):
+        """Save model and optionally assign permissions to creator.
+
+        If `auto_assign_perms_on_create` is True, automatically assigns
+        object-level permissions defined in `auto_assign_perms` to the
+        creator when a new object is created (not on updates).
+
+        By default, this behavior is disabled. To enable it, set
+        `auto_assign_perms_on_create = True` in your admin class.
+
+        The permissions to assign can be customized via `auto_assign_perms`,
+        which defaults to ["view", "change"].
+        """
+        result = super().save_model(request, obj, form, change)
+
+        # Auto-assign permissions to creator (opt-in, only for new objects)
+        if self.auto_assign_perms_on_create and not request.user.is_superuser and not change:
+            opts = self.opts
+            for action in self.auto_assign_perms:
+                perm = f"{opts.app_label}.{action}_{opts.model_name}"
+                assign_perm(perm, request.user, obj)
+
+        return result
+
+    @staticmethod
+    def remove_obj_perms(obj):
+        """Remove all object permissions for the given object.
+
+        Args:
+            obj: The object to remove permissions for
+        """
+        # Get all users and groups with permissions for this object
+        users_perms = get_users_with_perms(obj, attach_perms=True)
+        groups_perms = get_groups_with_perms(obj, attach_perms=True)
+
+        # Group users by permission to allow bulk removal per permission
+        perm_to_users = {}
+        for user, perms in users_perms.items():
+            for perm in perms:
+                perm_to_users.setdefault(perm, []).append(user)
+
+        for perm, users in perm_to_users.items():
+            remove_perm(perm, users, obj)
+
+        # Group groups by permission to allow bulk removal per permission
+        perm_to_groups = {}
+        for group, perms in groups_perms.items():
+            for perm in perms:
+                perm_to_groups.setdefault(perm, []).append(group)
+
+        for perm, groups in perm_to_groups.items():
+            remove_perm(perm, groups, obj)
+
+    def delete_model(self, request, obj):
+        """Delete model and clean up its object permissions."""
+        self.remove_obj_perms(obj)
+        return super().delete_model(request, obj)
+
+    def delete_queryset(self, request, queryset):
+        """Delete queryset and clean up object permissions for all objects.
+
+        Uses bulk deletion to efficiently remove permissions for large querysets
+        without forcing queryset evaluation.
+        """
+        # Get the model to determine content type
+        if queryset.model:
+            ctype = get_content_type(queryset.model)
+
+            # Get the permission models for this object type
+            UserObjectPermission = get_user_obj_perms_model(queryset.model)
+            GroupObjectPermission = get_group_obj_perms_model(queryset.model)
+
+            # Extract PKs without evaluating the full queryset
+            pks = list(queryset.values_list("pk", flat=True))
+
+            # Build filter conditions for bulk deletion
+            if UserObjectPermission.objects.is_generic():
+                # For generic permissions, filter by content_type and object_pk
+                user_filters = Q(content_type=ctype, object_pk__in=[str(pk) for pk in pks])
+                group_filters = Q(content_type=ctype, object_pk__in=[str(pk) for pk in pks])
+            else:
+                # For direct foreign key permissions, filter by content_object id
+                user_filters = Q(content_object_id__in=pks)
+                group_filters = Q(content_object_id__in=pks)
+
+            # Bulk delete permissions in two queries instead of N queries
+            UserObjectPermission.objects.filter(user_filters).delete()
+            GroupObjectPermission.objects.filter(group_filters).delete()
+
+        return super().delete_queryset(request, queryset)
+
+    def change_view(self, request, object_id, form_url="", extra_context=None):
+        """Override change_view to add object permissions access check to context."""
+        if extra_context is None:
+            extra_context = {}
+
+        # Default to no object permissions access; override if we can check on an existing object.
+        extra_context["has_object_permissions_access"] = False
+
+        obj = self.get_object(request, object_id)
+        if obj:
+            extra_context["has_object_permissions_access"] = self.has_object_permissions_access(request, obj)
+        return super().change_view(request, object_id, form_url, extra_context)
 
     def get_urls(self):
         """
@@ -197,6 +427,7 @@ class GuardedModelAdminMixin:
                 "opts": self.model._meta,
                 "original": str(obj),
                 "has_change_permission": self.has_change_permission(request, obj),
+                "has_object_permissions_access": self.has_object_permissions_access(request, obj),
                 "model_perms": get_perms_for_model(obj),
                 "title": _("Object permissions"),
             }
@@ -217,6 +448,11 @@ class GuardedModelAdminMixin:
         from django.contrib.admin.utils import unquote
 
         obj = get_object_or_404(self.get_queryset(request), pk=unquote(object_pk))
+
+        # Check if user has object-level permissions access
+        if not self.has_object_permissions_access(request, obj):
+            raise PermissionDenied
+
         users_perms = OrderedDict(
             sorted(
                 get_users_with_perms(obj, attach_perms=True, with_group_users=False).items(),
@@ -289,6 +525,10 @@ class GuardedModelAdminMixin:
 
         user = get_object_or_404(get_user_model(), pk=user_id)
         obj = get_object_or_404(self.get_queryset(request), pk=object_pk)
+
+        # Check if user has object-level permissions access
+        if not self.has_object_permissions_access(request, obj):
+            raise PermissionDenied
         form_class = self.get_obj_perms_manage_user_form(request)
         form = form_class(user, obj, request.POST or None)
 
@@ -369,6 +609,11 @@ class GuardedModelAdminMixin:
             return redirect(post_url)
 
         obj = get_object_or_404(self.get_queryset(request), pk=object_pk)
+
+        # Check if user has object-level permissions access
+        if not self.has_object_permissions_access(request, obj):
+            raise PermissionDenied
+
         GroupModel = get_group_obj_perms_model(obj).group.field.related_model
         group = get_object_or_404(GroupModel, id=group_id)
         form_class = self.get_obj_perms_manage_group_form(request)
@@ -449,6 +694,12 @@ class GuardedModelAdmin(GuardedModelAdminMixin, admin.ModelAdmin):
         include_object_permissions_urls (bool): *Default*: `True`
             Added in version 1.2.
             If `False` guardian-specific URLs are **NOT** included in the admin
+        auto_assign_perms_on_create (bool): *Default*: `False`
+            If `True`, automatically assigns object-level permissions to the creator
+            when a new object is created via admin. Superusers are excluded.
+        auto_assign_perms (list): *Default*: `["view", "change"]`
+            List of permission actions to auto-assign when `auto_assign_perms_on_create` is `True`.
+            Only meaningful object-level permissions should be included (avoid "add").
 
     Warning:
        Setting `user_can_access_owned_objects_only` to `True` will **NOT** affect superusers!
