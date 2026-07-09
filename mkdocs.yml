@@ -54,6 +54,7 @@ nav:
           - Upgrading to Direct Foreign Keys: userguide/upgrading-to-direct-foreign-keys.md
           - Custom User Model: userguide/custom-user-model.md
           - Custom Group Model: userguide/custom-group-model.md
+          - Entity Roles with Groups: userguide/entity-roles-with-groups.md
           - Admin Integration: userguide/admin-integration.md
           - Signals: userguide/signals.md
   - Contributing:
