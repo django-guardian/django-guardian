@@ -1,16 +1,19 @@
-.PHONY: help build pytest test clean install dev-install lint format docs
+.PHONY: help build pytest test test-all clean install dev-install lint format docs docs-serve check
 
 help:
 	@echo "Available commands:"
 	@echo "  build        - Build the package"
 	@echo "  pytest       - Run tests with pytest"
 	@echo "  test         - Alias for pytest"
+	@echo "  test-all     - Run the full tox matrix"
 	@echo "  clean        - Clean build artifacts"
-	@echo "  install      - Install the package"
-	@echo "  dev-install  - Install package in development mode with dev dependencies"
+	@echo "  install      - Sync project dependencies"
+	@echo "  dev-install  - Sync project with development dependencies"
 	@echo "  lint         - Run linting checks"
-	@echo "  format       - Format code"
+	@echo "  format       - Apply Ruff fixes and format code"
 	@echo "  docs         - Build documentation"
+	@echo "  docs-serve   - Serve documentation locally"
+	@echo "  check        - Run lint, tests, and docs build"
 
 # Build the package
 build:
@@ -18,36 +21,57 @@ build:
 
 # Run tests with pytest
 pytest:
-	pytest --cov=guardian --cov-report=xml --cov-report=term
+	uv run pytest --cov=guardian --cov-report=xml --cov-report=term
 
 # Alias for pytest
 test: pytest
+
+# Run the full tox matrix
+test-all:
+	uv run tox run
 
 # Clean build artifacts
 clean:
 	rm -rf build/
 	rm -rf dist/
 	rm -rf *.egg-info/
+	rm -rf .coverage
+	rm -rf .mypy_cache/
+	rm -rf .pytest_cache/
+	rm -rf .ruff_cache/
+	rm -rf .tox/
+	rm -rf htmlcov/
 	find . -type d -name __pycache__ -exec rm -rf {} +
 	find . -type f -name "*.pyc" -delete
 
-# Install the package
+# Sync the default project environment
 install:
-	uv pip install .
+	uv sync
 
-# Install in development mode with dev dependencies
+# Sync the development environment
 dev-install:
-	uv pip install -e . --group dev
+	uv sync --group dev
 
 # Run linting checks
 lint:
-	ruff check .
-	mypy ./guardian
+	uv run ruff check .
+	uv run mypy ./guardian
 
-# Format code
+# Apply auto-fixes and format code
 format:
-	ruff format .
+	uv run ruff check --fix .
+	uv run ruff format .
 
 # Build documentation
 docs:
-	mkdocs build
+	uv run mkdocs build
+
+# Serve documentation locally
+docs-serve:
+	uv run mkdocs serve
+
+# Run the most common local checks
+check:
+	$(MAKE) lint
+	$(MAKE) test
+	$(MAKE) docs

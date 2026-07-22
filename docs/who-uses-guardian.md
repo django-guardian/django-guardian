@@ -108,4 +108,4 @@ Feel free to reach out through our community channels.
 
 ---
 
-*Want to contribute to this page? We welcome additions of projects using django-guardian. Please see our [contribution guidelines](develop/overview.md) for more information.*
+*Want to contribute to this page? We welcome additions of projects using django-guardian. Please see our [contribution guidelines](https://github.com/django-guardian/django-guardian/blob/main/CONTRIBUTING.md) for more information.*
