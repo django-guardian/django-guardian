@@ -95,7 +95,8 @@ authors = [
   { name = "Richard de Wit", email = "henk.exe@gmail.com" },
   { name = "Pedro Rojas Gavidia", email = "pedrorojas.gavidia@gmail.com" },
   { name = "Rainshaw Gao", email = "rxg@live.com" },
-  {name = "Tom Clark", email = "guardian@octue.com"},
+  { name = "Tom Clark", email = "guardian@octue.com"},
+  { name = "David Graham", email = "dpgraham4401@gmail.com" },
   { name = "Meredith Hoo", email = "meredith.hoo1@gmail.com" },
   { name = "Chris Maggiuli" },
   { name = "Bona Fide IT GmbH"},
@@ -104,17 +105,14 @@ authors = [
   { name = "Sezer BOZKIR", email = "admin@sezerbozkir.com"},
   { name = "Paul Martin", email = "pauledwardmartin91@gmail.com"},
   { name = "marko1olo", email = "barsukdana@gmail.com" },
-]
-maintainers = [
-  {name = "Tom Clark", email = "django-guardian@octue.com"},
-  { name = "Brian May", email = "brian@microcomaustralia.com.au" },
-  { name = "Lukasz Balcerzak", email = "lukaszbalcerzak@gmail.com" },
-  { name = "Adam Dobrawy", email = "guardian@jawnosc.tk" },
-  { name = "David Graham", email = "dpgraham4401@gmail.com" },
   { name = "Michael K." },
   { name = "Chris Maggiuli" },
-  { name = "Bona Fide IT GmbH"},
-  { name = "Sezer BOZKIR", email = "admin@sezerbozkir.com"},
+  { name = "Bona Fide IT GmbH" },
+]
+maintainers = [
+  { name = "Sezer BOZKIR", email = "admin@sezerbozkir.com" },
+  { name = "David Graham", email = "dpgraham4401@gmail.com" },
+  { name = "Tom Clark", email = "django-guardian@octue.com" },
 
 ]
 dependencies = [
