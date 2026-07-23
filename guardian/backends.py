@@ -1,9 +1,11 @@
+from functools import wraps
 from typing import Any, Iterable, Optional
 
+from asgiref.sync import sync_to_async
 from django.contrib.auth import get_user_model
+from django.contrib.auth.backends import BaseBackend
 from django.db import models
 from django.db.models import Model
-from django.http import HttpRequest
 
 from guardian.conf import settings
 from guardian.core import ObjectPermissionChecker
@@ -45,6 +47,14 @@ def check_user_support(user_obj: Any) -> tuple[bool, Any]:
     return True, user_obj
 
 
+def noop(f: Any) -> Any:
+    @wraps(f)
+    def raise_attr_error(self, *args: Any, **kwargs: Any):
+        raise AttributeError(f"'{type(self).__name__}' object has no attribute '{f.__name__}'")
+
+    return property(raise_attr_error)
+
+
 def check_support(user_obj: Any, obj: Model) -> Any:
     """Checks if given user and object are supported.
 
@@ -55,15 +65,20 @@ def check_support(user_obj: Any, obj: Model) -> Any:
     return obj_support and user_support, user_obj
 
 
-class ObjectPermissionBackend:
+class ObjectPermissionBackend(BaseBackend):
     """Django backend for checking object-level permissions."""
 
     supports_object_permissions = True
     supports_anonymous_user = True
     supports_inactive_user = True
 
-    def authenticate(self, request: HttpRequest, username: Optional[str] = None, password: Optional[str] = None) -> Any:
-        return None
+    @noop
+    def get_user(self, user_id: int) -> None:
+        pass
+
+    @noop
+    async def aget_user(self, user_id: int) -> None:
+        pass
 
     def has_perm(self, user_obj: Any, perm: str, obj: Optional[Model] = None) -> bool:
         """Check if a user has the permission for a given object.
@@ -113,6 +128,57 @@ class ObjectPermissionBackend:
         check = ObjectPermissionChecker(user_obj)
         return check.has_perm(perm, obj)
 
+    async def ahas_perm(self, user_obj: Any, perm: str, obj: Optional[Model] = None) -> bool:
+        """Check if a user has the permission for a given object.
+
+        Async version of :meth:`ObjectPermissionBackend.has_perm`.
+
+        Returns `True` if given `user_obj` has `perm` for `obj`.
+        If no `obj` is given, `False` is returned.
+        The main difference between Django's `ModelBackend` is that we can pass
+        `obj` instance here and `perm` doesn't have to contain
+        `app_label` as it can be retrieved from given `obj`.
+
+        **Inactive user support**
+
+        If `user` is authenticated but inactive at the same time, all checks
+        always return `False`.
+
+        Note:
+            Remember, that if user is not *active*, all checks would return `False`.
+
+        Parameters:
+            user_obj (User): User instance.
+            perm (str): Permission string.
+            obj (Model): Model instance.
+
+        Returns:
+            `True` if `user_obj` has permission, `False` otherwise.
+        """
+
+        return await sync_to_async(self.has_perm)(user_obj, perm, obj)
+
+    def get_user_permissions(self, user_obj: Any, obj: Optional[Model] = None) -> Iterable[str]:
+        """Returns user permissions for a given object.
+
+        Parameters:
+            user_obj (User): User instance.
+            obj (Model): Django Model instance. If None, returns empty set
+                        since this backend only handles object-level permissions.
+
+        Returns:
+             a set of permission strings that the given specific `user_obj` has for `obj`.
+        """
+        support, user_obj = check_support(user_obj, obj)
+        if not support:
+            return set()
+
+        check = ObjectPermissionChecker(user_obj)
+        if user_obj.is_superuser:
+            return set(check.get_perms(obj))
+
+        return set(check.get_user_perms(obj))
+
     def get_group_permissions(self, user_obj: Any, obj: Optional[Model] = None) -> Iterable[str]:
         """Returns group permissions for a given object.
 
@@ -138,6 +204,7 @@ class ObjectPermissionBackend:
         return set(check.get_group_perms(obj))
 
     def get_all_permissions(self, user_obj: Any, obj: Optional[Model] = None) -> Iterable[str]:
+        # TODO: since we inherit from BaseBackend, this method should not be necessary
         """Returns all permissions for a given object.
 
         Parameters:
