@@ -11,6 +11,11 @@ User = get_user_model()
 
 
 class ObjectPermissionBackendTest(TestCase):
+    def test_inherits_base_backend(self):
+        """ObjectPermissionBackend should inherit from Django's BaseBackend."""
+        from django.contrib.auth.backends import BaseBackend
+        self.assertIsInstance(self.backend, BaseBackend)
+
     def setUp(self):
         self.backend = ObjectPermissionBackend()
         self.user = User.objects.create_user(username="testuser", password="testpass")
