@@ -6,7 +6,6 @@ from django.contrib.auth.backends import BaseBackend
 from django.db import models
 from django.db.models import Model
 from django.http import HttpRequest
-
 from guardian.conf import settings
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
