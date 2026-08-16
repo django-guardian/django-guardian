@@ -1,5 +1,4 @@
-from collections.abc import Iterable
-from typing import Any, Optional
+from typing import Any, Iterable, Optional
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import BaseBackend
@@ -64,10 +63,10 @@ class ObjectPermissionBackend(BaseBackend):
     supports_anonymous_user = True
     supports_inactive_user = True
 
-    def authenticate(self, request: HttpRequest, username: str | None = None, password: str | None = None) -> Any:
+    def authenticate(self, request: HttpRequest, username: Optional[str] = None, password: Optional[str] = None) -> Any:
         return None
 
-    def has_perm(self, user_obj: Any, perm: str, obj: Model | None = None) -> bool:
+    def has_perm(self, user_obj: Any, perm: str, obj: Optional[Model] = None) -> bool:
         """Check if a user has the permission for a given object.
 
         Returns `True` if given `user_obj` has `perm` for `obj`.
@@ -115,7 +114,7 @@ class ObjectPermissionBackend(BaseBackend):
         check = ObjectPermissionChecker(user_obj)
         return check.has_perm(perm, obj)
 
-    def get_group_permissions(self, user_obj: Any, obj: Model | None = None) -> Iterable[str]:
+    def get_group_permissions(self, user_obj: Any, obj: Optional[Model] = None) -> Iterable[str]:
         """Returns group permissions for a given object.
 
         Parameters:
@@ -139,7 +138,7 @@ class ObjectPermissionBackend(BaseBackend):
         check = ObjectPermissionChecker(user_obj)
         return set(check.get_group_perms(obj))
 
-    def get_all_permissions(self, user_obj: Any, obj: Model | None = None) -> Iterable[str]:
+    def get_all_permissions(self, user_obj: Any, obj: Optional[Model] = None) -> Iterable[str]:
         """Returns all permissions for a given object.
 
         Parameters:
