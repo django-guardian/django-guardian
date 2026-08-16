@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, Group
 from django.test import TestCase
+
 from guardian.backends import ObjectPermissionBackend
 from guardian.conf import settings as guardian_settings
 from guardian.shortcuts import assign_perm, remove_perm
@@ -15,16 +16,11 @@ class ObjectPermissionBackendTest(TestCase):
         from django.contrib.auth.backends import BaseBackend
 
         self.assertIsInstance(self.backend, BaseBackend)
-
     def setUp(self):
         self.backend = ObjectPermissionBackend()
         self.user = User.objects.create_user(username="testuser", password="testpass")
-        self.superuser = User.objects.create_superuser(
-            username="superuser", password="superpass"
-        )
-        self.inactive_user = User.objects.create_user(
-            username="inactive", password="inactive"
-        )
+        self.superuser = User.objects.create_superuser(username="superuser", password="superpass")
+        self.inactive_user = User.objects.create_user(username="inactive", password="inactive")
         self.inactive_user.is_active = False
         self.inactive_user.save()
 
@@ -35,33 +31,23 @@ class ObjectPermissionBackendTest(TestCase):
 
         # Create anonymous user if it doesn't exist
         try:
-            self.anonymous_user = User.objects.get(
-                username=guardian_settings.ANONYMOUS_USER_NAME
-            )
+            self.anonymous_user = User.objects.get(username=guardian_settings.ANONYMOUS_USER_NAME)
         except User.DoesNotExist:
-            self.anonymous_user = User.objects.create_user(
-                username=guardian_settings.ANONYMOUS_USER_NAME
-            )
+            self.anonymous_user = User.objects.create_user(username=guardian_settings.ANONYMOUS_USER_NAME)
 
     def test_authenticate_returns_none(self):
         """Backend should not authenticate users (returns None)"""
-        result = self.backend.authenticate(
-            request=None, username="test", password="test"
-        )
+        result = self.backend.authenticate(request=None, username="test", password="test")
         self.assertIsNone(result)
 
     def test_has_perm_with_object(self):
         """Test has_perm method with object permissions"""
         # No permission initially
-        self.assertFalse(
-            self.backend.has_perm(self.user, "change_project", self.project)
-        )
+        self.assertFalse(self.backend.has_perm(self.user, "change_project", self.project))
 
         # Assign permission
         assign_perm("change_project", self.user, self.project)
-        self.assertTrue(
-            self.backend.has_perm(self.user, "change_project", self.project)
-        )
+        self.assertTrue(self.backend.has_perm(self.user, "change_project", self.project))
 
     def test_has_perm_without_object(self):
         """Test has_perm method without object (should return False)"""
@@ -70,16 +56,12 @@ class ObjectPermissionBackendTest(TestCase):
 
     def test_has_perm_superuser(self):
         """Test has_perm method with superuser"""
-        self.assertTrue(
-            self.backend.has_perm(self.superuser, "change_project", self.project)
-        )
+        self.assertTrue(self.backend.has_perm(self.superuser, "change_project", self.project))
 
     def test_has_perm_inactive_user(self):
         """Test has_perm method with inactive user"""
         assign_perm("change_project", self.inactive_user, self.project)
-        self.assertFalse(
-            self.backend.has_perm(self.inactive_user, "change_project", self.project)
-        )
+        self.assertFalse(self.backend.has_perm(self.inactive_user, "change_project", self.project))
 
     def test_get_group_permissions_with_object(self):
         """Test get_group_permissions method with object"""
@@ -161,9 +143,7 @@ class ObjectPermissionBackendTest(TestCase):
         assign_perm("delete_project", self.group, self.project)
 
         # Verify they exist
-        self.assertTrue(
-            self.backend.has_perm(self.user, "change_project", self.project)
-        )
+        self.assertTrue(self.backend.has_perm(self.user, "change_project", self.project))
         group_perms = self.backend.get_group_permissions(self.user, self.project)
         self.assertIn("delete_project", group_perms)
 
@@ -172,9 +152,7 @@ class ObjectPermissionBackendTest(TestCase):
         remove_perm("delete_project", self.group, self.project)
 
         # Verify they're gone
-        self.assertFalse(
-            self.backend.has_perm(self.user, "change_project", self.project)
-        )
+        self.assertFalse(self.backend.has_perm(self.user, "change_project", self.project))
         group_perms = self.backend.get_group_permissions(self.user, self.project)
         self.assertEqual(set(), group_perms)
 
