@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, Group
 from django.test import TestCase
+
 from guardian.backends import ObjectPermissionBackend
 from guardian.conf import settings as guardian_settings
 from guardian.shortcuts import assign_perm, remove_perm
