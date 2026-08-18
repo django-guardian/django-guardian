@@ -1006,4 +1006,3 @@ def filter_perms_queryset_by_objects(perms_queryset, objects):
         return perms_queryset.filter(**{"{}__in".format(field): objects})
     else:
         return perms_queryset
-
