@@ -17,7 +17,7 @@ from guardian.admin import GuardedInlineAdminMixin, GuardedModelAdmin
 from guardian.models import Group
 from guardian.shortcuts import assign_perm, get_perms, get_perms_for_model, remove_perm
 from guardian.testapp.models import LogEntryWithGroup as LogEntry
-from guardian.testapp.models import UserProfile
+from guardian.testapp.models import Project, UserProfile
 from guardian.testapp.tests.conf import skipUnlessTestApp
 
 User = get_user_model()
@@ -431,6 +431,88 @@ class GuardedModelAdminTests(TestCase):
         request.user = joe
         qs = gma.get_queryset(request)
         self.assertEqual(sorted(e.pk for e in qs), sorted(LogEntry.objects.values_list("pk", flat=True)))
+
+    def test_user_can_access_permitted_objects_only(self):
+        attrs = {
+            "user_can_access_permitted_objects_only": True,
+        }
+        gma = self._get_gma(attrs=attrs, model=Project)
+        joe = User.objects.create_user("joe", "joe@example.com", "joe")
+        User.objects.create_user("jane", "jane@example.com", "jane")
+        p1 = Project.objects.create(name="p1")
+        Project.objects.create(name="p2")
+        assign_perm("change_project", joe, p1)
+        request = HttpRequest()
+        request.user = joe
+        qs = gma.get_queryset(request)
+        self.assertEqual(list(qs), [p1])
+
+    def test_user_can_access_permitted_objects_only_group(self):
+        attrs = {
+            "user_can_access_permitted_objects_only": True,
+        }
+        gma = self._get_gma(attrs=attrs, model=Project)
+        joe = User.objects.create_user("joe", "joe@example.com", "joe")
+        joe_group = Group.objects.create(name="joe-group")
+        joe.groups.add(joe_group)
+        p1 = Project.objects.create(name="p1")
+        Project.objects.create(name="p2")
+        assign_perm("change_project", joe_group, p1)
+        request = HttpRequest()
+        request.user = joe
+        qs = gma.get_queryset(request)
+        self.assertEqual(list(qs), [p1])
+
+    def test_user_can_access_permitted_objects_only_unless_superuser(self):
+        attrs = {
+            "user_can_access_permitted_objects_only": True,
+        }
+        gma = self._get_gma(attrs=attrs, model=Project)
+        joe = User.objects.create_superuser("joe", "joe@example.com", "joe")
+        p1 = Project.objects.create(name="p1")
+        p2 = Project.objects.create(name="p2")
+        request = HttpRequest()
+        request.user = joe
+        qs = gma.get_queryset(request)
+        self.assertEqual(sorted(p.pk for p in qs), sorted([p1.pk, p2.pk]))
+
+    def test_user_can_access_permitted_objects_with_specific_perms(self):
+        attrs = {
+            "user_can_access_permitted_objects_only": True,
+            "permitted_objects_perms": ["change_project"],
+        }
+        gma = self._get_gma(attrs=attrs, model=Project)
+        joe = User.objects.create_user("joe", "joe@example.com", "joe")
+        p1 = Project.objects.create(name="p1")
+        p2 = Project.objects.create(name="p2")
+        assign_perm("change_project", joe, p1)
+        assign_perm("delete_project", joe, p2)
+        request = HttpRequest()
+        request.user = joe
+        qs = gma.get_queryset(request)
+        self.assertEqual(list(qs), [p1])
+
+    def test_user_can_access_permitted_objects_accept_global_perms(self):
+        attrs = {
+            "user_can_access_permitted_objects_only": True,
+            "permitted_objects_perms": ["change_project"],
+            "permitted_objects_accept_global_perms": False,
+        }
+        gma = self._get_gma(attrs=attrs, model=Project)
+        joe = User.objects.create_user("joe", "joe@example.com", "joe")
+        p1 = Project.objects.create(name="p1")
+        Project.objects.create(name="p2")
+        assign_perm("change_project", joe, p1)
+
+        from django.contrib.auth.models import Permission
+        perm = Permission.objects.get(codename="change_project", content_type__app_label="testapp")
+        joe.user_permissions.add(perm)
+
+        request = HttpRequest()
+        request.user = joe
+        qs = gma.get_queryset(request)
+        self.assertEqual(list(qs), [p1])
+
 
 
 class GrappelliGuardedModelAdminTests(TestCase):
