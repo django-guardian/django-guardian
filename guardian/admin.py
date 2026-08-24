@@ -424,6 +424,40 @@ class GuardedModelAdminMixin:
         return AdminGroupObjectPermissionsForm
 
 
+class ReinforcedGuardedModelAdminMixin(GuardedModelAdminMixin):
+    """Mixin helper for custom subclassing `admin.ModelAdmin`.
+
+    Like `GuardedModelAdminMixin`, but also requires the guardian
+    view/change permissions for the object permissions management views
+    themselves. `GuardedModelAdminMixin` only checks `has_change_permission`
+    for the underlying model, so any staff user allowed to change a model
+    instance can also view and edit *every* user's and group's object
+    permissions for it, whether or not they hold the guardian permission
+    for that. This mixin is opt-in to avoid changing the behavior of
+    existing `GuardedModelAdminMixin` subclasses.
+    """
+
+    def obj_perms_manage_view(self, request, object_pk):
+        if not request.user.has_perm("guardian.view_userobjectpermission") and not request.user.has_perm(
+            "guardian.view_groupobjectpermission"
+        ):
+            post_url = reverse("admin:index", current_app=self.admin_site.name)
+            return redirect(post_url)
+        return super().obj_perms_manage_view(request, object_pk)
+
+    def obj_perms_manage_user_view(self, request, object_pk, user_id):
+        if not request.user.has_perm("guardian.change_userobjectpermission"):
+            post_url = reverse("admin:index", current_app=self.admin_site.name)
+            return redirect(post_url)
+        return super().obj_perms_manage_user_view(request, object_pk, user_id)
+
+    def obj_perms_manage_group_view(self, request, object_pk, group_id):
+        if not request.user.has_perm("guardian.change_groupobjectpermission"):
+            post_url = reverse("admin:index", current_app=self.admin_site.name)
+            return redirect(post_url)
+        return super().obj_perms_manage_group_view(request, object_pk, group_id)
+
+
 class GuardedModelAdmin(GuardedModelAdminMixin, admin.ModelAdmin):
     """Provide views for managing object permissions on the Django admin panel.
 
@@ -472,6 +506,14 @@ class GuardedModelAdmin(GuardedModelAdminMixin, admin.ModelAdmin):
 
         admin.site.register(Author, AuthorAdmin)
         ```
+    """
+
+
+class ReinforcedGuardedModelAdmin(ReinforcedGuardedModelAdminMixin, admin.ModelAdmin):
+    """Like `GuardedModelAdmin`, but requires the guardian view/change
+    permissions for the object permissions management views themselves.
+
+    See `ReinforcedGuardedModelAdminMixin` for details.
     """
 
 
