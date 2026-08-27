@@ -1110,7 +1110,7 @@ class GetObjectsForUser(TestCase):
         query = str(objects.query).lower()
         assert_query_does_not_cast_object_pk(self, query)
 
-    def test_get_objects_for_user_with_annotated_queryset_klass(self):
+    def test_get_objects_for_user_with_annotated_queryset(self):
         assign_perm("auth.change_group", self.user, self.group)
         other_group = Group.objects.create(name="group2")
         qs = Group.objects.annotate(_dummy=Value(1, output_field=IntegerField()))
