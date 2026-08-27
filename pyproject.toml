@@ -1,6 +1,6 @@
 [project]
 name = "django-guardian"
-version = "3.3.3"
+version = "3.3.4"
 description = "Per object permissions for Django"
 keywords = ["django", "permissions", "authorization", "object", "row", "level"]
 readme = "README.md"
@@ -124,7 +124,7 @@ dependencies = [
 Homepage = "https://github.com/django-guardian/django-guardian"
 Documentation = "https://django-guardian.readthedocs.io/"
 Repository = "https://github.com/django-guardian/django-guardian"
-Issues = "https://github.com/me/spam/issues"
+Issues = "https://github.com/django-guardian/django-guardian/issues"
 Changelog = "https://github.com/django-guardian/django-guardian/releases"
 
 [dependency-groups]
