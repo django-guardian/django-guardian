@@ -26,7 +26,7 @@ jobs:
         ref: ${{ inputs.ref }}
 
     - name: Install uv
-      uses: astral-sh/setup-uv@v9.0.0
+      uses: astral-sh/setup-uv@v10.0.1
 
     - name: Install python
       uses: actions/setup-python@v7.0.0
@@ -96,7 +96,7 @@ jobs:
         ref: ${{ inputs.ref }}
 
     - name: Install uv
-      uses: astral-sh/setup-uv@v9.0.0
+      uses: astral-sh/setup-uv@v10.0.1
 
     - name: Install python
       uses: actions/setup-python@v7.0.0
@@ -108,4 +108,4 @@ jobs:
       run: uv build
 
     - name: Publish package distributions to PyPI
-      uses: pypa/gh-action-pypi-publish@v1.14.1
+      uses: pypa/gh-action-pypi-publish@v1.14.2
