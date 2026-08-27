@@ -6,6 +6,7 @@ import django
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import IntegerField, Value
 from django.db.models.query import QuerySet
 from django.test import TestCase, TransactionTestCase
 
@@ -1108,6 +1109,14 @@ class GetObjectsForUser(TestCase):
 
         query = str(objects.query).lower()
         assert_query_does_not_cast_object_pk(self, query)
+
+    def test_get_objects_for_user_with_annotated_queryset(self):
+        assign_perm("auth.change_group", self.user, self.group)
+        other_group = Group.objects.create(name="group2")
+        qs = Group.objects.annotate(_dummy=Value(1, output_field=IntegerField()))
+        objects = get_objects_for_user(self.user, ["auth.change_group"], qs)
+        self.assertEqual(set(objects), {self.group})
+        self.assertNotIn(other_group, objects)
 
     def test_ensure_returns_queryset(self):
         objects = get_objects_for_user(self.user, ["auth.change_group"])
