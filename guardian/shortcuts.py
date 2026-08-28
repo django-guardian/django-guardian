@@ -984,19 +984,21 @@ def filter_perms_queryset_by_objects(perms_queryset, objects):
                 if _casts_to_bigint(handle_pk_field):
                     # Keep object_pk untouched to avoid CAST(object_pk AS bigint)
                     # scans on large guardian tables. We only stringify model PKs.
-                    objects = objects.values(_pk=Cast("pk", output_field=CharField()))
+                    objects = objects.annotate(_pk=Cast("pk", output_field=CharField())).values_list("_pk", flat=True)
                     field = "object_pk"
                 else:
-                    objects = objects.values(_pk=Cast(handle_pk_field("pk"), output_field=CharField()))
+                    objects = objects.annotate(_pk=Cast(handle_pk_field("pk"), output_field=CharField())).values_list(
+                        "_pk", flat=True
+                    )
                     # Apply the same transformation to the object_pk field for consistent comparison (#930)
                     perms_queryset = perms_queryset.annotate(
                         _transformed_object_pk=Cast(handle_pk_field(field), output_field=CharField())
                     )
                     field = "_transformed_object_pk"
             else:
-                objects = objects.values("pk")
+                objects = objects.values_list("pk", flat=True)
         else:
-            objects = objects.values("pk")
+            objects = objects.values_list("pk", flat=True)
         return perms_queryset.filter(**{"{}__in".format(field): objects})
     else:
         return perms_queryset
