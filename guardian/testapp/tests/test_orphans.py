@@ -37,8 +37,12 @@ class OrphanedObjectPermissionsTest(TestCase):
         """Helper method to create a specific number of orphan permissions"""
         target_objs = []
         for i in range(count):
+            # Use only the test method name (not self.id(), whose fully qualified
+            # dotted path can exceed ContentType.model's max_length=100 and raise
+            # a DataError on strict backends like PostgreSQL/MySQL, even though
+            # SQLite silently accepts it).
             target_obj = ContentType.objects.create(
-                model=f"test_model_{self.id()}_{i}", app_label="fake-for-guardian-tests"
+                model=f"test_model_{self._testMethodName}_{i}", app_label="fake-for-guardian-tests"
             )
             target_objs.append(target_obj)
 
