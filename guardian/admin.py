@@ -1,11 +1,12 @@
 from collections import OrderedDict
-from typing import Type
+from typing import Type, cast
 
 from django import forms
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
 from django.contrib.auth import get_user_model
+from django.db.models import Model
 from django.http import HttpRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import path, reverse
@@ -117,6 +118,15 @@ class AdminGroupObjectPermissionsForm(GroupObjectPermissionsForm):
 class GuardedModelAdminMixin:
     """Mixin helper for custom subclassing `admin.ModelAdmin`."""
 
+    # These attributes are provided by admin.ModelAdmin at runtime.
+    admin_site: admin.AdminSite
+    media: forms.Media
+    model: type[Model]
+
+    def has_change_permission(self, request: HttpRequest, obj: object = None) -> bool:
+        model_admin = cast(admin.ModelAdmin, super())
+        return model_admin.has_change_permission(request, obj)
+
     change_form_template: str = "admin/guardian/model/change_form.html"
     obj_perms_manage_template: str = "admin/guardian/model/obj_perms_manage.html"
     obj_perms_manage_user_template: str = "admin/guardian/model/obj_perms_manage_user.html"
@@ -177,7 +187,7 @@ class GuardedModelAdminMixin:
             urls = myurls + urls
         return urls
 
-    def get_obj_perms_base_context(self, request, obj):
+    def get_obj_perms_base_context(self, request, obj) -> dict:
         """Get context dict with common admin and object permissions related content.
 
         Returns context dictionary with common admin and object permissions
@@ -395,7 +405,7 @@ class GuardedModelAdminMixin:
 
         return render(request, self.get_obj_perms_manage_group_template(), context)
 
-    def get_obj_perms_manage_group_template(self):
+    def get_obj_perms_manage_group_template(self) -> str:
         """Returns object permissions for group admin template.
 
         May be overridden if dynamic behavior is needed.
@@ -411,7 +421,7 @@ class GuardedModelAdminMixin:
             return "admin/guardian/contrib/grappelli/obj_perms_manage_group.html"
         return self.obj_perms_manage_group_template
 
-    def get_obj_perms_manage_group_form(self, request):
+    def get_obj_perms_manage_group_form(self, request: HttpRequest) -> Type[forms.Form]:
         """Get the form class for group object permissions management.
 
         Parameters:
