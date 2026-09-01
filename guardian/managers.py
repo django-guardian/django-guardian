@@ -228,13 +228,9 @@ class UserObjectPermissionManager(BaseObjectPermissionManager):
         `guardian.managers.UserObjectPermissionManager`
     """
 
-    pass
-
 
 class GroupObjectPermissionManager(BaseObjectPermissionManager):
     """
     See Also:
         `guardian.managers.UserObjectPermissionManager`
     """
-
-    pass
