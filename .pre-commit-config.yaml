@@ -46,3 +46,4 @@ repos:
   rev: v3.20.0
   hooks:
   - id: pyupgrade
+    args: [--py310-plus]

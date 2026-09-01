@@ -1,5 +1,4 @@
 from collections import OrderedDict
-from typing import Type
 
 from django import forms
 from django.conf import settings
@@ -327,7 +326,7 @@ class GuardedModelAdminMixin:
             return "admin/guardian/contrib/grappelli/obj_perms_manage_user.html"
         return self.obj_perms_manage_user_template
 
-    def get_obj_perms_user_select_form(self, request: HttpRequest) -> Type[forms.Form]:
+    def get_obj_perms_user_select_form(self, request: HttpRequest) -> type[forms.Form]:
         """Get the form class for selecting a user for permissions management.
 
         Parameters:
@@ -339,7 +338,7 @@ class GuardedModelAdminMixin:
         """
         return UserManage
 
-    def get_obj_perms_group_select_form(self, request: HttpRequest) -> Type[forms.Form]:
+    def get_obj_perms_group_select_form(self, request: HttpRequest) -> type[forms.Form]:
         """Get the form class for group object permissions management.
         Parameters:
             request (HttpRequest): The HTTP request object.
@@ -350,7 +349,7 @@ class GuardedModelAdminMixin:
         """
         return GroupManage
 
-    def get_obj_perms_manage_user_form(self, request: HttpRequest) -> Type[forms.Form]:
+    def get_obj_perms_manage_user_form(self, request: HttpRequest) -> type[forms.Form]:
         """Get the form class for user object permissions management.
 
         Parameters:

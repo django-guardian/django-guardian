@@ -1,5 +1,5 @@
+from collections.abc import Iterable
 from itertools import chain
-from typing import Iterable, Optional
 
 from django.contrib.auth.models import Permission
 from django.db.models import Model
@@ -53,7 +53,7 @@ class ObjectPermissionChecker:
        dictionary.
     """
 
-    def __init__(self, user_or_group: Optional[Model] = None) -> None:
+    def __init__(self, user_or_group: Model | None = None) -> None:
         """Constructor for ObjectPermissionChecker.
 
         Parameters:
