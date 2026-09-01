@@ -565,6 +565,15 @@ class GetUsersWithPermsTest(TestCase):
             {user.username for user in (self.user1, self.user2)},
         )
 
+    def test_with_group_users_resolves_group_ids_as_subquery(self):
+        self.user1.groups.add(self.group1)
+        assign_perm("change_contenttype", self.group1, self.obj1)
+        assign_perm("change_contenttype", self.user2, self.obj1)
+
+        with self.assertNumQueries(1):
+            result = get_users_with_perms(self.obj1, with_group_users=True)
+            list(result)
+
     def test_only_with_perms_in_groups(self):
         assign_perm("change_contenttype", self.group1, self.obj1)
         assign_perm("delete_contenttype", self.group2, self.obj1)
