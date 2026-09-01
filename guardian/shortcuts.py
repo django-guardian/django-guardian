@@ -3,7 +3,7 @@
 from collections import defaultdict
 from functools import lru_cache, partial
 from itertools import groupby
-from typing import Any, Optional, Type, TypeVar, Union
+from typing import Any, TypeVar
 import warnings
 
 from django.apps import apps
@@ -63,7 +63,7 @@ def _get_first(t):
     return t[0]
 
 
-def _ensure_permission(perm: Union[Permission, str]) -> Permission:
+def _ensure_permission(perm: Permission | str) -> Permission:
     """Converts string permission to the corresponding django model, if required."""
     if isinstance(perm, str):
         try:
@@ -76,7 +76,7 @@ def _ensure_permission(perm: Union[Permission, str]) -> Permission:
     return perm
 
 
-def _normalize_perm(perm: Union[Permission, str]) -> Union[Permission, str]:
+def _normalize_perm(perm: Permission | str) -> Permission | str:
     """Normalizes permission codename, if it is a string."""
     if isinstance(perm, str) and "." in perm:
         _, perm = perm.split(".", 1)
@@ -85,10 +85,10 @@ def _normalize_perm(perm: Union[Permission, str]) -> Union[Permission, str]:
 
 
 def assign_perm(
-    perm: Union[str, Permission],
+    perm: str | Permission,
     user_or_group: Any,
-    obj: Optional[Model] = None,
-) -> Union[str, Permission, None]:
+    obj: Model | None = None,
+) -> str | Permission | None:
     """Assigns permission to user/group and object pair.
 
     Parameters:
@@ -191,10 +191,10 @@ def assign(perm, user_or_group, obj=None):
 
 
 def remove_perm(
-    perm: Union[str, Permission],
+    perm: str | Permission,
     user_or_group: Any = None,
-    obj: Union[Model, QuerySet, list, None] = None,
-) -> Union[tuple[int, dict], None]:
+    obj: Model | QuerySet | list | None = None,
+) -> tuple[int, dict] | None:
     """Removes permission from user/group and object pair.
 
     Parameters:
@@ -324,7 +324,7 @@ def get_group_perms(user_or_group: Any, obj: Model) -> QuerySet[Permission]:
     return check.get_group_perms(obj)
 
 
-def get_perms_for_model(cls: Union[Type[Model], Model, str]) -> QuerySet:
+def get_perms_for_model(cls: type[Model] | Model | str) -> QuerySet:
     """Get all permissions for a given model class.
 
     Returns:
@@ -345,8 +345,8 @@ def get_users_with_perms(
     attach_perms: bool = False,
     with_superusers: bool = False,
     with_group_users: bool = True,
-    only_with_perms_in: Optional[list[str]] = None,
-) -> Union[Any, list[str]]:
+    only_with_perms_in: list[str] | None = None,
+) -> Any | list[str]:
     """Get all users with *any* object permissions for the given `obj`.
 
     Parameters:
@@ -444,8 +444,8 @@ def get_users_with_perms(
 
 
 def get_groups_with_perms(
-    obj: Model, attach_perms: bool = False, only_with_perms_in: Optional[list[str]] = None
-) -> Union[Group, dict]:
+    obj: Model, attach_perms: bool = False, only_with_perms_in: list[str] | None = None
+) -> Group | dict:
     """Get all groups with *any* object permissions for the given `obj`.
 
     Parameters:
@@ -518,8 +518,8 @@ T = TypeVar("T", bound=Model)
 
 
 def _compute_codenames_and_ctype(
-    perms: Union[str, list[str]],
-) -> tuple[Optional[ContentType], set[str]]:
+    perms: str | list[str],
+) -> tuple[ContentType | None, set[str]]:
     """Extracts ContentType and codenames from given list of permissions."""
     if isinstance(perms, str):
         perms = [perms]
@@ -549,8 +549,8 @@ def _compute_codenames_and_ctype(
 
 
 def _compute_queryset(
-    ctype: Optional[ContentType],
-    klass: Union[Type[T], Manager[T], QuerySet[T], None],
+    ctype: ContentType | None,
+    klass: type[T] | Manager[T] | QuerySet[T] | None,
 ) -> tuple[ContentType, QuerySet[T]]:
     """Computes QuerySet and ContentType if still missing"""
     if ctype is None and klass is not None:
@@ -569,8 +569,8 @@ def _compute_queryset(
 
 def get_objects_for_user(
     user: Any,
-    perms: Union[str, list[str]],
-    klass: Union[Type[T], Manager[T], QuerySet[T], None] = None,
+    perms: str | list[str],
+    klass: type[T] | Manager[T] | QuerySet[T] | None = None,
     use_groups: bool = True,
     any_perm: bool = False,
     with_superuser: bool = True,
@@ -802,8 +802,8 @@ def get_objects_for_user(
 
 def get_objects_for_group(
     group: Group,
-    perms: Union[str, list[str]],
-    klass: Union[Type[T], Manager[T], QuerySet[T], None] = None,
+    perms: str | list[str],
+    klass: type[T] | Manager[T] | QuerySet[T] | None = None,
     any_perm: bool = False,
     accept_global_perms: bool = True,
 ) -> QuerySet[T]:
@@ -999,6 +999,6 @@ def filter_perms_queryset_by_objects(perms_queryset, objects):
                 objects = objects.values_list("pk", flat=True)
         else:
             objects = objects.values_list("pk", flat=True)
-        return perms_queryset.filter(**{"{}__in".format(field): objects})
+        return perms_queryset.filter(**{f"{field}__in": objects})
     else:
         return perms_queryset
