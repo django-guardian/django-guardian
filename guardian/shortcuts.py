@@ -419,9 +419,7 @@ def get_users_with_perms(
                         "permission_id__in": permission_ids,
                     }
                 )
-            group_ids = set(
-                group_model.objects.filter(**group_obj_perm_filters).values_list("group_id", flat=True).distinct()
-            )
+            group_ids = group_model.objects.filter(**group_obj_perm_filters).values("group_id").distinct()
             qset = qset | Q(groups__in=group_ids)
         if with_superusers:
             qset = qset | Q(is_superuser=True)
