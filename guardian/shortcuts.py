@@ -13,7 +13,6 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
 from django.db.models import (
-    AutoField,
     BigIntegerField,
     CharField,
     Count,
@@ -21,11 +20,8 @@ from django.db.models import (
     IntegerField,
     Manager,
     Model,
-    PositiveIntegerField,
-    PositiveSmallIntegerField,
     Q,
     QuerySet,
-    SmallIntegerField,
     UUIDField,
 )
 from django.db.models.expressions import Value
@@ -938,17 +934,7 @@ def _handle_pk_field(queryset):
     if isinstance(pk, ForeignKey):
         return _handle_pk_field(pk.target_field)
 
-    if isinstance(
-        pk,
-        (
-            IntegerField,
-            AutoField,
-            BigIntegerField,
-            PositiveIntegerField,
-            PositiveSmallIntegerField,
-            SmallIntegerField,
-        ),
-    ):
+    if isinstance(pk, IntegerField):
         return partial(Cast, output_field=BigIntegerField())
 
     if isinstance(pk, UUIDField):
