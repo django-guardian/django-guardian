@@ -16,7 +16,7 @@ def get_default_content_type(obj: Model | type[Model]) -> ContentType:
     """Get content type for a given object using Django's content type framework.
 
     Parameters:
-        obj (Model | Type): Object for which content type is to be fetched.
+        obj (Model | type[Model]): Object for which content type is to be fetched.
 
     Returns:
         Content type for the given object.
