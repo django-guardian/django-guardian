@@ -1,7 +1,7 @@
 from collections.abc import Iterable
 import sys
 from types import GeneratorType
-from typing import Any, Optional, Union
+from typing import Any
 import warnings
 
 # Import deprecated decorator with fallback for Python < 3.13
@@ -135,7 +135,7 @@ class PermissionRequiredMixin:
 
     # default class view settings
     login_url: str = settings.LOGIN_URL
-    permission_required: Union[str, list[str], None] = None
+    permission_required: str | list[str] | None = None
     redirect_field_name: str = REDIRECT_FIELD_NAME
     return_403: bool = False
     return_404: bool = False
@@ -151,7 +151,7 @@ class PermissionRequiredMixin:
         """
         return self.object_permission_denied_message
 
-    def get_required_permissions(self, request: Optional[HttpRequest] = None) -> list[str]:
+    def get_required_permissions(self, request: HttpRequest | None = None) -> list[str]:
         """Get the required permissions.
 
         Returns list of permissions in format *<app_label>.<codename>* that
@@ -190,7 +190,7 @@ class PermissionRequiredMixin:
 
     def check_permissions(
         self, request: HttpRequest
-    ) -> Union[HttpResponseForbidden, HttpResponseNotFound, HttpResponseRedirect, HttpResponse, None]:
+    ) -> HttpResponseForbidden | HttpResponseNotFound | HttpResponseRedirect | HttpResponse | None:
         """Check if the user has the required permissions.
 
         Checks if `request.user` has all permissions returned by the
@@ -220,7 +220,7 @@ class PermissionRequiredMixin:
         return forbidden
 
     def on_permission_check_fail(
-        self, request: HttpRequest, response: HttpResponse, obj: Optional[Union[Model, Any]] = None
+        self, request: HttpRequest, response: HttpResponse, obj: Model | Any | None = None
     ) -> None:
         """Method called upon permission check fail.
 
@@ -301,11 +301,11 @@ class PermissionListMixin:
             Default to `{}`,
     """
 
-    permission_required: Union[str, list[str], None] = None
+    permission_required: str | list[str] | None = None
     # rename get_objects_for_user_kwargs to when get_get_objects_for_user_kwargs is removed
     get_objects_for_user_extra_kwargs: dict = {}
 
-    def get_required_permissions(self, request: Optional[HttpRequest] = None) -> list[str]:
+    def get_required_permissions(self, request: HttpRequest | None = None) -> list[str]:
         """Get the required permissions.
 
         Returns list of permissions in format *<app_label>.<codename>* that

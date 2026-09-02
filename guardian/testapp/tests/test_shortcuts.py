@@ -6,6 +6,7 @@ import django
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import IntegerField, Value
 from django.db.models.query import QuerySet
 from django.test import TestCase, TransactionTestCase
 
@@ -564,6 +565,15 @@ class GetUsersWithPermsTest(TestCase):
             {user.username for user in (self.user1, self.user2)},
         )
 
+    def test_with_group_users_resolves_group_ids_as_subquery(self):
+        self.user1.groups.add(self.group1)
+        assign_perm("change_contenttype", self.group1, self.obj1)
+        assign_perm("change_contenttype", self.user2, self.obj1)
+
+        with self.assertNumQueries(1):
+            result = get_users_with_perms(self.obj1, with_group_users=True)
+            list(result)
+
     def test_only_with_perms_in_groups(self):
         assign_perm("change_contenttype", self.group1, self.obj1)
         assign_perm("delete_contenttype", self.group2, self.obj1)
@@ -1108,6 +1118,14 @@ class GetObjectsForUser(TestCase):
 
         query = str(objects.query).lower()
         assert_query_does_not_cast_object_pk(self, query)
+
+    def test_get_objects_for_user_with_annotated_queryset(self):
+        assign_perm("auth.change_group", self.user, self.group)
+        other_group = Group.objects.create(name="group2")
+        qs = Group.objects.annotate(_dummy=Value(1, output_field=IntegerField()))
+        objects = get_objects_for_user(self.user, ["auth.change_group"], qs)
+        self.assertEqual(set(objects), {self.group})
+        self.assertNotIn(other_group, objects)
 
     def test_ensure_returns_queryset(self):
         objects = get_objects_for_user(self.user, ["auth.change_group"])

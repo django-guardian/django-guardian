@@ -11,7 +11,7 @@ import logging
 from math import ceil
 import os
 import time
-from typing import Any, Optional, Union
+from typing import Any
 
 from django.apps import apps as django_apps
 from django.conf import settings
@@ -89,7 +89,7 @@ def get_anonymous_user() -> Any:
         return _get_anonymous_user_uncached()
 
 
-def get_identity(identity: Model) -> tuple[Union[Any, None], Union[Any, None]]:
+def get_identity(identity: Model) -> tuple[Any | None, Any | None]:
     """Get a tuple with the identity of the given input.
 
     Returns a tuple with one of the members set to `None` depending on whether the input is
@@ -159,21 +159,15 @@ def get_identity(identity: Model) -> tuple[Union[Any, None], Union[Any, None]]:
 def get_40x_or_None(
     request: HttpRequest,
     perms: list[str],
-    obj: Optional[Any] = None,
-    login_url: Optional[Any] = None,
-    redirect_field_name: Optional[str] = None,
+    obj: Any | None = None,
+    login_url: Any | None = None,
+    redirect_field_name: str | None = None,
     return_403: bool = False,
     return_404: bool = False,
     permission_denied_message: str = "",
     accept_global_perms: bool = False,
     any_perm: bool = False,
-) -> Union[
-    HttpResponseForbidden,
-    HttpResponseNotFound,
-    HttpResponseRedirect,
-    HttpResponse,
-    None,
-]:
+) -> HttpResponseForbidden | HttpResponseNotFound | HttpResponseRedirect | HttpResponse | None:
     login_url = login_url or settings.LOGIN_URL
     redirect_field_name = redirect_field_name or REDIRECT_FIELD_NAME
 
@@ -236,17 +230,17 @@ def get_obj_perm_model_by_conf(setting_name: str) -> type[Model]:
     try:
         return django_apps.get_model(setting_value, require_ready=False)  # type: ignore
     except ValueError as e:
-        raise ImproperlyConfigured("{} must be of the form 'app_label.model_name'".format(setting_value)) from e
+        raise ImproperlyConfigured(f"{setting_value} must be of the form 'app_label.model_name'") from e
     except LookupError as e:
         raise ImproperlyConfigured(
-            "{} refers to model '{}' that has not been installed".format(setting_name, setting_value)
+            f"{setting_name} refers to model '{setting_value}' that has not been installed"
         ) from e
 
 
 def clean_orphan_obj_perms(
-    batch_size: Optional[int] = None,
-    max_batches: Optional[int] = None,
-    max_duration_secs: Optional[int] = None,
+    batch_size: int | None = None,
+    max_batches: int | None = None,
+    max_duration_secs: int | None = None,
     skip_batches: int = 0,
 ) -> int:
     """
@@ -415,7 +409,7 @@ def clean_orphan_obj_perms(
 # are defined
 
 
-def get_obj_perms_model(obj: Optional[Model], base_cls: type[Model], generic_cls: type[Model]) -> type[Model]:
+def get_obj_perms_model(obj: Model | None, base_cls: type[Model], generic_cls: type[Model]) -> type[Model]:
     """Return the matching object permission model for the obj class.
 
     Defaults to returning the generic object permission when no direct foreignkey is defined, or obj is None.
@@ -447,7 +441,7 @@ def get_obj_perms_model(obj: Optional[Model], base_cls: type[Model], generic_cls
     return generic_cls
 
 
-def get_user_obj_perms_model(obj: Optional[Model] = None) -> type[Model]:
+def get_user_obj_perms_model(obj: Model | None = None) -> type[Model]:
     """Returns model class that connects given `obj` and User class.
 
     If obj is not specified, then the user generic object permission model
@@ -459,7 +453,7 @@ def get_user_obj_perms_model(obj: Optional[Model] = None) -> type[Model]:
     return get_obj_perms_model(obj, UserObjectPermissionBase, UserObjectPermission)
 
 
-def get_group_obj_perms_model(obj: Optional[Model] = None) -> type[Model]:
+def get_group_obj_perms_model(obj: Model | None = None) -> type[Model]:
     """Returns model class that connects given `obj` and Group class.
 
     If obj is not specified, then the group generic object permission model

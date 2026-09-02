@@ -1,4 +1,4 @@
-from typing import Any, TypeAlias, Union
+from typing import Any, TypeAlias
 import warnings
 
 from django.contrib.auth.models import Permission
@@ -12,7 +12,7 @@ from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type, get_default_content_type
 from guardian.exceptions import ObjectNotPersisted
 
-_PermType: TypeAlias = Union[Permission, str]
+_PermType: TypeAlias = Permission | str
 
 _DEFAULT_CONTENT_TYPE_PATH = f"{get_default_content_type.__module__}.{get_default_content_type.__name__}"
 
@@ -41,9 +41,7 @@ def _ensure_permission(perm: _PermType, ctype: ContentType) -> Permission:
     return perm
 
 
-def _get_perm_filter(
-    perm: _PermType, model: Union[Model, type[Model], None] = None, ctype: Union[ContentType, None] = None
-) -> Q:
+def _get_perm_filter(perm: _PermType, model: Model | type[Model] | None = None, ctype: ContentType | None = None) -> Q:
     if isinstance(perm, Permission):
         return Q(permission=perm)
 
@@ -89,7 +87,7 @@ class BaseObjectPermissionManager(models.Manager):
         return obj_perm
 
     def bulk_assign_perm(
-        self, perm: _PermType, user_or_group: Any, queryset: Union[QuerySet, list], ignore_conflicts: bool = False
+        self, perm: _PermType, user_or_group: Any, queryset: QuerySet | list, ignore_conflicts: bool = False
     ) -> list:
         """
         Bulk assigns permissions with given `perm` for an objects in `queryset` and
@@ -171,9 +169,7 @@ class BaseObjectPermissionManager(models.Manager):
             filters &= Q(content_object__pk=obj.pk)
         return self.filter(filters).delete()
 
-    def bulk_remove_perm(
-        self, perm: _PermType, user_or_group: Any, queryset: Union[QuerySet, list]
-    ) -> tuple[int, dict]:
+    def bulk_remove_perm(self, perm: _PermType, user_or_group: Any, queryset: QuerySet | list) -> tuple[int, dict]:
         """
         Removes permission `perm` for a `queryset` and given `user_or_group`.
 
@@ -228,13 +224,9 @@ class UserObjectPermissionManager(BaseObjectPermissionManager):
         `guardian.managers.UserObjectPermissionManager`
     """
 
-    pass
-
 
 class GroupObjectPermissionManager(BaseObjectPermissionManager):
     """
     See Also:
         `guardian.managers.UserObjectPermissionManager`
     """
-
-    pass
