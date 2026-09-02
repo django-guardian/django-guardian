@@ -7,17 +7,18 @@ from django import forms
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.http import HttpRequest
 from django.test import TestCase
 from django.test.client import Client
 from django.urls import reverse
 
-from guardian.admin import GuardedInlineAdminMixin, GuardedModelAdmin
+from guardian.admin import GuardedInlineAdminMixin, GuardedModelAdmin, ReinforcedGuardedModelAdmin
 from guardian.models import Group
 from guardian.shortcuts import assign_perm, get_perms, get_perms_for_model, remove_perm
 from guardian.testapp.models import LogEntryWithGroup as LogEntry
-from guardian.testapp.models import UserProfile
+from guardian.testapp.models import Post, UserProfile
 from guardian.testapp.tests.conf import skipUnlessTestApp
 
 User = get_user_model()
@@ -47,6 +48,12 @@ try:
 except admin.sites.NotRegistered:
     pass
 admin.site.register(ContentType, ContentTypeGuardedAdmin)
+
+try:
+    admin.site.unregister(Post)
+except admin.sites.NotRegistered:
+    pass
+admin.site.register(Post, ReinforcedGuardedModelAdmin)
 
 
 class AdminTests(TestCase):
@@ -431,6 +438,83 @@ class GuardedModelAdminTests(TestCase):
         request.user = joe
         qs = gma.get_queryset(request)
         self.assertEqual(sorted(e.pk for e in qs), sorted(LogEntry.objects.values_list("pk", flat=True)))
+
+
+class ReinforcedGuardedModelAdminTests(TestCase):
+    """Object permissions management views must require the guardian
+    view/change permission, not just the model's own change permission.
+    """
+
+    def setUp(self):
+        self.staffer = User.objects.create_user("staffer", "staffer@example.com", "staffer")
+        self.staffer.is_staff = True
+        self.staffer.user_permissions.add(
+            Permission.objects.get(
+                content_type=ContentType.objects.get_for_model(Post),
+                codename="change_post",
+            )
+        )
+        self.staffer.save()
+        self.post = Post.objects.create(title="foo-post-title")
+        self.client = Client()
+        self.client.login(username="staffer", password="staffer")
+
+    def tearDown(self):
+        self.client.logout()
+
+    def test_manage_view_denies_staff_without_guardian_perm(self):
+        url = reverse("admin:testapp_post_permissions", args=[self.post.pk])
+        response = self.client.get(url)
+        self.assertRedirects(response, reverse("admin:index"))
+
+    def test_manage_view_denies_staff_with_only_user_view_perm(self):
+        # The combined page always renders both users_perms and
+        # groups_perms, so holding only the user-side view permission
+        # must not be enough to reach it: it would expose every group's
+        # object permissions too.
+        self.staffer.user_permissions.add(Permission.objects.get(codename="view_userobjectpermission"))
+        url = reverse("admin:testapp_post_permissions", args=[self.post.pk])
+        response = self.client.get(url)
+        self.assertRedirects(response, reverse("admin:index"))
+
+    def test_manage_view_denies_staff_with_only_group_view_perm(self):
+        # Symmetric case: only the group-side view permission must not
+        # expose every user's object permissions either.
+        self.staffer.user_permissions.add(Permission.objects.get(codename="view_groupobjectpermission"))
+        url = reverse("admin:testapp_post_permissions", args=[self.post.pk])
+        response = self.client.get(url)
+        self.assertRedirects(response, reverse("admin:index"))
+
+    def test_manage_view_allows_staff_with_both_guardian_perms(self):
+        self.staffer.user_permissions.add(Permission.objects.get(codename="view_userobjectpermission"))
+        self.staffer.user_permissions.add(Permission.objects.get(codename="view_groupobjectpermission"))
+        url = reverse("admin:testapp_post_permissions", args=[self.post.pk])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_manage_user_view_denies_staff_without_guardian_perm(self):
+        url = reverse("admin:testapp_post_permissions_manage_user", args=[self.post.pk, self.staffer.pk])
+        response = self.client.get(url)
+        self.assertRedirects(response, reverse("admin:index"))
+
+    def test_manage_user_view_allows_staff_with_guardian_perm(self):
+        self.staffer.user_permissions.add(Permission.objects.get(codename="change_userobjectpermission"))
+        url = reverse("admin:testapp_post_permissions_manage_user", args=[self.post.pk, self.staffer.pk])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_manage_group_view_denies_staff_without_guardian_perm(self):
+        group = Group.objects.create(name="reinforced-test-group")
+        url = reverse("admin:testapp_post_permissions_manage_group", args=[self.post.pk, group.pk])
+        response = self.client.get(url)
+        self.assertRedirects(response, reverse("admin:index"))
+
+    def test_manage_group_view_allows_staff_with_guardian_perm(self):
+        self.staffer.user_permissions.add(Permission.objects.get(codename="change_groupobjectpermission"))
+        group = Group.objects.create(name="reinforced-test-group")
+        url = reverse("admin:testapp_post_permissions_manage_group", args=[self.post.pk, group.pk])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
 
 
 class GrappelliGuardedModelAdminTests(TestCase):

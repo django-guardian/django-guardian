@@ -90,6 +90,37 @@ row level permissions.
 !!! note
     Example above is shipped with `django-guardian` package with the example project.
 
+## Restricting Access to the Object Permissions Views
+
+`GuardedModelAdmin` only requires the standard Django change permission for
+the model itself to access the object permissions management views. Any
+staff user allowed to change a `Post`, for example, can also view and edit
+*every* user's and group's guardian permissions for it, whether or not they
+hold a guardian permission for that.
+
+If you want those views to also require the relevant guardian permission
+(`guardian.view_userobjectpermission`, `guardian.view_groupobjectpermission`,
+`guardian.change_userobjectpermission`, or `guardian.change_groupobjectpermission`,
+depending on the view), use `ReinforcedGuardedModelAdmin` instead:
+
+``` python
+from guardian.admin import ReinforcedGuardedModelAdmin
+
+
+class PostAdmin(ReinforcedGuardedModelAdmin):
+    prepopulated_fields = {"slug": ("title",)}
+    list_display = ('title', 'slug', 'created_at')
+    search_fields = ('title', 'content')
+    ordering = ('-created_at',)
+    date_hierarchy = 'created_at'
+
+admin.site.register(Post, PostAdmin)
+```
+
+This is opt-in and not the default, since some applications may rely on the
+existing behavior of granting access based on the model's change permission
+alone.
+
 ## Inline Admin Support
 
 Django admin provides inline functionality that allows editing related objects
