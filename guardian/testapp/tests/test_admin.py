@@ -467,8 +467,27 @@ class ReinforcedGuardedModelAdminTests(TestCase):
         response = self.client.get(url)
         self.assertRedirects(response, reverse("admin:index"))
 
-    def test_manage_view_allows_staff_with_guardian_perm(self):
+    def test_manage_view_denies_staff_with_only_user_view_perm(self):
+        # The combined page always renders both users_perms and
+        # groups_perms, so holding only the user-side view permission
+        # must not be enough to reach it: it would expose every group's
+        # object permissions too.
         self.staffer.user_permissions.add(Permission.objects.get(codename="view_userobjectpermission"))
+        url = reverse("admin:testapp_post_permissions", args=[self.post.pk])
+        response = self.client.get(url)
+        self.assertRedirects(response, reverse("admin:index"))
+
+    def test_manage_view_denies_staff_with_only_group_view_perm(self):
+        # Symmetric case: only the group-side view permission must not
+        # expose every user's object permissions either.
+        self.staffer.user_permissions.add(Permission.objects.get(codename="view_groupobjectpermission"))
+        url = reverse("admin:testapp_post_permissions", args=[self.post.pk])
+        response = self.client.get(url)
+        self.assertRedirects(response, reverse("admin:index"))
+
+    def test_manage_view_allows_staff_with_both_guardian_perms(self):
+        self.staffer.user_permissions.add(Permission.objects.get(codename="view_userobjectpermission"))
+        self.staffer.user_permissions.add(Permission.objects.get(codename="view_groupobjectpermission"))
         url = reverse("admin:testapp_post_permissions", args=[self.post.pk])
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)

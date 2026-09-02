@@ -438,7 +438,12 @@ class ReinforcedGuardedModelAdminMixin(GuardedModelAdminMixin):
     """
 
     def obj_perms_manage_view(self, request, object_pk):
-        if not request.user.has_perm("guardian.view_userobjectpermission") and not request.user.has_perm(
+        # The delegated view always renders both users_perms and
+        # groups_perms on the same page, with no way to omit either half,
+        # so reaching it requires both view permissions. Requiring just
+        # one would let a user who can only view user-object permissions
+        # see every group's object permissions too, and vice versa.
+        if not request.user.has_perm("guardian.view_userobjectpermission") or not request.user.has_perm(
             "guardian.view_groupobjectpermission"
         ):
             post_url = reverse("admin:index", current_app=self.admin_site.name)
