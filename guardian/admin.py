@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from collections.abc import Sequence
 
 from django import forms
 from django.conf import settings
@@ -15,6 +16,7 @@ from guardian.forms import GroupObjectPermissionsForm, UserObjectPermissionsForm
 from guardian.shortcuts import (
     get_group_perms,
     get_groups_with_perms,
+    get_objects_for_user,
     get_perms_for_model,
     get_user_perms,
     get_users_with_perms,
@@ -124,6 +126,10 @@ class GuardedModelAdminMixin:
     user_owned_objects_field: str = "user"
     user_can_access_owned_by_group_objects_only: bool = False
     group_owned_objects_field: str = "group"
+    user_can_access_permitted_objects_only: bool = False
+    permitted_objects_perms: Sequence[str] | str = ()
+    permitted_objects_any_perm: bool = True
+    permitted_objects_accept_global_perms: bool = False
     include_object_permissions_urls: bool = True
 
     def get_queryset(self, request):
@@ -132,6 +138,19 @@ class GuardedModelAdminMixin:
         if request.user.is_superuser:
             return qs
 
+        if self.user_can_access_permitted_objects_only:
+            perms = (
+                self.permitted_objects_perms
+                if isinstance(self.permitted_objects_perms, str)
+                else list(self.permitted_objects_perms)
+            )
+            qs = get_objects_for_user(
+                user=request.user,
+                perms=perms,
+                klass=qs,
+                any_perm=self.permitted_objects_any_perm,
+                accept_global_perms=self.permitted_objects_accept_global_perms,
+            )
         if self.user_can_access_owned_objects_only:
             filters = {self.user_owned_objects_field: request.user}
             qs = qs.filter(**filters)
@@ -484,6 +503,16 @@ class GuardedModelAdmin(GuardedModelAdminMixin, admin.ModelAdmin):
             name of the field can be changed by overriding `group_owned_objects_field`).
         group_owned_objects_field (str): *Default*: `group`
             Name of the field to check for group ownership.
+        user_can_access_permitted_objects_only (bool): *Default*: `False`
+            If `True`, `guardian.shortcuts.get_objects_for_user` is used to filter out objects
+            for which the user does not have permissions.
+        permitted_objects_perms (Sequence[str] | str): *Default*: `()`
+            Permissions to check when `user_can_access_permitted_objects_only` is `True`.
+            If empty sequence (default), checks for any object-level permission on the model.
+        permitted_objects_any_perm (bool): *Default*: `True`
+            Whether having any of the permissions in `permitted_objects_perms` is sufficient.
+        permitted_objects_accept_global_perms (bool): *Default*: `False`
+            Whether global permissions are taken into account when filtering objects.
         include_object_permissions_urls (bool): *Default*: `True`
             Added in version 1.2.
             If `False` guardian-specific URLs are **NOT** included in the admin
@@ -494,6 +523,10 @@ class GuardedModelAdmin(GuardedModelAdminMixin, admin.ModelAdmin):
 
     Warning:
        Setting `user_can_access_owned_by_group_objects_only` to `True` will **NOT** affect superusers!
+       Admins would still see all items.
+
+    Warning:
+       Setting `user_can_access_permitted_objects_only` to `True` will **NOT** affect superusers!
        Admins would still see all items.
 
 
