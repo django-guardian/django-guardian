@@ -511,7 +511,6 @@ class GuardedModelAdminTests(TestCase):
         Project.objects.create(name="p2")
         assign_perm("change_project", joe, p1)
 
-        from django.contrib.auth.models import Permission
         perm = Permission.objects.get(codename="change_project", content_type__app_label="testapp")
         joe.user_permissions.add(perm)
 
@@ -519,7 +518,6 @@ class GuardedModelAdminTests(TestCase):
         request.user = joe
         qs = gma.get_queryset(request)
         self.assertEqual(list(qs), [p1])
-
 
 
 class ReinforcedGuardedModelAdminTests(TestCase):
