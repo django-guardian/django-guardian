@@ -1,6 +1,5 @@
 from collections import OrderedDict
 from collections.abc import Sequence
-from typing import Union
 
 from django import forms
 from django.conf import settings
@@ -128,7 +127,7 @@ class GuardedModelAdminMixin:
     user_can_access_owned_by_group_objects_only: bool = False
     group_owned_objects_field: str = "group"
     user_can_access_permitted_objects_only: bool = False
-    permitted_objects_perms: Union[Sequence[str], str] = ()
+    permitted_objects_perms: Sequence[str] | str = ()
     permitted_objects_any_perm: bool = True
     permitted_objects_accept_global_perms: bool = False
     include_object_permissions_urls: bool = True
