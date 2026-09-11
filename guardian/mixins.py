@@ -201,8 +201,17 @@ class PermissionRequiredMixin:
         Parameters:
             request (HttpRequest): The original request.
         """
-        obj = self.get_permission_object()
+        return self._check_permissions_for_object(request, self.get_permission_object())
 
+    def _check_permissions_for_object(
+        self, request: HttpRequest, obj: Model | Any | None
+    ) -> HttpResponseForbidden | HttpResponseNotFound | HttpResponseRedirect | HttpResponse | None:
+        """Run the permission check against an already resolved object.
+
+        Shared by `check_permissions()` and `acheck_permissions()`. Every
+        synchronous hook is called from here, so that the asynchronous version
+        only needs a single thread to run all of them.
+        """
         forbidden = get_40x_or_None(
             request,
             perms=self.get_required_permissions(request),
@@ -259,24 +268,7 @@ class PermissionRequiredMixin:
             request (HttpRequest): The original request.
         """
         obj = await self.aget_permission_object()
-
-        forbidden = await sync_to_async(get_40x_or_None)(
-            request,
-            perms=self.get_required_permissions(request),
-            obj=obj,
-            login_url=self.login_url,
-            redirect_field_name=self.redirect_field_name,
-            return_403=self.return_403,
-            return_404=self.return_404,
-            permission_denied_message=self.get_object_permission_denied_message(),
-            accept_global_perms=self.accept_global_perms,
-            any_perm=self.any_perm,
-        )
-        if forbidden:
-            await sync_to_async(self.on_permission_check_fail)(request, forbidden, obj=obj)
-        if forbidden and self.raise_exception:
-            raise PermissionDenied(self.get_object_permission_denied_message())
-        return forbidden
+        return await sync_to_async(self._check_permissions_for_object)(request, obj)
 
     def dispatch(self, request, *args, **kwargs):
         self.request = request

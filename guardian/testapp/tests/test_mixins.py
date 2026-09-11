@@ -136,6 +136,28 @@ class AsyncPermissionRequiredMixinTests(TestCase):
         response = self.dispatch(view, request)
         self.assertEqual(response.status_code, 405)
 
+    def test_sync_hooks_can_query_the_database_in_async_view(self):
+        """Overridden synchronous hooks run in a thread, so ORM access is allowed."""
+
+        class AsyncViewQueryingHooks(AsyncPermissionObjectView):
+            def get_required_permissions(inner_self, request=None):
+                Post.objects.count()
+                return super().get_required_permissions(request)
+
+            def get_object_permission_denied_message(inner_self):
+                return Post.objects.get(pk=self.post.pk).title
+
+        request = self.factory.get("/")
+        request.user = self.user
+        view = AsyncViewQueryingHooks()
+        view.setup(request)
+        with self.assertRaisesMessage(PermissionDenied, "foo-post-title"):
+            self.dispatch(view, request)
+
+        request.user.add_obj_perm("change_post", self.post)
+        response = self.dispatch(view, request)
+        self.assertEqual(response.content, b"some html")
+
     def test_async_view_is_detected(self):
         self.assertTrue(AsyncPermissionView.view_is_async)
         self.assertFalse(PermissionTestView.view_is_async)
