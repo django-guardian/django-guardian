@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+
+    <div class="span12">
+        <div class="hero-unit">
+            <h1>Articles</h1>
+            <a href="{% url "articles:create" %}" class="btn btn-primary">Add article</a>
+        </div>
+    </div>
+{% for object in object_list %}
+    <div class="span3">
+    </div>
+    <div class="span9">
+        <a href="{{object.get_absolute_url}}" name="{{ post.id }}"><h1>{{ object.title }}</h1></a>
+        <h5>at {{ object.created_at }}</h5>
+        <hr/>
+        {{ object.content|safe }}
+    </div>
+{% endfor %}
+</div>
+
+
+{% endblock %}

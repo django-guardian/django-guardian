@@ -1,7 +1,7 @@
 # Polish translation of django-guardian.
 # This file is distributed under the same license as django-guardian's package.
 # Translator: Tomasz Wsuł <2nickers@gmail.com>, 2013.
-# 
+#
 msgid ""
 msgstr ""
 "Project-Id-Version: django-guardian 1.2\n"

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+
+    <div class="span3">
+        <div class="well sidebar-nav">
+            <ul class="nav nav-list">
+                <li class="nav-header">Recent posts</li>
+                {% for post in posts %}
+                <li><a href="#{{ post.id }}">{{ post.title }}</a></li>
+                {% endfor %}
+            </ul>
+        </div><!--/.well -->
+    </div>
+
+    <div class="span9">
+        <div class="hero-unit">
+            <h1>Posts</h1>
+            <a href="{% url "admin:posts_post_add" %}" class="btn btn-primary">Add post</a>
+        </div>
+    </div>
+{% for post in posts %}
+    <div class="span3">
+    </div>
+    <div class="span9">
+        <a href="{% url "posts_post_detail" post.slug %}" name="{{ post.id }}"><h1>{{ post.title }}</h1></a>
+        <h5>at {{ post.created_at }}</h5>
+        <hr/>
+        {{ post.content|safe }}
+    </div>
+{% endfor %}
+</div>
+
+
+{% endblock %}

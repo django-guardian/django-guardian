@@ -1,26 +1,25 @@
 from .models import (
-    BaseObjectPermission,
     BaseGenericObjectPermission,
-    UserObjectPermissionBase,
-    UserObjectPermissionAbstract,
-    UserObjectPermission,
-    GroupObjectPermissionBase,
-    GroupObjectPermissionAbstract,
+    BaseObjectPermission,
+    Group,
     GroupObjectPermission,
+    GroupObjectPermissionAbstract,
+    GroupObjectPermissionBase,
     Permission,
-    Group
+    UserObjectPermission,
+    UserObjectPermissionAbstract,
+    UserObjectPermissionBase,
 )
 
-
 __all__ = [
-    'BaseObjectPermission',
-    'BaseGenericObjectPermission',
-    'UserObjectPermissionBase',
-    'UserObjectPermissionAbstract',
-    'GroupObjectPermissionBase',
-    'GroupObjectPermissionAbstract',
-    'Permission',
-    'Group',
-    'UserObjectPermission',
-    'GroupObjectPermission'
+    "BaseObjectPermission",
+    "BaseGenericObjectPermission",
+    "UserObjectPermissionBase",
+    "UserObjectPermissionAbstract",
+    "GroupObjectPermissionBase",
+    "GroupObjectPermissionAbstract",
+    "Permission",
+    "Group",
+    "UserObjectPermission",
+    "GroupObjectPermission",
 ]
