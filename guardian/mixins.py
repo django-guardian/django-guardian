@@ -10,6 +10,8 @@ if sys.version_info >= (3, 13):
 else:
     from typing_extensions import deprecated
 
+from asgiref.sync import sync_to_async
+from django import VERSION as DJANGO_VERSION
 from django.conf import settings
 from django.contrib.auth.decorators import REDIRECT_FIELD_NAME, login_required
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
@@ -234,14 +236,69 @@ class PermissionRequiredMixin:
                 method or `object` attribute, in that order).
         """
 
+    async def aget_permission_object(self):
+        """Asynchronous version of `get_permission_object()`.
+
+        By default it runs the synchronous version in a thread, so existing
+        views keep working unchanged. Override it when the object is fetched
+        through the asynchronous ORM API:
+
+        ```python
+        async def aget_permission_object(self):
+            return await Post.objects.aget(slug=self.kwargs["slug"])
+        ```
+        """
+        return await sync_to_async(self.get_permission_object)()
+
+    async def acheck_permissions(
+        self, request: HttpRequest
+    ) -> HttpResponseForbidden | HttpResponseNotFound | HttpResponseRedirect | HttpResponse | None:
+        """Asynchronous version of `check_permissions()`.
+
+        Parameters:
+            request (HttpRequest): The original request.
+        """
+        obj = await self.aget_permission_object()
+
+        forbidden = await sync_to_async(get_40x_or_None)(
+            request,
+            perms=self.get_required_permissions(request),
+            obj=obj,
+            login_url=self.login_url,
+            redirect_field_name=self.redirect_field_name,
+            return_403=self.return_403,
+            return_404=self.return_404,
+            permission_denied_message=self.get_object_permission_denied_message(),
+            accept_global_perms=self.accept_global_perms,
+            any_perm=self.any_perm,
+        )
+        if forbidden:
+            await sync_to_async(self.on_permission_check_fail)(request, forbidden, obj=obj)
+        if forbidden and self.raise_exception:
+            raise PermissionDenied(self.get_object_permission_denied_message())
+        return forbidden
+
     def dispatch(self, request, *args, **kwargs):
         self.request = request
         self.args = args
         self.kwargs = kwargs
+        if DJANGO_VERSION >= (4, 1, 2) and getattr(self, "view_is_async", False):
+            # Returns a coroutine, awaited by Django's `View.as_view()` wrapper.
+            return self.adispatch(request, *args, **kwargs)
         response = self.check_permissions(request)
         if response:
             return response
         return super().dispatch(request, *args, **kwargs)
+
+    async def adispatch(self, request, *args, **kwargs):
+        """Asynchronous version of `dispatch()`, used when the view is asynchronous.
+
+        Requires Django >= 4.1.2.
+        """
+        response = await self.acheck_permissions(request)
+        if response:
+            return response
+        return await super().dispatch(request, *args, **kwargs)
 
 
 class GuardianUserMixin:

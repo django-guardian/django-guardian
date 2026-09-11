@@ -105,6 +105,7 @@ authors = [
   { name = "Sezer BOZKIR", email = "admin@sezerbozkir.com"},
   { name = "Paul Martin", email = "pauledwardmartin91@gmail.com"},
   { name = "marko1olo", email = "barsukdana@gmail.com" },
+  { name = "Giannis Terzopoulos", email = "terzo.giannis@gmail.com" },
 ]
 maintainers = [
   {name = "Tom Clark", email = "django-guardian@octue.com"},

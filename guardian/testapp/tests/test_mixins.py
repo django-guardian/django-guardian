@@ -1,7 +1,9 @@
 from types import GeneratorType
-from unittest import mock
+from unittest import mock, skipIf
 import warnings
 
+from asgiref.sync import async_to_sync
+from django import VERSION as DJANGO_VERSION
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
@@ -43,6 +45,100 @@ class PostPermissionListView(PermissionListMixin, ListView):
     model = Post
     permission_required = "testapp.change_post"
     template_name = "list.html"
+
+
+class AsyncPermissionView(PermissionRequiredMixin, View):
+    permission_required = "testapp.change_post"
+    raise_exception = True
+
+    async def get(self, request, *args, **kwargs):
+        return HttpResponse("some html")
+
+
+def check_fail_handler(obj):
+    """Hook used by the tests to assert `on_permission_check_fail` was called."""
+
+
+class AsyncPermissionObjectView(AsyncPermissionView):
+    async def aget_permission_object(self):
+        return await Post.objects.aget(title="foo-post-title")
+
+    def on_permission_check_fail(self, request, response, obj=None):
+        check_fail_handler(obj)
+
+
+@skipIf(DJANGO_VERSION < (4, 1, 2), "Asynchronous class-based views require Django >= 4.1.2")
+class AsyncPermissionRequiredMixinTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.post = Post.objects.create(title="foo-post-title")
+        cls.user = get_user_model().objects.create_user("joe", "joe@doe.com", "doe")
+
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    @staticmethod
+    def dispatch(view, request, **kwargs):
+        """Run a view's asynchronous `dispatch()` from a synchronous test."""
+
+        async def run():
+            return await view.dispatch(request, **kwargs)
+
+        return async_to_sync(run)()
+
+    def test_authorized_user_can_access_async_view(self):
+        request = self.factory.get("/")
+        request.user = self.user
+        request.user.add_obj_perm("change_post", self.post)
+        view = AsyncPermissionObjectView()
+        view.setup(request)
+        response = self.dispatch(view, request)
+        self.assertEqual(response.content, b"some html")
+
+    def test_default_aget_permission_object_falls_back_to_sync_get_object(self):
+        class AsyncViewWithSyncGetObject(AsyncPermissionView):
+            def get_object(inner_self):
+                return self.post
+
+        request = self.factory.get("/")
+        request.user = self.user
+        request.user.add_obj_perm("change_post", self.post)
+        view = AsyncViewWithSyncGetObject()
+        view.setup(request)
+        response = self.dispatch(view, request)
+        self.assertEqual(response.content, b"some html")
+
+    @mock.patch("guardian.testapp.tests.test_mixins.check_fail_handler")
+    def test_unauthorized_user_cannot_access_async_view(self, check_fail):
+        request = self.factory.get("/")
+        request.user = self.user
+        view = AsyncPermissionObjectView()
+        view.setup(request)
+        with self.assertRaises(PermissionDenied):
+            self.dispatch(view, request)
+        check_fail.assert_called_once_with(self.post)
+
+    def test_unauthorized_user_is_redirected_from_async_view(self):
+        request = self.factory.get("/")
+        request.user = self.user
+        view = AsyncPermissionObjectView()
+        view.setup(request)
+        view.raise_exception = False
+        response = self.dispatch(view, request)
+        self.assertEqual(response.status_code, 302)
+
+    def test_disallowed_http_method_works_in_async_view(self):
+        request = self.factory.post("/")
+        request.user = self.user
+        request.user.add_obj_perm("change_post", self.post)
+        view = AsyncPermissionObjectView()
+        view.setup(request)
+        response = self.dispatch(view, request)
+        self.assertEqual(response.status_code, 405)
+
+    def test_async_view_is_detected(self):
+        self.assertTrue(AsyncPermissionView.view_is_async)
+        self.assertFalse(PermissionTestView.view_is_async)
 
 
 class TestViewMixins(TestCase):
