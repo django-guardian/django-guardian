@@ -7,8 +7,9 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
 from django.http import HttpResponse
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.test.client import RequestFactory
+from django.urls import path
 from django.views.generic import ListView, View
 
 from guardian.mixins import (
@@ -71,6 +72,11 @@ class AsyncPermissionObjectView(AsyncPermissionView):
         check_fail_handler(obj)
 
 
+urlpatterns = [
+    path("async-permission-required/", AsyncPermissionObjectView.as_view(raise_exception=False)),
+]
+
+
 @skipIf(not _ASYNC_VIEWS_SUPPORTED, "Asynchronous class-based views require Django >= 4.2")
 class AsyncPermissionRequiredMixinTests(TestCase):
     @classmethod
@@ -81,116 +87,119 @@ class AsyncPermissionRequiredMixinTests(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
 
-    @staticmethod
-    def dispatch(view, request, **kwargs):
-        """Run a view's asynchronous `dispatch()` from a synchronous test."""
+    def call(self, view_class, method="get", **initkwargs):
+        """Dispatch an asynchronous view from a synchronous test."""
+        request = getattr(self.factory, method)("/")
+        request.user = self.user
+        view = view_class(**initkwargs)
+        view.setup(request)
 
         async def run():
-            return await view.dispatch(request, **kwargs)
+            return await view.dispatch(request)
 
         return async_to_sync(run)()
 
     def test_authorized_user_can_access_async_view(self):
-        request = self.factory.get("/")
-        request.user = self.user
-        request.user.add_obj_perm("change_post", self.post)
-        view = AsyncPermissionObjectView()
-        view.setup(request)
-        response = self.dispatch(view, request)
-        self.assertEqual(response.content, b"some html")
+        self.user.add_obj_perm("change_post", self.post)
+        self.assertEqual(self.call(AsyncPermissionObjectView).content, b"some html")
 
-    def test_default_aget_permission_object_falls_back_to_sync_get_object(self):
-        class AsyncViewWithSyncGetObject(AsyncPermissionView):
-            def get_object(inner_self):
-                return self.post
-
-        request = self.factory.get("/")
-        request.user = self.user
-        request.user.add_obj_perm("change_post", self.post)
-        view = AsyncViewWithSyncGetObject()
-        view.setup(request)
-        response = self.dispatch(view, request)
-        self.assertEqual(response.content, b"some html")
-
-    @mock.patch("guardian.testapp.tests.test_mixins.check_fail_handler")
-    def test_unauthorized_user_cannot_access_async_view(self, check_fail):
-        request = self.factory.get("/")
-        request.user = self.user
-        view = AsyncPermissionObjectView()
-        view.setup(request)
-        with self.assertRaises(PermissionDenied):
-            self.dispatch(view, request)
+    def test_unauthorized_user_cannot_access_async_view(self):
+        with mock.patch("guardian.testapp.tests.test_mixins.check_fail_handler") as check_fail:
+            with self.assertRaises(PermissionDenied):
+                self.call(AsyncPermissionObjectView)
         check_fail.assert_called_once_with(self.post)
 
     def test_unauthorized_user_is_redirected_from_async_view(self):
-        request = self.factory.get("/")
-        request.user = self.user
-        view = AsyncPermissionObjectView()
-        view.setup(request)
-        view.raise_exception = False
-        response = self.dispatch(view, request)
+        response = self.call(AsyncPermissionObjectView, raise_exception=False)
         self.assertEqual(response.status_code, 302)
 
     def test_disallowed_http_method_works_in_async_view(self):
-        request = self.factory.post("/")
-        request.user = self.user
-        request.user.add_obj_perm("change_post", self.post)
-        view = AsyncPermissionObjectView()
-        view.setup(request)
-        response = self.dispatch(view, request)
-        self.assertEqual(response.status_code, 405)
+        self.user.add_obj_perm("change_post", self.post)
+        self.assertEqual(self.call(AsyncPermissionObjectView, method="post").status_code, 405)
+
+    def test_options_request_works_in_async_view(self):
+        self.user.add_obj_perm("change_post", self.post)
+        self.assertEqual(self.call(AsyncPermissionObjectView, method="options").status_code, 200)
+
+    def test_default_aget_permission_object_falls_back_to_sync_get_object(self):
+        post = self.post
+
+        class AsyncViewWithSyncGetObject(AsyncPermissionView):
+            def get_object(self):
+                return post
+
+        self.user.add_obj_perm("change_post", self.post)
+        self.assertEqual(self.call(AsyncViewWithSyncGetObject).content, b"some html")
 
     def test_async_get_object_is_awaited(self):
         class AsyncViewWithAsyncGetObject(AsyncPermissionView):
             async def get_object(self):
                 return await Post.objects.aget(title="foo-post-title")
 
-        request = self.factory.get("/")
-        request.user = self.user
-        request.user.add_obj_perm("change_post", self.post)
-        view = AsyncViewWithAsyncGetObject()
-        view.setup(request)
-        response = self.dispatch(view, request)
-        self.assertEqual(response.content, b"some html")
+        self.user.add_obj_perm("change_post", self.post)
+        self.assertEqual(self.call(AsyncViewWithAsyncGetObject).content, b"some html")
 
     def test_async_get_permission_object_is_awaited(self):
         class AsyncViewWithAsyncGetPermissionObject(AsyncPermissionView):
             async def get_permission_object(self):
                 return await Post.objects.aget(title="foo-post-title")
 
-        request = self.factory.get("/")
-        request.user = self.user
-        request.user.add_obj_perm("change_post", self.post)
-        view = AsyncViewWithAsyncGetPermissionObject()
-        view.setup(request)
-        response = self.dispatch(view, request)
-        self.assertEqual(response.content, b"some html")
+        self.user.add_obj_perm("change_post", self.post)
+        self.assertEqual(self.call(AsyncViewWithAsyncGetPermissionObject).content, b"some html")
 
     def test_sync_hooks_can_query_the_database_in_async_view(self):
-        """Overridden synchronous hooks run in a thread, so ORM access is allowed."""
+        """The synchronous hooks all run in a thread, so they may use the ORM."""
+        post = self.post
 
         class AsyncViewQueryingHooks(AsyncPermissionObjectView):
-            def get_required_permissions(inner_self, request=None):
+            def get_required_permissions(self, request=None):
                 Post.objects.count()
                 return super().get_required_permissions(request)
 
-            def get_object_permission_denied_message(inner_self):
-                return Post.objects.get(pk=self.post.pk).title
+            def get_object_permission_denied_message(self):
+                return Post.objects.get(pk=post.pk).title
 
+        with self.assertRaisesMessage(PermissionDenied, "foo-post-title"):
+            self.call(AsyncViewQueryingHooks)
+
+        self.user.add_obj_perm("change_post", self.post)
+        self.assertEqual(self.call(AsyncViewQueryingHooks).content, b"some html")
+
+    def test_sync_view_is_not_dispatched_asynchronously(self):
+        """A synchronous view keeps calling its handler right away."""
         request = self.factory.get("/")
         request.user = self.user
-        view = AsyncViewQueryingHooks()
-        view.setup(request)
-        with self.assertRaisesMessage(PermissionDenied, "foo-post-title"):
-            self.dispatch(view, request)
-
         request.user.add_obj_perm("change_post", self.post)
-        response = self.dispatch(view, request)
-        self.assertEqual(response.content, b"some html")
+        view = PermissionTestView(object=self.post)
+        view.setup(request)
+        with self.assertRaises(DatabaseRemovedError):
+            view.dispatch(request)
 
-    def test_async_view_is_detected(self):
-        self.assertTrue(AsyncPermissionView.view_is_async)
-        self.assertFalse(PermissionTestView.view_is_async)
+    def test_permissions_are_checked_when_the_view_is_called_through_as_view(self):
+        view = AsyncPermissionObjectView.as_view(raise_exception=False)
+        request = self.factory.get("/")
+        request.user = self.user
+
+        async def call():
+            return await view(request)
+
+        self.assertEqual(async_to_sync(call)().status_code, 302)
+
+        self.user.add_obj_perm("change_post", self.post)
+        self.assertEqual(async_to_sync(call)().content, b"some html")
+
+    @override_settings(ROOT_URLCONF=__name__)
+    def test_async_view_served_through_the_request_handler(self):
+        """The whole stack: URL resolution, middleware and a lazy `request.user`."""
+        self.async_client.force_login(self.user)
+
+        async def get():
+            return await self.async_client.get("/async-permission-required/")
+
+        self.assertEqual(async_to_sync(get)().status_code, 302)
+
+        self.user.add_obj_perm("change_post", self.post)
+        self.assertEqual(async_to_sync(get)().content, b"some html")
 
 
 class TestViewMixins(TestCase):
