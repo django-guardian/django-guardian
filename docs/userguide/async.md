@@ -94,9 +94,9 @@ well; asynchronous views do not call the synchronous one.
 
 ## Limitations
 
-- Django's generic views other than `View` (`DetailView`, `ListView`, ...)
-  define synchronous handlers, so they are never asynchronous views. The
-  mixin then uses its synchronous path, as before.
+- Django's generic views (`DetailView`, `ListView`, ...) provide synchronous
+  handlers by default. They use the mixin's synchronous path unless every
+  effective HTTP handler is overridden with a coroutine.
 - `LoginRequiredMixin` and `PermissionListMixin` have no asynchronous
   support yet.
 - On Django 4.1 and older the synchronous path is used even for
