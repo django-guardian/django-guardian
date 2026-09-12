@@ -21,6 +21,11 @@ from django.http import HttpRequest, HttpResponse, HttpResponseForbidden, HttpRe
 from guardian.shortcuts import get_objects_for_user
 from guardian.utils import get_40x_or_None, get_anonymous_user, get_group_obj_perms_model, get_user_obj_perms_model
 
+# Django 4.1.2 made the response for a disallowed HTTP method awaitable, which
+# asynchronous views rely on. 4.1 is end of life, so 4.2 is the floor here.
+# Two components only: comparing django.VERSION with three is deprecated.
+_ASYNC_VIEWS_SUPPORTED = DJANGO_VERSION >= (4, 2)
+
 
 class LoginRequiredMixin:
     """A login required mixin for use with class-based views.
@@ -274,7 +279,7 @@ class PermissionRequiredMixin:
         self.request = request
         self.args = args
         self.kwargs = kwargs
-        if DJANGO_VERSION >= (4, 1, 2) and getattr(self, "view_is_async", False):
+        if _ASYNC_VIEWS_SUPPORTED and getattr(self, "view_is_async", False):
             # Returns a coroutine, awaited by Django's `View.as_view()` wrapper.
             return self.adispatch(request, *args, **kwargs)
         response = self.check_permissions(request)
@@ -285,7 +290,7 @@ class PermissionRequiredMixin:
     async def adispatch(self, request, *args, **kwargs):
         """Asynchronous version of `dispatch()`, used when the view is asynchronous.
 
-        Requires Django >= 4.1.2.
+        Requires Django >= 4.2.
         """
         response = await self.acheck_permissions(request)
         if response:

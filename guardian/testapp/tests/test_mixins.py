@@ -3,7 +3,6 @@ from unittest import mock, skipIf
 import warnings
 
 from asgiref.sync import async_to_sync
-from django import VERSION as DJANGO_VERSION
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
@@ -12,7 +11,12 @@ from django.test import TestCase
 from django.test.client import RequestFactory
 from django.views.generic import ListView, View
 
-from guardian.mixins import LoginRequiredMixin, PermissionListMixin, PermissionRequiredMixin
+from guardian.mixins import (
+    _ASYNC_VIEWS_SUPPORTED,
+    LoginRequiredMixin,
+    PermissionListMixin,
+    PermissionRequiredMixin,
+)
 from guardian.shortcuts import assign_perm
 
 from ..models import Post
@@ -67,7 +71,7 @@ class AsyncPermissionObjectView(AsyncPermissionView):
         check_fail_handler(obj)
 
 
-@skipIf(DJANGO_VERSION < (4, 1, 2), "Asynchronous class-based views require Django >= 4.1.2")
+@skipIf(not _ASYNC_VIEWS_SUPPORTED, "Asynchronous class-based views require Django >= 4.2")
 class AsyncPermissionRequiredMixinTests(TestCase):
     @classmethod
     def setUpTestData(cls):

@@ -12,7 +12,7 @@ case, the mixin runs its permission check asynchronously instead of the
 synchronous one.
 
 !!! note
-    Asynchronous class-based views require Django >= 4.1.2.
+    Asynchronous class-based views require Django >= 4.2.
 
 Synchronous views are unaffected: they keep using `check_permissions()`
 and `get_permission_object()` exactly as before, with no additional
