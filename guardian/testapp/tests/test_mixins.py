@@ -139,6 +139,30 @@ class AsyncPermissionRequiredMixinTests(TestCase):
         self.user.add_obj_perm("change_post", self.post)
         self.assertEqual(self.call(AsyncViewWithAsyncGetObject).content, b"some html")
 
+    def test_permission_object_takes_precedence_over_async_get_object(self):
+        class AsyncViewWithBothSources(AsyncPermissionView):
+            permission_object = None
+
+            async def get_object(self):
+                raise AssertionError("get_object() must not be called")
+
+        self.user.add_obj_perm("change_post", self.post)
+        response = self.call(AsyncViewWithBothSources, permission_object=self.post)
+        self.assertEqual(response.content, b"some html")
+
+    def test_async_get_object_falls_back_to_the_object_attribute(self):
+        """An awaited `get_object()` keeps the fallback of the synchronous version."""
+
+        class AsyncViewWithEmptyAsyncGetObject(AsyncPermissionView):
+            object = None
+
+            async def get_object(self):
+                return None
+
+        self.user.add_obj_perm("change_post", self.post)
+        response = self.call(AsyncViewWithEmptyAsyncGetObject, object=self.post)
+        self.assertEqual(response.content, b"some html")
+
     def test_async_get_permission_object_is_awaited(self):
         class AsyncViewWithAsyncGetPermissionObject(AsyncPermissionView):
             async def get_permission_object(self):

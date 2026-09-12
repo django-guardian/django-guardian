@@ -278,9 +278,10 @@ class PermissionRequiredMixin:
             return await self.get_permission_object()
         obj = await sync_to_async(self.get_permission_object)()
         if isawaitable(obj):
-            # The view defines an asynchronous `get_object()`, which the
-            # synchronous `get_permission_object()` cannot await by itself.
-            obj = await obj
+            # The view defines an asynchronous `get_object()`, whose coroutine the
+            # synchronous `get_permission_object()` returned without awaiting it and
+            # without reaching its fallback. Await it and apply that fallback here.
+            obj = await obj or getattr(self, "object", None)
         return obj
 
     async def acheck_permissions(
