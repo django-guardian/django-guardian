@@ -275,9 +275,8 @@ class PermissionRequiredMixin:
         the view is awaited as well.
         """
         if iscoroutinefunction(self.get_permission_object):
-            obj = await self.get_permission_object()
-        else:
-            obj = await sync_to_async(self.get_permission_object)()
+            return await self.get_permission_object()
+        obj = await sync_to_async(self.get_permission_object)()
         if isawaitable(obj):
             # The view defines an asynchronous `get_object()`, which the
             # synchronous `get_permission_object()` cannot await by itself.
@@ -299,8 +298,9 @@ class PermissionRequiredMixin:
         self.request = request
         self.args = args
         self.kwargs = kwargs
+        # `view_is_async` is missing when the mixin is used outside Django's `View`.
         if _ASYNC_VIEWS_SUPPORTED and getattr(self, "view_is_async", False):
-            # Returns a coroutine, awaited by Django's `View.as_view()` wrapper.
+            # The returned coroutine is awaited by Django's `View.as_view()` wrapper.
             return self.adispatch(request, *args, **kwargs)
         response = self.check_permissions(request)
         if response:

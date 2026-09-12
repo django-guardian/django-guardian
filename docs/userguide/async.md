@@ -15,8 +15,8 @@ synchronous one.
     Asynchronous class-based views require Django >= 4.2.
 
 Synchronous views are unaffected: they keep using `check_permissions()`
-and `get_permission_object()` exactly as before, with no additional
-overhead.
+and `get_permission_object()` exactly as before, and the only addition on
+their path is a single flag check in `dispatch()`.
 
 ## Basic usage
 
