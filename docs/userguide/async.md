@@ -60,6 +60,20 @@ class PostView(PermissionRequiredMixin, View):
         return HttpResponse('some html')
 ```
 
+An `async def get_object()` or an `async def get_permission_object()` on the
+view is awaited as well, so this works too:
+
+```python
+class PostView(PermissionRequiredMixin, View):
+    permission_required = 'testapp.change_post'
+
+    async def get_object(self):
+        return await Post.objects.aget(slug=self.kwargs['slug'])
+
+    async def get(self, request, *args, **kwargs):
+        return HttpResponse('some html')
+```
+
 ## Asynchronous counterparts
 
 Each synchronous method has an `a`-prefixed sister method, following the

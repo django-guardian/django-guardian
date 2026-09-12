@@ -1,4 +1,5 @@
 from collections.abc import Iterable
+from inspect import isawaitable
 import sys
 from types import GeneratorType
 from typing import Any
@@ -10,7 +11,7 @@ if sys.version_info >= (3, 13):
 else:
     from typing_extensions import deprecated
 
-from asgiref.sync import sync_to_async
+from asgiref.sync import iscoroutinefunction, sync_to_async
 from django import VERSION as DJANGO_VERSION
 from django.conf import settings
 from django.contrib.auth.decorators import REDIRECT_FIELD_NAME, login_required
@@ -261,8 +262,19 @@ class PermissionRequiredMixin:
         async def aget_permission_object(self):
             return await Post.objects.aget(slug=self.kwargs["slug"])
         ```
+
+        An asynchronous `get_permission_object()` or `get_object()` defined on
+        the view is awaited as well.
         """
-        return await sync_to_async(self.get_permission_object)()
+        if iscoroutinefunction(self.get_permission_object):
+            obj = await self.get_permission_object()
+        else:
+            obj = await sync_to_async(self.get_permission_object)()
+        if isawaitable(obj):
+            # The view defines an asynchronous `get_object()`, which the
+            # synchronous `get_permission_object()` cannot await by itself.
+            obj = await obj
+        return obj
 
     async def acheck_permissions(
         self, request: HttpRequest
