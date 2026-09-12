@@ -1,5 +1,5 @@
 from collections.abc import Iterable
-from inspect import isawaitable
+from inspect import isawaitable, iscoroutinefunction
 import sys
 from types import GeneratorType
 from typing import Any
@@ -11,7 +11,7 @@ if sys.version_info >= (3, 13):
 else:
     from typing_extensions import deprecated
 
-from asgiref.sync import iscoroutinefunction, sync_to_async
+from asgiref.sync import sync_to_async
 from django import VERSION as DJANGO_VERSION
 from django.conf import settings
 from django.contrib.auth.decorators import REDIRECT_FIELD_NAME, login_required
