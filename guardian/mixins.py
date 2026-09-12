@@ -1,5 +1,5 @@
 from collections.abc import Iterable
-from inspect import isawaitable, iscoroutinefunction
+from inspect import isawaitable
 import sys
 from types import GeneratorType
 from typing import Any
@@ -12,6 +12,14 @@ else:
     from typing_extensions import deprecated
 
 from asgiref.sync import sync_to_async
+
+try:
+    from asgiref.sync import iscoroutinefunction
+except ImportError:
+    # asgiref < 3.6, which Django < 4.2 still allows. The asynchronous path is
+    # disabled on those versions anyway, so the stricter detector is enough.
+    from inspect import iscoroutinefunction
+
 from django import VERSION as DJANGO_VERSION
 from django.conf import settings
 from django.contrib.auth.decorators import REDIRECT_FIELD_NAME, login_required

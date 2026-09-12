@@ -2,7 +2,7 @@ from types import GeneratorType
 from unittest import mock, skipIf
 import warnings
 
-from asgiref.sync import async_to_sync
+from asgiref.sync import async_to_sync, sync_to_async
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
@@ -146,6 +146,17 @@ class AsyncPermissionRequiredMixinTests(TestCase):
 
         self.user.add_obj_perm("change_post", self.post)
         self.assertEqual(self.call(AsyncViewWithAsyncGetPermissionObject).content, b"some html")
+
+    def test_permission_object_callable_wrapped_with_sync_to_async_is_detected(self):
+        post = self.post
+
+        class AsyncViewWithWrappedCallable(AsyncPermissionView):
+            def setup(self, request, *args, **kwargs):
+                super().setup(request, *args, **kwargs)
+                self.get_permission_object = sync_to_async(lambda: post)
+
+        self.user.add_obj_perm("change_post", self.post)
+        self.assertEqual(self.call(AsyncViewWithWrappedCallable).content, b"some html")
 
     def test_sync_hooks_can_query_the_database_in_async_view(self):
         """The synchronous hooks all run in a thread, so they may use the ORM."""
