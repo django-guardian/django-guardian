@@ -86,6 +86,19 @@ naming convention used by Django itself (`aget()`, `acreate()`, ...):
 | `dispatch()`              | `adispatch()`              |
 
 `get_required_permissions()`, `get_object_permission_denied_message()` and
-`on_permission_check_fail()` have no asynchronous counterpart.
-`on_permission_check_fail()` is called in a thread when the view is
-asynchronous, so it is safe to run queries in it.
+`on_permission_check_fail()` have no asynchronous counterpart: they are all
+called from a single worker thread, so they may run queries.
+
+If you override `check_permissions()`, override `acheck_permissions()` as
+well; asynchronous views do not call the synchronous one.
+
+## Limitations
+
+- Django's generic views other than `View` (`DetailView`, `ListView`, ...)
+  define synchronous handlers, so they are never asynchronous views. The
+  mixin then uses its synchronous path, as before.
+- `LoginRequiredMixin` and `PermissionListMixin` have no asynchronous
+  support yet.
+- On Django 4.1 and older the synchronous path is used even for
+  asynchronous views. Responses for a disallowed HTTP method only became
+  awaitable in Django 4.1.2, and 4.1 is end of life, so the floor is 4.2.
