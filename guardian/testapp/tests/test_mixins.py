@@ -72,8 +72,14 @@ class AsyncPermissionObjectView(AsyncPermissionView):
         check_fail_handler(obj)
 
 
+class AsyncLoginRequiredView(LoginRequiredMixin, View):
+    async def get(self, request, *args, **kwargs):
+        return HttpResponse("some html")
+
+
 urlpatterns = [
     path("async-permission-required/", AsyncPermissionObjectView.as_view(raise_exception=False)),
+    path("async-login-required/", AsyncLoginRequiredView.as_view()),
 ]
 
 
@@ -235,6 +241,35 @@ class AsyncPermissionRequiredMixinTests(TestCase):
 
         self.user.add_obj_perm("change_post", self.post)
         self.assertEqual(async_to_sync(get)().content, b"some html")
+
+
+@skipIf(not _ASYNC_VIEWS_SUPPORTED, "Asynchronous class-based views require Django >= 4.2")
+class AsyncLoginRequiredMixinTests(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = get_user_model().objects.create_user("jane", "jane@doe.com", "doe")
+
+    def get(self):
+        async def request():
+            return await self.async_client.get("/async-login-required/")
+
+        return async_to_sync(request)()
+
+    @override_settings(ROOT_URLCONF=__name__)
+    def test_anonymous_user_is_redirected_through_the_request_handler(self):
+        response = self.get()
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/accounts/login/?next=/async-login-required/")
+
+    @override_settings(ROOT_URLCONF=__name__)
+    def test_authenticated_user_can_access_async_view(self):
+        self.async_client.force_login(self.user)
+
+        response = self.get()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b"some html")
 
 
 class TestViewMixins(TestCase):
