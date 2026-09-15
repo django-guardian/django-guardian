@@ -81,9 +81,35 @@ class LoginRequiredMixin:
     login_url = settings.LOGIN_URL
 
     def dispatch(self, request, *args, **kwargs):
+        # `view_is_async` is missing when the mixin is used outside Django's `View`.
+        if _ASYNC_VIEWS_SUPPORTED and getattr(self, "view_is_async", False):
+            # The returned coroutine is awaited by Django's `View.as_view()` wrapper.
+            return self.adispatch(request, *args, **kwargs)
         return login_required(redirect_field_name=self.redirect_field_name, login_url=self.login_url)(super().dispatch)(
             request, *args, **kwargs
         )
+
+    async def adispatch(self, request, *args, **kwargs):
+        """Asynchronous version of `dispatch()`, used when the view is asynchronous.
+
+        Requires Django >= 4.2.
+        """
+
+        # `login_required` is reused because `user_passes_test()` resolves the
+        # login URL and decides whether the `next` path may be passed to it. It
+        # has to run outside the event loop, though: resolving the lazy
+        # `request.user` there raises `SynchronousOnlyOperation`, and only
+        # Django >= 5.1 gives the decorator an asynchronous wrapper for a
+        # coroutine function. The synchronous dispatch the decorator wraps
+        # returns the handler's coroutine, which is awaited back in the event
+        # loop.
+        login_required_dispatch = login_required(
+            redirect_field_name=self.redirect_field_name, login_url=self.login_url
+        )(super().dispatch)
+        response = await sync_to_async(login_required_dispatch)(request, *args, **kwargs)
+        if isawaitable(response):
+            response = await response
+        return response
 
 
 class PermissionRequiredMixin:

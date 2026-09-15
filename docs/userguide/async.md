@@ -1,15 +1,15 @@
 ---
 title: Asynchronous views
-description: Using PermissionRequiredMixin with asynchronous class-based views.
+description: Using PermissionRequiredMixin and LoginRequiredMixin with asynchronous class-based views.
 ---
 
 # Asynchronous views
 
-`guardian.mixins.PermissionRequiredMixin` works with asynchronous
-class-based views. Django detects a view as asynchronous when all of its
-HTTP handlers (`get()`, `post()`, ...) are coroutines. When that is the
-case, the mixin runs its permission check asynchronously instead of the
-synchronous one.
+`guardian.mixins.PermissionRequiredMixin` and
+`guardian.mixins.LoginRequiredMixin` work with asynchronous class-based
+views. Django detects a view as asynchronous when all of its HTTP handlers
+(`get()`, `post()`, ...) are coroutines. When that is the case, the mixins
+run their asynchronous counterpart instead of the synchronous one.
 
 !!! note
     Asynchronous class-based views require Django >= 4.2.
@@ -42,6 +42,24 @@ By default, the object to check the permission against is resolved by
 `aget_permission_object()`, which runs the synchronous
 `get_permission_object()` in a thread. That is, `permission_object`,
 `get_object()` and `object` are honoured as usual.
+
+## Login required
+
+`LoginRequiredMixin` needs nothing beyond the same rule. An anonymous user
+is redirected to the login page from `adispatch()`, so `request.user` is
+resolved through `sync_to_async()` instead of being read in the event loop:
+
+```python
+from django.http import HttpResponse
+from django.views.generic import View
+
+from guardian.mixins import LoginRequiredMixin
+
+
+class SecretView(LoginRequiredMixin, View):
+    async def get(self, request, *args, **kwargs):
+        return HttpResponse('some html')
+```
 
 ## Fetching the object with the asynchronous ORM
 
@@ -97,8 +115,7 @@ well; asynchronous views do not call the synchronous one.
 - Django's generic views (`DetailView`, `ListView`, ...) provide synchronous
   handlers by default. They use the mixin's synchronous path unless every
   effective HTTP handler is overridden with a coroutine.
-- `LoginRequiredMixin` and `PermissionListMixin` have no asynchronous
-  support yet.
+- `PermissionListMixin` has no asynchronous support yet.
 - On Django 4.1 and older the synchronous path is used even for
   asynchronous views. Responses for a disallowed HTTP method only became
   awaitable in Django 4.1.2, and 4.1 is end of life, so the floor is 4.2.
