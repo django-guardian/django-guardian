@@ -325,21 +325,21 @@ class GuardianUserMixin:
         return get_anonymous_user()
 
     def add_obj_perm(self, perm: str, obj: Model) -> Any:
-        UserObjectPermission = get_user_obj_perms_model()
+        UserObjectPermission = get_user_obj_perms_model(obj)
         return UserObjectPermission.objects.assign_perm(perm, self, obj)
 
     def del_obj_perm(self, perm: str, obj: Model) -> Any:
-        UserObjectPermission = get_user_obj_perms_model()
+        UserObjectPermission = get_user_obj_perms_model(obj)
         return UserObjectPermission.objects.remove_perm(perm, self, obj)
 
 
 class GuardianGroupMixin:
     def add_obj_perm(self, perm: str, obj: Model) -> Any:
-        GroupObjectPermission = get_group_obj_perms_model()
+        GroupObjectPermission = get_group_obj_perms_model(obj)
         return GroupObjectPermission.objects.assign_perm(perm, self, obj)
 
     def del_obj_perm(self, perm: str, obj: Model) -> Any:
-        GroupObjectPermission = get_group_obj_perms_model()
+        GroupObjectPermission = get_group_obj_perms_model(obj)
         return GroupObjectPermission.objects.remove_perm(perm, self, obj)
 
 

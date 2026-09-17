@@ -54,6 +54,22 @@ class TestDirectUserPermissions(TestCase):
         result = ProjectUserObjectPermission.objects.filter(**filters).count()
         self.assertEqual(result, 1)
 
+    def test_add_obj_perm(self):
+        self.joe.add_obj_perm("add_project", self.project)
+        filters = {
+            "content_object": self.project,
+            "permission__codename": "add_project",
+            "user": self.joe,
+        }
+        self.assertEqual(ProjectUserObjectPermission.objects.filter(**filters).count(), 1)
+        self.assertTrue(self.joe.has_perm("add_project", self.project))
+
+    def test_del_obj_perm(self):
+        assign_perm("add_project", self.joe, self.project)
+        self.joe.del_obj_perm("add_project", self.project)
+        self.assertEqual(ProjectUserObjectPermission.objects.count(), 0)
+        self.assertFalse(self.joe.has_perm("add_project", self.project))
+
     def test_remove_perm(self):
         assign_perm("add_project", self.joe, self.project)
         filters = {
@@ -226,6 +242,22 @@ class TestDirectGroupPermissions(TestCase):
 
         result = get_objects_for_group(self.group, "testapp.add_project")
         self.assertEqual(sorted(p.pk for p in result), sorted([foo.pk, bar.pk]))
+
+    def test_add_obj_perm(self):
+        self.group.add_obj_perm("add_project", self.project)
+        filters = {
+            "content_object": self.project,
+            "permission__codename": "add_project",
+            "group": self.group,
+        }
+        self.assertEqual(ProjectGroupObjectPermission.objects.filter(**filters).count(), 1)
+        self.assertTrue(self.joe.has_perm("add_project", self.project))
+
+    def test_del_obj_perm(self):
+        assign_perm("add_project", self.group, self.project)
+        self.group.del_obj_perm("add_project", self.project)
+        self.assertEqual(ProjectGroupObjectPermission.objects.count(), 0)
+        self.assertFalse(self.joe.has_perm("add_project", self.project))
 
 
 @skipUnlessTestApp
