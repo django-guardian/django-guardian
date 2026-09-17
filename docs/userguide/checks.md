@@ -64,10 +64,12 @@ True
 False
 ```
 
-Only object permissions are checked here. This is *not* the same as the
-standard `joe.has_perm('change_site', site)`, which goes through the whole
-authentication backend chain and also takes global (model level) permissions
-into account.
+Only object permissions are checked here, and the configured authentication
+backends are bypassed. This is *not* the same as the standard
+`joe.has_perm('change_site', site)`, which runs through the backend chain.
+Django's `ModelBackend` returns no permissions once an object is passed, so
+global (model level) permissions are not part of that answer either, but a
+custom backend may answer differently.
 
 Every call builds its own `ObjectPermissionChecker`, so checking many objects in
 a loop hits the database once per object. Use `ObjectPermissionChecker` directly

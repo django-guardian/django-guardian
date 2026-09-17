@@ -293,9 +293,12 @@ def has_perm(user_or_group: Any, perm: str, obj: Model) -> bool:
         False otherwise.
 
     Note:
-        Only object-level permissions are checked. This is NOT equivalent to
-        `user.has_perm(perm, obj)`, which goes through the full authentication
-        backend chain and also consults global (model-level) permissions.
+        Only object-level permissions are checked, and the configured
+        authentication backends are bypassed. This is NOT equivalent to
+        `user.has_perm(perm, obj)`, which runs through the backend chain.
+        Django's `ModelBackend` returns no permissions once an object is
+        passed, so global (model-level) permissions are not part of that
+        answer either, but a custom backend may answer differently.
         For inactive users (is_active=False), returns False.
         For superusers, returns True.
         Each call builds its own `ObjectPermissionChecker`. To check many objects,

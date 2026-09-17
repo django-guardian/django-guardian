@@ -56,8 +56,10 @@ if has_perm(editors_group, 'change_article', article):
     ...
 ```
 
-Only object permissions are checked. Unlike `user.has_perm(perm, obj)`, this does not go through the authentication
-backend chain and does not consult global (model-level) permissions.
+Only object permissions are checked, and the configured authentication backends are bypassed. Unlike
+`user.has_perm(perm, obj)`, this does not go through the backend chain. Django's `ModelBackend` returns no permissions
+once an object is passed, so global (model-level) permissions are not part of that answer either, but a custom backend
+may answer differently.
 
 ### General Permission Checking
 
