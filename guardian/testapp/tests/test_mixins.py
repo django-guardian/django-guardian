@@ -77,9 +77,24 @@ class AsyncLoginRequiredView(LoginRequiredMixin, View):
         return HttpResponse("some html")
 
 
+class CooperativeAsyncMixin:
+    """Another cooperative asynchronous dispatch, placed after `LoginRequiredMixin`."""
+
+    async def dispatch(self, request, *args, **kwargs):
+        response = await super().dispatch(request, *args, **kwargs)
+        response["X-Cooperative-Dispatch"] = "yes"
+        return response
+
+
+class CooperativeAsyncLoginRequiredView(LoginRequiredMixin, CooperativeAsyncMixin, View):
+    async def get(self, request, *args, **kwargs):
+        return HttpResponse("some html")
+
+
 urlpatterns = [
     path("async-permission-required/", AsyncPermissionObjectView.as_view(raise_exception=False)),
     path("async-login-required/", AsyncLoginRequiredView.as_view()),
+    path("async-cooperative-login-required/", CooperativeAsyncLoginRequiredView.as_view()),
 ]
 
 
@@ -249,9 +264,9 @@ class AsyncLoginRequiredMixinTests(TestCase):
     def setUpTestData(cls):
         cls.user = get_user_model().objects.create_user("jane", "jane@doe.com", "doe")
 
-    def get(self):
+    def get(self, path="/async-login-required/"):
         async def request():
-            return await self.async_client.get("/async-login-required/")
+            return await self.async_client.get(path)
 
         return async_to_sync(request)()
 
@@ -270,6 +285,23 @@ class AsyncLoginRequiredMixinTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b"some html")
+
+    @override_settings(ROOT_URLCONF=__name__)
+    def test_anonymous_user_is_redirected_before_a_cooperative_async_dispatch(self):
+        response = self.get("/async-cooperative-login-required/")
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, "/accounts/login/?next=/async-cooperative-login-required/")
+
+    @override_settings(ROOT_URLCONF=__name__)
+    def test_authenticated_user_can_reach_a_cooperative_async_dispatch(self):
+        self.async_client.force_login(self.user)
+
+        response = self.get("/async-cooperative-login-required/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b"some html")
+        self.assertEqual(response["X-Cooperative-Dispatch"], "yes")
 
 
 class TestViewMixins(TestCase):

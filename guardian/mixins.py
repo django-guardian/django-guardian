@@ -96,16 +96,20 @@ class LoginRequiredMixin:
         """
 
         # `login_required` is reused because `user_passes_test()` resolves the
-        # login URL and decides whether the `next` path may be passed to it. It
-        # has to run outside the event loop, though: resolving the lazy
-        # `request.user` there raises `SynchronousOnlyOperation`, and only
-        # Django >= 5.1 gives the decorator an asynchronous wrapper for a
-        # coroutine function. The synchronous dispatch the decorator wraps
-        # returns the handler's coroutine, which is awaited back in the event
-        # loop.
+        # login URL and decides whether the `next` path may be passed to it.
+        # From Django 5.1 on, a coroutine dispatch gets an asynchronous wrapper
+        # that resolves the user through `await request.auser()` and runs the
+        # test in a thread, so it can be awaited here and still supports another
+        # cooperative asynchronous dispatch further down the MRO. Older
+        # versions only have the synchronous wrapper, whose lazy `request.user`
+        # lookup would raise `SynchronousOnlyOperation` on the event loop, so it
+        # runs in a thread. The synchronous dispatch it wraps returns the
+        # handler's coroutine, which is awaited back in the event loop.
         login_required_dispatch = login_required(
             redirect_field_name=self.redirect_field_name, login_url=self.login_url
         )(super().dispatch)
+        if iscoroutinefunction(login_required_dispatch):
+            return await login_required_dispatch(request, *args, **kwargs)
         response = await sync_to_async(login_required_dispatch)(request, *args, **kwargs)
         if isawaitable(response):
             response = await response
