@@ -91,10 +91,27 @@ class CooperativeAsyncLoginRequiredView(LoginRequiredMixin, CooperativeAsyncMixi
         return HttpResponse("some html")
 
 
+def combined_handler(request):
+    """Handler of `CombinedAsyncLoginPermissionView`, patched by its tests."""
+
+
+class CombinedAsyncLoginPermissionView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = "testapp.change_post"
+    raise_exception = True
+
+    async def get(self, request, *args, **kwargs):
+        combined_handler(request)
+        return HttpResponse("combined html")
+
+    async def aget_permission_object(self):
+        return await Post.objects.aget(title="foo-post-title")
+
+
 urlpatterns = [
     path("async-permission-required/", AsyncPermissionObjectView.as_view(raise_exception=False)),
     path("async-login-required/", AsyncLoginRequiredView.as_view()),
     path("async-cooperative-login-required/", CooperativeAsyncLoginRequiredView.as_view()),
+    path("async-combined/", CombinedAsyncLoginPermissionView.as_view()),
 ]
 
 
@@ -302,6 +319,44 @@ class AsyncLoginRequiredMixinTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b"some html")
         self.assertEqual(response["X-Cooperative-Dispatch"], "yes")
+
+
+@skipIf(not _ASYNC_VIEWS_SUPPORTED, "Asynchronous class-based views require Django >= 4.2")
+class AsyncCombinedMixinTests(TestCase):
+    """`LoginRequiredMixin` and `PermissionRequiredMixin` on the same async view."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.post = Post.objects.create(title="foo-post-title")
+        cls.user = get_user_model().objects.create_user("jill", "jill@doe.com", "doe")
+
+    def get(self):
+        async def request():
+            return await self.async_client.get("/async-combined/")
+
+        return async_to_sync(request)()
+
+    @override_settings(ROOT_URLCONF=__name__)
+    def test_authorized_user_reaches_the_handler_once(self):
+        self.async_client.force_login(self.user)
+        assign_perm("testapp.change_post", self.user, self.post)
+
+        with mock.patch("guardian.testapp.tests.test_mixins.combined_handler") as handler:
+            response = self.get()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b"combined html")
+        handler.assert_called_once()
+
+    @override_settings(ROOT_URLCONF=__name__)
+    def test_permission_check_runs_before_the_handler(self):
+        self.async_client.force_login(self.user)
+
+        with mock.patch("guardian.testapp.tests.test_mixins.combined_handler") as handler:
+            response = self.get()
+
+        self.assertEqual(response.status_code, 403)
+        handler.assert_not_called()
 
 
 class TestViewMixins(TestCase):
