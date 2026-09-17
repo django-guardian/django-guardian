@@ -301,8 +301,10 @@ def has_perm(user_or_group: Any, perm: str, obj: Model) -> bool:
         answer either, but a custom backend may answer differently.
         For inactive users (is_active=False), returns False.
         For superusers, returns True.
-        Each call builds its own `ObjectPermissionChecker`. To check many objects,
-        use that class directly so its cache can be reused.
+        Each call builds its own `ObjectPermissionChecker`, whose cache is keyed
+        by object, so checking many objects costs a lookup per object. Use
+        `ObjectPermissionChecker.prefetch_perms()` for that case, and reuse a
+        single checker when the same object is checked more than once.
     """
     check = ObjectPermissionChecker(user_or_group)
     return check.has_perm(perm, obj)

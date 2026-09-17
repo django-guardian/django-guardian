@@ -71,16 +71,20 @@ Django's `ModelBackend` returns no permissions once an object is passed, so
 global (model level) permissions are not part of that answer either, but a
 custom backend may answer differently.
 
-Every call builds its own `ObjectPermissionChecker`, so checking many objects in
-a loop hits the database once per object. Use `ObjectPermissionChecker` directly
-in that case, it caches the permissions it has already fetched:
+Every call builds its own `ObjectPermissionChecker`, and that checker caches per
+object, so a loop over many objects queries the database for each one. Reusing a
+single checker only helps when the same object is checked again. For a loop,
+prefetch the permissions first:
 
 ```python
 >>> from guardian.core import ObjectPermissionChecker
 >>>
 >>> checker = ObjectPermissionChecker(joe)
+>>> checker.prefetch_perms(sites)
 >>> [site for site in sites if checker.has_perm('change_site', site)]
 ```
+
+See [Performance Tuning](performance.md) for the details.
 
 ### get_perms
 
