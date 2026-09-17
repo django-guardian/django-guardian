@@ -322,9 +322,10 @@ class PermissionRequiredMixin:
 class GuardianUserMixin:
     """A model mixin that adds object permission helpers to a custom user model.
 
-    By default `django-guardian` adds the same helpers to the user model by monkey patching it.
-    Subclass this mixin and set `GUARDIAN_MONKEY_PATCH_USER = False` to get them through
-    inheritance instead, which is the recommended setup for custom user models.
+    By default `django-guardian` monkey patches the user model with these helpers, plus
+    `evict_obj_perms_cache`, which this mixin does not provide. Subclass this mixin and set
+    `GUARDIAN_MONKEY_PATCH_USER = False` to get them through inheritance instead, which is
+    the recommended setup for custom user models.
 
     Example:
         ```python
