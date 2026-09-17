@@ -15,9 +15,9 @@ There is also `has_perm()` for checking a single permission:
 ### Function Relationships
 
 - **`has_perm(user_or_group, perm, obj)`**: Returns whether that single permission is held (user + group permissions)
-- **`get_perms(user, obj)`**: Returns ALL permissions (user + group permissions combined)
+- **`get_perms(user_or_group, obj)`**: Returns ALL permissions (user + group permissions combined)
 - **`get_user_perms(user, obj)`**: Returns ONLY direct user permissions
-- **`get_group_perms(user, obj)`**: Returns ONLY group permissions
+- **`get_group_perms(user_or_group, obj)`**: Returns ONLY group permissions
 
 For any user and object: `get_perms(user, obj) = get_user_perms(user, obj) + get_group_perms(user, obj)`
 
