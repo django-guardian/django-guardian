@@ -47,6 +47,39 @@ More on the backend can be found at
 Aside from the standard `has_perm` method, `django-guardian` provides
 some useful helpers for object permission checks.
 
+### has_perm
+
+To check a single object permission for a `User` or a `Group`:
+
+```python
+>>> from guardian.shortcuts import has_perm
+>>>
+>>> joe = User.objects.get(username='joe')
+>>> editors = Group.objects.get(name='editors')
+>>> site = Site.objects.get_current()
+>>>
+>>> has_perm(joe, 'change_site', site)
+True
+>>> has_perm(editors, 'change_site', site)
+False
+```
+
+Only object permissions are checked here. This is *not* the same as the
+standard `joe.has_perm('change_site', site)`, which goes through the whole
+authentication backend chain and also takes global (model level) permissions
+into account.
+
+Every call builds its own `ObjectPermissionChecker`, so checking many objects in
+a loop hits the database once per object. Use `ObjectPermissionChecker` directly
+in that case, it caches the permissions it has already fetched:
+
+```python
+>>> from guardian.core import ObjectPermissionChecker
+>>>
+>>> checker = ObjectPermissionChecker(joe)
+>>> [site for site in sites if checker.has_perm('change_site', site)]
+```
+
 ### get_perms
 
 To check permissions we can use a quick-and-dirty shortcut:
@@ -61,9 +94,9 @@ To check permissions we can use a quick-and-dirty shortcut:
 True
 ```
 
-It is probably better to use standard `has_perm` method. But for `Group`
-instances it is not as easy and `get_perms` could be handy here as it
-accepts both `User` and `Group` instances. If we need to do some more
+For a single permission the `has_perm` shortcut above is usually enough;
+`get_perms` is handy when we need the whole list of object permissions. Both
+accept `User` and `Group` instances. If we need to do some more
 work, we can use lower level `ObjectPermissionChecker` class which is
 described in the next section.
 

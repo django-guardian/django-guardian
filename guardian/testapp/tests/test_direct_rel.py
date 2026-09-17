@@ -8,6 +8,7 @@ from guardian.shortcuts import (
     get_objects_for_group,
     get_objects_for_user,
     get_users_with_perms,
+    has_perm,
     remove_perm,
 )
 from guardian.testapp.models import (
@@ -258,6 +259,22 @@ class TestDirectGroupPermissions(TestCase):
         self.group.del_obj_perm("add_project", self.project)
         self.assertEqual(ProjectGroupObjectPermission.objects.count(), 0)
         self.assertFalse(self.joe.has_perm("add_project", self.project))
+
+    def test_has_perm(self):
+        assign_perm("add_project", self.group, self.project)
+        self.assertTrue(has_perm(self.group, "add_project", self.project))
+        self.assertTrue(has_perm(self.group, "testapp.add_project", self.project))
+        self.assertFalse(has_perm(self.group, "change_project", self.project))
+        self.assertFalse(has_perm(self.group, "no_such_perm", self.project))
+
+    def test_has_perm_on_another_object(self):
+        other = Project.objects.create(name="other")
+        assign_perm("add_project", self.group, other)
+        self.assertFalse(has_perm(self.group, "add_project", self.project))
+
+    def test_has_perm_for_user_through_group(self):
+        assign_perm("add_project", self.group, self.project)
+        self.assertTrue(has_perm(self.joe, "add_project", self.project))
 
 
 @skipUnlessTestApp

@@ -27,7 +27,7 @@ from django.core.exceptions import ImproperlyConfigured, PermissionDenied
 from django.db.models import Model, QuerySet
 from django.http import HttpRequest, HttpResponse, HttpResponseForbidden, HttpResponseNotFound, HttpResponseRedirect
 
-from guardian.shortcuts import get_objects_for_user
+from guardian.shortcuts import get_objects_for_user, has_perm
 from guardian.utils import get_40x_or_None, get_anonymous_user, get_group_obj_perms_model, get_user_obj_perms_model
 
 # Django 4.1.2 made the response for a disallowed HTTP method awaitable, which
@@ -341,6 +341,9 @@ class GuardianGroupMixin:
     def del_obj_perm(self, perm: str, obj: Model) -> Any:
         GroupObjectPermission = get_group_obj_perms_model(obj)
         return GroupObjectPermission.objects.remove_perm(perm, self, obj)
+
+    def has_perm(self, perm: str, obj: Model) -> bool:
+        return has_perm(self, perm, obj)
 
 
 class PermissionListMixin:

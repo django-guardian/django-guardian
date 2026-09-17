@@ -9,10 +9,12 @@ Django Guardian provides several shortcut functions for querying permissions. Un
 
 ## Permission Query Functions Overview
 
-When working with object permissions in django-guardian, there are three main functions for querying permissions:
+When working with object permissions in django-guardian, there are three main functions for querying permissions.
+There is also `has_perm()` for checking a single permission:
 
 ### Function Relationships
 
+- **`has_perm(user_or_group, perm, obj)`**: Returns whether that single permission is held (user + group permissions)
 - **`get_perms(user, obj)`**: Returns ALL permissions (user + group permissions combined)
 - **`get_user_perms(user, obj)`**: Returns ONLY direct user permissions
 - **`get_group_perms(user, obj)`**: Returns ONLY group permissions
@@ -23,6 +25,7 @@ For any user and object: `get_perms(user, obj) = get_user_perms(user, obj) + get
 
 | Function | Returns | Type | Includes Groups | Use Case |
 |----------|---------|------|----------------|----------|
+| `has_perm()` | Single permission check | `bool` | Yes | Checking one known permission |
 | `get_perms()` | All permissions | `list[str]` | Yes | General permission checking |
 | `get_user_perms()` | Direct user permissions only | `QuerySet` | No | Permission management interfaces |
 | `get_group_perms()` | Group permissions only | `QuerySet` | N/A | Understanding permission inheritance |
@@ -35,6 +38,26 @@ For any user and object: `get_perms(user, obj) = get_user_perms(user, obj) + get
 - **Superusers**: `get_perms()` returns all available permissions for the object's model
 
 ## Common Use Cases
+
+### Single Permission Checking
+
+Use `has_perm()` when you need to check one known permission, regardless of whether it comes from direct assignment or
+group membership. It accepts both users and groups:
+
+```python
+from guardian.shortcuts import has_perm
+
+if has_perm(user, 'change_article', article):
+    # User can change this article (either directly or through groups)
+    allow_editing = True
+
+if has_perm(editors_group, 'change_article', article):
+    # The group itself has the permission on this article
+    ...
+```
+
+Only object permissions are checked. Unlike `user.has_perm(perm, obj)`, this does not go through the authentication
+backend chain and does not consult global (model-level) permissions.
 
 ### General Permission Checking
 
