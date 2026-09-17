@@ -320,29 +320,105 @@ class PermissionRequiredMixin:
 
 
 class GuardianUserMixin:
+    """A model mixin that adds object permission helpers to a custom user model.
+
+    By default `django-guardian` adds the same helpers to the user model by monkey patching it.
+    Subclass this mixin and set `GUARDIAN_MONKEY_PATCH_USER = False` to get them through
+    inheritance instead, which is the recommended setup for custom user models.
+
+    Example:
+        ```python
+        from django.contrib.auth.models import AbstractUser
+        from guardian.mixins import GuardianUserMixin
+
+        class CustomUser(AbstractUser, GuardianUserMixin):
+            ...
+        ```
+    """
+
     @staticmethod
     def get_anonymous():
+        """Returns the anonymous user instance configured by `ANONYMOUS_USER_NAME`."""
         return get_anonymous_user()
 
     def add_obj_perm(self, perm: str, obj: Model) -> Any:
+        """Assigns the permission for the given object to this user.
+
+        Args:
+            perm: Permission codename
+            obj: Django model instance the permission is assigned for
+
+        Returns:
+            The created user object permission instance.
+        """
         UserObjectPermission = get_user_obj_perms_model(obj)
         return UserObjectPermission.objects.assign_perm(perm, self, obj)
 
     def del_obj_perm(self, perm: str, obj: Model) -> Any:
+        """Removes the permission for the given object from this user.
+
+        Args:
+            perm: Permission codename
+            obj: Django model instance the permission is removed for
+        """
         UserObjectPermission = get_user_obj_perms_model(obj)
         return UserObjectPermission.objects.remove_perm(perm, self, obj)
 
 
 class GuardianGroupMixin:
+    """A model mixin that adds object permission helpers to a custom group model.
+
+    By default `django-guardian` adds `add_obj_perm` and `del_obj_perm` to the group model by
+    monkey patching it. Subclass this mixin and set `GUARDIAN_MONKEY_PATCH_GROUP = False` to get
+    them through inheritance instead, which is the recommended setup for custom group models.
+
+    Example:
+        ```python
+        from django.contrib.auth.models import Group
+        from guardian.mixins import GuardianGroupMixin
+
+        class CustomGroup(Group, GuardianGroupMixin):
+            ...
+        ```
+    """
+
     def add_obj_perm(self, perm: str, obj: Model) -> Any:
+        """Assigns the permission for the given object to this group.
+
+        Args:
+            perm: Permission codename
+            obj: Django model instance the permission is assigned for
+
+        Returns:
+            The created group object permission instance.
+        """
         GroupObjectPermission = get_group_obj_perms_model(obj)
         return GroupObjectPermission.objects.assign_perm(perm, self, obj)
 
     def del_obj_perm(self, perm: str, obj: Model) -> Any:
+        """Removes the permission for the given object from this group.
+
+        Args:
+            perm: Permission codename
+            obj: Django model instance the permission is removed for
+        """
         GroupObjectPermission = get_group_obj_perms_model(obj)
         return GroupObjectPermission.objects.remove_perm(perm, self, obj)
 
     def has_perm(self, perm: str, obj: Model) -> bool:
+        """Checks whether this group has the permission for the given object.
+
+        Args:
+            perm: Permission codename, with or without the `app_label.` prefix
+            obj: Django model instance for which to check the permission
+
+        Returns:
+            True if the group has the permission for the given object, False otherwise.
+
+        Note:
+            Only object-level permissions are checked, global (model-level) permissions
+            assigned to the group are ignored. See `guardian.shortcuts.has_perm`.
+        """
         return has_perm(self, perm, obj)
 
 

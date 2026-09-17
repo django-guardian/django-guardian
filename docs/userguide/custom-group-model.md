@@ -95,6 +95,20 @@ To fix this, it is recommended to add the setting
 `GUARDIAN_MONKEY_PATCH_GROUP = False` in your `settings.py` and subclass
 `guardian.mixins.GuardianGroupMixin` in your custom group model.
 
+The mixin adds `add_obj_perm(perm, obj)`, `del_obj_perm(perm, obj)` and
+`has_perm(perm, obj)` to the group model:
+
+``` python
+group = CustomGroup.objects.get(name='editors')
+
+group.add_obj_perm('change_article', article)
+group.has_perm('change_article', article)  # True
+group.del_obj_perm('change_article', article)
+```
+
+`has_perm` only checks object permissions, global (model level) permissions
+assigned to the group are ignored.
+
 The `settings.py` file for the example above would look like this:
 
 ``` python
