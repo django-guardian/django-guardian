@@ -360,10 +360,12 @@ class Migration(migrations.Migration):
 
 ## Object permissions written through `add_obj_perm`
 
-Up to and including release 3.5.0, `user.add_obj_perm()`, `group.add_obj_perm()`
-and their `del_obj_perm()` counterparts always wrote to the generic object
-permission model, even for models with a direct foreign key. Those rows were
-never read back by the permission checks, which read the direct model.
+Up to and including release 3.5.0, `user.add_obj_perm()` and
+`group.add_obj_perm()` wrote to the generic object permission model even when
+the object's model declared its own permission model, and `del_obj_perm()`
+deleted from that same generic table. The permission checks read the direct
+model, so a permission added that way was never seen, and a permission assigned
+with `assign_perm()` could not be removed with `del_obj_perm()`.
 
 Since release 3.6.0 both methods use the direct model. Rows written by the
 older releases stay in the generic table, where they remain invisible to the
