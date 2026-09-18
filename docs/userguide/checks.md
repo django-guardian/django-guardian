@@ -49,6 +49,8 @@ some useful helpers for object permission checks.
 
 ### has_perm
 
+!!! abstract "Added in version 3.6.0"
+
 To check a single object permission for a `User` or a `Group`:
 
 ```python
@@ -64,27 +66,7 @@ True
 False
 ```
 
-Only object permissions are checked here, and the configured authentication
-backends are bypassed. This is *not* the same as the standard
-`joe.has_perm('change_site', site)`, which runs through the backend chain.
-Django's `ModelBackend` returns no permissions once an object is passed, so
-global (model level) permissions are not part of that answer either, but a
-custom backend may answer differently.
-
-Every call builds its own `ObjectPermissionChecker`, and that checker caches per
-object, so a loop over many objects queries the database for each one. Reusing a
-single checker only helps when the same object is checked again. For a loop,
-prefetch the permissions first:
-
-```python
->>> from guardian.core import ObjectPermissionChecker
->>>
->>> checker = ObjectPermissionChecker(joe)
->>> checker.prefetch_perms(sites)
->>> [site for site in sites if checker.has_perm('change_site', site)]
-```
-
-See [Performance Tuning](performance.md) for the details.
+Only object permissions are checked here.
 
 ### get_perms
 

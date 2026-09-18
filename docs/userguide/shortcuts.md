@@ -32,7 +32,7 @@ For any user and object: `get_perms(user, obj) = get_user_perms(user, obj) + get
 
 ## Important Notes
 
-- **Inactive users** (`is_active=False`): All functions return empty results
+- **Inactive users** (`is_active=False`): `has_perm()` returns `False`, the other functions return empty results
 - **Return types**: `get_perms()` returns a list, while `get_user_perms()` and `get_group_perms()` return QuerySets
 - **Group behavior**: When `get_group_perms()` is called with a user, it returns permissions from ALL groups the user belongs to
 - **Superusers**: `get_perms()` returns all available permissions for the object's model
@@ -40,6 +40,8 @@ For any user and object: `get_perms(user, obj) = get_user_perms(user, obj) + get
 ## Common Use Cases
 
 ### Single Permission Checking
+
+!!! abstract "Added in version 3.6.0"
 
 Use `has_perm()` when you need to check one known permission, regardless of whether it comes from direct assignment or
 group membership. It accepts both users and groups:
@@ -56,10 +58,7 @@ if has_perm(editors_group, 'change_article', article):
     ...
 ```
 
-Only object permissions are checked, and the configured authentication backends are bypassed. Unlike
-`user.has_perm(perm, obj)`, this does not go through the backend chain. Django's `ModelBackend` returns no permissions
-once an object is passed, so global (model-level) permissions are not part of that answer either, but a custom backend
-may answer differently.
+Only object permissions are checked.
 
 ### General Permission Checking
 

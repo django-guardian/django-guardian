@@ -96,10 +96,13 @@ To fix this, it is recommended to add the setting
 `guardian.mixins.GuardianGroupMixin` in your custom group model.
 
 The mixin adds `add_obj_perm(perm, obj)`, `del_obj_perm(perm, obj)` and
-`has_perm(perm, obj)` to the group model:
+`has_perm(perm, obj)` (the last one since version 3.6.0) to the group model:
 
 ``` python
+from myapp.models import Article
+
 group = CustomGroup.objects.get(name='editors')
+article = Article.objects.get(pk=1)
 
 group.add_obj_perm('change_article', article)
 group.has_perm('change_article', article)  # True
