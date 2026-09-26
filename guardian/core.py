@@ -272,13 +272,11 @@ class ObjectPermissionChecker:
             else:
                 # Direct models have no content_type/object_pk columns of their
                 # own: they point at one target model via `content_object`, so
-                # that target's content type is constant for the whole queryset.
-                target_model = model._meta.get_field("content_object").remote_field.model
-                target_ctype_id = get_content_type(target_model).id
-                rows = qs.select_related("permission__codename").values_list(
-                    "content_object_id", "permission__codename"
-                )
-                perms = ((target_ctype_id, force_str(object_pk), codename) for object_pk, codename in rows)
+                # that target's content type is constant for the whole queryset
+                # and already available off the joined `permission` row - reuse
+                # it instead of resolving the target's ContentType separately.
+                rows = qs.values_list("permission__content_type_id", "content_object_id", "permission__codename")
+                perms = ((ctype_id, force_str(object_pk), codename) for ctype_id, object_pk, codename in rows)
             for p in perms:
                 if p[:2] not in cache:
                     cache[p[:2]] = []
@@ -289,6 +287,14 @@ class ObjectPermissionChecker:
         return obj, cache
 
     def _prefetch_cache(self):
+        obj = self.user if self.user else self.group
+
+        # Cache hits should stay O(1): bail out before scanning the app
+        # registry for direct permission models and building their querysets.
+        if hasattr(obj, "_guardian_perms_cache"):
+            self._obj_perms_cache = obj._guardian_perms_cache
+            return
+
         from guardian.models import GroupObjectPermissionBase, UserObjectPermissionBase
         from guardian.utils import get_direct_obj_perms_models, get_group_obj_perms_model, get_user_obj_perms_model
 
@@ -298,7 +304,6 @@ class ObjectPermissionChecker:
         direct_group_models = get_direct_obj_perms_models(GroupObjectPermissionBase, GroupObjectPermission)
 
         if self.user:
-            obj = self.user
             querysets = (
                 [UserObjectPermission.objects.filter(user=obj)]
                 + [model.objects.filter(user=obj) for model in direct_user_models]
@@ -306,13 +311,9 @@ class ObjectPermissionChecker:
                 + [model.objects.filter(group__user=obj) for model in direct_group_models]
             )
         else:
-            obj = self.group
             querysets = [GroupObjectPermission.objects.filter(group=obj)] + [
                 model.objects.filter(group=obj) for model in direct_group_models
             ]
 
-        if not hasattr(obj, "_guardian_perms_cache"):
-            obj, cache = self._init_obj_prefetch_cache(obj, *querysets)
-        else:
-            cache = obj._guardian_perms_cache
+        obj, cache = self._init_obj_prefetch_cache(obj, *querysets)
         self._obj_perms_cache = cache
