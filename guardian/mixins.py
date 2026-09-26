@@ -81,9 +81,36 @@ class LoginRequiredMixin:
     login_url = settings.LOGIN_URL
 
     def dispatch(self, request, *args, **kwargs):
+        # `view_is_async` is missing when the mixin is used outside Django's `View`.
+        if _ASYNC_VIEWS_SUPPORTED and getattr(self, "view_is_async", False):
+            # The returned coroutine is awaited by Django's `View.as_view()` wrapper.
+            return self.adispatch(request, *args, **kwargs)
         return login_required(redirect_field_name=self.redirect_field_name, login_url=self.login_url)(super().dispatch)(
             request, *args, **kwargs
         )
+
+    async def adispatch(self, request, *args, **kwargs):
+        """Asynchronous version of `dispatch()`, used when the view is asynchronous.
+
+        The login check runs Django's own `login_required()` in a thread against
+        a sentinel view, so the redirect keeps the exact semantics of the
+        synchronous path, including `resolve_url()` and dropping the `next` path
+        when the login url points at a different scheme or host.
+
+        Requires Django >= 4.2.
+        """
+        sentinel = object()
+        check_login = login_required(redirect_field_name=self.redirect_field_name, login_url=self.login_url)(
+            lambda _request, *_args, **_kwargs: sentinel
+        )
+        result = await sync_to_async(check_login)(request, *args, **kwargs)
+        if result is not sentinel:
+            # `login_required()` redirected an anonymous user.
+            return result
+        response = super().dispatch(request, *args, **kwargs)
+        if isawaitable(response):
+            response = await response
+        return response
 
 
 class PermissionRequiredMixin:

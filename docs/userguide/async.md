@@ -11,6 +11,10 @@ HTTP handlers (`get()`, `post()`, ...) are coroutines. When that is the
 case, the mixin runs its permission check asynchronously instead of the
 synchronous one.
 
+`guardian.mixins.LoginRequiredMixin` supports asynchronous views as well:
+it runs Django's own `login_required()` check in a thread and returns its
+redirect unchanged, so the login url handling is exactly the synchronous one.
+
 !!! note
     Asynchronous class-based views require Django >= 4.2.
 
@@ -97,8 +101,7 @@ well; asynchronous views do not call the synchronous one.
 - Django's generic views (`DetailView`, `ListView`, ...) provide synchronous
   handlers by default. They use the mixin's synchronous path unless every
   effective HTTP handler is overridden with a coroutine.
-- `LoginRequiredMixin` and `PermissionListMixin` have no asynchronous
-  support yet.
+- `PermissionListMixin` has no asynchronous support yet.
 - On Django 4.1 and older the synchronous path is used even for
   asynchronous views. Responses for a disallowed HTTP method only became
   awaitable in Django 4.1.2, and 4.1 is end of life, so the floor is 4.2.

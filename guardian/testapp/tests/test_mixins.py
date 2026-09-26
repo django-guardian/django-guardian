@@ -4,6 +4,7 @@ import warnings
 
 from asgiref.sync import async_to_sync, sync_to_async
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import AnonymousUser
 from django.core.exceptions import ImproperlyConfigured, PermissionDenied
 from django.http import HttpResponse
@@ -72,8 +73,20 @@ class AsyncPermissionObjectView(AsyncPermissionView):
         check_fail_handler(obj)
 
 
+class AsyncSecretView(LoginRequiredMixin, View):
+    async def get(self, request, *args, **kwargs):
+        return HttpResponse("secret-view")
+
+
+class SyncSecretView(LoginRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        return HttpResponse("secret-view")
+
+
 urlpatterns = [
     path("async-permission-required/", AsyncPermissionObjectView.as_view(raise_exception=False)),
+    path("async-secret/", AsyncSecretView.as_view()),
+    path("async-secret/<int:pk>/", AsyncSecretView.as_view()),
 ]
 
 
@@ -235,6 +248,101 @@ class AsyncPermissionRequiredMixinTests(TestCase):
 
         self.user.add_obj_perm("change_post", self.post)
         self.assertEqual(async_to_sync(get)().content, b"some html")
+
+
+@skipIf(not _ASYNC_VIEWS_SUPPORTED, "Asynchronous class-based views require Django >= 4.2")
+class AsyncLoginRequiredMixinTests(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.user = get_user_model().objects.create_user("joe", "joe@doe.com", "doe")
+
+    def call(self, request, view_class=AsyncSecretView, **initkwargs):
+        """Dispatch an asynchronous view from a synchronous test."""
+        view = view_class(**initkwargs)
+        view.setup(request)
+
+        async def run():
+            return await view.dispatch(request)
+
+        return async_to_sync(run)()
+
+    def anonymous_request(self, path="/some-secret-page/", method="get"):
+        request = getattr(self.factory, method)(path)
+        request.user = AnonymousUser()
+        return request
+
+    def test_anonymous_user_is_redirected(self):
+        response = self.call(self.anonymous_request(), login_url="/let-me-in/", redirect_field_name="foobar")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], "/let-me-in/?foobar=/some-secret-page/")
+
+    def test_authenticated_user_is_served(self):
+        request = self.anonymous_request()
+        request.user = self.user
+        response = self.call(request)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b"secret-view")
+
+    def test_redirect_is_identical_to_login_required(self):
+        """The redirect comes from `login_required()` itself, so it must be identical.
+
+        A cross-scheme `login_url` keeps the absolute path as `next`, which is
+        the behaviour of `user_passes_test()` and its `resolve_url()` handling.
+        """
+
+        def secret_view(request):
+            return HttpResponse("secret-view")
+
+        for login_url in ("/let-me-in/", "http://testserver/let-me-in/", "https://other.example/login/"):
+            with self.subTest(login_url=login_url):
+                request = self.anonymous_request()
+                expected = login_required(login_url=login_url)(secret_view)(request)["Location"]
+
+                sync_view = SyncSecretView(login_url=login_url)
+                sync_view.setup(request)
+                self.assertEqual(sync_view.dispatch(request)["Location"], expected)
+
+                response = self.call(self.anonymous_request(), login_url=login_url)
+                self.assertEqual(response["Location"], expected)
+
+    def test_anonymous_post_is_redirected_before_the_method_check(self):
+        response = self.call(self.anonymous_request(method="post"))
+        self.assertEqual(response.status_code, 302)
+
+    def test_authenticated_post_is_not_allowed(self):
+        request = self.anonymous_request(method="post")
+        request.user = self.user
+        self.assertEqual(self.call(request).status_code, 405)
+
+    def test_authenticated_options_request_works(self):
+        request = self.anonymous_request(method="options")
+        request.user = self.user
+        self.assertEqual(self.call(request).status_code, 200)
+
+    @override_settings(ROOT_URLCONF=__name__)
+    def test_served_through_the_request_handler(self):
+        """The whole stack: URL resolution, middleware and a lazy `request.user`."""
+
+        async def get():
+            return await self.async_client.get("/async-secret/")
+
+        response = async_to_sync(get)()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], "/accounts/login/?next=/async-secret/")
+
+        self.async_client.force_login(self.user)
+        response = async_to_sync(get)()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b"secret-view")
+
+    @override_settings(ROOT_URLCONF=__name__)
+    def test_url_kwargs_are_passed_through(self):
+        async def get():
+            return await self.async_client.get("/async-secret/42/")
+
+        response = async_to_sync(get)()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response["Location"], "/accounts/login/?next=/async-secret/42/")
 
 
 class TestViewMixins(TestCase):
