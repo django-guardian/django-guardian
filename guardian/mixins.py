@@ -3,7 +3,10 @@ from inspect import isawaitable
 import sys
 from types import GeneratorType
 from typing import Any
+from urllib.parse import urlsplit
 import warnings
+
+from django.shortcuts import resolve_url
 
 # Import deprecated decorator with fallback for Python < 3.13
 if sys.version_info >= (3, 13):
@@ -81,9 +84,38 @@ class LoginRequiredMixin:
     login_url = settings.LOGIN_URL
 
     def dispatch(self, request, *args, **kwargs):
-        return login_required(redirect_field_name=self.redirect_field_name, login_url=self.login_url)(super().dispatch)(
-            request, *args, **kwargs
-        )
+        if self.view_is_async:
+            return self.adispatch(request, *args, **kwargs)
+
+        return login_required(
+            redirect_field_name=self.redirect_field_name,
+            login_url=self.login_url,
+        )(super().dispatch)(request, *args, **kwargs)
+
+    async def adispatch(self, request, *args, **kwargs):
+        from django.contrib.auth.views import redirect_to_login
+
+        user = await sync_to_async(lambda: request.user)()
+
+        if not user.is_authenticated:
+            path = request.build_absolute_uri()
+            resolved_login_url = resolve_url(self.login_url)
+
+            login_scheme, login_netloc = urlsplit(resolved_login_url)[:2]
+            current_scheme, current_netloc = urlsplit(path)[:2]
+
+            if (not login_scheme or login_scheme == current_scheme) and (
+                not login_netloc or login_netloc == current_netloc
+            ):
+                path = request.get_full_path()
+
+            return redirect_to_login(
+                path,
+                resolved_login_url,
+                self.redirect_field_name,
+            )
+
+        return await super().dispatch(request, *args, **kwargs)
 
 
 class PermissionRequiredMixin:

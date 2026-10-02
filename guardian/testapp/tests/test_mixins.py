@@ -382,6 +382,38 @@ class TestViewMixins(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, b"secret-view")
 
+    def test_login_required_mixin_async_view(self):
+        class AsyncSecretView(LoginRequiredMixin, View):
+            redirect_field_name = "foobar"
+            login_url = "/let-me-in/"
+
+            async def get(self, request):
+                return HttpResponse("secret-view")
+
+        request = self.factory.get("/some-secret-page/")
+        request.user = AnonymousUser()
+
+        view = AsyncSecretView.as_view()
+
+        async def call():
+            return await view(request)
+
+        response = async_to_sync(call)()
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            response["Location"],
+            "/let-me-in/?foobar=/some-secret-page/",
+        )
+
+        request.user = get_user_model().objects.create_user(
+            username="async-user",
+            password="password",
+        )
+
+        response = async_to_sync(call)()
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b"secret-view")
+
     def test_list_permission(self):
         request = self.factory.get("/some-secret-list/")
         request.user = AnonymousUser()
