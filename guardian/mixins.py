@@ -84,15 +84,16 @@ class LoginRequiredMixin:
         # `view_is_async` is missing when the mixin is used outside Django's `View`.
         if _ASYNC_VIEWS_SUPPORTED and getattr(self, "view_is_async", False):
             # The returned coroutine is awaited by Django's `View.as_view()` wrapper.
-            # Call this mixin's own `adispatch()`: a mixin further down the MRO may
-            # define one as well, and `self.adispatch` would resolve back to this
-            # method, re-entering login dispatch instead of chaining to it.
-            return LoginRequiredMixin.adispatch(self, request, *args, **kwargs)
+            # The helper is deliberately not called `adispatch()`: the permission
+            # mixin defines one too, so on a view that combines both mixins a
+            # dynamic `adispatch()` call would land on the wrong mixin, and login
+            # dispatch would re-enter itself instead of chaining on.
+            return self._adispatch(request, *args, **kwargs)
         return login_required(redirect_field_name=self.redirect_field_name, login_url=self.login_url)(super().dispatch)(
             request, *args, **kwargs
         )
 
-    async def adispatch(self, request, *args, **kwargs):
+    async def _adispatch(self, request, *args, **kwargs):
         """Asynchronous version of `dispatch()`, used when the view is asynchronous.
 
         Requires Django >= 4.2.
@@ -335,10 +336,7 @@ class PermissionRequiredMixin:
         # `view_is_async` is missing when the mixin is used outside Django's `View`.
         if _ASYNC_VIEWS_SUPPORTED and getattr(self, "view_is_async", False):
             # The returned coroutine is awaited by Django's `View.as_view()` wrapper.
-            # Bind to this mixin's own `adispatch()` for the same reason: with a
-            # second asynchronous dispatch mixin in the MRO, `self.adispatch` can
-            # resolve to that one and never reach the permission check.
-            return PermissionRequiredMixin.adispatch(self, request, *args, **kwargs)
+            return self.adispatch(request, *args, **kwargs)
         response = self.check_permissions(request)
         if response:
             return response

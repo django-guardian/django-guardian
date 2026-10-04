@@ -107,11 +107,40 @@ class CombinedAsyncLoginPermissionView(LoginRequiredMixin, PermissionRequiredMix
         return await Post.objects.aget(title="foo-post-title")
 
 
+def adispatch_override_handler(request):
+    """Hook of `AsyncAdispatchOverrideMixin.adispatch()`, patched by its tests."""
+
+
+class AsyncAdispatchOverrideMixin(PermissionRequiredMixin):
+    """Customises the asynchronous counterpart of `dispatch()`."""
+
+    permission_required = "testapp.change_post"
+
+    async def adispatch(self, request, *args, **kwargs):
+        adispatch_override_handler(request)
+        return await super().adispatch(request, *args, **kwargs)
+
+    async def aget_permission_object(self):
+        return await Post.objects.aget(title="foo-post-title")
+
+
+class AsyncAdispatchOverrideView(AsyncAdispatchOverrideMixin, View):
+    async def get(self, request, *args, **kwargs):
+        return HttpResponse("some html")
+
+
+class CombinedAsyncAdispatchOverrideView(LoginRequiredMixin, AsyncAdispatchOverrideMixin, View):
+    async def get(self, request, *args, **kwargs):
+        return HttpResponse("combined html")
+
+
 urlpatterns = [
     path("async-permission-required/", AsyncPermissionObjectView.as_view(raise_exception=False)),
     path("async-login-required/", AsyncLoginRequiredView.as_view()),
     path("async-cooperative-login-required/", CooperativeAsyncLoginRequiredView.as_view()),
     path("async-combined/", CombinedAsyncLoginPermissionView.as_view()),
+    path("async-adispatch-override/", AsyncAdispatchOverrideView.as_view()),
+    path("async-combined-adispatch-override/", CombinedAsyncAdispatchOverrideView.as_view()),
 ]
 
 
@@ -357,6 +386,46 @@ class AsyncCombinedMixinTests(TestCase):
 
         self.assertEqual(response.status_code, 403)
         handler.assert_not_called()
+
+
+@skipIf(not _ASYNC_VIEWS_SUPPORTED, "Asynchronous class-based views require Django >= 4.2")
+class AsyncAdispatchOverrideTests(TestCase):
+    """`adispatch()` stays an override point for subclasses of `PermissionRequiredMixin`."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.post = Post.objects.create(title="foo-post-title")
+        cls.user = get_user_model().objects.create_user("jane2", "jane2@doe.com", "doe")
+
+    def get(self, path):
+        async def request():
+            return await self.async_client.get(path)
+
+        return async_to_sync(request)()
+
+    @override_settings(ROOT_URLCONF=__name__)
+    def test_override_runs_on_an_asynchronous_view(self):
+        self.async_client.force_login(self.user)
+        assign_perm("testapp.change_post", self.user, self.post)
+
+        with mock.patch("guardian.testapp.tests.test_mixins.adispatch_override_handler") as override_handler:
+            response = self.get("/async-adispatch-override/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b"some html")
+        override_handler.assert_called_once()
+
+    @override_settings(ROOT_URLCONF=__name__)
+    def test_override_runs_beside_login_required(self):
+        self.async_client.force_login(self.user)
+        assign_perm("testapp.change_post", self.user, self.post)
+
+        with mock.patch("guardian.testapp.tests.test_mixins.adispatch_override_handler") as override_handler:
+            response = self.get("/async-combined-adispatch-override/")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, b"combined html")
+        override_handler.assert_called_once()
 
 
 class TestViewMixins(TestCase):

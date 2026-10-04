@@ -14,9 +14,9 @@ run their asynchronous counterpart instead of the synchronous one.
 !!! note
     Asynchronous class-based views require Django >= 4.2.
 
-Synchronous views are unaffected: they keep using `check_permissions()`
-and `get_permission_object()` exactly as before, and the only addition on
-their path is a single flag check in `dispatch()`.
+Synchronous views are unaffected: the permission check keeps using
+`check_permissions()` and `get_permission_object()` exactly as before, and
+the only addition on that path is a single flag check in `dispatch()`.
 
 ## Basic usage
 
@@ -46,8 +46,8 @@ By default, the object to check the permission against is resolved by
 ## Login required
 
 `LoginRequiredMixin` needs nothing beyond the same rule. An anonymous user
-is redirected to the login page from `adispatch()`, so `request.user` is
-resolved through `sync_to_async()` instead of being read in the event loop:
+is redirected to the login page before the handler runs, and the lazy
+`request.user` is never read in the event loop:
 
 ```python
 from django.http import HttpResponse
@@ -94,14 +94,19 @@ class PostView(PermissionRequiredMixin, View):
 
 ## Asynchronous counterparts
 
-Each synchronous method has an `a`-prefixed sister method, following the
-naming convention used by Django itself (`aget()`, `acreate()`, ...):
+Every `PermissionRequiredMixin` method on the dispatch path has an
+`a`-prefixed sister method, following the naming convention used by Django
+itself (`aget()`, `acreate()`, ...):
 
 | Synchronous               | Asynchronous               |
 |---------------------------|----------------------------|
 | `get_permission_object()` | `aget_permission_object()` |
 | `check_permissions()`     | `acheck_permissions()`     |
 | `dispatch()`              | `adispatch()`              |
+
+`LoginRequiredMixin` has no such counterpart to override: its asynchronous
+path only applies `login_required()` before chaining on to the next
+`dispatch()`, so `login_url` and `redirect_field_name` are the only knobs.
 
 `get_required_permissions()`, `get_object_permission_denied_message()` and
 `on_permission_check_fail()` have no asynchronous counterpart: they are all
