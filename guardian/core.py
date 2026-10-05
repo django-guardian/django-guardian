@@ -78,8 +78,16 @@ class ObjectPermissionChecker:
         elif self.user and self.user.is_superuser:
             return True
         if "." in perm:
-            _, perm = perm.split(".", 1)
-        return perm in self.get_perms(obj)
+            app_label, perm = perm.split(".", 1)
+        else:
+            app_label = None
+        if perm in self.get_perms(obj):
+            return True
+        if guardian_settings.ACCEPT_GLOBAL_PERMS and self.user is not None:
+            if app_label is None:
+                app_label = get_content_type(obj).app_label
+            return self.user.has_perm(f"{app_label}.{perm}")
+        return False
 
     def get_group_filters(self, obj):
         ctype = get_content_type(obj)

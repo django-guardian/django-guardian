@@ -154,6 +154,30 @@ queries or when latency is particularly important.
 
 Defaults to `False`.
 
+## `GUARDIAN_ACCEPT_GLOBAL_PERMS`
+
+!!! abstract "Added in version 3.6"
+
+When enabled, a global permission also satisfies object-level checks for
+users: `user.has_perm("app_label.codename", obj)` and
+`ObjectPermissionChecker(user).has_perm("app_label.codename", obj)` return
+`True` when the user holds the global `app_label.codename` permission, even
+if no object permission is assigned.
+
+Things to know:
+
+- Only `has_perm(..., obj)` checks are affected. `get_perms()` and
+  `get_user_perms()` keep returning object-level permissions only.
+- `Group` identity checks are unaffected: groups do not have global
+  permissions of their own.
+- Object permissions keep working exactly as before; this only adds a
+  fallback when no object permission matches.
+- When a user's global permission is granted through a group membership,
+  it counts as well, just like Django's global permission checks.
+
+Defaults to `False`, preserving the default behavior where global and
+object permissions are strictly separated.
+
 ## `GUARDIAN_ANONYMOUS_USER_CACHE_TTL`
 
 !!! abstract "Added in version 3.1.3"
