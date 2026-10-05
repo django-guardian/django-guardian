@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AnonymousUser, Group
+from django.contrib.auth.models import AnonymousUser, Group, Permission
 from django.test import TestCase
 
 from guardian.backends import ObjectPermissionBackend
@@ -57,6 +57,33 @@ class ObjectPermissionBackendTest(TestCase):
         """Test has_perm method with inactive user"""
         assign_perm("change_project", self.inactive_user, self.project)
         self.assertFalse(self.backend.has_perm(self.inactive_user, "change_project", self.project))
+
+    def test_has_perm_accept_global_perms(self):
+        """Global permissions satisfy object checks when GUARDIAN_ACCEPT_GLOBAL_PERMS is enabled"""
+        self.user.user_permissions.add(Permission.objects.get(codename="change_project"))
+
+        # Default behavior: global permission does not answer the object check
+        self.assertFalse(self.backend.has_perm(self.user, "change_project", self.project))
+
+        guardian_settings.ACCEPT_GLOBAL_PERMS = True
+        try:
+            self.assertTrue(self.backend.has_perm(self.user, "change_project", self.project))
+            # Fresh instance so the permission cache is not reused
+            user = User.objects.get(pk=self.user.pk)
+            self.assertTrue(user.has_perm("testapp.change_project", self.project))
+        finally:
+            guardian_settings.ACCEPT_GLOBAL_PERMS = False
+
+    def test_get_all_permissions_accept_global_perms(self):
+        """get_all_permissions keeps returning object permissions only"""
+        self.user.user_permissions.add(Permission.objects.get(codename="change_project"))
+
+        guardian_settings.ACCEPT_GLOBAL_PERMS = True
+        try:
+            perms = self.backend.get_all_permissions(self.user, self.project)
+            self.assertNotIn("change_project", perms)
+        finally:
+            guardian_settings.ACCEPT_GLOBAL_PERMS = False
 
     def test_get_group_permissions_with_object(self):
         """Test get_group_permissions method with object"""
