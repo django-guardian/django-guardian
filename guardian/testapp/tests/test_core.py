@@ -176,6 +176,87 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
                 GroupObjectPermission.objects.assign_perm(perm, self.group, obj)
             self.assertEqual(sorted(perms), sorted(check.get_perms(obj)))
 
+    def test_accept_global_perms_disabled_by_default(self):
+        user = User.objects.create(username="global-only", is_active=True)
+        user.user_permissions.add(self.get_permission("change_contenttype"))
+        obj = ContentType.objects.create(model="baz", app_label="guardian-tests-accept-global")
+
+        # The global permission answers checks without an object...
+        self.assertTrue(user.has_perm("contenttypes.change_contenttype"))
+        # ...but not object-level ones by default
+        self.assertFalse(ObjectPermissionChecker(user).has_perm("change_contenttype", obj))
+        self.assertFalse(user.has_perm("contenttypes.change_contenttype", obj))
+
+    def test_accept_global_perms_falls_back_for_users(self):
+        guardian_settings.ACCEPT_GLOBAL_PERMS = True
+        try:
+            user = User.objects.create(username="global-only", is_active=True)
+            user.user_permissions.add(self.get_permission("change_contenttype"))
+            obj = ContentType.objects.create(model="baz", app_label="guardian-tests-accept-global")
+
+            checker = ObjectPermissionChecker(user)
+            # Bare codename and fully-qualified permission both fall back
+            self.assertTrue(checker.has_perm("change_contenttype", obj))
+            self.assertTrue(checker.has_perm("contenttypes.change_contenttype", obj))
+            # The backend path (user.has_perm with obj) falls back as well
+            self.assertTrue(user.has_perm("contenttypes.change_contenttype", obj))
+
+            # Object permission listings stay object-level only
+            self.assertEqual([], list(checker.get_perms(obj)))
+
+            # A user without the global permission is still denied
+            other = User.objects.create(username="no-global", is_active=True)
+            self.assertFalse(ObjectPermissionChecker(other).has_perm("change_contenttype", obj))
+            self.assertFalse(other.has_perm("contenttypes.change_contenttype", obj))
+
+            # Object permissions keep working
+            assign_perm("delete_contenttype", user, obj)
+            self.assertTrue(ObjectPermissionChecker(user).has_perm("delete_contenttype", obj))
+        finally:
+            guardian_settings.ACCEPT_GLOBAL_PERMS = False
+
+    def test_accept_global_perms_inactive_user(self):
+        guardian_settings.ACCEPT_GLOBAL_PERMS = True
+        try:
+            user = User.objects.create(username="inactive-global", is_active=False)
+            user.user_permissions.add(self.get_permission("change_contenttype"))
+            obj = ContentType.objects.create(model="baz", app_label="guardian-tests-accept-global")
+
+            self.assertFalse(ObjectPermissionChecker(user).has_perm("change_contenttype", obj))
+            self.assertFalse(user.has_perm("contenttypes.change_contenttype", obj))
+        finally:
+            guardian_settings.ACCEPT_GLOBAL_PERMS = False
+
+    def test_accept_global_perms_group_checker_unaffected(self):
+        guardian_settings.ACCEPT_GLOBAL_PERMS = True
+        try:
+            # Groups may hold Django permissions, but those are consumed by
+            # users - a group identity check should not pass globally.
+            self.group.permissions.add(self.get_permission("change_contenttype"))
+            obj = ContentType.objects.create(model="baz", app_label="guardian-tests-accept-global")
+
+            check = ObjectPermissionChecker(self.group)
+            self.assertFalse(check.has_perm("change_contenttype", obj))
+
+            # Object permissions for the group still work as before
+            # (fresh checker: the previous check cached its result)
+            assign_perm("change_contenttype", self.group, obj)
+            self.assertTrue(ObjectPermissionChecker(self.group).has_perm("change_contenttype", obj))
+        finally:
+            guardian_settings.ACCEPT_GLOBAL_PERMS = False
+
+    def test_accept_global_perms_via_group_membership(self):
+        guardian_settings.ACCEPT_GLOBAL_PERMS = True
+        try:
+            self.group.permissions.add(self.get_permission("change_contenttype"))
+            obj = ContentType.objects.create(model="baz", app_label="guardian-tests-accept-global")
+
+            # self.user belongs to self.group (see setUp), so the global
+            # permission granted to the group counts for the user too
+            self.assertTrue(self.user.has_perm("contenttypes.change_contenttype", obj))
+        finally:
+            guardian_settings.ACCEPT_GLOBAL_PERMS = False
+
     def test_prefetch_user_perms(self):
         settings.DEBUG = True
         try:

@@ -42,6 +42,8 @@ GET_CONTENT_TYPE = getattr(settings, "GUARDIAN_GET_CONTENT_TYPE", "guardian.ctyp
 
 AUTO_PREFETCH = getattr(settings, "GUARDIAN_AUTO_PREFETCH", False)
 
+ACCEPT_GLOBAL_PERMS = getattr(settings, "GUARDIAN_ACCEPT_GLOBAL_PERMS", False)
+
 # Anonymous user cache TTL configuration
 # 0 = no cache (default), positive number = cache TTL in seconds, -1 = cache indefinitely
 ANONYMOUS_USER_CACHE_TTL = getattr(settings, "GUARDIAN_ANONYMOUS_USER_CACHE_TTL", 0)
@@ -56,6 +58,9 @@ def check_configuration():
         raise ImproperlyConfigured(
             "Cannot use both GUARDIAN_RENDER_403 AND GUARDIAN_RAISE_403 - only one of this config may be True"
         )
+
+    if ACCEPT_GLOBAL_PERMS not in [True, False]:
+        raise ImproperlyConfigured("GUARDIAN_ACCEPT_GLOBAL_PERMS must be either True or False")
 
 
 check_configuration()
