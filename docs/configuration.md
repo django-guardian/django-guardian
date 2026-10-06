@@ -152,6 +152,16 @@ may not be compatible with non-standard deployments, and should only be
 used when non-prefetched invocations would result in a large number of
 queries or when latency is particularly important.
 
+Direct foreign key permission models (models that subclass
+`UserObjectPermissionBase` or `GroupObjectPermissionBase` and point at
+a single target model through `content_object`) are also included in
+the prefetch. Prefetching executes one SQL query for every enabled
+direct permission model (for a user, across both the user and group
+direct models), even when that model's table has no rows for the user. The number of queries therefore scales with the number of
+installed direct permission models, which can be a substantial increase
+in deployments that define many of them. Measure the query count in your
+deployment before enabling this setting.
+
 Defaults to `False`.
 
 ## `GUARDIAN_ANONYMOUS_USER_CACHE_TTL`

@@ -16,7 +16,13 @@ from guardian.exceptions import NotUserNorGroup
 from guardian.management import create_anonymous_user
 from guardian.models import GroupObjectPermission, UserObjectPermission
 from guardian.shortcuts import assign_perm
-from guardian.testapp.models import Project, ProjectGroupObjectPermission, ProjectUserObjectPermission
+from guardian.testapp.models import (
+    MixedGroupObjectPermission,
+    Project,
+    ProjectGroupObjectPermission,
+    ProjectUserObjectPermission,
+    ReverseMixedUserObjectPermission,
+)
 from guardian.utils import evict_obj_perms_cache
 
 auth_app = django_apps.get_app_config("auth")
@@ -418,6 +424,8 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
         guardian_settings.AUTO_PREFETCH = True
         ProjectUserObjectPermission.enabled = False
         ProjectGroupObjectPermission.enabled = False
+        MixedGroupObjectPermission.enabled = False
+        ReverseMixedUserObjectPermission.enabled = False
         try:
             from django.db import connection
 
@@ -491,12 +499,16 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
             guardian_settings.AUTO_PREFETCH = False
             ProjectUserObjectPermission.enabled = True
             ProjectGroupObjectPermission.enabled = True
+            MixedGroupObjectPermission.enabled = True
+            ReverseMixedUserObjectPermission.enabled = True
 
     def test_autoprefetch_superuser_perms(self):
         settings.DEBUG = True
         guardian_settings.AUTO_PREFETCH = True
         ProjectUserObjectPermission.enabled = False
         ProjectGroupObjectPermission.enabled = False
+        MixedGroupObjectPermission.enabled = False
+        ReverseMixedUserObjectPermission.enabled = False
         try:
             from django.db import connection
 
@@ -533,12 +545,16 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
             guardian_settings.AUTO_PREFETCH = False
             ProjectUserObjectPermission.enabled = True
             ProjectGroupObjectPermission.enabled = True
+            MixedGroupObjectPermission.enabled = True
+            ReverseMixedUserObjectPermission.enabled = True
 
     def test_autoprefetch_group_perms(self):
         settings.DEBUG = True
         guardian_settings.AUTO_PREFETCH = True
         ProjectUserObjectPermission.enabled = False
         ProjectGroupObjectPermission.enabled = False
+        MixedGroupObjectPermission.enabled = False
+        ReverseMixedUserObjectPermission.enabled = False
         try:
             from django.db import connection
 
@@ -585,6 +601,58 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
             guardian_settings.AUTO_PREFETCH = False
             ProjectUserObjectPermission.enabled = True
             ProjectGroupObjectPermission.enabled = True
+            MixedGroupObjectPermission.enabled = True
+            ReverseMixedUserObjectPermission.enabled = True
+
+    def test_autoprefetch_direct_rel_perms(self):
+        """AUTO_PREFETCH must also pick up permissions stored in a direct
+        (non-generic) permission model, not just the generic/shared one.
+
+        Regression test: `_prefetch_cache()` used to resolve
+        `get_user_obj_perms_model()` / `get_group_obj_perms_model()` with no
+        object, which always returns the generic model. Permissions assigned
+        through a project-specific model like `ProjectUserObjectPermission`
+        were therefore silently invisible to prefetching, and `has_perm`
+        returned `False` even though the permission existed in the database.
+        """
+        settings.DEBUG = True
+        guardian_settings.AUTO_PREFETCH = True
+        try:
+            from django.db import connection
+
+            ContentType.objects.clear_cache()
+            project = Project.objects.create(name="direct-rel-project")
+            other_project = Project.objects.create(name="unassigned-project")
+
+            # One permission via the generic path (a Group has no direct
+            # model), one via the direct path (Project does) - same user.
+            assign_perm("change_group", self.user, self.group)
+            assign_perm("change_project", self.user, project)
+
+            checker = ObjectPermissionChecker(self.user)
+            checker._prefetch_cache()
+            query_count = len(connection.queries)
+
+            # Both the generic-path and the direct-path permissions resolve...
+            self.assertTrue(checker.has_perm("change_group", self.group))
+            self.assertTrue(checker.has_perm("change_project", project))
+            # ...and checking again doesn't spawn any further queries.
+            self.assertEqual(len(connection.queries), query_count)
+
+            # A permission that was never assigned is still correctly denied,
+            # rather than raising or falling back to a database hit.
+            self.assertFalse(checker.has_perm("change_project", other_project))
+            self.assertEqual(len(connection.queries), query_count)
+
+            # Same coverage on the group side.
+            group_project = Project.objects.create(name="group-direct-rel-project")
+            assign_perm("change_project", self.group, group_project)
+            group_checker = ObjectPermissionChecker(self.group)
+            group_checker._prefetch_cache()
+            self.assertTrue(group_checker.has_perm("change_project", group_project))
+        finally:
+            settings.DEBUG = False
+            guardian_settings.AUTO_PREFETCH = False
 
     def test_prefetch_user_perms_with_empty_objects(self):
         settings.DEBUG = True
