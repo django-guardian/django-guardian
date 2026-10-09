@@ -7,3 +7,7 @@
 ::: guardian.mixins.PermissionRequiredMixin
 
 ::: guardian.mixins.PermissionListMixin
+
+::: guardian.mixins.GuardianUserMixin
+
+::: guardian.mixins.GuardianGroupMixin
