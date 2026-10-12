@@ -1329,6 +1329,25 @@ class GetObjectsForUser(TestCase):
         )
         self.assertEqual(set(objects.values_list("id", flat=True)), {ctypes[0].id, ctypes[1].id})
 
+    def test_global_perm_with_partial_group_object_perms(self):
+        # Global perm covers one codename; group grants only one of the two remaining ones on ctypes[0].
+        self.user.groups.add(self.group)
+        ctypes = list(ContentType.objects.all().order_by("id"))
+        assign_perm("contenttypes.change_contenttype", self.user)
+        assign_perm("delete_contenttype", self.group, ctypes[0])
+        assign_perm("delete_contenttype", self.group, ctypes[1])
+        assign_perm("add_contenttype", self.user, ctypes[1])
+
+        objects = get_objects_for_user(
+            self.user,
+            [
+                "contenttypes.change_contenttype",
+                "contenttypes.delete_contenttype",
+                "contenttypes.add_contenttype",
+            ],
+        )
+        self.assertEqual(set(objects.values_list("id", flat=True)), {ctypes[1].id})
+
     def test_varchar_primary_key(self):
         """
         Verify that the function works when the objects that should be returned

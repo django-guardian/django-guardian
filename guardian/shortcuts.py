@@ -684,7 +684,6 @@ def get_objects_for_user(
     if user.is_anonymous:
         user = get_anonymous_user()
 
-    has_global_perms = False
     # a superuser has by default assigned global perms for any
     if accept_global_perms and with_superuser:
         global_perms = {code for code in codenames if user.has_perm(ctype.app_label + "." + code)}
@@ -698,14 +697,7 @@ def get_objects_for_user(
         # therefore return full queryset
         if global_perms and (not codenames or any_perm):
             return queryset
-        # if we have global perms and still some object based perms differing from global perms and any_perm is set
-        # to false, then we have to flag that global perms exist in order to merge object based permissions by user
-        # and by group correctly. Scenario: global perm change_xx and object based perm delete_xx on object A for user,
-        # and object based permission delete_xx  on object B for group, to which user is assigned.
-        # get_objects_for_user(user, [change_xx, delete_xx], use_groups=True, any_perm=False, accept_global_perms=True)
-        # must retrieve object A and B.
-        elif global_perms and codenames:
-            has_global_perms = True
+        # Otherwise the remaining codenames must all be granted per object (by user or groups), see below.
 
     # Now we should extract the list of pk values for which we would filter the queryset
     user_model = get_user_obj_perms_model(queryset.model)
@@ -738,7 +730,7 @@ def get_objects_for_user(
             group_fields = generic_fields
         else:
             group_fields = direct_fields
-        if not any_perm and len(codenames) > 1 and not has_global_perms:
+        if not any_perm and len(codenames) > 1:
             user_obj_perms = user_obj_perms_queryset.values_list(*user_fields)
             groups_obj_perms = groups_obj_perms_queryset.values_list(*group_fields)
             data = list(user_obj_perms) + list(groups_obj_perms)
