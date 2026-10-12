@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from collections.abc import Sequence
 
-from django import forms
+from django import VERSION, forms
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin.widgets import FilteredSelectMultiple
@@ -217,6 +217,8 @@ class GuardedModelAdminMixin:
                 "has_change_permission": self.has_change_permission(request, obj),
                 "model_perms": get_perms_for_model(obj),
                 "title": _("Object permissions"),
+                # see https://github.com/django/django/pull/19492
+                "legacy_breadcrumbs": VERSION < (6, 1),
             }
         )
         return context

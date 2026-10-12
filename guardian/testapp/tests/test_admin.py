@@ -1,6 +1,8 @@
 import copy
 import os
+import re
 import unittest
+from unittest import mock
 
 from django import VERSION as DJANGO_VERSION
 from django import forms
@@ -302,6 +304,70 @@ if "django.contrib.admin" not in settings.INSTALLED_APPS:
     # TODO: use @unittest.skipUnless('django.contrib.admin' in settings.INSTALLED_APPS)
     #       if possible (requires Python 2.7, though)
     AdminTests = type("AdminTests", (TestCase,), {})
+
+
+@unittest.skipUnless("django.contrib.admin" in settings.INSTALLED_APPS, "django.contrib.admin must be installed")
+class AdminBreadcrumbsTests(TestCase):
+    """Breadcrumbs of the object permissions pages, in the Django < 6.1 and Django >= 6.1 markup."""
+
+    LEGACY_VERSION = (6, 0)
+    ACCESSIBILITY_VERSION = (6, 1)
+
+    def setUp(self):
+        self.admin = User.objects.create_superuser("admin", "admin@example.com", "admin")
+        self.user = User.objects.create_user("joe", "joe@example.com", "joe")
+        self.group = Group.objects.create(name="group")
+        self.obj = ContentType.objects.create(model="bar", app_label="fake-for-guardian-tests")
+        app_label, model_name = self.obj._meta.app_label, self.obj._meta.model_name
+        self.client.login(username="admin", password="admin")
+
+        index = reverse("admin:index")
+        app = reverse("admin:app_list", kwargs={"app_label": app_label})
+        changelist = reverse(f"admin:{app_label}_{model_name}_changelist")
+        change = reverse(f"admin:{app_label}_{model_name}_change", args=[self.obj.pk])
+        permissions = reverse(f"admin:{app_label}_{model_name}_permissions", args=[self.obj.pk])
+        manage_user = reverse(
+            f"admin:{app_label}_{model_name}_permissions_manage_user", args=[self.obj.pk, self.user.pk]
+        )
+        manage_group = reverse(
+            f"admin:{app_label}_{model_name}_permissions_manage_group", args=[self.obj.pk, self.group.pk]
+        )
+        # page url -> (breadcrumb hrefs, text of the last crumb)
+        self.pages = {
+            permissions: ([index, app, changelist, change], "Object permissions"),
+            manage_user: ([index, app, changelist, change, permissions], "Manage user: joe"),
+            manage_group: ([index, app, changelist, change, permissions], "Manage group: group"),
+        }
+
+    def _get_breadcrumbs(self, url, version, tag):
+        with mock.patch("guardian.admin.VERSION", version):
+            response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+        match = re.search(rf'<{tag} class="breadcrumbs">(.*?)</{tag}>', content, re.DOTALL)
+        self.assertIsNotNone(match, f'no <{tag} class="breadcrumbs"> in {url}')
+        return content, match.group(1)
+
+    def test_semantic_breadcrumbs(self):
+        for url, (hrefs, current) in self.pages.items():
+            with self.subTest(url=url):
+                content, crumbs = self._get_breadcrumbs(url, self.ACCESSIBILITY_VERSION, "ol")
+                self.assertNotIn('<div class="breadcrumbs">', content)
+                self.assertEqual(re.findall(r'<a href="([^"]*)">', crumbs), hrefs)
+                self.assertNotIn("../", crumbs)
+                self.assertNotIn("&rsaquo;", crumbs)
+                self.assertEqual(len(re.findall(r"<li[ >]", crumbs)), len(hrefs) + 1)
+                self.assertTrue(crumbs.strip().endswith(f'<li aria-current="page">{current}</li>'))
+
+    def test_legacy_breadcrumbs(self):
+        for url, (hrefs, current) in self.pages.items():
+            with self.subTest(url=url):
+                content, crumbs = self._get_breadcrumbs(url, self.LEGACY_VERSION, "div")
+                self.assertNotIn('<ol class="breadcrumbs">', content)
+                self.assertEqual(re.findall(r'<a href="([^"]*)">', crumbs), hrefs)
+                self.assertNotIn("../", crumbs)
+                self.assertEqual(crumbs.count("&rsaquo;"), len(hrefs))
+                self.assertTrue(crumbs.strip().endswith(current))
 
 
 @skipUnlessTestApp
