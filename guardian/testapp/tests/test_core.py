@@ -654,6 +654,54 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
             settings.DEBUG = False
             guardian_settings.AUTO_PREFETCH = False
 
+    def test_autoprefetch_direct_rel_perms_inherited_from_group(self):
+        """A user must inherit permissions that their group holds in a direct
+        (non-generic) permission model when AUTO_PREFETCH is on."""
+        settings.DEBUG = True
+        guardian_settings.AUTO_PREFETCH = True
+        try:
+            from django.db import connection
+
+            ContentType.objects.clear_cache()
+            project = Project.objects.create(name="inherited-project")
+            other_project = Project.objects.create(name="not-inherited-project")
+
+            member = User.objects.create(username="group_member", is_active=True)
+            member.groups.add(self.group)
+            assign_perm("change_project", self.group, project)
+
+            checker = ObjectPermissionChecker(member)
+            checker._prefetch_cache()
+            query_count = len(connection.queries)
+
+            self.assertTrue(checker.has_perm("change_project", project))
+            self.assertFalse(checker.has_perm("change_project", other_project))
+            self.assertEqual(len(connection.queries), query_count)
+        finally:
+            settings.DEBUG = False
+            guardian_settings.AUTO_PREFETCH = False
+
+    def test_direct_obj_perms_models_skips_proxy_models(self):
+        """Proxy models of a direct permission model share its table and must not
+        be returned as separate direct models (they'd be queried twice)."""
+        from django.apps import apps
+
+        from guardian.models import UserObjectPermissionBase
+        from guardian.utils import get_direct_obj_perms_models, get_user_obj_perms_model
+
+        class ProxyProjectUserObjectPermission(ProjectUserObjectPermission):
+            class Meta:
+                proxy = True
+                app_label = "testapp"
+
+        try:
+            models = get_direct_obj_perms_models(UserObjectPermissionBase, get_user_obj_perms_model())
+            self.assertIn(ProjectUserObjectPermission, models)
+            self.assertNotIn(ProxyProjectUserObjectPermission, models)
+        finally:
+            apps.all_models["testapp"].pop("proxyprojectuserobjectpermission", None)
+            apps.clear_cache()
+
     def test_prefetch_user_perms_with_empty_objects(self):
         settings.DEBUG = True
         try:

@@ -458,8 +458,13 @@ def get_direct_obj_perms_models(base_cls: type[Model], generic_cls: type[Model])
             issubclass(model, base_cls)
             and model is not generic_cls
             and not model._meta.abstract
+            and not model._meta.proxy
             and getattr(model, "enabled", True)
             and not model.objects.is_generic()
+            # Only the model that declares `content_object` itself owns the
+            # relation; proxies and multi-table subclasses inherit it and would
+            # query the same rows twice.
+            and any(f.name == "content_object" for f in model._meta.local_fields)
         )
     ]
 
