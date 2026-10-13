@@ -274,6 +274,42 @@ def get_perms(user_or_group: Any, obj: Model) -> list[str]:
     return check.get_perms(obj)
 
 
+def has_perm(user_or_group: Any, perm: str, obj: Model) -> bool:
+    """Check whether the given user/group has a permission for an object.
+
+    For users this covers both directly assigned permissions and permissions
+    inherited from the groups the user belongs to. For groups only the
+    permissions assigned to that group are taken into account.
+
+    Args:
+        user_or_group: User, AnonymousUser, or Group instance
+        perm: Permission codename, with or without the `app_label.` prefix
+            (the prefix is stripped and ignored, the permission is always
+            looked up against the content type of `obj`)
+        obj: Django model instance for which to check the permission
+
+    Returns:
+        True if the user/group has the permission for the given object,
+        False otherwise.
+
+    Note:
+        Only object-level permissions are checked, and the configured
+        authentication backends are bypassed. This is NOT equivalent to
+        `user.has_perm(perm, obj)`, which runs through the backend chain.
+        Django's `ModelBackend` returns no permissions once an object is
+        passed, so global (model-level) permissions are not part of that
+        answer either, but a custom backend may answer differently.
+        For inactive users (is_active=False), returns False.
+        For superusers, returns True.
+        Each call builds its own `ObjectPermissionChecker`, whose cache is keyed
+        by object, so checking many objects costs a lookup per object. Use
+        `ObjectPermissionChecker.prefetch_perms()` for that case, and reuse a
+        single checker when the same object is checked more than once.
+    """
+    check = ObjectPermissionChecker(user_or_group)
+    return check.has_perm(perm, obj)
+
+
 def get_user_perms(user: Any, obj: Model) -> QuerySet:
     """Get permissions assigned DIRECTLY to a user for a specific object.
 

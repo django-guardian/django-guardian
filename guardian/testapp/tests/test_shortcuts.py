@@ -32,11 +32,14 @@ from guardian.shortcuts import (
     get_perms_for_model,
     get_user_perms,
     get_users_with_perms,
+    has_perm,
     remove_perm,
 )
 from guardian.testapp.models import (
     CharPKModel,
     ChildTestModel,
+    ParentTestModel,
+    Post,
     TextPKModel,
     UUIDPKModel,
 )
@@ -526,6 +529,75 @@ class GetPermsTest(ObjectPermissionTestCase):
         perms = get_perms(self.user, self.ctype)
         for perm in perms_to_assign:
             self.assertTrue(perm in perms)
+
+
+class HasPermTest(TestCase):
+    """
+    Tests has_perm function with the generic object permissions models.
+    """
+
+    def setUp(self):
+        self.group = Group.objects.create(name="editors")
+        self.user = User.objects.create_user("joe", "joe@example.com", "foobar")
+        self.post = Post.objects.create(title="Foobar")
+
+    def test_group_with_perm(self):
+        assign_perm("change_post", self.group, self.post)
+        self.assertTrue(has_perm(self.group, "change_post", self.post))
+
+    def test_group_without_perm(self):
+        assign_perm("change_post", self.group, self.post)
+        self.assertFalse(has_perm(self.group, "delete_post", self.post))
+
+    def test_group_perm_on_another_object(self):
+        other_post = Post.objects.create(title="Other")
+        assign_perm("change_post", self.group, other_post)
+        self.assertFalse(has_perm(self.group, "change_post", self.post))
+
+    def test_same_codename_on_another_model(self):
+        for model in (Post, ParentTestModel):
+            Permission.objects.create(
+                codename="shared_codename",
+                name="Shared codename",
+                content_type=ContentType.objects.get_for_model(model),
+            )
+        parent = ParentTestModel.objects.create()
+        assign_perm("shared_codename", self.group, parent)
+
+        self.assertTrue(has_perm(self.group, "shared_codename", parent))
+        self.assertFalse(has_perm(self.group, "shared_codename", self.post))
+
+    def test_app_label_prefixed_perm(self):
+        assign_perm("change_post", self.group, self.post)
+        self.assertTrue(has_perm(self.group, "testapp.change_post", self.post))
+        self.assertFalse(has_perm(self.group, "testapp.delete_post", self.post))
+
+    def test_nonexistent_codename(self):
+        self.assertFalse(has_perm(self.group, "no_such_perm", self.post))
+
+    def test_user_with_direct_perm(self):
+        assign_perm("change_post", self.user, self.post)
+        self.assertTrue(has_perm(self.user, "change_post", self.post))
+
+    def test_user_with_perm_through_group(self):
+        self.user.groups.add(self.group)
+        assign_perm("change_post", self.group, self.post)
+        self.assertTrue(has_perm(self.user, "change_post", self.post))
+
+    def test_user_without_perm(self):
+        self.assertFalse(has_perm(self.user, "change_post", self.post))
+
+    def test_inactive_user(self):
+        assign_perm("change_post", self.user, self.post)
+        self.user.is_active = False
+        self.assertFalse(has_perm(self.user, "change_post", self.post))
+
+    def test_superuser(self):
+        superuser = User.objects.create_superuser("root", "root@example.com", "foobar")
+        self.assertTrue(has_perm(superuser, "change_post", self.post))
+
+    def test_not_user_nor_group(self):
+        self.assertRaises(NotUserNorGroup, has_perm, None, "change_post", self.post)
 
 
 class GetUsersWithPermsTest(TestCase):
