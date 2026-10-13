@@ -157,10 +157,16 @@ Direct foreign key permission models (models that subclass
 a single target model through `content_object`) are also included in
 the prefetch. Prefetching executes one SQL query for every enabled
 direct permission model (for a user, across both the user and group
-direct models), even when that model's table has no rows for the user. The number of queries therefore scales with the number of
-installed direct permission models, which can be a substantial increase
-in deployments that define many of them. Measure the query count in your
-deployment before enabling this setting.
+direct models), even when that model's table has no rows for the user.
+The number of queries therefore scales with the number of installed
+direct permission models.
+
+!!! warning
+
+    `GUARDIAN_AUTO_PREFETCH` is best suited for deployments with a small
+    number of direct permission models. If your deployment defines a
+    larger number of them, benchmark the query count and latency with
+    and without this setting before enabling it.
 
 Defaults to `False`.
 
