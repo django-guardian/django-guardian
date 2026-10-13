@@ -441,6 +441,34 @@ def get_obj_perms_model(obj: Model | None, base_cls: type[Model], generic_cls: t
     return generic_cls
 
 
+def get_direct_obj_perms_models(base_cls: type[Model], generic_cls: type[Model]) -> list[type[Model]]:
+    """Return every installed, enabled direct object permission model.
+
+    A "direct" model is a subclass of `base_cls` that targets one specific
+    model via a `content_object` foreign key, as opposed to `generic_cls`
+    which stores permissions for any model via the contenttypes framework.
+    Unlike `get_obj_perms_model`, this is not scoped to a single target
+    model - it is used by prefetching, which has no single `obj` to resolve
+    against and needs every direct model that might hold a match.
+    """
+    return [
+        model
+        for model in django_apps.get_models()
+        if (
+            issubclass(model, base_cls)
+            and model is not generic_cls
+            and not model._meta.abstract
+            and not model._meta.proxy
+            and getattr(model, "enabled", True)
+            and not model.objects.is_generic()
+            # Only the model that declares `content_object` itself owns the
+            # relation; proxies and multi-table subclasses inherit it and would
+            # query the same rows twice.
+            and any(f.name == "content_object" for f in model._meta.local_fields)
+        )
+    ]
+
+
 def get_user_obj_perms_model(obj: Model | None = None) -> type[Model]:
     """Returns model class that connects given `obj` and User class.
 
