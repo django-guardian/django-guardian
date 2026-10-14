@@ -59,7 +59,7 @@ def check_configuration():
             "Cannot use both GUARDIAN_RENDER_403 AND GUARDIAN_RAISE_403 - only one of this config may be True"
         )
 
-    if ACCEPT_GLOBAL_PERMS not in [True, False]:
+    if not isinstance(ACCEPT_GLOBAL_PERMS, bool):
         raise ImproperlyConfigured("GUARDIAN_ACCEPT_GLOBAL_PERMS must be either True or False")
 
 

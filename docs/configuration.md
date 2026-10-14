@@ -172,7 +172,7 @@ Defaults to `False`.
 
 ## `GUARDIAN_ACCEPT_GLOBAL_PERMS`
 
-!!! abstract "Added in version 3.6"
+!!! abstract "Added in version 3.5.1"
 
 When enabled, a global permission also satisfies object-level checks for
 users: `user.has_perm("app_label.codename", obj)` and

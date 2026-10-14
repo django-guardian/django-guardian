@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, Group, Permission
+from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 
 from guardian.backends import ObjectPermissionBackend
@@ -29,6 +30,13 @@ class ObjectPermissionBackendTest(TestCase):
             self.anonymous_user = User.objects.get(username=guardian_settings.ANONYMOUS_USER_NAME)
         except User.DoesNotExist:
             self.anonymous_user = User.objects.create_user(username=guardian_settings.ANONYMOUS_USER_NAME)
+
+    def get_project_change_permission(self) -> Permission:
+        # codenames are only unique per content type, so scope the lookup
+        return Permission.objects.get(
+            codename="change_project",
+            content_type=ContentType.objects.get_for_model(Project),
+        )
 
     def test_authenticate_returns_none(self):
         """Backend should not authenticate users (returns None)"""
@@ -60,7 +68,7 @@ class ObjectPermissionBackendTest(TestCase):
 
     def test_has_perm_accept_global_perms(self):
         """Global permissions satisfy object checks when GUARDIAN_ACCEPT_GLOBAL_PERMS is enabled"""
-        self.user.user_permissions.add(Permission.objects.get(codename="change_project"))
+        self.user.user_permissions.add(self.get_project_change_permission())
 
         # Default behavior: global permission does not answer the object check
         self.assertFalse(self.backend.has_perm(self.user, "change_project", self.project))
@@ -76,7 +84,7 @@ class ObjectPermissionBackendTest(TestCase):
 
     def test_get_all_permissions_accept_global_perms(self):
         """get_all_permissions keeps returning object permissions only"""
-        self.user.user_permissions.add(Permission.objects.get(codename="change_project"))
+        self.user.user_permissions.add(self.get_project_change_permission())
 
         guardian_settings.ACCEPT_GLOBAL_PERMS = True
         try:

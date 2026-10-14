@@ -20,10 +20,13 @@ class TestConfiguration(TestCase):
             self.assertEqual(get_content_type(None), "x")
 
     def test_accept_global_perms_must_be_bool(self):
-        with mock.patch("guardian.conf.settings.ACCEPT_GLOBAL_PERMS", "yes"):
-            self.assertRaises(ImproperlyConfigured, guardian_settings.check_configuration)
-        with mock.patch("guardian.conf.settings.ACCEPT_GLOBAL_PERMS", True):
-            guardian_settings.check_configuration()
+        # ints are rejected too (True == 1, but isinstance(1, bool) is False)
+        for invalid in ("yes", 1, 0, None):
+            with mock.patch("guardian.conf.settings.ACCEPT_GLOBAL_PERMS", invalid):
+                self.assertRaises(ImproperlyConfigured, guardian_settings.check_configuration)
+        for valid in (True, False):
+            with mock.patch("guardian.conf.settings.ACCEPT_GLOBAL_PERMS", valid):
+                guardian_settings.check_configuration()
 
 
 def get_test_content_type(obj):
