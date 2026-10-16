@@ -702,7 +702,10 @@ def get_objects_for_user(
         # Otherwise the remaining codenames must all be granted per object (by user or groups), see below.
         has_global_perms = bool(global_perms and codenames)
 
-    legacy_group_union = has_global_perms and guardian_settings.LEGACY_GLOBAL_PERMS_GROUP_UNION
+    # Only group calls with several remaining codenames hit the all-perms group check the legacy mode skips.
+    legacy_group_union = (
+        use_groups and len(codenames) > 1 and has_global_perms and guardian_settings.LEGACY_GLOBAL_PERMS_GROUP_UNION
+    )
     if legacy_group_union:
         # This feature will be removed in 3.6.0. (GHSA-5729-mvhf-9gq4)
         warnings.warn(
