@@ -86,6 +86,12 @@ class ObjectPermissionChecker:
         if guardian_settings.ACCEPT_GLOBAL_PERMS and self.user is not None:
             if app_label is None:
                 app_label = get_content_type(obj).app_label
+            elif app_label not in {obj._meta.app_label, get_content_type(obj).app_label}:
+                # The supplied prefix does not relate to this object at all,
+                # so its global permission must not answer the check either
+                # (ObjectPermissionBackend rejects such prefixes already;
+                # direct checker calls need the same guard here).
+                return False
             return self.user.has_perm(f"{app_label}.{perm}")
         return False
 

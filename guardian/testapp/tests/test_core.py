@@ -263,6 +263,24 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
         finally:
             guardian_settings.ACCEPT_GLOBAL_PERMS = False
 
+    def test_accept_global_perms_rejects_unrelated_app_prefix(self):
+        guardian_settings.ACCEPT_GLOBAL_PERMS = True
+        try:
+            user = User.objects.create(username="auth-global", is_active=True)
+            user.user_permissions.add(self.get_permission("change_group"))
+            project = Project.objects.create(name="AcceptGlobalPerms")
+
+            # A global auth.* permission must not answer a check against a
+            # testapp object just because the prefix says so
+            # (the ObjectPermissionBackend path rejects such prefixes with
+            # WrongAppError already - direct checker calls need this guard)
+            self.assertFalse(ObjectPermissionChecker(user).has_perm("auth.change_group", project))
+
+            # The same permission still answers checks for auth objects
+            self.assertTrue(ObjectPermissionChecker(user).has_perm("auth.change_group", self.group))
+        finally:
+            guardian_settings.ACCEPT_GLOBAL_PERMS = False
+
     def test_prefetch_user_perms(self):
         settings.DEBUG = True
         try:
