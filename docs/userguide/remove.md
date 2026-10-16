@@ -145,6 +145,7 @@ users or groups at once:
 
 !!! note
 
-    **Bulk operations do not fire `post_delete` signals.** Bulk removals use
-    `QuerySet.delete()` internally, so per-object `post_delete` signals are
-    not sent. If you rely on signals, remove permissions individually instead.
+    **Bulk removals send deletion signals.** They use Django's
+    [`QuerySet.delete()`](https://docs.djangoproject.com/en/stable/ref/models/querysets/#delete),
+    which sends `pre_delete` and `post_delete` signals for the deleted
+    object-permission instances but does not call their individual `delete()` methods.
