@@ -170,6 +170,27 @@ direct permission models.
 
 Defaults to `False`.
 
+## `GUARDIAN_LEGACY_GLOBAL_PERMS_GROUP_UNION`
+
+!!! abstract "Added in version 3.5.1"
+
+!!! danger "Deprecated, removed in version 3.6.0"
+
+    This setting re-enables the behaviour fixed in
+    [GHSA-5729-mvhf-9gq4](https://github.com/django-guardian/django-guardian/security/advisories/GHSA-5729-mvhf-9gq4).
+    Use it only as a short-term migration aid.
+
+Before 3.5.1, `get_objects_for_user` with `any_perm=False` returned an object
+when the user held a global permission for some of the requested permissions
+and one of their groups held *any one* of the remaining permissions on that
+object. Since 3.5.1 the user (directly or through groups) must hold *all* of
+the remaining permissions on the object.
+
+Set this to `True` to restore the old behaviour. Every call that takes the
+legacy path emits a `DeprecationWarning`.
+
+Defaults to `False`.
+
 ## `GUARDIAN_ANONYMOUS_USER_CACHE_TTL`
 
 !!! abstract "Added in version 3.1.3"

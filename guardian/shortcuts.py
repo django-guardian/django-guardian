@@ -28,6 +28,7 @@ from django.db.models.expressions import Value
 from django.db.models.functions import Cast, Replace
 from django.shortcuts import _get_queryset
 
+from guardian.conf import settings as guardian_settings
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
 from guardian.exceptions import (
@@ -684,6 +685,7 @@ def get_objects_for_user(
     if user.is_anonymous:
         user = get_anonymous_user()
 
+    has_global_perms = False
     # a superuser has by default assigned global perms for any
     if accept_global_perms and with_superuser:
         global_perms = {code for code in codenames if user.has_perm(ctype.app_label + "." + code)}
@@ -698,6 +700,17 @@ def get_objects_for_user(
         if global_perms and (not codenames or any_perm):
             return queryset
         # Otherwise the remaining codenames must all be granted per object (by user or groups), see below.
+        has_global_perms = bool(global_perms and codenames)
+
+    legacy_group_union = has_global_perms and guardian_settings.LEGACY_GLOBAL_PERMS_GROUP_UNION
+    if legacy_group_union:
+        # This feature will be removed in 3.6.0. (GHSA-5729-mvhf-9gq4)
+        warnings.warn(
+            "GUARDIAN_LEGACY_GLOBAL_PERMS_GROUP_UNION is deprecated and will be removed in 3.6.0. "
+            "It makes get_objects_for_user return objects the user lacks a required permission on.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
     # Now we should extract the list of pk values for which we would filter the queryset
     user_model = get_user_obj_perms_model(queryset.model)
@@ -730,7 +743,7 @@ def get_objects_for_user(
             group_fields = generic_fields
         else:
             group_fields = direct_fields
-        if not any_perm and len(codenames) > 1:
+        if not any_perm and len(codenames) > 1 and not legacy_group_union:
             user_obj_perms = user_obj_perms_queryset.values_list(*user_fields)
             groups_obj_perms = groups_obj_perms_queryset.values_list(*group_fields)
             data = list(user_obj_perms) + list(groups_obj_perms)
