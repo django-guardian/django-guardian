@@ -22,7 +22,6 @@ from guardian.models import Group, Permission
 import guardian.shortcuts as guardian_shortcuts
 from guardian.shortcuts import (
     _get_ct_cached,
-    assign,
     assign_perm,
     get_group_perms,
     get_groups_with_perms,
@@ -173,13 +172,6 @@ class AssignPermTest(ObjectPermissionTestCase):
 
         assign_perm("contenttypes.contenttype.reorder", self.user, self.ctype)
         self.assertTrue(self.user.has_perm("contenttypes.contenttype.reorder", self.ctype))
-
-    def test_deprecation_warning(self):
-        with warnings.catch_warnings(record=True) as warns:
-            warnings.simplefilter("always")
-            assign("contenttypes.change_contenttype", self.group)
-            self.assertEqual(len(warns), 1)
-            self.assertTrue(isinstance(warns[0].message, DeprecationWarning))
 
     def test_user_assign_perm_list(self):
         """
