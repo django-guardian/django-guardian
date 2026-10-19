@@ -294,6 +294,8 @@ def clean_orphan_obj_perms(
 
         # Process User permissions first
         user_processed = 0
+        user_deleted = 0
+        user_last_pk = None
         user_total = UserObjectPermission.objects.count()
 
         # Skip user batches if needed
@@ -308,15 +310,19 @@ def clean_orphan_obj_perms(
             gc.collect()
 
             current_batch_size = min(batch_size, user_remaining)
-            user_batch = list(
-                UserObjectPermission.objects.order_by("pk")[
-                    user_skip_records + user_processed : user_skip_records + user_processed + current_batch_size
-                ]
-            )
+            # Only the first batch uses an offset. Deleting orphans shifts the
+            # remaining rows down, so later batches continue after the last
+            # seen pk instead of at a growing offset that would skip rows.
+            user_qs = UserObjectPermission.objects.order_by("pk")
+            if user_last_pk is None:
+                user_batch = list(user_qs[user_skip_records : user_skip_records + current_batch_size])
+            else:
+                user_batch = list(user_qs.filter(pk__gt=user_last_pk)[:current_batch_size])
 
             if not user_batch:
                 break
 
+            user_last_pk = user_batch[-1].pk
             scanned += len(user_batch)
             user_processed += len(user_batch)
             user_remaining -= len(user_batch)
@@ -329,6 +335,7 @@ def clean_orphan_obj_perms(
                 )
                 UserObjectPermission.objects.filter(pk__in=orphan_pks).delete()
                 deleted += len(orphan_pks)
+                user_deleted += len(orphan_pks)
 
             processed_batches += 1
             batch_count += 1
@@ -337,8 +344,11 @@ def clean_orphan_obj_perms(
             logger.info(f"Processed user batch {processed_batches}, scanned {scanned} objects.")
 
         # Process Group permissions
+        group_processed = 0
+        group_deleted = 0
+        group_skip_records = 0
         if remaining_batches > 0:
-            group_processed = 0
+            group_last_pk = None
             group_total = GroupObjectPermission.objects.count()
 
             # Calculate skip for group permissions
@@ -355,15 +365,16 @@ def clean_orphan_obj_perms(
                 gc.collect()
 
                 current_batch_size = min(batch_size, group_remaining)
-                group_batch = list(
-                    GroupObjectPermission.objects.order_by("pk")[
-                        group_skip_records + group_processed : group_skip_records + group_processed + current_batch_size
-                    ]
-                )
+                group_qs = GroupObjectPermission.objects.order_by("pk")
+                if group_last_pk is None:
+                    group_batch = list(group_qs[group_skip_records : group_skip_records + current_batch_size])
+                else:
+                    group_batch = list(group_qs.filter(pk__gt=group_last_pk)[:current_batch_size])
 
                 if not group_batch:
                     break
 
+                group_last_pk = group_batch[-1].pk
                 scanned += len(group_batch)
                 group_processed += len(group_batch)
                 group_remaining -= len(group_batch)
@@ -376,12 +387,24 @@ def clean_orphan_obj_perms(
                     )
                     GroupObjectPermission.objects.filter(pk__in=orphan_pks).delete()
                     deleted += len(orphan_pks)
+                    group_deleted += len(orphan_pks)
 
                 processed_batches += 1
                 batch_count += 1
                 remaining_batches -= 1
 
                 logger.info(f"Processed group batch {processed_batches}, scanned {scanned} objects.")
+
+        # skip_batches counts batches of rows that still exist, so base the
+        # resume point on the rows kept rather than the rows scanned. Rounding
+        # down may rescan a few rows on resume, but never skips any.
+        if user_remaining > 0:
+            resume_skip_batches = (user_skip_records + user_processed - user_deleted) // batch_size
+        else:
+            resume_skip_batches = (
+                ceil((user_total - user_deleted) / batch_size)
+                + (group_skip_records + group_processed - group_deleted) // batch_size
+            )
 
     logger.info(
         f"Finished orphan object permissions cleanup. "
@@ -393,7 +416,7 @@ def clean_orphan_obj_perms(
         suggestion = (
             f"To resume cleanup, call:\n"
             f"clean_orphan_obj_perms(batch_size={batch_size}, "
-            f"skip_batches={skip_batches + processed_batches}, "
+            f"skip_batches={resume_skip_batches}, "
         )
         if max_batches is not None:
             suggestion += f"max_batches={max_batches - batch_count}, "
