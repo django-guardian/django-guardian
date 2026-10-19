@@ -56,6 +56,10 @@ def check_configuration():
         raise ImproperlyConfigured(
             "Cannot use both GUARDIAN_RENDER_403 AND GUARDIAN_RAISE_403 - only one of this config may be True"
         )
+    if RENDER_404 and RAISE_404:
+        raise ImproperlyConfigured(
+            "Cannot use both GUARDIAN_RENDER_404 AND GUARDIAN_RAISE_404 - only one of this config may be True"
+        )
 
 
 check_configuration()

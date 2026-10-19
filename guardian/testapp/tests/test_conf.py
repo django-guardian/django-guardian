@@ -13,6 +13,11 @@ class TestConfiguration(TestCase):
             with mock.patch("guardian.conf.settings.RAISE_403", True):
                 self.assertRaises(ImproperlyConfigured, guardian_settings.check_configuration)
 
+    def test_check_configuration_render_404_and_raise_404(self):
+        with mock.patch("guardian.conf.settings.RENDER_404", True):
+            with mock.patch("guardian.conf.settings.RAISE_404", True):
+                self.assertRaises(ImproperlyConfigured, guardian_settings.check_configuration)
+
     def test_get_content_type(self):
         with mock.patch(
             "guardian.conf.settings.GET_CONTENT_TYPE", "guardian.testapp.tests.test_conf.get_test_content_type"
