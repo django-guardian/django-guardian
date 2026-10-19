@@ -18,9 +18,16 @@ from django.conf import settings
 from django.contrib.auth import REDIRECT_FIELD_NAME, get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.core.cache import cache
-from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist, PermissionDenied
+from django.core.exceptions import ImproperlyConfigured, PermissionDenied
 from django.db.models import Model, QuerySet
-from django.http import HttpRequest, HttpResponse, HttpResponseForbidden, HttpResponseNotFound, HttpResponseRedirect
+from django.http import (
+    Http404,
+    HttpRequest,
+    HttpResponse,
+    HttpResponseForbidden,
+    HttpResponseNotFound,
+    HttpResponseRedirect,
+)
 from django.shortcuts import render
 
 from guardian.conf import settings as guardian_settings
@@ -204,7 +211,7 @@ def get_40x_or_None(
                 response.status_code = 404
                 return response
             elif guardian_settings.RAISE_404:
-                raise ObjectDoesNotExist
+                raise Http404
             return HttpResponseNotFound()
         else:
             from django.contrib.auth.views import redirect_to_login
