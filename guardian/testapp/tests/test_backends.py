@@ -1,8 +1,11 @@
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, Group
+from django.core.cache import cache
 from django.test import TestCase
 
-from guardian.backends import ObjectPermissionBackend
+from guardian.backends import ObjectPermissionBackend, check_user_support
 from guardian.conf import settings as guardian_settings
 from guardian.shortcuts import assign_perm, remove_perm
 from guardian.testapp.models import Project
@@ -172,3 +175,35 @@ class ObjectPermissionBackendTest(TestCase):
         self.assertTrue(self.backend.supports_object_permissions)
         self.assertTrue(self.backend.supports_anonymous_user)
         self.assertTrue(self.backend.supports_inactive_user)
+
+
+class CheckUserSupportAnonymousCacheTest(TestCase):
+    """check_user_support() resolves anonymous users through get_anonymous_user() (#1050)."""
+
+    def setUp(self):
+        cache.clear()
+        self.anonymous_user = User.objects.get_or_create(username=guardian_settings.ANONYMOUS_USER_NAME)[0]
+
+    def tearDown(self):
+        cache.clear()
+
+    def test_uses_get_anonymous_user(self):
+        with patch("guardian.backends.get_anonymous_user", return_value=self.anonymous_user) as mock_get:
+            supported, user_obj = check_user_support(AnonymousUser())
+
+        mock_get.assert_called_once_with()
+        self.assertTrue(supported)
+        self.assertEqual(user_obj, self.anonymous_user)
+
+    def test_anonymous_lookup_is_cached_when_ttl_is_set(self):
+        with patch("guardian.conf.settings.ANONYMOUS_USER_CACHE_TTL", 300):
+            check_user_support(AnonymousUser())
+            with self.assertNumQueries(0):
+                supported, user_obj = check_user_support(AnonymousUser())
+
+        self.assertTrue(supported)
+        self.assertEqual(user_obj.pk, self.anonymous_user.pk)
+
+    def test_anonymous_lookup_hits_database_without_cache(self):
+        with patch("guardian.conf.settings.ANONYMOUS_USER_CACHE_TTL", 0), self.assertNumQueries(1):
+            check_user_support(AnonymousUser())
