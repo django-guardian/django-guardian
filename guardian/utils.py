@@ -177,7 +177,10 @@ def get_40x_or_None(
     has_permissions = False
     # global perms check first (if accept_global_perms)
     if accept_global_perms:
-        has_permissions = all(request.user.has_perm(perm) for perm in perms)  # type: ignore[union-attr]
+        if any_perm:
+            has_permissions = any(request.user.has_perm(perm) for perm in perms)  # type: ignore[union-attr]
+        else:
+            has_permissions = all(request.user.has_perm(perm) for perm in perms)  # type: ignore[union-attr]
     # if still no permission granted, try obj perms
     if not has_permissions:
         if any_perm:

@@ -160,19 +160,21 @@ class ObjectPermissionChecker:
         if self.user and not self.user.is_active:
             return []
 
-        if guardian_settings.AUTO_PREFETCH:
+        # Superusers have every permission, so the prefetch cache (which only
+        # holds explicitly assigned permissions) is not used for them.
+        if guardian_settings.AUTO_PREFETCH and not (self.user and self.user.is_superuser):
             self._prefetch_cache()
 
         ctype = get_content_type(obj)
         key = self.get_local_cache_key(obj)
         if key not in self._obj_perms_cache:
-            # If auto-prefetching enabled, do not hit the database
-            if guardian_settings.AUTO_PREFETCH:
-                return []
             if self.user and self.user.is_superuser:
                 perms: list[str] = list(
                     Permission.objects.filter(content_type=ctype).values_list("codename", flat=True)
                 )
+            # If auto-prefetching enabled, do not hit the database
+            elif guardian_settings.AUTO_PREFETCH:
+                return []
             elif self.user:
                 # Query user and group permissions separately and then combine
                 # the results to avoid a slow query

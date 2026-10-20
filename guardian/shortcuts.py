@@ -883,7 +883,10 @@ def get_objects_for_group(
 
     global_perms = set()
     if accept_global_perms:
-        global_perm_set = group.permissions.values_list("codename", flat=True)
+        # Only global permissions of the queried model count, as a codename can exist on several models
+        global_perm_set = set(
+            group.permissions.filter(content_type=ctype, codename__in=codenames).values_list("codename", flat=True)
+        )
         for code in codenames:
             if code in global_perm_set:
                 global_perms.add(code)

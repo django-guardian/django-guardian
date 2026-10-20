@@ -611,6 +611,36 @@ class TestViewMixins(TestCase):
         response = view(request)
         self.assertEqual(response.status_code, 302)
 
+    def test_any_perm_with_one_global_permission(self):
+        # The user holds one of the required permissions globally and none per object
+        assign_perm("testapp.view_post", self.user)
+        request = self.factory.get("/")
+        request.user = get_user_model().objects.get(pk=self.user.pk)
+
+        view = PermissionTestView.as_view(
+            any_perm=True,
+            accept_global_perms=True,
+            permission_required=["testapp.change_post", "testapp.view_post"],
+            object=self.post,
+        )
+        with self.assertRaises(DatabaseRemovedError):
+            view(request)
+
+    def test_all_perms_with_one_global_permission(self):
+        # Without any_perm, one of two global permissions is not enough
+        assign_perm("testapp.view_post", self.user)
+        request = self.factory.get("/")
+        request.user = get_user_model().objects.get(pk=self.user.pk)
+
+        view = PermissionTestView.as_view(
+            any_perm=False,
+            accept_global_perms=True,
+            permission_required=["testapp.change_post", "testapp.view_post"],
+            object=self.post,
+        )
+        response = view(request)
+        self.assertEqual(response.status_code, 302)
+
     def test_get_get_objects_for_user_kwargs_raises_deprecation_warning(self):
         """The old method should raise a deprecation warning.
 
