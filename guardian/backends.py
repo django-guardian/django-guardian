@@ -1,10 +1,9 @@
 from collections.abc import Iterable
 from functools import wraps
-from typing import Any, Iterable, Optional
+from typing import Any
 
 from asgiref.sync import sync_to_async
 import django
-from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import BaseBackend
 from django.db import models
 from django.db.models import Model
@@ -50,7 +49,14 @@ def check_user_support(user_obj: Any) -> tuple[bool, Any]:
     return True, user_obj
 
 
-def noop(f: Any) -> Any:
+def hidden_method(f: Any) -> Any:
+    """Hides an inherited method, so `hasattr(obj, name)` returns `False`.
+
+    The decorated method is replaced by a property that raises `AttributeError`
+    on access, which is what makes `hasattr` report the attribute as missing.
+    The body of the decorated function is never executed.
+    """
+
     @wraps(f)
     def raise_attr_error(self, *args: Any, **kwargs: Any):
         raise AttributeError(f"'{type(self).__name__}' object has no attribute '{f.__name__}'")
@@ -78,13 +84,19 @@ class ObjectPermissionBackend(BaseBackend):
     def authenticate(self, request: HttpRequest, username: str | None = None, password: str | None = None) -> Any:
         return None
 
+    # `BaseBackend` always defines `get_user` and `aget_user`, but Django (e.g.
+    # `Client._get_backend`, used by `force_login`) uses `hasattr(backend, "get_user")`
+    # to find a backend able to load users. This backend can't, so it must not look
+    # like it can.
+    # Django 6.2+ only considers backends that override these methods, so the
+    # workaround is only needed before that.
     if django.VERSION < (6, 2):
 
-        @noop
+        @hidden_method
         def get_user(self, user_id: int) -> None:
             pass
 
-        @noop
+        @hidden_method
         async def aget_user(self, user_id: int) -> None:
             pass
 
@@ -145,7 +157,7 @@ class ObjectPermissionBackend(BaseBackend):
         `obj` instance here and `perm` doesn't have to contain
         `app_label` as it can be retrieved from given `obj`.
 
-        Async version of :meth:`ObjectPermissionBackend.has_perm`.
+        Async version of :meth:`ObjectPermissionBackend.has_perm` using sync_to_async for compatibility.
 
         **Inactive user support**
 
@@ -182,6 +194,8 @@ class ObjectPermissionBackend(BaseBackend):
             return set()
 
         check = ObjectPermissionChecker(user_obj)
+
+        # Superusers get all object permissions for the target object.
         if user_obj.is_superuser:
             return set(check.get_perms(obj))
 
@@ -212,7 +226,6 @@ class ObjectPermissionBackend(BaseBackend):
         return set(check.get_group_perms(obj))
 
     def get_all_permissions(self, user_obj: Any, obj: Model | None = None) -> Iterable[str]:
-        # TODO: since we inherit from BaseBackend, this method should not be necessary
         """Returns all permissions for a given object.
 
         Parameters:

@@ -1,7 +1,7 @@
 from unittest import skipIf, skipUnless
 from unittest.mock import patch
 
-from asgiref.sync import sync_to_async
+from asgiref.sync import async_to_sync, sync_to_async
 import django
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import BaseBackend
@@ -56,13 +56,13 @@ class ObjectPermissionBackendTest(TestCase):
         self.assertIsNone(result)
 
     @skipIf(django.VERSION >= (6, 2), "Django 6.2 changed the way get_user is checked")
-    def test_get_user_not_exists(self):
-        """Backend should not retrieve users"""
+    def test_get_user_is_not_used_for_auth_flow(self):
+        """Backend should not participate in user retrieval/auth flow"""
         self.assertFalse(hasattr(self.backend, "get_user"))
 
     @skipUnless((5, 2) <= django.VERSION < (6, 2), "Django 6.2 changed the way aget_user is checked")
-    async def test_aget_user_not_exists(self):
-        """Async backend should not retrieve users"""
+    async def test_aget_user_is_not_used_for_auth_flow(self):
+        """Async backend should not participate in user retrieval/auth flow."""
         self.assertFalse(hasattr(self.backend, "aget_user"))
 
     @skipIf(django.VERSION < (6, 2), "Django 6.2 changed the way get_user is checked")
@@ -227,6 +227,7 @@ class ObjectPermissionBackendTest(TestCase):
         perms = self.backend.get_user_permissions(self.superuser, self.project)
         # Superuser should have all permissions for the content type
         self.assertGreater(len(list(perms)), 0)
+        self.assertIn("change_project", perms)
 
     @skipIf(django.VERSION < (5, 2), "Async backends are supported on Django 5.2 and above")
     async def test_aget_user_permissions_superuser(self):
@@ -234,6 +235,7 @@ class ObjectPermissionBackendTest(TestCase):
         perms = await self.backend.aget_user_permissions(self.superuser, self.project)
         # Superuser should have all permissions for the content type
         self.assertGreater(len(list(perms)), 0)
+        self.assertIn("change_project", perms)
 
     def test_get_group_permissions_with_object(self):
         """Test get_group_permissions method with object"""
