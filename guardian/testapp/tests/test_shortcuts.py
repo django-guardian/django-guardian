@@ -1815,6 +1815,32 @@ class GetObjectsForGroup(TestCase):
         )
         self.assertEqual(set(objects), set())
 
+    def _create_can_publish_perms(self):
+        """The same custom codename on two models, as in #1046"""
+        return {
+            model: Permission.objects.create(
+                codename="can_publish",
+                name="Can publish",
+                content_type=ContentType.objects.get_for_model(model),
+            )
+            for model in (ContentType, Group)
+        }
+
+    def test_global_permission_with_same_codename_on_another_model(self):
+        perms = self._create_can_publish_perms()
+        # A global can_publish for Group must not grant can_publish on every ContentType
+        self.group1.permissions.add(perms[Group])
+
+        objects = get_objects_for_group(self.group1, "can_publish", klass=ContentType)
+        self.assertEqual(set(objects), set())
+
+    def test_global_permission_with_same_codename_on_the_requested_model(self):
+        perms = self._create_can_publish_perms()
+        self.group1.permissions.add(perms[ContentType])
+
+        objects = get_objects_for_group(self.group1, "can_publish", klass=ContentType)
+        self.assertEqual(set(objects), set(ContentType.objects.all()))
+
     def test_exception_different_ctypes(self):
         self.assertRaises(
             MixedContentTypeError,
