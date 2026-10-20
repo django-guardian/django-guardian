@@ -1,4 +1,5 @@
 from io import StringIO
+import re
 from unittest.mock import patch
 
 from django.apps import apps as django_apps
@@ -96,17 +97,12 @@ class OrphanedObjectPermissionsTest(TestCase):
 
     def test_clean_perms_with_batch_size(self):
         """Test cleaning orphan permissions with batch_size parameter"""
-        # Test that batch_size parameter works without exact count verification
-        self._create_orphan_permissions(5)
+        expected_orphans = self._create_orphan_permissions(5)
 
-        # Clean with batch size - just verify it runs and removes something
         removed = clean_orphan_obj_perms(batch_size=3)
 
-        # The main goal is to test that batch_size parameter is accepted and works
-        self.assertGreaterEqual(removed, 0)  # Should remove at least 0 orphans
-
-        # Clean any remaining to ensure clean state for next tests
-        clean_orphan_obj_perms()
+        self.assertEqual(removed, expected_orphans)
+        self.assertEqual(self._get_current_orphan_count(), 0)
 
     def test_clean_perms_with_max_batches(self):
         """Test cleaning orphan permissions with max_batches parameter"""
@@ -206,6 +202,86 @@ class OrphanedObjectPermissionsTest(TestCase):
             total_removed += removed
 
         self.assertEqual(total_removed, expected_orphans)
+
+    def _assign_perms_with_orphans(self, identity, perm, count, orphan_indexes):
+        """Assign ``perm`` on ``count`` new objects, in pk order, then delete the objects at ``orphan_indexes``"""
+        target_objs = [
+            ContentType.objects.create(model=f"{identity}_{i}", app_label="fake-for-guardian-tests")
+            for i in range(count)
+        ]
+        for target_obj in target_objs:
+            assign_perm(perm, identity, target_obj)
+        for i in orphan_indexes:
+            target_objs[i].delete()
+
+    def _resume_skip_batches(self, logs):
+        """Return the skip_batches value from the logged resume hint"""
+        match = re.search(r"skip_batches=(\d+)", logs.output[-1])
+        self.assertIsNotNone(match)
+        return int(match.group(1))
+
+    def test_clean_perms_batched_does_not_skip_rows_after_deleting_orphans(self):
+        """Deleting orphans in one batch must not make the next batch skip rows"""
+        self._assign_perms_with_orphans(self.user, "change_contenttype", 4, orphan_indexes=[0, 2])
+        self._assign_perms_with_orphans(self.group, "delete_contenttype", 4, orphan_indexes=[0, 2])
+
+        removed = clean_orphan_obj_perms(batch_size=2)
+
+        self.assertEqual(removed, 4)
+        self.assertEqual(self._get_current_orphan_count(), 0)
+
+    def test_clean_perms_resume_hint_does_not_skip_user_orphans(self):
+        """Resuming with the logged skip_batches must reach orphans left in the user permissions"""
+        self._assign_perms_with_orphans(self.user, "change_contenttype", 6, orphan_indexes=[0, 2])
+
+        with self.assertLogs("guardian.utils", level="INFO") as logs:
+            removed = clean_orphan_obj_perms(batch_size=2, max_batches=1)
+        self.assertEqual(removed, 1)
+
+        removed += clean_orphan_obj_perms(batch_size=2, skip_batches=self._resume_skip_batches(logs))
+
+        self.assertEqual(removed, 2)
+        self.assertEqual(self._get_current_orphan_count(), 0)
+
+    def test_clean_perms_resume_hint_does_not_skip_group_orphans(self):
+        """Resuming with the logged skip_batches must reach orphans left in the group permissions"""
+        self._assign_perms_with_orphans(self.user, "change_contenttype", 3, orphan_indexes=[1])
+        self._assign_perms_with_orphans(self.group, "delete_contenttype", 4, orphan_indexes=[0, 2])
+
+        # Two batches cover the 3 user permissions, the third covers the first 2 group permissions
+        with self.assertLogs("guardian.utils", level="INFO") as logs:
+            removed = clean_orphan_obj_perms(batch_size=2, max_batches=3)
+        self.assertEqual(removed, 2)
+
+        removed += clean_orphan_obj_perms(batch_size=2, skip_batches=self._resume_skip_batches(logs))
+
+        self.assertEqual(removed, 3)
+        self.assertEqual(self._get_current_orphan_count(), 0)
+
+    def test_clean_perms_batched_reaches_last_group_batch_after_partial_user_batch(self):
+        """The batch budget must cover the last group batch when the user permissions end in a partial batch"""
+        self._assign_perms_with_orphans(self.user, "change_contenttype", 1, orphan_indexes=[])
+        self._assign_perms_with_orphans(self.group, "delete_contenttype", 3, orphan_indexes=[2])
+
+        # 1 user batch and 2 group batches, although the 4 rows would fit in 2 batches of 2
+        removed = clean_orphan_obj_perms(batch_size=2)
+
+        self.assertEqual(removed, 1)
+        self.assertEqual(self._get_current_orphan_count(), 0)
+
+    def test_clean_perms_resume_hint_reaches_last_group_batch(self):
+        """Resuming after a partial user batch must still have batches left for the remaining group permissions"""
+        self._assign_perms_with_orphans(self.user, "change_contenttype", 1, orphan_indexes=[])
+        self._assign_perms_with_orphans(self.group, "delete_contenttype", 3, orphan_indexes=[2])
+
+        with self.assertLogs("guardian.utils", level="INFO") as logs:
+            removed = clean_orphan_obj_perms(batch_size=2, max_batches=2)
+        self.assertEqual(removed, 0)
+
+        removed += clean_orphan_obj_perms(batch_size=2, skip_batches=self._resume_skip_batches(logs))
+
+        self.assertEqual(removed, 1)
+        self.assertEqual(self._get_current_orphan_count(), 0)
 
     def test_clean_perms_command(self):
         """
