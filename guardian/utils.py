@@ -279,9 +279,10 @@ def clean_orphan_obj_perms(
     else:
         total_user = UserObjectPermission.objects.count()
         total_group = GroupObjectPermission.objects.count()
-        total_records = total_user + total_group
 
-        total_batches_possible = ceil(total_records / batch_size)
+        # User and group permissions are batched separately, so a partial last
+        # user batch is followed by full group batches. Count them per table.
+        total_batches_possible = ceil(total_user / batch_size) + ceil(total_group / batch_size)
 
         remaining_batches = total_batches_possible - skip_batches
         if max_batches is not None:
