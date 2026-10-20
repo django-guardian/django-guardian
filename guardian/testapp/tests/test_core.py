@@ -7,6 +7,7 @@ from django.contrib.auth.management import create_permissions
 from django.contrib.auth.models import AnonymousUser, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db import connection
+from django.template import Context, Template
 from django.test import TestCase
 from django.test.utils import CaptureQueriesContext
 
@@ -547,6 +548,53 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
             ProjectGroupObjectPermission.enabled = True
             MixedGroupObjectPermission.enabled = True
             ReverseMixedUserObjectPermission.enabled = True
+
+    def test_autoprefetch_superuser_get_perms(self):
+        """With AUTO_PREFETCH on, get_perms() must still return every permission
+        for an active superuser, just like it does with AUTO_PREFETCH off.
+
+        Regression test for #1049: the AUTO_PREFETCH early return used to run
+        before the superuser branch, so get_perms() returned [] (or only the
+        explicitly assigned permissions) while has_perm() returned True.
+        """
+        guardian_settings.AUTO_PREFETCH = True
+        try:
+            user = User.objects.create(username="active_superuser", is_superuser=True, is_active=True)
+            other_group = Group.objects.create(name="other-group")
+            # An explicitly assigned object permission must not narrow the result.
+            assign_perm("change_group", user, other_group)
+            ctype = ContentType.objects.get_for_model(Group)
+            expected = sorted(Permission.objects.filter(content_type=ctype).values_list("codename", flat=True))
+            self.assertTrue(expected)
+
+            checker = ObjectPermissionChecker(user)
+            self.assertEqual(sorted(checker.get_perms(self.group)), expected)
+            self.assertEqual(sorted(checker.get_perms(other_group)), expected)
+
+            # The result is cached on the checker, so asking again is free.
+            with CaptureQueriesContext(connection) as queries:
+                self.assertEqual(sorted(checker.get_perms(self.group)), expected)
+            self.assertEqual(len(queries), 0)
+        finally:
+            guardian_settings.AUTO_PREFETCH = False
+
+    def test_autoprefetch_superuser_get_obj_perms_tag(self):
+        """The get_obj_perms template tag must list every permission for an
+        active superuser when AUTO_PREFETCH is on (#1049)."""
+        guardian_settings.AUTO_PREFETCH = True
+        try:
+            user = User.objects.create(username="active_superuser", is_superuser=True, is_active=True)
+            ctype = ContentType.objects.get_for_model(Group)
+            expected = set(Permission.objects.filter(content_type=ctype).values_list("codename", flat=True))
+            self.assertTrue(expected)
+
+            template = Template(
+                '{% load guardian_tags %}{% get_obj_perms user for group as "obj_perms" %}{{ obj_perms|join:"," }}'
+            )
+            output = template.render(Context({"user": user, "group": self.group}))
+            self.assertEqual(set(output.split(",")), expected)
+        finally:
+            guardian_settings.AUTO_PREFETCH = False
 
     def test_autoprefetch_group_perms(self):
         settings.DEBUG = True
