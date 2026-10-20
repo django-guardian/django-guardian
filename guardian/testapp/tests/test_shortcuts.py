@@ -11,6 +11,7 @@ from django.db.models.query import QuerySet
 from django.test import TestCase, TransactionTestCase
 
 from guardian.compat import get_user_permission_full_codename
+from guardian.conf import settings as guardian_settings
 from guardian.core import ObjectPermissionChecker
 from guardian.exceptions import (
     MixedContentTypeError,
@@ -754,6 +755,23 @@ class GetUsersWithPermsTest(TestCase):
             set(result),
             {self.user1, admin},
         )
+
+    def test_with_superusers_attach_perms_autoprefetch(self):
+        """With AUTO_PREFETCH on, get_users_with_perms(attach_perms=True) must list
+        every permission for the content type for a superuser (#1049)."""
+        guardian_settings.AUTO_PREFETCH = True
+        try:
+            admin = User.objects.create(username="admin", is_superuser=True)
+            assign_perm("change_contenttype", self.user1, self.obj1)
+            ctype = ContentType.objects.get_for_model(self.obj1)
+            expected = sorted(Permission.objects.filter(content_type=ctype).values_list("codename", flat=True))
+            self.assertTrue(expected)
+
+            result = get_users_with_perms(self.obj1, attach_perms=True, with_superusers=True)
+            self.assertEqual(result[admin], expected)
+            self.assertEqual(result[self.user1], ["change_contenttype"])
+        finally:
+            guardian_settings.AUTO_PREFETCH = False
 
     def test_get_group_perms_consistent_inactive_user(self):
         """Test that the get_group_perms shortcut returns the same results as the
@@ -1796,6 +1814,32 @@ class GetObjectsForGroup(TestCase):
             any_perm=False,
         )
         self.assertEqual(set(objects), set())
+
+    def _create_can_publish_perms(self):
+        """The same custom codename on two models, as in #1046"""
+        return {
+            model: Permission.objects.create(
+                codename="can_publish",
+                name="Can publish",
+                content_type=ContentType.objects.get_for_model(model),
+            )
+            for model in (ContentType, Group)
+        }
+
+    def test_global_permission_with_same_codename_on_another_model(self):
+        perms = self._create_can_publish_perms()
+        # A global can_publish for Group must not grant can_publish on every ContentType
+        self.group1.permissions.add(perms[Group])
+
+        objects = get_objects_for_group(self.group1, "can_publish", klass=ContentType)
+        self.assertEqual(set(objects), set())
+
+    def test_global_permission_with_same_codename_on_the_requested_model(self):
+        perms = self._create_can_publish_perms()
+        self.group1.permissions.add(perms[ContentType])
+
+        objects = get_objects_for_group(self.group1, "can_publish", klass=ContentType)
+        self.assertEqual(set(objects), set(ContentType.objects.all()))
 
     def test_exception_different_ctypes(self):
         self.assertRaises(
