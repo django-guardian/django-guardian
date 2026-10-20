@@ -49,7 +49,7 @@ def check_user_support(user_obj: Any) -> tuple[bool, Any]:
     return True, user_obj
 
 
-def hidden_method(f: Any) -> Any:
+def _hidden_method(f: Any) -> Any:
     """Hides an inherited method, so `hasattr(obj, name)` returns `False`.
 
     The decorated method is replaced by a property that raises `AttributeError`
@@ -92,11 +92,11 @@ class ObjectPermissionBackend(BaseBackend):
     # workaround is only needed before that.
     if django.VERSION < (6, 2):
 
-        @hidden_method
+        @_hidden_method
         def get_user(self, user_id: int) -> None:
             pass
 
-        @hidden_method
+        @_hidden_method
         async def aget_user(self, user_id: int) -> None:
             pass
 
