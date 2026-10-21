@@ -114,7 +114,10 @@ class BaseObjectPermissionManager(models.Manager):
 
         assigned_perms = []
         for instance in instances:
-            if instance.pk not in existing and str(instance.pk) not in existing:
+            # Direct rows return pks in the field's Python type (e.g. UUID), while a saved
+            # instance may keep the raw value it was created with (e.g. a UUID string).
+            pk = instance.pk if self.is_generic() else instance._meta.pk.to_python(instance.pk)
+            if pk not in existing and str(pk) not in existing:
                 kwargs = {"permission": permission, self.user_or_group_field: user_or_group}
                 if self.is_generic():
                     kwargs["content_type"] = ctype

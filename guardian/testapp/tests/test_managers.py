@@ -17,7 +17,7 @@ from guardian.models import (
 from guardian.models import (
     UserObjectPermission as DefaultUserObjectPermission,
 )
-from guardian.testapp.models import ChildTestModel, ParentTestModel, Project
+from guardian.testapp.models import ChildTestModel, ParentTestModel, Project, UUIDPKModel
 from guardian.utils import get_group_obj_perms_model, get_user_obj_perms_model
 
 User = get_user_model()
@@ -222,6 +222,17 @@ class TestBulkAssignPermDirectRow(TestCase):
         self.assertEqual(ProjectUserObjectPermission.objects.filter(user=self.user).count(), 1)
         self.assertEqual(ProjectGroupObjectPermission.objects.filter(group=self.group).count(), 1)
         self.assertEqual(ProjectGroupObjectPermission.objects.filter(group=other_group).count(), 1)
+
+    def test_direct_model_uuid_pk_given_as_string(self):
+        """An instance keeping a string UUID pk must still match its existing direct row."""
+        permission = Permission.objects.get(codename="change_uuidpkmodel")
+        obj = UUIDPKModel.objects.create(uuid_pk="12345678-1234-5678-1234-567812345678")
+        self.assertIsInstance(obj.pk, str)
+        UUIDPermission = get_user_obj_perms_model(obj)
+        UUIDPermission.objects.assign_perm(permission, self.user, obj)
+
+        self.assertEqual(UUIDPermission.objects.bulk_assign_perm(permission, self.user, [obj]), [])
+        self.assertEqual(UUIDPermission.objects.filter(user=self.user).count(), 1)
 
 
 class TestAssignPermCustomContentType(TestCase):
