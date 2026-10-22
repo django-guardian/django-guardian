@@ -272,3 +272,34 @@ class TestMixedDirectAndGenericObjectPermission(TestCase):
         )
         result = get_objects_for_user(self.joe, "testapp.add_reversemixed")
         self.assertEqual(sorted(p.pk for p in result), sorted([self.reverse_mixed.pk]))
+
+    def test_get_objects_for_user_all_perms_user_generic_group_direct(self):
+        other = Mixed.objects.create(name="Other")
+        assign_perm("change_mixed", self.joe, self.mixed)
+        assign_perm("delete_mixed", self.group, self.mixed)
+        assign_perm("change_mixed", self.joe, other)
+        result = get_objects_for_user(self.joe, ["testapp.change_mixed", "testapp.delete_mixed"])
+        self.assertEqual([obj.pk for obj in result], [self.mixed.pk])
+
+    def test_get_objects_for_user_all_perms_user_direct_group_generic(self):
+        other = ReverseMixed.objects.create(name="Other")
+        assign_perm("change_reversemixed", self.joe, self.reverse_mixed)
+        assign_perm("delete_reversemixed", self.group, self.reverse_mixed)
+        assign_perm("delete_reversemixed", self.group, other)
+        result = get_objects_for_user(self.joe, ["testapp.change_reversemixed", "testapp.delete_reversemixed"])
+        self.assertEqual([obj.pk for obj in result], [self.reverse_mixed.pk])
+
+    def test_get_objects_for_user_all_perms_split_between_user_and_group_several_objects(self):
+        objects = [Mixed.objects.create(name=f"Obj{i}") for i in range(12)]
+        for obj in objects:
+            assign_perm("change_mixed", self.joe, obj)
+        for obj in objects[:10]:
+            assign_perm("delete_mixed", self.group, obj)
+        result = get_objects_for_user(self.joe, ["testapp.change_mixed", "testapp.delete_mixed"])
+        self.assertEqual(sorted(obj.pk for obj in result), sorted(obj.pk for obj in objects[:10]))
+
+    def test_get_objects_for_user_all_perms_without_groups_mixed_models(self):
+        assign_perm("change_mixed", self.joe, self.mixed)
+        assign_perm("delete_mixed", self.group, self.mixed)
+        result = get_objects_for_user(self.joe, ["testapp.change_mixed", "testapp.delete_mixed"], use_groups=False)
+        self.assertEqual(list(result), [])
