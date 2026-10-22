@@ -1,6 +1,10 @@
 from collections.abc import Iterable
+from functools import wraps
 from typing import Any
 
+from asgiref.sync import sync_to_async
+import django
+from django.contrib.auth.backends import BaseBackend
 from django.db import models
 from django.db.models import Model
 from django.http import HttpRequest
@@ -45,6 +49,21 @@ def check_user_support(user_obj: Any) -> tuple[bool, Any]:
     return True, user_obj
 
 
+def _hidden_method(f: Any) -> Any:
+    """Hides an inherited method, so `hasattr(obj, name)` returns `False`.
+
+    The decorated method is replaced by a property that raises `AttributeError`
+    on access, which is what makes `hasattr` report the attribute as missing.
+    The body of the decorated function is never executed.
+    """
+
+    @wraps(f)
+    def raise_attr_error(self, *args: Any, **kwargs: Any):
+        raise AttributeError(f"'{type(self).__name__}' object has no attribute '{f.__name__}'")
+
+    return property(raise_attr_error)
+
+
 def check_support(user_obj: Any, obj: Model) -> Any:
     """Checks if given user and object are supported.
 
@@ -55,7 +74,7 @@ def check_support(user_obj: Any, obj: Model) -> Any:
     return obj_support and user_support, user_obj
 
 
-class ObjectPermissionBackend:
+class ObjectPermissionBackend(BaseBackend):
     """Django backend for checking object-level permissions."""
 
     supports_object_permissions = True
@@ -64,6 +83,22 @@ class ObjectPermissionBackend:
 
     def authenticate(self, request: HttpRequest, username: str | None = None, password: str | None = None) -> Any:
         return None
+
+    # `BaseBackend` always defines `get_user` and `aget_user`, but Django (e.g.
+    # `Client._get_backend`, used by `force_login`) uses `hasattr(backend, "get_user")`
+    # to find a backend able to load users. This backend can't, so it must not look
+    # like it can.
+    # Django 6.2+ only considers backends that override these methods, so the
+    # workaround is only needed before that.
+    if django.VERSION < (6, 2):
+
+        @_hidden_method
+        def get_user(self, user_id: int) -> None:
+            pass
+
+        @_hidden_method
+        async def aget_user(self, user_id: int) -> None:
+            pass
 
     def has_perm(self, user_obj: Any, perm: str, obj: Model | None = None) -> bool:
         """Check if a user has the permission for a given object.
@@ -112,6 +147,59 @@ class ObjectPermissionBackend:
 
         check = ObjectPermissionChecker(user_obj)
         return check.has_perm(perm, obj)
+
+    async def ahas_perm(self, user_obj: Any, perm: str, obj: Model | None = None) -> bool:
+        """Check if a user has the permission for a given object.
+
+        Returns `True` if given `user_obj` has `perm` for `obj`.
+        If no `obj` is given, `False` is returned.
+        The main difference between Django's `ModelBackend` is that we can pass
+        `obj` instance here and `perm` doesn't have to contain
+        `app_label` as it can be retrieved from given `obj`.
+
+        Async version of :meth:`ObjectPermissionBackend.has_perm` using sync_to_async for compatibility.
+
+        **Inactive user support**
+
+        If `user` is authenticated but inactive at the same time, all checks
+        always return `False`.
+
+        Note:
+           Remember, that if user is not *active*, all checks would return `False`.
+
+        Parameters:
+            user_obj (User): User instance.
+            perm (str): Permission string.
+            obj (Model): Model instance.
+
+        Returns:
+            `True` if `user_obj` has permission, `False` otherwise.
+        """
+
+        return await sync_to_async(self.has_perm)(user_obj, perm, obj)
+
+    def get_user_permissions(self, user_obj: Any, obj: Model | None = None) -> Iterable[str]:
+        """Returns user permissions for a given object.
+
+        Parameters:
+            user_obj (User): User instance.
+            obj (Model): Django Model instance. If None, returns empty set
+                        since this backend only handles object-level permissions.
+
+        Returns:
+             a set of permission strings that the given specific `user_obj` has for `obj`.
+        """
+        support, user_obj = check_support(user_obj, obj)
+        if not support:
+            return set()
+
+        check = ObjectPermissionChecker(user_obj)
+
+        # Superusers get all object permissions for the target object.
+        if user_obj.is_superuser:
+            return set(check.get_perms(obj))
+
+        return set(check.get_user_perms(obj))
 
     def get_group_permissions(self, user_obj: Any, obj: Model | None = None) -> Iterable[str]:
         """Returns group permissions for a given object.
