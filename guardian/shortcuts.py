@@ -661,6 +661,10 @@ def get_objects_for_user(
             - If `accept_global_perms` is `True`: An empty list is returned.
             - If `accept_global_perms` is `False`: An empty list is returned.
 
+    Note: Inactive users
+        For inactive users (`is_active=False`), including inactive superusers,
+        an empty QuerySet is returned, matching `user.has_perm()`.
+
     Note: Primary key types
         Standard PK types (integer family, ``UUIDField``, ``CharField``) use
         optimised native casts. Non-standard PK types (e.g. ``TextField``,
@@ -675,15 +679,21 @@ def get_objects_for_user(
     # match which means: ctype.model_class() == queryset.model
     # we should also have `codenames` list
 
-    # First check if user is superuser and if so, return queryset immediately
-    if with_superuser and user.is_superuser:
-        return queryset
-
     # Check if the user is anonymous. The
     # django.contrib.auth.models.AnonymousUser object doesn't work for queries
     # and it's nice to be able to pass in request.user blindly.
     if user.is_anonymous:
         user = get_anonymous_user()
+
+    # Inactive users get no objects, the same way ObjectPermissionChecker and
+    # ObjectPermissionBackend deny them every permission. This is checked after
+    # the anonymous user lookup because AnonymousUser.is_active is always False.
+    if not user.is_active:
+        return queryset.none()
+
+    # Check if user is superuser and if so, return queryset immediately
+    if with_superuser and user.is_superuser:
+        return queryset
 
     has_global_perms = False
     # a superuser has by default assigned global perms for any
