@@ -42,6 +42,7 @@ from guardian.testapp.models import (
     UUIDPKModel,
 )
 from guardian.testapp.tests.test_core import ObjectPermissionTestCase
+from guardian.utils import get_anonymous_user
 
 User = get_user_model()
 user_app_label = User._meta.app_label
@@ -1053,6 +1054,48 @@ class GetObjectsForUser(TestCase):
         assign_perm("change_contenttype", self.user, obj1)
         objects = get_objects_for_user(self.user, ["contenttypes.change_contenttype"], ctypes)
         self.assertEqual({obj1}, set(objects))
+
+    def test_inactive_user(self):
+        obj1 = ContentType.objects.create(model="foo", app_label="guardian-tests")
+        assign_perm("change_contenttype", self.user, obj1)
+        self.user.is_active = False
+        self.user.save()
+
+        objects = get_objects_for_user(self.user, ["contenttypes.change_contenttype"], ContentType.objects.all())
+        self.assertEqual(set(objects), set())
+        self.assertFalse(self.user.has_perm("contenttypes.change_contenttype", obj1))
+
+    def test_inactive_user_with_group_and_global_perms(self):
+        obj1 = ContentType.objects.create(model="foo", app_label="guardian-tests")
+        self.user.groups.add(self.group)
+        assign_perm("change_contenttype", self.group, obj1)
+        assign_perm("contenttypes.delete_contenttype", self.user)
+        self.user.is_active = False
+        self.user.save()
+
+        objects = get_objects_for_user(
+            self.user,
+            ["contenttypes.change_contenttype", "contenttypes.delete_contenttype"],
+            ContentType.objects.all(),
+            any_perm=True,
+        )
+        self.assertEqual(set(objects), set())
+
+    def test_inactive_superuser(self):
+        self.user.is_superuser = True
+        self.user.is_active = False
+        objects = get_objects_for_user(self.user, ["contenttypes.change_contenttype"], ContentType.objects.all())
+        self.assertEqual(set(objects), set())
+
+    def test_inactive_anonymous_user(self):
+        obj1 = ContentType.objects.create(model="foo", app_label="guardian-tests")
+        assign_perm("change_contenttype", AnonymousUser(), obj1)
+        anonymous = get_anonymous_user()
+        anonymous.is_active = False
+        anonymous.save()
+
+        objects = get_objects_for_user(AnonymousUser(), ["contenttypes.change_contenttype"], ContentType.objects.all())
+        self.assertEqual(set(objects), set())
 
     def test_mixed_perms(self):
         codenames = [
