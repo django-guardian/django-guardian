@@ -3,9 +3,16 @@ from unittest import mock
 from django.conf import global_settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, Group
-from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
+from django.core.exceptions import PermissionDenied
 from django.db.models.base import ModelBase
-from django.http import HttpRequest, HttpResponse, HttpResponseForbidden, HttpResponseNotFound, HttpResponseRedirect
+from django.http import (
+    Http404,
+    HttpRequest,
+    HttpResponse,
+    HttpResponseForbidden,
+    HttpResponseNotFound,
+    HttpResponseRedirect,
+)
 from django.shortcuts import get_object_or_404
 from django.template import TemplateDoesNotExist
 from django.test import TestCase
@@ -139,7 +146,7 @@ class PermissionRequiredTest(TestDataMixin, TestCase):
         def dummy_view(request):
             return HttpResponse("dummy_view")
 
-        self.assertRaises(ObjectDoesNotExist, dummy_view, request)
+        self.assertRaises(Http404, dummy_view, request)
 
     def test_anonymous_user_wrong_app(self):
         request = self._get_request(self.anon)
