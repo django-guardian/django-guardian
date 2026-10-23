@@ -132,6 +132,10 @@ class UUIDPKModel(models.Model):
     )
 
 
+class UUIDPKUserObjectPermission(UserObjectPermissionBase):
+    content_object = models.ForeignKey(UUIDPKModel, on_delete=models.CASCADE)
+
+
 class CustomUser(AbstractUser, GuardianUserMixin):
     custom_id = models.AutoField(primary_key=True)
 
