@@ -45,6 +45,9 @@ AUTO_PREFETCH = getattr(settings, "GUARDIAN_AUTO_PREFETCH", False)
 # Restores the pre-3.5.1 get_objects_for_user behaviour fixed in GHSA-5729-mvhf-9gq4. Insecure, removed in 3.6.0.
 LEGACY_GLOBAL_PERMS_GROUP_UNION = getattr(settings, "GUARDIAN_LEGACY_GLOBAL_PERMS_GROUP_UNION", False)
 
+# Restores the pre-3.5.3 get_objects_for_user behaviour for inactive users. Insecure, removed in 3.6.0.
+LEGACY_INACTIVE_USER_OBJECTS = getattr(settings, "GUARDIAN_LEGACY_INACTIVE_USER_OBJECTS", False)
+
 # Anonymous user cache TTL configuration
 # 0 = no cache (default), positive number = cache TTL in seconds, -1 = cache indefinitely
 ANONYMOUS_USER_CACHE_TTL = getattr(settings, "GUARDIAN_ANONYMOUS_USER_CACHE_TTL", 0)
