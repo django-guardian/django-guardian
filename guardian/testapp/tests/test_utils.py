@@ -3,18 +3,21 @@ from unittest.mock import MagicMock, patch
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, Group
 from django.contrib.contenttypes.models import ContentType
+from django.core.cache import cache
 from django.db import models
 from django.test import TestCase, override_settings
 
+from guardian.conf import settings as guardian_settings
 from guardian.exceptions import NotUserNorGroup
 from guardian.models import GroupObjectPermission, UserObjectPermission, UserObjectPermissionBase
 from guardian.testapp.models import Project, ProjectGroupObjectPermission, ProjectUserObjectPermission
-from guardian.testapp.tests.conf import skipUnlessTestApp
+from guardian.testapp.tests.conf import delete_anonymous_user, skipUnlessTestApp
 from guardian.testapp.tests.test_core import ObjectPermissionTestCase
 from guardian.utils import (
     _get_anonymous_user_cached,
     _get_anonymous_user_uncached,
     get_anonymous_user,
+    get_anonymous_user_or_none,
     get_group_obj_perms_model,
     get_identity,
     get_obj_perms_model,
@@ -28,6 +31,60 @@ class GetAnonymousUserTest(TestCase):
     def test(self):
         anon = get_anonymous_user()
         self.assertTrue(isinstance(anon, User))
+
+
+class GetAnonymousUserOrNoneTest(TestCase):
+    """get_anonymous_user_or_none() returns None instead of raising DoesNotExist (#1047)."""
+
+    def setUp(self):
+        cache.clear()
+
+    def tearDown(self):
+        cache.clear()
+
+    def test_returns_anonymous_user(self):
+        anon = get_anonymous_user_or_none()
+        self.assertEqual(anon.username, guardian_settings.ANONYMOUS_USER_NAME)
+
+    def test_disabled_returns_none_without_query_or_warning(self):
+        with (
+            patch("guardian.conf.settings.ANONYMOUS_USER_NAME", None),
+            self.assertNumQueries(0),
+            self.assertNoLogs("guardian.utils"),
+        ):
+            self.assertIsNone(get_anonymous_user_or_none())
+
+    def test_missing_row_returns_none_and_warns(self):
+        delete_anonymous_user()
+        with self.assertLogs("guardian.utils", level="WARNING"):
+            self.assertIsNone(get_anonymous_user_or_none())
+
+    def test_missing_row_with_cache_returns_none_and_warns(self):
+        delete_anonymous_user()
+        with (
+            patch("guardian.conf.settings.ANONYMOUS_USER_CACHE_TTL", 300),
+            self.assertLogs("guardian.utils", level="WARNING"),
+        ):
+            self.assertIsNone(get_anonymous_user_or_none())
+
+    def test_missing_row_warns_once(self):
+        delete_anonymous_user()
+        with self.assertLogs("guardian.utils", level="WARNING") as logs:
+            get_anonymous_user_or_none()
+            get_anonymous_user_or_none()
+        self.assertEqual(len(logs.records), 1)
+        self.assertIn("manage.py migrate", logs.output[0])
+
+    def test_recovers_when_row_is_recreated(self):
+        # A missing row must not be cached, so recreating it (e.g. via migrate) restores access
+        delete_anonymous_user()
+        with (
+            patch("guardian.conf.settings.ANONYMOUS_USER_CACHE_TTL", 300),
+            self.assertLogs("guardian.utils", level="WARNING"),
+        ):
+            self.assertIsNone(get_anonymous_user_or_none())
+            anon = User.objects.create(username=guardian_settings.ANONYMOUS_USER_NAME)
+            self.assertEqual(get_anonymous_user_or_none(), anon)
 
 
 class GetIdentityTest(ObjectPermissionTestCase):
