@@ -178,9 +178,9 @@ def assign_perm(
 
 
 def assign(perm, user_or_group, obj=None):
-    """Depreciated function name left in for compatibility"""
+    """Deprecated function name retained for backwards compatibility"""
     warnings.warn(
-        "Shortcut function 'assign' is being renamed to 'assign_perm'. Update your code accordingly as old name will be depreciated in 2.0 version.",
+        "Shortcut function 'assign' is being renamed to 'assign_perm'. Use 'assign_perm' instead; 'assign' is deprecated and retained for backwards compatibility.",
         DeprecationWarning,
     )
     return assign_perm(perm, user_or_group, obj)
