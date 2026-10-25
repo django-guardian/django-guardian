@@ -1097,6 +1097,51 @@ class GetObjectsForUser(TestCase):
         objects = get_objects_for_user(AnonymousUser(), ["contenttypes.change_contenttype"], ContentType.objects.all())
         self.assertEqual(set(objects), set())
 
+    @mock.patch("guardian.shortcuts.guardian_settings.LEGACY_INACTIVE_USER_OBJECTS", True)
+    def test_inactive_user_legacy(self):
+        # Legacy (pre-3.5.3) behaviour: inactive users get objects like active users.
+        obj1 = ContentType.objects.create(model="foo", app_label="guardian-tests")
+        assign_perm("change_contenttype", self.user, obj1)
+        self.user.is_active = False
+        self.user.save()
+
+        with self.assertWarns(DeprecationWarning):
+            objects = get_objects_for_user(self.user, ["contenttypes.change_contenttype"], ContentType.objects.all())
+        self.assertEqual(set(objects), {obj1})
+
+    @mock.patch("guardian.shortcuts.guardian_settings.LEGACY_INACTIVE_USER_OBJECTS", True)
+    def test_inactive_superuser_legacy(self):
+        self.user.is_superuser = True
+        self.user.is_active = False
+
+        with self.assertWarns(DeprecationWarning):
+            objects = get_objects_for_user(self.user, ["contenttypes.change_contenttype"], ContentType.objects.all())
+        self.assertEqual(set(objects), set(ContentType.objects.all()))
+
+    @mock.patch("guardian.shortcuts.guardian_settings.LEGACY_INACTIVE_USER_OBJECTS", True)
+    def test_inactive_anonymous_user_legacy(self):
+        obj1 = ContentType.objects.create(model="foo", app_label="guardian-tests")
+        assign_perm("change_contenttype", AnonymousUser(), obj1)
+        anonymous = get_anonymous_user()
+        anonymous.is_active = False
+        anonymous.save()
+
+        with self.assertWarns(DeprecationWarning):
+            objects = get_objects_for_user(
+                AnonymousUser(), ["contenttypes.change_contenttype"], ContentType.objects.all()
+            )
+        self.assertEqual(set(objects), {obj1})
+
+    @mock.patch("guardian.shortcuts.guardian_settings.LEGACY_INACTIVE_USER_OBJECTS", True)
+    def test_legacy_inactive_setting_does_not_warn_for_active_users(self):
+        obj1 = ContentType.objects.create(model="foo", app_label="guardian-tests")
+        assign_perm("change_contenttype", self.user, obj1)
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", DeprecationWarning)
+            objects = get_objects_for_user(self.user, ["contenttypes.change_contenttype"], ContentType.objects.all())
+        self.assertEqual(set(objects), {obj1})
+
     def test_mixed_perms(self):
         codenames = [
             get_user_permission_full_codename("change"),

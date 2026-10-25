@@ -663,7 +663,9 @@ def get_objects_for_user(
 
     Note: Inactive users
         For inactive users (`is_active=False`), including inactive superusers,
-        an empty QuerySet is returned, matching `user.has_perm()`.
+        an empty QuerySet is returned, matching `user.has_perm()`. Setting
+        `GUARDIAN_LEGACY_INACTIVE_USER_OBJECTS = True` restores the pre-3.5.3
+        behaviour; it is deprecated and will be removed in 3.6.0.
 
     Note: Primary key types
         Standard PK types (integer family, ``UUIDField``, ``CharField``) use
@@ -689,7 +691,15 @@ def get_objects_for_user(
     # ObjectPermissionBackend deny them every permission. This is checked after
     # the anonymous user lookup because AnonymousUser.is_active is always False.
     if not user.is_active:
-        return queryset.none()
+        if not guardian_settings.LEGACY_INACTIVE_USER_OBJECTS:
+            return queryset.none()
+        # This feature will be removed in 3.6.0.
+        warnings.warn(
+            "GUARDIAN_LEGACY_INACTIVE_USER_OBJECTS is deprecated and will be removed in 3.6.0. "
+            "It makes get_objects_for_user return objects to inactive users.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
     # Check if user is superuser and if so, return queryset immediately
     if with_superuser and user.is_superuser:
