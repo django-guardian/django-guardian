@@ -143,9 +143,9 @@ class BaseObjectPermissionManager(models.Manager):
         return self.model.objects.bulk_create(to_add, ignore_conflicts=ignore_conflicts)
 
     def assign(self, perm: _PermType, user_or_group: Any, obj: Model) -> Any:
-        """Depreciated function name left in for compatibility"""
+        """Deprecated function name retained for backwards compatibility"""
         warnings.warn(
-            "UserObjectPermissionManager method 'assign' is being renamed to 'assign_perm'. Update your code accordingly as old name will be depreciated in 2.0 version.",
+            "UserObjectPermissionManager method 'assign' is being renamed to 'assign_perm'. Use 'assign_perm' instead; 'assign' is deprecated and retained for backwards compatibility.",
             DeprecationWarning,
         )
         return self.assign_perm(perm, user_or_group, obj)
