@@ -17,7 +17,7 @@ from guardian.models import (
 from guardian.models import (
     UserObjectPermission as DefaultUserObjectPermission,
 )
-from guardian.testapp.models import ChildTestModel, ParentTestModel, Project, UUIDPKModel
+from guardian.testapp.models import ChildTestModel, ParentTestModel, Project, UUIDPKModel, UUIDPKUserObjectPermission
 from guardian.utils import get_group_obj_perms_model, get_user_obj_perms_model
 
 User = get_user_model()
@@ -228,11 +228,10 @@ class TestBulkAssignPermDirectRow(TestCase):
         permission = Permission.objects.get(codename="change_uuidpkmodel")
         obj = UUIDPKModel.objects.create(uuid_pk="12345678-1234-5678-1234-567812345678")
         self.assertIsInstance(obj.pk, str)
-        UUIDPermission = get_user_obj_perms_model(obj)
-        UUIDPermission.objects.assign_perm(permission, self.user, obj)
+        UUIDPKUserObjectPermission.objects.assign_perm(permission, self.user, obj)
 
-        self.assertEqual(UUIDPermission.objects.bulk_assign_perm(permission, self.user, [obj]), [])
-        self.assertEqual(UUIDPermission.objects.filter(user=self.user).count(), 1)
+        self.assertEqual(UUIDPKUserObjectPermission.objects.bulk_assign_perm(permission, self.user, [obj]), [])
+        self.assertEqual(UUIDPKUserObjectPermission.objects.filter(user=self.user).count(), 1)
 
 
 class TestAssignPermCustomContentType(TestCase):

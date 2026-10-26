@@ -106,7 +106,7 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
             # (again: content type and actual permissions for the object...
             query_count = len(connection.queries)
             checker.has_perm("change_user", self.user)
-            self.assertEqual(len(connection.queries), query_count + 5)
+            self.assertEqual(len(connection.queries), query_count + 4)
 
         finally:
             settings.DEBUG = False
