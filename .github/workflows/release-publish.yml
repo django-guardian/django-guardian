@@ -16,7 +16,7 @@ on:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: write
     steps:
@@ -85,7 +85,7 @@ jobs:
         skipIfReleaseExists: true
 
   publish:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       id-token: write
     needs: release

@@ -14,7 +14,7 @@ env:
 
 jobs:
   pre-commit:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
     - name: Checkout code
       uses: actions/checkout@v7.0.1
@@ -36,7 +36,7 @@ jobs:
       run: pre-commit run --all-files
 
   tests:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs: pre-commit
     strategy:
       fail-fast: false
