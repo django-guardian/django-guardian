@@ -5,11 +5,10 @@ from django.db import models
 from django.db.models import Model
 from django.http import HttpRequest
 
-from guardian.conf import settings
 from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type
 from guardian.exceptions import WrongAppError
-from guardian.utils import get_anonymous_user
+from guardian.utils import get_anonymous_user_or_none
 
 
 def check_object_support(obj: Model) -> bool:
@@ -36,11 +35,13 @@ def check_user_support(user_obj: Any) -> tuple[bool, Any]:
     # This is how we support anonymous users - simply try to retrieve User
     # instance and perform checks for that predefined user
     if not user_obj.is_authenticated:
-        # If anonymous user permission is disabled, then they are always unauthorized
-        if settings.ANONYMOUS_USER_NAME is None:
+        # If anonymous user permission is disabled or the anonymous user row is
+        # missing, then they are always unauthorized.
+        # get_anonymous_user_or_none() honours GUARDIAN_ANONYMOUS_USER_CACHE_TTL
+        anonymous_user = get_anonymous_user_or_none()
+        if anonymous_user is None:
             return False, user_obj
-        # get_anonymous_user() honours GUARDIAN_ANONYMOUS_USER_CACHE_TTL
-        user_obj = get_anonymous_user()
+        user_obj = anonymous_user
 
     return True, user_obj
 

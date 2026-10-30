@@ -37,7 +37,7 @@ from guardian.exceptions import (
     WrongAppError,
 )
 from guardian.utils import (
-    get_anonymous_user,
+    get_anonymous_user_or_none,
     get_group_obj_perms_model,
     get_identity,
     get_user_obj_perms_model,
@@ -270,6 +270,7 @@ def get_perms(user_or_group: Any, obj: Model) -> list[str]:
     Note:
         For inactive users (is_active=False), returns empty list [].
         For superusers, returns all available permissions for the object's model.
+        For `AnonymousUser` when anonymous support is unavailable, returns empty list [].
     """
     check = ObjectPermissionChecker(user_or_group)
     return check.get_perms(obj)
@@ -292,6 +293,7 @@ def get_user_perms(user: Any, obj: Model) -> QuerySet:
     Note:
         For inactive users (is_active=False), returns empty QuerySet.
         Return type is QuerySet, not list (unlike get_perms()).
+        For `AnonymousUser` when anonymous support is unavailable, returns empty QuerySet.
     """
     check = ObjectPermissionChecker(user)
     return check.get_user_perms(obj)
@@ -316,6 +318,7 @@ def get_group_perms(user_or_group: Any, obj: Model) -> QuerySet[Permission]:
         For inactive users (is_active=False), returns empty QuerySet.
         Return type is QuerySet, not list (unlike get_perms()).
         Does NOT include direct user permissions.
+        For `AnonymousUser` when anonymous support is unavailable, returns empty QuerySet.
     """
     check = ObjectPermissionChecker(user_or_group)
     return check.get_group_perms(obj)
@@ -681,9 +684,12 @@ def get_objects_for_user(
 
     # Check if the user is anonymous. The
     # django.contrib.auth.models.AnonymousUser object doesn't work for queries
-    # and it's nice to be able to pass in request.user blindly.
+    # and it's nice to be able to pass in request.user blindly. If anonymous
+    # support is disabled or the anonymous user row is missing, they get nothing.
     if user.is_anonymous:
-        user = get_anonymous_user()
+        user = get_anonymous_user_or_none()
+        if user is None:
+            return queryset.none()
 
     has_global_perms = False
     # a superuser has by default assigned global perms for any

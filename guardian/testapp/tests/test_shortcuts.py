@@ -41,6 +41,7 @@ from guardian.testapp.models import (
     TextPKModel,
     UUIDPKModel,
 )
+from guardian.testapp.tests.conf import delete_anonymous_user
 from guardian.testapp.tests.test_core import ObjectPermissionTestCase
 
 User = get_user_model()
@@ -527,6 +528,30 @@ class GetPermsTest(ObjectPermissionTestCase):
         perms = get_perms(self.user, self.ctype)
         for perm in perms_to_assign:
             self.assertTrue(perm in perms)
+
+
+class AnonymousUnavailablePermsTest(ObjectPermissionTestCase):
+    """Read shortcuts return no permissions instead of raising DoesNotExist (#1047)."""
+
+    def assert_no_perms(self):
+        anon = AnonymousUser()
+        self.assertEqual(get_perms(anon, self.ctype), [])
+        self.assertEqual(list(get_user_perms(anon, self.ctype)), [])
+        self.assertEqual(list(get_group_perms(anon, self.ctype)), [])
+
+    def test_anonymous_disabled(self):
+        with mock.patch("guardian.conf.settings.ANONYMOUS_USER_NAME", None):
+            self.assert_no_perms()
+
+    def test_anonymous_missing_row(self):
+        delete_anonymous_user()
+        with self.assertLogs("guardian.utils", level="WARNING"):
+            self.assert_no_perms()
+
+    def test_anonymous_available(self):
+        assign_perm("change_contenttype", AnonymousUser(), self.ctype)
+        self.assertEqual(get_perms(AnonymousUser(), self.ctype), ["change_contenttype"])
+        self.assertEqual(list(get_user_perms(AnonymousUser(), self.ctype)), ["change_contenttype"])
 
 
 class GetUsersWithPermsTest(TestCase):
@@ -1053,6 +1078,19 @@ class GetObjectsForUser(TestCase):
         assign_perm("change_contenttype", self.user, obj1)
         objects = get_objects_for_user(self.user, ["contenttypes.change_contenttype"], ctypes)
         self.assertEqual({obj1}, set(objects))
+
+    def test_anonymous_disabled_returns_empty_queryset(self):
+        ContentType.objects.create(model="foo", app_label="guardian-tests")
+        with mock.patch("guardian.conf.settings.ANONYMOUS_USER_NAME", None):
+            objects = get_objects_for_user(AnonymousUser(), ["contenttypes.change_contenttype"], ContentType)
+        self.assertEqual(set(), set(objects))
+
+    def test_anonymous_missing_row_returns_empty_queryset(self):
+        delete_anonymous_user()
+        ContentType.objects.create(model="foo", app_label="guardian-tests")
+        with self.assertLogs("guardian.utils", level="WARNING"):
+            objects = get_objects_for_user(AnonymousUser(), ["contenttypes.change_contenttype"], ContentType)
+        self.assertEqual(set(), set(objects))
 
     def test_mixed_perms(self):
         codenames = [

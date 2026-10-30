@@ -9,6 +9,7 @@ from guardian.backends import ObjectPermissionBackend, check_user_support
 from guardian.conf import settings as guardian_settings
 from guardian.shortcuts import assign_perm, remove_perm
 from guardian.testapp.models import Project
+from guardian.testapp.tests.conf import delete_anonymous_user
 
 User = get_user_model()
 
@@ -188,7 +189,7 @@ class CheckUserSupportAnonymousCacheTest(TestCase):
         cache.clear()
 
     def test_uses_get_anonymous_user(self):
-        with patch("guardian.backends.get_anonymous_user", return_value=self.anonymous_user) as mock_get:
+        with patch("guardian.utils.get_anonymous_user", return_value=self.anonymous_user) as mock_get:
             supported, user_obj = check_user_support(AnonymousUser())
 
         mock_get.assert_called_once_with()
@@ -207,3 +208,42 @@ class CheckUserSupportAnonymousCacheTest(TestCase):
     def test_anonymous_lookup_hits_database_without_cache(self):
         with patch("guardian.conf.settings.ANONYMOUS_USER_CACHE_TTL", 0), self.assertNumQueries(1):
             check_user_support(AnonymousUser())
+
+
+class CheckUserSupportMissingAnonymousTest(TestCase):
+    """Anonymous checks deny access instead of crashing when the anonymous row is missing (#1047)."""
+
+    def setUp(self):
+        cache.clear()
+        delete_anonymous_user()
+        self.project = Project.objects.create(name="Test Project")
+
+    def tearDown(self):
+        cache.clear()
+
+    def test_check_user_support_denies_and_warns(self):
+        anon = AnonymousUser()
+        with self.assertLogs("guardian.utils", level="WARNING"):
+            supported, user_obj = check_user_support(anon)
+
+        self.assertFalse(supported)
+        self.assertIs(user_obj, anon)
+
+    def test_backend_methods_deny(self):
+        backend = ObjectPermissionBackend()
+        with self.assertLogs("guardian.utils", level="WARNING"):
+            self.assertFalse(backend.has_perm(AnonymousUser(), "testapp.change_project", self.project))
+            self.assertEqual(backend.get_all_permissions(AnonymousUser(), self.project), set())
+            self.assertEqual(backend.get_group_permissions(AnonymousUser(), self.project), set())
+
+
+class CheckUserSupportAnonymousDisabledTest(TestCase):
+    """Anonymous checks deny access when ANONYMOUS_USER_NAME is None."""
+
+    def test_check_user_support_denies(self):
+        anon = AnonymousUser()
+        with patch("guardian.conf.settings.ANONYMOUS_USER_NAME", None), self.assertNumQueries(0):
+            supported, user_obj = check_user_support(anon)
+
+        self.assertFalse(supported)
+        self.assertIs(user_obj, anon)

@@ -1,4 +1,5 @@
 from itertools import chain
+from unittest.mock import patch
 
 from django.apps import apps as django_apps
 from django.conf import settings
@@ -24,6 +25,7 @@ from guardian.testapp.models import (
     ProjectUserObjectPermission,
     ReverseMixedUserObjectPermission,
 )
+from guardian.testapp.tests.conf import delete_anonymous_user
 from guardian.utils import evict_obj_perms_cache
 
 auth_app = django_apps.get_app_config("auth")
@@ -120,6 +122,25 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
         check = ObjectPermissionChecker(user)
         # assert anonymous user has no object permissions at all for obj
         self.assertTrue([] == list(check.get_perms(self.ctype)))
+
+    def assert_anonymous_checker_grants_nothing(self):
+        check = ObjectPermissionChecker(AnonymousUser())
+        check.prefetch_perms(ContentType.objects.filter(pk=self.ctype.pk))
+        self.assertFalse(check.has_perm("change_contenttype", self.ctype))
+        self.assertEqual(check.get_perms(self.ctype), [])
+        self.assertEqual(list(check.get_user_perms(self.ctype)), [])
+        self.assertEqual(list(check.get_group_perms(self.ctype)), [])
+
+    def test_anonymous_user_support_disabled(self):
+        # #1047: previously raised DoesNotExist looking up username=None
+        with patch("guardian.conf.settings.ANONYMOUS_USER_NAME", None):
+            self.assert_anonymous_checker_grants_nothing()
+
+    def test_anonymous_user_row_missing(self):
+        # #1047: previously raised DoesNotExist; perms are deleted with the row, so denying is accurate
+        delete_anonymous_user()
+        with self.assertLogs("guardian.utils", level="WARNING"):
+            self.assert_anonymous_checker_grants_nothing()
 
     def test_superuser(self):
         user = User.objects.create(username="superuser", is_superuser=True)
