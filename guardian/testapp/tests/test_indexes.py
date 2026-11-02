@@ -43,6 +43,15 @@ class IndexTestCase(TransactionTestCase):
             if constraint_info.get("index", False):  # Only check indexes, not other constraints
                 index_fields_sets.append(set(constraint_info["columns"]))
 
+        # A lookup by content type and object alone cannot use either of the
+        # principal-first indexes, so the pair needs an index of its own. The
+        # subset checks below would pass on those wider indexes alone, which is
+        # how this regression slipped through.
+        self.assertTrue(
+            any(index_set == {"content_type_id", "object_pk"} for index_set in index_fields_sets),
+            f"Expected an index on (content_type, object_pk), found only: {index_fields_sets}",
+        )
+
         # Check if our expected indexes exist (using sets to ignore order)
         expected_indexes = [
             {"permission_id", "user_id", "content_type_id", "object_pk"},
@@ -71,6 +80,15 @@ class IndexTestCase(TransactionTestCase):
         for constraint_name, constraint_info in indexes.items():
             if constraint_info.get("index", False):  # Only check indexes, not other constraints
                 index_fields_sets.append(set(constraint_info["columns"]))
+
+        # A lookup by content type and object alone cannot use either of the
+        # principal-first indexes, so the pair needs an index of its own. The
+        # subset checks below would pass on those wider indexes alone, which is
+        # how this regression slipped through.
+        self.assertTrue(
+            any(index_set == {"content_type_id", "object_pk"} for index_set in index_fields_sets),
+            f"Expected an index on (content_type, object_pk), found only: {index_fields_sets}",
+        )
 
         # Check if our expected indexes exist (using sets to ignore order)
         expected_indexes = [
