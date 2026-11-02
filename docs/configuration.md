@@ -191,6 +191,28 @@ legacy path emits a `DeprecationWarning`.
 
 Defaults to `False`.
 
+## `GUARDIAN_LEGACY_INACTIVE_USER_OBJECTS`
+
+!!! abstract "Added in version 3.5.3"
+
+!!! danger "Deprecated, removed in version 3.6.0"
+
+    This setting re-enables the behaviour fixed in
+    [#1052](https://github.com/django-guardian/django-guardian/issues/1052).
+    Use it only as a short-term migration aid.
+
+Before 3.5.3, `get_objects_for_user` returned objects to inactive users
+(`is_active=False`) in the same way as to active ones, and an inactive
+superuser got the whole queryset, although `user.has_perm()` denies inactive
+users every permission. Since 3.5.3 it returns an empty queryset for them.
+This includes the anonymous user: if its row is inactive, anonymous visitors
+get no objects either.
+
+Set this to `True` to restore the old behaviour. Every call for an inactive
+user then emits a `DeprecationWarning`.
+
+Defaults to `False`.
+
 ## `GUARDIAN_ANONYMOUS_USER_CACHE_TTL`
 
 !!! abstract "Added in version 3.1.3"
