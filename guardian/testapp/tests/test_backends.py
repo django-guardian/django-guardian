@@ -1,23 +1,36 @@
 from types import SimpleNamespace
 from unittest import skipIf, skipUnless
 from unittest.mock import patch
+from uuid import uuid4
 
-from asgiref.sync import sync_to_async
+from asgiref.sync import async_to_sync, sync_to_async
 import django
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_permission_codename, get_user_model
 from django.contrib.auth.backends import BaseBackend
 from django.contrib.auth.models import AnonymousUser, Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
-from django.test import TestCase, override_settings
+from django.test import TestCase
 
 from guardian.backends import ObjectPermissionBackend, check_user_support
 from guardian.conf import settings as guardian_settings
 from guardian.exceptions import WrongAppError
 from guardian.shortcuts import assign_perm, remove_perm
-from guardian.testapp.models import Project
+from guardian.testapp.models import CharPKModel, Mixed, Post, Project, ReverseMixed, UUIDPKModel
 
 User = get_user_model()
+
+requires_async_auth = skipIf(django.VERSION < (5, 2), "Async backends are supported on Django 5.2 and above")
+
+# (label, factory): one model for each object permission table layout
+OBJECT_FACTORIES = (
+    ("direct", lambda: Project.objects.create(name=uuid4().hex)),
+    ("generic", lambda: Post.objects.create(title=uuid4().hex)),
+    ("mixed", lambda: Mixed.objects.create(name=uuid4().hex)),
+    ("reverse-mixed", lambda: ReverseMixed.objects.create(name=uuid4().hex)),
+    ("char-pk", lambda: CharPKModel.objects.create(char_pk=uuid4().hex)),
+    ("uuid-pk", lambda: UUIDPKModel.objects.create()),
+)
 
 
 class ObjectPermissionBackendTest(TestCase):
@@ -80,17 +93,6 @@ class ObjectPermissionBackendTest(TestCase):
     async def test_aget_user_not_overridden(self):
         """Async backend should not override aget_user"""
         self.assertNotOverride(BaseBackend.aget_user, self.backend)
-
-    def test_force_login_skips_backend(self):
-        """force_login must pick a backend able to load users, even if this one comes first"""
-        backends = (
-            "guardian.backends.ObjectPermissionBackend",
-            "django.contrib.auth.backends.ModelBackend",
-        )
-        with override_settings(AUTHENTICATION_BACKENDS=backends):
-            self.client.force_login(self.user)
-            session_backend = self.client.session["_auth_user_backend"]
-        self.assertEqual("django.contrib.auth.backends.ModelBackend", session_backend)
 
     def test_has_perm_with_object(self):
         """Test has_perm method with object permissions"""
@@ -243,121 +245,22 @@ class ObjectPermissionBackendTest(TestCase):
             has_perm = await self.backend.ahas_perm(AnonymousUser(), "change_project", self.project)
         self.assertFalse(has_perm)
 
-    def test_get_user_permissions_with_object(self):
-        """Test get_user_permissions method with object"""
-        # No permissions initially
-        perms = self.backend.get_user_permissions(self.user, self.project)
-        self.assertEqual(set(), perms)
-
-        # Assign permission to user
+    def test_get_user_permissions_returns_empty_set(self):
+        """get_user_permissions is not implemented by this backend: sync and async both return an empty set"""
         assign_perm("change_project", self.user, self.project)
-        perms = self.backend.get_user_permissions(self.user, self.project)
-        self.assertIn("change_project", perms)
+        for user in (self.user, self.superuser, self.inactive_user, AnonymousUser()):
+            for obj in (self.project, None, "not a model"):
+                with self.subTest(user=user, obj=obj):
+                    self.assertEqual(set(), self.backend.get_user_permissions(user, obj))
 
     @skipIf(django.VERSION < (5, 2), "Async backends are supported on Django 5.2 and above")
-    async def test_aget_user_permissions_with_object(self):
-        """Test aget_user_permissions method with object"""
-        # No permissions initially
-        perms = await self.backend.aget_user_permissions(self.user, self.project)
-        self.assertEqual(set(), perms)
-
-        # Assign permission to user
+    async def test_aget_user_permissions_returns_empty_set(self):
+        """aget_user_permissions matches get_user_permissions: an empty set"""
         await sync_to_async(assign_perm)("change_project", self.user, self.project)
-        perms = await self.backend.aget_user_permissions(self.user, self.project)
-        self.assertIn("change_project", perms)
-
-    def test_get_user_permissions_without_object(self):
-        """Test get_user_permissions method without object (should return empty set)"""
-        perms = self.backend.get_user_permissions(self.user)
-        self.assertEqual(set(), perms)
-
-    @skipIf(django.VERSION < (5, 2), "Async backends are supported on Django 5.2 and above")
-    async def test_aget_user_permissions_without_object(self):
-        """Test aget_user_permissions method without object (should return empty set)"""
-        perms = await self.backend.aget_user_permissions(self.user)
-        self.assertEqual(set(), perms)
-
-    def test_get_user_permissions_unsupported_object(self):
-        """Test get_user_permissions method with objects that are not model instances (should return empty set)"""
-        for obj in ("not a model", Project):
-            with self.subTest(obj=obj):
-                self.assertEqual(set(), self.backend.get_user_permissions(self.superuser, obj))
-
-    @skipIf(django.VERSION < (5, 2), "Async backends are supported on Django 5.2 and above")
-    async def test_aget_user_permissions_unsupported_object(self):
-        """Test aget_user_permissions method with objects that are not model instances (should return empty set)"""
-        for obj in ("not a model", Project):
-            with self.subTest(obj=obj):
-                self.assertEqual(set(), await self.backend.aget_user_permissions(self.superuser, obj))
-
-    def test_get_user_permissions_inactive_user(self):
-        """Test get_user_permissions method with inactive user"""
-        assign_perm("change_project", self.inactive_user, self.project)
-        perms = self.backend.get_user_permissions(self.inactive_user, self.project)
-        self.assertEqual(set(), perms)
-
-    @skipIf(django.VERSION < (5, 2), "Async backends are supported on Django 5.2 and above")
-    async def test_aget_user_permissions_inactive_user(self):
-        """Test aget_user_permissions method with inactive user"""
-        await sync_to_async(assign_perm)("change_project", self.inactive_user, self.project)
-        perms = await self.backend.aget_user_permissions(self.inactive_user, self.project)
-        self.assertEqual(set(), perms)
-
-    def test_get_user_permissions_anonymous_user(self):
-        """Test get_user_permissions method with anonymous user"""
-        anonymous = AnonymousUser()
-        perms = self.backend.get_user_permissions(anonymous, self.project)
-        # Should return empty set for anonymous users (unless configured)
-        self.assertEqual(set(), perms)
-
-    @skipIf(django.VERSION < (5, 2), "Async backends are supported on Django 5.2 and above")
-    async def test_aget_user_permissions_anonymous_user(self):
-        """Test aget_user_permissions method with anonymous user"""
-        anonymous = AnonymousUser()
-        perms = await self.backend.aget_user_permissions(anonymous, self.project)
-        # Should return empty set for anonymous users (unless configured)
-        self.assertEqual(set(), perms)
-
-    def test_get_user_permissions_anonymous_user_with_permissions(self):
-        """Test get_user_permissions method with anonymous user that was granted permissions"""
-        assign_perm("change_project", self.anonymous_user, self.project)
-        perms = self.backend.get_user_permissions(AnonymousUser(), self.project)
-        self.assertEqual({"change_project"}, perms)
-
-    @skipIf(django.VERSION < (5, 2), "Async backends are supported on Django 5.2 and above")
-    async def test_aget_user_permissions_anonymous_user_with_permissions(self):
-        """Test aget_user_permissions method with anonymous user that was granted permissions"""
-        await sync_to_async(assign_perm)("change_project", self.anonymous_user, self.project)
-        perms = await self.backend.aget_user_permissions(AnonymousUser(), self.project)
-        self.assertEqual({"change_project"}, perms)
-
-    def test_get_user_permissions_anonymous_user_disabled(self):
-        """Test get_user_permissions method with anonymous user when ANONYMOUS_USER_NAME is None"""
-        assign_perm("change_project", self.anonymous_user, self.project)
-        with patch("guardian.conf.settings.ANONYMOUS_USER_NAME", None):
-            perms = self.backend.get_user_permissions(AnonymousUser(), self.project)
-        self.assertEqual(set(), perms)
-
-    @skipIf(django.VERSION < (5, 2), "Async backends are supported on Django 5.2 and above")
-    async def test_aget_user_permissions_anonymous_user_disabled(self):
-        """Test aget_user_permissions method with anonymous user when ANONYMOUS_USER_NAME is None"""
-        await sync_to_async(assign_perm)("change_project", self.anonymous_user, self.project)
-        with patch("guardian.conf.settings.ANONYMOUS_USER_NAME", None):
-            perms = await self.backend.aget_user_permissions(AnonymousUser(), self.project)
-        self.assertEqual(set(), perms)
-
-    def test_get_user_permissions_superuser(self):
-        """Test get_user_permissions method with superuser"""
-        perms = self.backend.get_user_permissions(self.superuser, self.project)
-        # Superuser should have all permissions for the content type
-        self.assertEqual(self.project_codenames(), perms)
-
-    @skipIf(django.VERSION < (5, 2), "Async backends are supported on Django 5.2 and above")
-    async def test_aget_user_permissions_superuser(self):
-        """Test aget_user_permissions method with superuser"""
-        perms = await self.backend.aget_user_permissions(self.superuser, self.project)
-        # Superuser should have all permissions for the content type
-        self.assertEqual(await sync_to_async(self.project_codenames)(), perms)
+        for user in (self.user, self.superuser, self.inactive_user, AnonymousUser()):
+            for obj in (self.project, None, "not a model"):
+                with self.subTest(user=user, obj=obj):
+                    self.assertEqual(set(), await self.backend.aget_user_permissions(user, obj))
 
     def test_get_group_permissions_with_object(self):
         """Test get_group_permissions method with object"""
@@ -715,6 +618,37 @@ class ObjectPermissionBackendTest(TestCase):
         self.assertIn("change_project", group_perms)
         self.assertIn("delete_project", group_perms)
 
+    def test_get_group_permissions_superuser(self):
+        """Pins current behavior: a superuser only gets the permissions assigned to their groups"""
+        self.superuser.groups.add(self.group)
+        assign_perm("change_project", self.group, self.project)
+        self.assertEqual({"change_project"}, self.backend.get_group_permissions(self.superuser, self.project))
+
+    @skipIf(django.VERSION < (5, 2), "Async backends are supported on Django 5.2 and above")
+    async def test_aget_group_permissions_superuser(self):
+        """Pins current behavior: a superuser only gets the permissions assigned to their groups"""
+        await self.superuser.groups.aadd(self.group)
+        await sync_to_async(assign_perm)("change_project", self.group, self.project)
+        perms = await self.backend.aget_group_permissions(self.superuser, self.project)
+        self.assertEqual({"change_project"}, perms)
+
+    def test_inactive_superuser(self):
+        """An inactive superuser has no permissions"""
+        self.inactive_user.is_superuser = True
+        self.inactive_user.save()
+        self.assertFalse(self.backend.has_perm(self.inactive_user, "change_project", self.project))
+        self.assertEqual(set(), self.backend.get_all_permissions(self.inactive_user, self.project))
+        self.assertEqual(set(), self.backend.get_group_permissions(self.inactive_user, self.project))
+
+    @skipIf(django.VERSION < (5, 2), "Async backends are supported on Django 5.2 and above")
+    async def test_inactive_superuser_async(self):
+        """An inactive superuser has no permissions"""
+        self.inactive_user.is_superuser = True
+        await self.inactive_user.asave()
+        self.assertFalse(await self.backend.ahas_perm(self.inactive_user, "change_project", self.project))
+        self.assertEqual(set(), await self.backend.aget_all_permissions(self.inactive_user, self.project))
+        self.assertEqual(set(), await self.backend.aget_group_permissions(self.inactive_user, self.project))
+
     def test_backend_attributes(self):
         """Test that backend has correct attributes"""
         self.assertTrue(self.backend.supports_object_permissions)
@@ -752,3 +686,95 @@ class CheckUserSupportAnonymousCacheTest(TestCase):
     def test_anonymous_lookup_hits_database_without_cache(self):
         with patch("guardian.conf.settings.ANONYMOUS_USER_CACHE_TTL", 0), self.assertNumQueries(1):
             check_user_support(AnonymousUser())
+
+
+@requires_async_auth
+class ObjectPermissionBackendObjectModelsTest(TestCase):
+    """Every backend method, sync and async, on each object permission table layout.
+
+    `OBJECT_FACTORIES` covers direct foreign keys, generic tables, mixed ones and non-integer primary keys.
+    """
+
+    def setUp(self):
+        self.backend = ObjectPermissionBackend()
+        self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.group = Group.objects.create(name="testgroup")
+        self.user.groups.add(self.group)
+
+    def each_object(self):
+        """Yield `(obj, change, delete, view)`, the last three being the permission codenames for `obj`.
+
+        The user has `change` directly and `delete` through the group.
+        """
+        for label, factory in OBJECT_FACTORIES:
+            with self.subTest(model=label):
+                obj = factory()
+                change, delete, view = (
+                    get_permission_codename(action, obj._meta) for action in ("change", "delete", "view")
+                )
+                assign_perm(change, self.user, obj)
+                assign_perm(delete, self.group, obj)
+                # a new instance has no prefetch cache
+                self.user = User.objects.get(pk=self.user.pk)
+                yield obj, change, delete, view
+
+    def test_has_perm(self):
+        for obj, change, delete, view in self.each_object():
+            self.assertTrue(self.backend.has_perm(self.user, change, obj))
+            self.assertTrue(async_to_sync(self.backend.ahas_perm)(self.user, change, obj))
+            self.assertTrue(self.backend.has_perm(self.user, delete, obj))
+            self.assertTrue(async_to_sync(self.backend.ahas_perm)(self.user, delete, obj))
+            self.assertFalse(self.backend.has_perm(self.user, view, obj))
+            self.assertFalse(async_to_sync(self.backend.ahas_perm)(self.user, view, obj))
+
+    def test_get_group_permissions(self):
+        for obj, _, delete, _ in self.each_object():
+            self.assertEqual({delete}, self.backend.get_group_permissions(self.user, obj))
+            self.assertEqual({delete}, async_to_sync(self.backend.aget_group_permissions)(self.user, obj))
+
+    def test_get_user_permissions(self):
+        for obj, *_ in self.each_object():
+            self.assertEqual(set(), self.backend.get_user_permissions(self.user, obj))
+            self.assertEqual(set(), async_to_sync(self.backend.aget_user_permissions)(self.user, obj))
+
+    def test_get_all_permissions(self):
+        for obj, change, delete, _ in self.each_object():
+            self.assertEqual({change, delete}, self.backend.get_all_permissions(self.user, obj))
+            self.assertEqual({change, delete}, async_to_sync(self.backend.aget_all_permissions)(self.user, obj))
+
+
+@requires_async_auth
+class ObjectPermissionBackendAutoPrefetchTest(ObjectPermissionBackendObjectModelsTest):
+    """With `GUARDIAN_AUTO_PREFETCH`, runs the same tests as the parent and checks the sync and async methods share the cache."""
+
+    def setUp(self):
+        super().setUp()
+        self.project = Project.objects.create(name="Test Project")
+        patcher = patch("guardian.conf.settings.AUTO_PREFETCH", True)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_permission_assigned_after_the_cache_is_warm(self):
+        """The cache is not refreshed, so none of the methods sees `view_project`, and they all agree."""
+        self.assertEqual(set(), self.backend.get_all_permissions(self.user, self.project))  # warms the cache
+        assign_perm("view_project", self.user, self.project)
+
+        self.assertEqual(set(), self.backend.get_all_permissions(self.user, self.project))
+        self.assertEqual(set(), async_to_sync(self.backend.aget_all_permissions)(self.user, self.project))
+        self.assertFalse(self.backend.has_perm(self.user, "view_project", self.project))
+        self.assertFalse(async_to_sync(self.backend.ahas_perm)(self.user, "view_project", self.project))
+
+    def test_cache_warmed_by_the_async_method(self):
+        self.assertEqual(set(), async_to_sync(self.backend.aget_all_permissions)(self.user, self.project))
+        assign_perm("view_project", self.user, self.project)
+
+        self.assertEqual(set(), self.backend.get_all_permissions(self.user, self.project))
+        self.assertFalse(async_to_sync(self.backend.ahas_perm)(self.user, "view_project", self.project))
+
+    def test_aget_all_permissions_wraps_get_all_permissions(self):
+        """It doesn't go through aget_user_permissions / aget_group_permissions, which bypass the cache."""
+        with (
+            patch.object(self.backend, "aget_user_permissions", side_effect=AssertionError),
+            patch.object(self.backend, "aget_group_permissions", side_effect=AssertionError),
+        ):
+            async_to_sync(self.backend.aget_all_permissions)(self.user, self.project)

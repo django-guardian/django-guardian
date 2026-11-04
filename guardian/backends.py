@@ -96,9 +96,12 @@ class ObjectPermissionBackend(BaseBackend):
         def get_user(self, user_id: int) -> None:
             pass
 
-        @_hidden_method
-        async def aget_user(self, user_id: int) -> None:
-            pass
+        # `BaseBackend` only has `aget_user` from Django 5.2
+        if django.VERSION >= (5, 2):
+
+            @_hidden_method
+            async def aget_user(self, user_id: int) -> None:
+                pass
 
     def has_perm(self, user_obj: Any, perm: str, obj: Model | None = None) -> bool:
         """Check if a user has the permission for a given object.
@@ -148,58 +151,39 @@ class ObjectPermissionBackend(BaseBackend):
         check = ObjectPermissionChecker(user_obj)
         return check.has_perm(perm, obj)
 
-    async def ahas_perm(self, user_obj: Any, perm: str, obj: Model | None = None) -> bool:
-        """Check if a user has the permission for a given object.
+    # Async backends are supported by Django 5.2 and above: older versions never call
+    # these methods, so they are only defined from there on.
+    if django.VERSION >= (5, 2):
 
-        Returns `True` if given `user_obj` has `perm` for `obj`.
-        If no `obj` is given, `False` is returned.
-        The main difference between Django's `ModelBackend` is that we can pass
-        `obj` instance here and `perm` doesn't have to contain
-        `app_label` as it can be retrieved from given `obj`.
+        async def ahas_perm(self, user_obj: Any, perm: str, obj: Model | None = None) -> bool:
+            """Check if a user has the permission for a given object.
 
-        Async version of :meth:`ObjectPermissionBackend.has_perm` using sync_to_async for compatibility.
+            Returns `True` if given `user_obj` has `perm` for `obj`.
+            If no `obj` is given, `False` is returned.
+            The main difference between Django's `ModelBackend` is that we can pass
+            `obj` instance here and `perm` doesn't have to contain
+            `app_label` as it can be retrieved from given `obj`.
 
-        **Inactive user support**
+            Async version of :meth:`ObjectPermissionBackend.has_perm` using sync_to_async for compatibility.
 
-        If `user` is authenticated but inactive at the same time, all checks
-        always return `False`.
+            **Inactive user support**
 
-        Note:
-           Remember, that if user is not *active*, all checks would return `False`.
+            If `user` is authenticated but inactive at the same time, all checks
+            always return `False`.
 
-        Parameters:
-            user_obj (User): User instance.
-            perm (str): Permission string.
-            obj (Model): Model instance.
+            Note:
+               Remember, that if user is not *active*, all checks would return `False`.
 
-        Returns:
-            `True` if `user_obj` has permission, `False` otherwise.
-        """
+            Parameters:
+                user_obj (User): User instance.
+                perm (str): Permission string.
+                obj (Model): Model instance.
 
-        return await sync_to_async(self.has_perm)(user_obj, perm, obj)
+            Returns:
+                `True` if `user_obj` has permission, `False` otherwise.
+            """
 
-    def get_user_permissions(self, user_obj: Any, obj: Model | None = None) -> Iterable[str]:
-        """Returns user permissions for a given object.
-
-        Parameters:
-            user_obj (User): User instance.
-            obj (Model): Django Model instance. If None, returns empty set
-                        since this backend only handles object-level permissions.
-
-        Returns:
-             a set of permission strings that the given specific `user_obj` has for `obj`.
-        """
-        support, user_obj = check_support(user_obj, obj)
-        if not support:
-            return set()
-
-        check = ObjectPermissionChecker(user_obj)
-
-        # Superusers get all object permissions for the target object.
-        if user_obj.is_superuser:
-            return set(check.get_perms(obj))
-
-        return set(check.get_user_perms(obj))
+            return await sync_to_async(self.has_perm)(user_obj, perm, obj)
 
     def get_group_permissions(self, user_obj: Any, obj: Model | None = None) -> Iterable[str]:
         """Returns group permissions for a given object.
@@ -208,6 +192,12 @@ class ObjectPermissionBackend(BaseBackend):
             user_obj (User): User instance.
             obj (Model): Django Model instance. If None, returns empty set
                         since this backend only handles object-level permissions.
+
+        Note:
+            For superusers, only the permissions explicitly assigned to their groups
+            are returned, unlike Django's `ModelBackend`, which returns all of them.
+            `get_all_permissions` and `has_perm` do treat superusers as having
+            every permission.
 
         Returns:
              a set of permission strings that the given `user_obj` has for `obj`
@@ -242,3 +232,21 @@ class ObjectPermissionBackend(BaseBackend):
 
         check = ObjectPermissionChecker(user_obj)
         return set(check.get_perms(obj))
+
+    if django.VERSION >= (5, 2):
+
+        async def aget_all_permissions(self, user_obj: Any, obj: Model | None = None) -> Iterable[str]:
+            """Returns all permissions for a given object.
+
+            Async version of :meth:`ObjectPermissionBackend.get_all_permissions` using
+            sync_to_async, so it behaves exactly like the sync method (including
+            `GUARDIAN_AUTO_PREFETCH` caching).
+
+            Parameters:
+                user_obj (User): User instance.
+                obj (Model): Django Model instance.
+
+            Returns:
+                 a set of permission strings that the given `user_obj` has for `obj`.
+            """
+            return await sync_to_async(self.get_all_permissions)(user_obj, obj)

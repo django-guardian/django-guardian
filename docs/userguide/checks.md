@@ -188,6 +188,23 @@ More on decorators can be read at corresponding
     [django-authority](https://github.com/jazzband/django-authority) and all
     credits go to it's creator, Jannis Leidel.
 
+## Asynchronous checks
+
+On Django 5.2 and above, Django's async user API works with guardian's backend:
+
+```python
+allowed = await user.ahas_perm("change_project", project)
+allowed = await user.ahas_perm("testapp.change_project", project)
+all_perms = await user.aget_all_permissions(project)
+```
+
+!!! note
+    These methods currently run the synchronous backend methods through
+    `sync_to_async`, so they behave exactly like their synchronous
+    counterparts, including `GUARDIAN_AUTO_PREFETCH` caching. They are not
+    natively asynchronous (yet), and any quirk of the sync methods is shared by
+    the async ones (see [Caveats](caveats.md#user-permissions-on-the-backend)).
+
 ## Inside templates
 
 `django-guardian` comes with special template tag
