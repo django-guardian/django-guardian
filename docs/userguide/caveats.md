@@ -144,3 +144,18 @@ devices = get_objects_for_user(user, "app.view_device")
     `get_perms` work with any PK type without special handling. The
     casting behaviour described above only applies to queryset-filtering
     functions like `get_objects_for_user` and `get_objects_for_group`.
+
+## User permissions on the backend
+
+The object permission backend does not implement `get_user_permissions()`:
+`user.get_user_permissions(obj)` returns an empty set, even when `user` has
+object permissions for `obj`. Use `get_all_permissions(obj)`, or
+`guardian.shortcuts.get_perms`, to list them.
+
+For superusers, `get_group_permissions(obj)` only returns the permissions
+explicitly assigned to the user's groups, while Django's `ModelBackend`
+returns all of them. `has_perm()` and `get_all_permissions()` do treat active
+superusers as having every permission.
+
+The asynchronous counterparts (`aget_user_permissions()`,
+`aget_group_permissions()`) behave the same way.
