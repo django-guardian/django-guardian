@@ -749,7 +749,9 @@ def get_objects_for_user(
         if not any_perm and len(codenames) > 1 and not legacy_group_union:
             user_obj_perms = user_obj_perms_queryset.values_list(*user_fields)
             groups_obj_perms = groups_obj_perms_queryset.values_list(*group_fields)
-            data = list(user_obj_perms) + list(groups_obj_perms)
+            # Generic rows hold object_pk as str, direct rows hold the pk as stored on the model (int, UUID, ...).
+            # Compare them as str so they sort and group together; unlike to_python this cannot raise on a bad row.
+            data = [(str(pk), codename) for pk, codename in [*user_obj_perms, *groups_obj_perms]]
             # sorting/grouping by pk (first in result tuple)
             data = sorted(data, key=_get_first)
             pk_list = []
