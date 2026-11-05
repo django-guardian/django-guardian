@@ -17,7 +17,7 @@ from guardian.models import (
 from guardian.models import (
     UserObjectPermission as DefaultUserObjectPermission,
 )
-from guardian.testapp.models import ChildTestModel, ParentTestModel
+from guardian.testapp.models import ChildTestModel, ParentTestModel, Project, UUIDPKModel, UUIDPKUserObjectPermission
 from guardian.utils import get_group_obj_perms_model, get_user_obj_perms_model
 
 User = get_user_model()
@@ -85,7 +85,7 @@ class TestManagerAssignPerm(TestCase):
 
     def test_user_bulk_assign_perm(self):
         UserObjectPermission = get_user_obj_perms_model(self.obj)
-        with self.assertNumQueries(3):
+        with self.assertNumQueries(2):
             assigned = UserObjectPermission.objects.bulk_assign_perm(self.permission, self.user, [self.obj])
         self.assertEqual(assigned, [UserObjectPermission.objects.get(user=self.user, permission=self.permission)])
 
@@ -124,6 +124,114 @@ class TestManagerAssignPerm(TestCase):
         with self.assertNumQueries(1):
             assigned = GroupObjectPermission.objects.assign_perm_to_many(self.permission, [self.group], self.obj)
         self.assertEqual(assigned, [GroupObjectPermission.objects.get(group=self.group, permission=self.permission)])
+
+
+class TestBulkAssignPermDirectRow(TestCase):
+    """``bulk_assign_perm`` must only skip objects that already have a direct row."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(username="testuser", email="test@example.com")
+        self.group = Group.objects.create(name="testgroup")
+        self.obj = ContentType.objects.create(model="foo", app_label="guardian-tests")
+        self.content_type = ContentType.objects.get_for_model(self.obj)
+        self.permission = Permission.objects.get(content_type=self.content_type, codename="change_contenttype")
+        self.UserObjectPermission = get_user_obj_perms_model(self.obj)
+        self.GroupObjectPermission = get_group_obj_perms_model(self.obj)
+
+    def test_user_with_perm_through_group_gets_direct_row(self):
+        other_group = Group.objects.create(name="othergroup")
+        self.GroupObjectPermission.objects.assign_perm(self.permission, other_group, self.obj)
+        self.user.groups.add(other_group)
+
+        assigned = self.UserObjectPermission.objects.bulk_assign_perm(self.permission, self.user, [self.obj])
+
+        self.assertEqual(len(assigned), 1)
+        self.assertTrue(self.UserObjectPermission.objects.filter(user=self.user, permission=self.permission).exists())
+
+    def test_user_with_global_perm_gets_direct_row(self):
+        self.user.user_permissions.add(self.permission)
+
+        assigned = self.UserObjectPermission.objects.bulk_assign_perm(self.permission, self.user, [self.obj])
+
+        self.assertEqual(len(assigned), 1)
+        self.assertTrue(self.UserObjectPermission.objects.filter(user=self.user, permission=self.permission).exists())
+
+    def test_superuser_gets_direct_row(self):
+        superuser = User.objects.create_superuser(username="root", email="root@example.com", password="x")
+
+        assigned = self.UserObjectPermission.objects.bulk_assign_perm(self.permission, superuser, [self.obj])
+
+        self.assertEqual(len(assigned), 1)
+        self.assertTrue(self.UserObjectPermission.objects.filter(user=superuser, permission=self.permission).exists())
+
+    def test_group_with_global_perm_gets_direct_row(self):
+        self.group.permissions.add(self.permission)
+
+        assigned = self.GroupObjectPermission.objects.bulk_assign_perm(self.permission, self.group, [self.obj])
+
+        self.assertEqual(len(assigned), 1)
+        self.assertTrue(
+            self.GroupObjectPermission.objects.filter(group=self.group, permission=self.permission).exists()
+        )
+
+    def test_existing_direct_row_is_skipped(self):
+        self.UserObjectPermission.objects.assign_perm(self.permission, self.user, self.obj)
+        self.GroupObjectPermission.objects.assign_perm(self.permission, self.group, self.obj)
+
+        self.assertEqual(self.UserObjectPermission.objects.bulk_assign_perm(self.permission, self.user, [self.obj]), [])
+        self.assertEqual(
+            self.GroupObjectPermission.objects.bulk_assign_perm(self.permission, self.group, [self.obj]), []
+        )
+        self.assertEqual(self.UserObjectPermission.objects.filter(user=self.user).count(), 1)
+        self.assertEqual(self.GroupObjectPermission.objects.filter(group=self.group).count(), 1)
+
+    def test_only_missing_objects_are_assigned(self):
+        other = ContentType.objects.create(model="bar", app_label="guardian-tests")
+        self.UserObjectPermission.objects.assign_perm(self.permission, self.user, self.obj)
+
+        assigned = self.UserObjectPermission.objects.bulk_assign_perm(
+            self.permission, self.user, ContentType.objects.filter(pk__in=[self.obj.pk, other.pk])
+        )
+
+        self.assertEqual([str(perm.object_pk) for perm in assigned], [str(other.pk)])
+
+    def test_direct_models_user_and_group(self):
+        project = Project.objects.create(name="project")
+        permission = Permission.objects.get(codename="change_project")
+        ProjectUserObjectPermission = get_user_obj_perms_model(project)
+        ProjectGroupObjectPermission = get_group_obj_perms_model(project)
+        other_group = Group.objects.create(name="othergroup")
+        ProjectGroupObjectPermission.objects.assign_perm(permission, other_group, project)
+        self.user.groups.add(other_group)
+
+        user_assigned = ProjectUserObjectPermission.objects.bulk_assign_perm(
+            permission, self.user, Project.objects.all()
+        )
+        group_assigned = ProjectGroupObjectPermission.objects.bulk_assign_perm(
+            permission, self.group, Project.objects.all()
+        )
+        self.assertEqual(len(user_assigned), 1)
+        self.assertEqual(len(group_assigned), 1)
+
+        self.assertEqual(
+            ProjectUserObjectPermission.objects.bulk_assign_perm(permission, self.user, Project.objects.all()), []
+        )
+        self.assertEqual(
+            ProjectGroupObjectPermission.objects.bulk_assign_perm(permission, self.group, Project.objects.all()), []
+        )
+        self.assertEqual(ProjectUserObjectPermission.objects.filter(user=self.user).count(), 1)
+        self.assertEqual(ProjectGroupObjectPermission.objects.filter(group=self.group).count(), 1)
+        self.assertEqual(ProjectGroupObjectPermission.objects.filter(group=other_group).count(), 1)
+
+    def test_direct_model_uuid_pk_given_as_string(self):
+        """An instance keeping a string UUID pk must still match its existing direct row."""
+        permission = Permission.objects.get(codename="change_uuidpkmodel")
+        obj = UUIDPKModel.objects.create(uuid_pk="12345678-1234-5678-1234-567812345678")
+        self.assertIsInstance(obj.pk, str)
+        UUIDPKUserObjectPermission.objects.assign_perm(permission, self.user, obj)
+
+        self.assertEqual(UUIDPKUserObjectPermission.objects.bulk_assign_perm(permission, self.user, [obj]), [])
+        self.assertEqual(UUIDPKUserObjectPermission.objects.filter(user=self.user).count(), 1)
 
 
 class TestAssignPermCustomContentType(TestCase):

@@ -132,6 +132,13 @@ class UUIDPKModel(models.Model):
     )
 
 
+class UUIDPKUserObjectPermission(UserObjectPermissionBase):
+    # Disabled so UUIDPKModel keeps resolving to the generic permission model in the
+    # existing UUID tests; tests of the direct model use this class explicitly.
+    enabled = False
+    content_object = models.ForeignKey(UUIDPKModel, on_delete=models.CASCADE)
+
+
 class CustomUser(AbstractUser, GuardianUserMixin):
     custom_id = models.AutoField(primary_key=True)
 

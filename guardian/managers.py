@@ -8,7 +8,6 @@ from django.db import models
 from django.db.models import Model, Q, QuerySet
 
 from guardian.conf import settings as guardian_settings
-from guardian.core import ObjectPermissionChecker
 from guardian.ctypes import get_content_type, get_default_content_type
 from guardian.exceptions import ObjectNotPersisted
 
@@ -101,12 +100,24 @@ class BaseObjectPermissionManager(models.Manager):
             ctype = get_content_type(queryset.model)
 
         permission = _ensure_permission(perm, ctype)
-        checker = ObjectPermissionChecker(user_or_group)
-        checker.prefetch_perms(queryset)
+        instances = list(queryset)
+        # Only a direct row for this exact user or group counts as already assigned;
+        # group, global and superuser access must not suppress it.
+        existing_filter = {"permission": permission, self.user_or_group_field: user_or_group}
+        if self.is_generic():
+            existing_filter["content_type"] = ctype
+            existing_filter["object_pk__in"] = [str(instance.pk) for instance in instances]
+            existing = set(self.model.objects.filter(**existing_filter).values_list("object_pk", flat=True))
+        else:
+            existing_filter["content_object__in"] = instances
+            existing = set(self.model.objects.filter(**existing_filter).values_list("content_object_id", flat=True))
 
         assigned_perms = []
-        for instance in queryset:
-            if not checker.has_perm(permission.codename, instance):
+        for instance in instances:
+            # Direct rows return pks in the field's Python type (e.g. UUID), while a saved
+            # instance may keep the raw value it was created with (e.g. a UUID string).
+            pk = instance.pk if self.is_generic() else instance._meta.pk.to_python(instance.pk)
+            if pk not in existing and str(pk) not in existing:
                 kwargs = {"permission": permission, self.user_or_group_field: user_or_group}
                 if self.is_generic():
                     kwargs["content_type"] = ctype
