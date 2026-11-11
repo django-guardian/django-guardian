@@ -29,7 +29,8 @@ class ObjectPermissionsNode(template.Node):
             self.user = for_whom
             self.group = None
         elif isinstance(for_whom, AnonymousUser):
-            self.user = get_user_model().get_anonymous()
+            # ObjectPermissionChecker resolves the guardian anonymous user (if any) itself
+            self.user = for_whom
             self.group = None
         elif isinstance(for_whom, Group):
             self.user = None
