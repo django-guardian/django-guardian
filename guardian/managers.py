@@ -1,5 +1,4 @@
 from typing import Any, TypeAlias
-import warnings
 
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
@@ -141,14 +140,6 @@ class BaseObjectPermissionManager(models.Manager):
             to_add.append(self.model(**kwargs))
 
         return self.model.objects.bulk_create(to_add, ignore_conflicts=ignore_conflicts)
-
-    def assign(self, perm: _PermType, user_or_group: Any, obj: Model) -> Any:
-        """Depreciated function name left in for compatibility"""
-        warnings.warn(
-            "UserObjectPermissionManager method 'assign' is being renamed to 'assign_perm'. Update your code accordingly as old name will be depreciated in 2.0 version.",
-            DeprecationWarning,
-        )
-        return self.assign_perm(perm, user_or_group, obj)
 
     def remove_perm(self, perm: _PermType, user_or_group: Any, obj: Model) -> tuple[int, dict]:
         """
