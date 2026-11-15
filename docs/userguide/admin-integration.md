@@ -184,9 +184,11 @@ that Django's inline admin forms expect:
 - `has_change_permission(request, obj=None)` - Check if user can change inline objects
 - `has_delete_permission(request, obj=None)` - Check if user can delete inline objects
 
-These methods integrate with Guardian's object-level permissions system. When `obj`
-is provided, they check for object-level permissions. When `obj` is `None`, they
-check for global permissions.
+Django admin calls these methods with `obj` set to the *parent* object being
+edited, not an instance of the inline model. In that case (and when `obj` is
+`None`) the mixin checks the user's global permission for the inline model, for
+example `app.change_userphone`. Only when `obj` is an instance of the inline model
+itself is the permission checked against that object.
 
 ### Supported Inline Types
 
@@ -207,14 +209,10 @@ class UserPhoneTabularInline(GuardedInlineAdminMixin, admin.TabularInline):
 ### Permission Behavior
 
 - **Superusers**: Have all permissions automatically granted
-- **Global permissions**: When no specific object is provided, checks global model permissions
-- **Object-level permissions**: When a parent object is provided, checks permissions on that specific object
-- **Permission isolation**: Users only see inline forms for objects they have appropriate permissions for
-
-!!! tip
-    The inline permission checks are performed in the context of the parent object.
-    This means users need permissions on the inline model type, and the permission
-    checks can be scoped to the specific parent object being edited.
+- **Global permissions**: Users see an inline when they hold the matching global permission on the inline model (`view`, `change`, `add` or `delete`)
+- **Parent object**: The parent object passed by Django admin is not used for the lookup, so permissions assigned on the parent never grant access to the inline model
+- **Object-level permissions**: Only checked when the object passed is an instance of the inline model itself
+- **Per-instance permissions only**: A user who has object-level permissions on some inline instances but no global permission does not see the inline
 
 !!! warning
     Make sure to define appropriate permissions in your inline model's `Meta.permissions`

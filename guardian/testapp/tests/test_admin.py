@@ -12,7 +12,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.contrib.contenttypes.models import ContentType
 from django.http import HttpRequest
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
 from django.test.client import Client
 from django.urls import reverse
 
@@ -1060,3 +1060,70 @@ class GuardedInlineAdminMixinTests(TestCase):
         self.assertFalse(inline.has_change_permission(request, other_profile))
         self.assertFalse(inline.has_add_permission(request, other_profile))
         self.assertFalse(inline.has_delete_permission(request, other_profile))
+
+    # Real admin call pattern: Django passes the *parent* object, not an inline instance
+    def _staff_user_with_global_perms(self, *actions):
+        staff = User.objects.create_user("staff", "staff@example.com", "staff", is_staff=True)
+        staff.user_permissions.add(*[self.permissions[action] for action in actions])
+        return User.objects.get(pk=staff.pk)
+
+    def test_inline_permissions_with_parent_object_use_global_permissions(self):
+        """The parent object passed by Django admin must not be used for object-level lookups."""
+        staff = self._staff_user_with_global_perms("view", "change")
+        inline = UserProfileInline(User, admin.site)
+        request = self._create_request(staff)
+
+        # `self.user` is the parent object, as passed by `ModelAdmin.get_inline_instances`.
+        self.assertTrue(inline.has_view_permission(request, self.user))
+        self.assertTrue(inline.has_change_permission(request, self.user))
+        self.assertFalse(inline.has_add_permission(request, self.user))
+        self.assertFalse(inline.has_delete_permission(request, self.user))
+
+    def test_inline_permissions_with_parent_object_denied_without_global_permissions(self):
+        inline = UserProfileInline(User, admin.site)
+        request = self._create_request(self.other_user)
+
+        for check in (
+            inline.has_add_permission,
+            inline.has_view_permission,
+            inline.has_change_permission,
+            inline.has_delete_permission,
+        ):
+            self.assertFalse(check(request, self.user))
+
+    def test_inline_permissions_with_parent_object_ignore_parent_object_permissions(self):
+        """Object permissions on the parent never grant access to the inline model."""
+        inline = UserProfileInline(User, admin.site)
+        request = self._create_request(self.other_user)
+        assign_perm(f"{User._meta.app_label}.change_{User._meta.model_name}", self.other_user, self.user)
+
+        self.assertFalse(inline.has_change_permission(request, self.user))
+
+    def test_get_inline_instances_returns_inline_for_user_with_global_permissions(self):
+        staff = self._staff_user_with_global_perms("view", "change")
+        model_admin = UserAdminWithProfile(User, admin.AdminSite())
+        request = self._create_request(staff)
+
+        inlines = model_admin.get_inline_instances(request, self.user)
+
+        self.assertEqual([type(inline) for inline in inlines], [UserProfileInline])
+
+    def test_get_inline_instances_hides_inline_without_permissions(self):
+        model_admin = UserAdminWithProfile(User, admin.AdminSite())
+        request = self._create_request(self.other_user)
+
+        self.assertEqual(model_admin.get_inline_instances(request, self.user), [])
+
+    def test_get_formsets_with_inlines_yields_inline_for_user_with_global_permissions(self):
+        """`get_formsets_with_inlines` is what the change view uses to build its inline formsets."""
+        staff = self._staff_user_with_global_perms("view", "change")
+        model_admin = UserAdminWithProfile(User, admin.AdminSite())
+        request = RequestFactory().get("/")
+        request.user = staff
+
+        formsets_with_inlines = list(model_admin.get_formsets_with_inlines(request, self.user))
+
+        self.assertEqual(len(formsets_with_inlines), 1)
+        formset_class, inline = formsets_with_inlines[0]
+        self.assertEqual(formset_class.model, UserProfile)
+        self.assertIsInstance(inline, UserProfileInline)
