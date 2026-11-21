@@ -22,6 +22,9 @@ To fix this, it is recommended to add the setting
 `GUARDIAN_MONKEY_PATCH_USER = False` in your settings.py and subclass
 `guardian.mixins.GuardianUserMixin` in your custom user model.
 
+The mixin adds `get_anonymous()`, `add_obj_perm(perm, obj)` and
+`del_obj_perm(perm, obj)` to the user model.
+
 !!! danger "important"
 
     `django-guardian` relies **heavily** on the `auth.User` model.

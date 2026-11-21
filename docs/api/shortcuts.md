@@ -4,6 +4,8 @@
 
 ::: guardian.shortcuts.remove_perm
 
+::: guardian.shortcuts.has_perm
+
 ::: guardian.shortcuts.get_perms
 
 ::: guardian.shortcuts.get_user_perms
