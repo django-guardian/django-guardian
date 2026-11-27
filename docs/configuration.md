@@ -88,6 +88,28 @@ Would use template pointed by `GUARDIAN_TEMPLATE_403` to do that. Default is `Fa
 Tells parts of guardian what template to use for responses with status
 code `403` (i.e. `api-decorators-permission_required`). Defaults to `403.html`.
 
+## `GUARDIAN_RAISE_404`
+
+If set to `True`, guardian would raise `django.http.Http404` instead of returning
+empty `django.http.HttpResponseNotFound`. Default is `False`.
+
+!!! warning
+
+    Remember that you cannot use both
+    `GUARDIAN_RENDER_404` **AND** `GUARDIAN_RAISE_404` - if both are set
+    to `True`, `django.core.exceptions.ImproperlyConfigured` would be raised.
+
+## `GUARDIAN_RENDER_404`
+
+If set to `True`, guardian would try to render 404 response rather than
+return content less `django.http.HttpResponseNotFound`.
+Would use template pointed by `GUARDIAN_TEMPLATE_404` to do that. Default is `False`.
+
+## `GUARDIAN_TEMPLATE_404`
+
+Tells parts of guardian what template to use for responses with status
+code `404` (i.e. `permission_required_or_404`). Defaults to `404.html`.
+
 
 ## `ANONYMOUS_USER_NAME`
 
