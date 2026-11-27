@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.test import TestCase
 
+from guardian.mixins import GuardianGroupMixin, GuardianUserMixin
 from guardian.shortcuts import (
     assign_perm,
     get_groups_with_perms,
@@ -67,6 +68,32 @@ class TestDirectUserPermissions(TestCase):
         remove_perm("add_project", self.joe, self.project)
         result = ProjectUserObjectPermission.objects.filter(**filters).count()
         self.assertEqual(result, 0)
+
+    def test_user_add_del_obj_perm(self):
+        self.joe.add_obj_perm("add_project", self.project)
+        filters = {
+            "content_object": self.project,
+            "permission__codename": "add_project",
+            "user": self.joe,
+        }
+        self.assertEqual(ProjectUserObjectPermission.objects.filter(**filters).count(), 1)
+        self.assertTrue(self.joe.has_perm("testapp.add_project", self.project))
+
+        self.joe.del_obj_perm("add_project", self.project)
+        self.assertEqual(ProjectUserObjectPermission.objects.filter(**filters).count(), 0)
+        self.assertFalse(self.joe.has_perm("testapp.add_project", self.project))
+
+    def test_guardian_user_mixin_direct_call(self):
+        GuardianUserMixin.add_obj_perm(self.joe, "add_project", self.project)
+        filters = {
+            "content_object": self.project,
+            "permission__codename": "add_project",
+            "user": self.joe,
+        }
+        self.assertEqual(ProjectUserObjectPermission.objects.filter(**filters).count(), 1)
+
+        GuardianUserMixin.del_obj_perm(self.joe, "add_project", self.project)
+        self.assertEqual(ProjectUserObjectPermission.objects.filter(**filters).count(), 0)
 
     def test_get_users_with_perms(self):
         User.objects.create_user("john", "john@foobar.com", "john")
@@ -172,6 +199,32 @@ class TestDirectGroupPermissions(TestCase):
         remove_perm("add_project", self.group, self.project)
         result = ProjectGroupObjectPermission.objects.filter(**filters).count()
         self.assertEqual(result, 0)
+
+    def test_group_add_del_obj_perm(self):
+        self.group.add_obj_perm("add_project", self.project)
+        filters = {
+            "content_object": self.project,
+            "permission__codename": "add_project",
+            "group": self.group,
+        }
+        self.assertEqual(ProjectGroupObjectPermission.objects.filter(**filters).count(), 1)
+        self.assertTrue(self.joe.has_perm("testapp.add_project", self.project))
+
+        self.group.del_obj_perm("add_project", self.project)
+        self.assertEqual(ProjectGroupObjectPermission.objects.filter(**filters).count(), 0)
+        self.assertFalse(self.joe.has_perm("testapp.add_project", self.project))
+
+    def test_guardian_group_mixin_direct_call(self):
+        GuardianGroupMixin.add_obj_perm(self.group, "add_project", self.project)
+        filters = {
+            "content_object": self.project,
+            "permission__codename": "add_project",
+            "group": self.group,
+        }
+        self.assertEqual(ProjectGroupObjectPermission.objects.filter(**filters).count(), 1)
+
+        GuardianGroupMixin.del_obj_perm(self.group, "add_project", self.project)
+        self.assertEqual(ProjectGroupObjectPermission.objects.filter(**filters).count(), 0)
 
     def test_get_groups_with_perms(self):
         Group.objects.create(name="managers")
