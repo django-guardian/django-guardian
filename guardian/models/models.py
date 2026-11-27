@@ -128,6 +128,11 @@ class UserObjectPermission(UserObjectPermissionAbstract):
         indexes = [
             models.Index(fields=["permission", "user", "content_type", "object_pk"]),
             models.Index(fields=["user", "content_type", "object_pk"]),
+            # Answer "which grants exist for these objects" without knowing the
+            # user or group. The two indexes above cannot: they both start with
+            # the principal, so a lookup by content type and object falls back
+            # to the content_type foreign key index.
+            models.Index(fields=["content_type", "object_pk"], name="guardian_us_content_179ed2_idx"),
         ]
 
 
@@ -193,4 +198,8 @@ class GroupObjectPermission(GroupObjectPermissionAbstract):
         indexes = [
             models.Index(fields=["permission", "group", "content_type", "object_pk"]),
             models.Index(fields=["group", "content_type", "object_pk"]),
+            # See the matching entry on UserObjectPermissionBase: a lookup by
+            # content type and object alone cannot use the principal-first
+            # indexes.
+            models.Index(fields=["content_type", "object_pk"], name="guardian_gr_content_ae6aec_idx"),
         ]
