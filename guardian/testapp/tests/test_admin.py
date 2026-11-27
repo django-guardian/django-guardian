@@ -9,7 +9,7 @@ from django import forms
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import AnonymousUser, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.http import HttpRequest
 from django.test import TestCase
@@ -1060,3 +1060,33 @@ class GuardedInlineAdminMixinTests(TestCase):
         self.assertFalse(inline.has_change_permission(request, other_profile))
         self.assertFalse(inline.has_add_permission(request, other_profile))
         self.assertFalse(inline.has_delete_permission(request, other_profile))
+
+
+@skipUnlessTestApp
+class GuardedInlineAdminMixinTests(TestCase):
+    """The inline's permission methods are called with the parent object."""
+
+    def setUp(self):
+        self.user = User.objects.create(username="inline-perms-user", is_staff=True)
+        self.request = HttpRequest()
+        self.request.user = self.user
+        self.parent = self.user
+        self.inline = UserProfileInline(User, admin.site)
+        opts = UserProfile._meta
+        self.change_perm = f"{opts.app_label}.change_{opts.model_name}"
+        self.view_perm = f"{opts.app_label}.view_{opts.model_name}"
+
+    def test_global_permission_grants_the_inline_check(self):
+        assign_perm(self.change_perm, self.user)
+        assign_perm(self.view_perm, self.user)
+        self.assertTrue(self.inline.has_change_permission(self.request, self.parent))
+        self.assertTrue(self.inline.has_view_permission(self.request, self.parent))
+
+    def test_inline_check_is_denied_without_the_global_permission(self):
+        self.assertFalse(self.inline.has_change_permission(self.request, self.parent))
+        self.assertFalse(self.inline.has_view_permission(self.request, self.parent))
+
+    def test_inline_check_denies_for_an_anonymous_user(self):
+        request = HttpRequest()
+        request.user = AnonymousUser()
+        self.assertFalse(self.inline.has_change_permission(request, self.parent))
