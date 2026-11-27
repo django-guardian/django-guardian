@@ -5,6 +5,7 @@ Functions defined within this module are a part of django-guardian's internal fu
 and be considered unstable; their APIs may change in any future releases.
 """
 
+from functools import lru_cache
 import gc
 from itertools import chain
 import logging
@@ -94,6 +95,35 @@ def get_anonymous_user() -> Any:
         return _get_anonymous_user_cached()
     else:
         return _get_anonymous_user_uncached()
+
+
+@lru_cache(None)
+def _warn_missing_anonymous_user(username: str) -> None:
+    """Log the missing anonymous user once per process to avoid flooding logs."""
+    logger.warning(
+        "Anonymous user %r does not exist; denying object permissions for anonymous users. "
+        "Run `manage.py migrate` to recreate it, or set GUARDIAN_ANONYMOUS_USER_NAME = None "
+        "to disable anonymous user support.",
+        username,
+    )
+
+
+def get_anonymous_user_or_none() -> Any | None:
+    """Get the django-guardian anonymous user, or `None` if it is unavailable.
+
+    Returns `None` when anonymous support is disabled (`ANONYMOUS_USER_NAME = None`)
+    or when the anonymous user row does not exist (e.g. after a database restore),
+    so callers can deny access instead of raising `DoesNotExist`. Denying is
+    accurate: object permissions are deleted along with the anonymous user row.
+    A warning is logged once per process when the row is missing.
+    """
+    if guardian_settings.ANONYMOUS_USER_NAME is None:
+        return None
+    try:
+        return get_anonymous_user()
+    except get_user_model().DoesNotExist:
+        _warn_missing_anonymous_user(guardian_settings.ANONYMOUS_USER_NAME)
+        return None
 
 
 def get_identity(identity: Model) -> tuple[Any | None, Any | None]:

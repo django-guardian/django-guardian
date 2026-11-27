@@ -1,14 +1,19 @@
 from collections.abc import Iterable
 from itertools import chain
 
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import AnonymousUser, Permission
 from django.db.models import Model
 from django.db.models.query import QuerySet
 from django.utils.encoding import force_str
 
 from guardian.conf import settings as guardian_settings
 from guardian.ctypes import get_content_type
-from guardian.utils import get_group_obj_perms_model, get_identity, get_user_obj_perms_model
+from guardian.utils import (
+    get_anonymous_user_or_none,
+    get_group_obj_perms_model,
+    get_identity,
+    get_user_obj_perms_model,
+)
 
 
 def _get_pks_model_and_ctype(objects):
@@ -58,9 +63,20 @@ class ObjectPermissionChecker:
 
         Parameters:
             user_or_group (User, AnonymousUser, Group): The user or group to check permissions for.
+                If `AnonymousUser` is given while anonymous support is disabled or the
+                anonymous user does not exist, the checker grants no permissions.
         """
-        self.user, self.group = get_identity(user_or_group)  # type: ignore[arg-type] # None is not allowed
         self._obj_perms_cache: dict = {}
+        if isinstance(user_or_group, AnonymousUser):
+            user_or_group = get_anonymous_user_or_none()
+            if user_or_group is None:
+                self.user, self.group = None, None
+                return
+        self.user, self.group = get_identity(user_or_group)  # type: ignore[arg-type] # None is not allowed
+
+    def _has_identity(self) -> bool:
+        """Returns `False` for an anonymous checker without a guardian anonymous user."""
+        return self.user is not None or self.group is not None
 
     def has_perm(self, perm: str, obj: Model) -> bool:
         """Checks if user/group has the specified permission for the given object.
@@ -123,7 +139,7 @@ class ObjectPermissionChecker:
         return user_filters
 
     def get_user_perms(self, obj: Model) -> QuerySet[str]:
-        if self.user and not self.user.is_active:
+        if not self._has_identity() or (self.user and not self.user.is_active):
             return Permission.objects.none().values_list("codename", flat=True)
 
         ctype = get_content_type(obj)
@@ -136,7 +152,7 @@ class ObjectPermissionChecker:
         return user_perms
 
     def get_group_perms(self, obj: Model) -> QuerySet[str]:
-        if self.user and not self.user.is_active:
+        if not self._has_identity() or (self.user and not self.user.is_active):
             return Permission.objects.none().values_list("codename", flat=True)
 
         ctype = get_content_type(obj)
@@ -157,7 +173,7 @@ class ObjectPermissionChecker:
         Returns:
             list of codenames for all permissions for given `obj`.
         """
-        if self.user and not self.user.is_active:
+        if not self._has_identity() or (self.user and not self.user.is_active):
             return []
 
         # Superusers have every permission, so the prefetch cache (which only
@@ -197,7 +213,7 @@ class ObjectPermissionChecker:
         Parameters:
             objects (list[Model]): Iterable of Django model objects.
         """
-        if self.user and not self.user.is_active:
+        if not self._has_identity() or (self.user and not self.user.is_active):
             return []
 
         pks, model, ctype = _get_pks_model_and_ctype(objects)

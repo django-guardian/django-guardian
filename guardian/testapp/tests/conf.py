@@ -11,6 +11,18 @@ def skipUnlessTestApp(obj):
     return unittest.skipUnless(app in settings.INSTALLED_APPS, "app %r must be installed to run this test" % app)(obj)
 
 
+def delete_anonymous_user():
+    """Delete the guardian anonymous user row and reset the once-per-process missing-user warning."""
+    from django.contrib.auth import get_user_model
+    from django.core.cache import cache
+
+    from guardian.utils import _warn_missing_anonymous_user
+
+    get_user_model().objects.filter(username=guardian_settings.ANONYMOUS_USER_NAME).delete()
+    cache.clear()
+    _warn_missing_anonymous_user.cache_clear()
+
+
 class TestDataMixin:
     def setUp(self):
         super().setUp()

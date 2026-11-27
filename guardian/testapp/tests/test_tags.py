@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser, Group
@@ -8,6 +10,7 @@ from django.test import TestCase
 from guardian.core import ObjectPermissionChecker
 from guardian.exceptions import NotUserNorGroup
 from guardian.models import GroupObjectPermission, UserObjectPermission
+from guardian.testapp.tests.conf import delete_anonymous_user
 
 User = get_user_model()
 
@@ -77,6 +80,21 @@ class GetObjPermsTagTest(TestCase):
         context = {"user": User.get_anonymous(), "contenttype": self.ctype}
         real_anon_user_output = render(template, context)
         self.assertEqual(anon_output, real_anon_user_output)
+
+    def _render_anonymous_perms(self):
+        template = (
+            '{% load guardian_tags %}{% get_obj_perms user for contenttype as "obj_perms" %}[{{ obj_perms|join:" " }}]'
+        )
+        return render(template, {"user": AnonymousUser(), "contenttype": self.ctype})
+
+    def test_anonymous_user_disabled(self):
+        with patch("guardian.conf.settings.ANONYMOUS_USER_NAME", None):
+            self.assertEqual(self._render_anonymous_perms(), "[]")
+
+    def test_anonymous_user_missing_row(self):
+        delete_anonymous_user()
+        with self.assertLogs("guardian.utils", level="WARNING"):
+            self.assertEqual(self._render_anonymous_perms(), "[]")
 
     def test_wrong_user_or_group(self):
         template = "".join(
