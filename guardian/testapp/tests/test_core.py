@@ -786,3 +786,61 @@ class ObjectPermissionCheckerTest(ObjectPermissionTestCase):
         # Ignore other queries that JOIN this table.
         group_selects = [q for q in queries if q["sql"].endswith(auth_group_from)]
         self.assertEqual(len(group_selects), 1)
+
+    def test_prefetch_multiple_model_types_user_perms(self):
+        settings.DEBUG = True
+        try:
+            from django.db import connection
+
+            ContentType.objects.clear_cache()
+            group1 = Group.objects.create(name="group_multi_1")
+            group2 = Group.objects.create(name="group_multi_2")
+            project1 = Project.objects.create(name="ProjectMulti1")
+            project2 = Project.objects.create(name="ProjectMulti2")
+            user = User.objects.create(username="multi_model_user", is_active=True)
+
+            assign_perm("change_group", user, group1)
+            assign_perm("change_project", user, project1)
+            checker = ObjectPermissionChecker(user)
+
+            mixed_objects = [group1, project1, group2, project2]
+            self.assertTrue(checker.prefetch_perms(mixed_objects))
+            query_count = len(connection.queries)
+
+            self.assertEqual(len(checker._obj_perms_cache), len(mixed_objects))
+            self.assertTrue(checker.has_perm("change_group", group1))
+            self.assertFalse(checker.has_perm("change_group", group2))
+            self.assertTrue(checker.has_perm("change_project", project1))
+            self.assertFalse(checker.has_perm("change_project", project2))
+            self.assertEqual(len(connection.queries), query_count)
+        finally:
+            settings.DEBUG = False
+
+    def test_prefetch_multiple_model_types_superuser_and_group_perms(self):
+        settings.DEBUG = True
+        try:
+            from django.db import connection
+
+            ContentType.objects.clear_cache()
+            group1 = Group.objects.create(name="group_multi_target")
+            owner_group = Group.objects.create(name="group_multi_owner")
+            project1 = Project.objects.create(name="ProjectMultiSuper")
+            superuser = User.objects.create(username="multi_superuser", is_superuser=True, is_active=True)
+
+            su_checker = ObjectPermissionChecker(superuser)
+            self.assertTrue(su_checker.prefetch_perms([group1, project1]))
+            su_queries = len(connection.queries)
+            self.assertTrue(su_checker.has_perm("change_group", group1))
+            self.assertTrue(su_checker.has_perm("change_project", project1))
+            self.assertEqual(len(connection.queries), su_queries)
+
+            assign_perm("change_group", owner_group, group1)
+            assign_perm("change_project", owner_group, project1)
+            group_checker = ObjectPermissionChecker(owner_group)
+            self.assertTrue(group_checker.prefetch_perms([group1, project1]))
+            grp_queries = len(connection.queries)
+            self.assertTrue(group_checker.has_perm("change_group", group1))
+            self.assertTrue(group_checker.has_perm("change_project", project1))
+            self.assertEqual(len(connection.queries), grp_queries)
+        finally:
+            settings.DEBUG = False
